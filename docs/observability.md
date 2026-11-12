@@ -135,3 +135,22 @@ Observation only: a trip raises a finding; nothing is blocked or contained.
 - `POST /v1/deception/trip` (admin) lets agents report `{canary_id?, host, path}` for a touched planted file or credential.
 - `GET /v1/deception/trips` lists recent trips. One finding `deception-canary-tripped` (high; tags `deception`, `canary`; ATT&CK T1552)
   is created per canary per 10 minutes; further trips are counted and recorded (capped).
+## Fleet health diagnostics
+
+Read-only diagnostics of agent liveness and data flow (bearer token or session required). Kavach only
+observes and describes; recommendations are plain-English suggestions, never actions Kavach performs.
+
+- `GET /v1/fleet/health`: per agent `state`, `heartbeat_age_seconds`, `sensor_kind` (`ebpf`, `proc-poll`,
+  `unknown`), `queued` and `backlog_high` (over 100), `last_event`, `never_reported_events`,
+  `sensor_blind_suspected` (heartbeat online but no events for over 1 hour; an idle host is also possible) and
+  `flags`. Heartbeat gap history is not stored, so age is derived from the last heartbeat only; agents do not
+  report a version, so `version` is "not reported" and drift is unknown. Includes `score` (0-100) and `factors`:
+  heartbeat_online 40, data_flowing 25, strong_sensor 15, backlog_healthy 10, no_shadow_hosts 10, each weighted
+  by the share of active (non-revoked) agents. No active agents scores 0.
+- `GET /v1/fleet/coverage-gaps`: `shadow_hosts` (seen in findings or events, not enrolled),
+  `agents_without_data`, `agents_on_polling_sensor`.
+- `GET /v1/fleet/stale?minutes=15` (1-10080): agents whose last heartbeat is older than the cutoff, plus
+  `never_seen` agents that have not sent a heartbeat.
+- `GET /v1/fleet/health/{host}`: single-host diagnostic with deterministic `recommendations`. 404 when the host
+  is neither enrolled nor seen in data; a shadow host returns `enrolled: false`.
+- Metrics: `kavach_fleet_coverage_score` and `kavach_fleet_stale_agents` (15 minute cutoff).

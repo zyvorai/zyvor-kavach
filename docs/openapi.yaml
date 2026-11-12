@@ -87,6 +87,36 @@ paths:
       responses:
         "200":
           description: Agent status array
+  /v1/fleet/health:
+    get:
+      summary: Fleet health diagnostics and coverage score (read-only)
+      responses:
+        "200":
+          description: Per-agent health, score 0-100 and factors
+  /v1/fleet/health/{host}:
+    get:
+      summary: Single-host health diagnostic with recommendations
+      parameters:
+        - { name: host, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Diagnostic
+        "404":
+          description: Host not enrolled and not seen in data
+  /v1/fleet/coverage-gaps:
+    get:
+      summary: Shadow hosts, agents without data, agents on polling sensor
+      responses:
+        "200":
+          description: Coverage gaps
+  /v1/fleet/stale:
+    get:
+      summary: Agents with no heartbeat within the cutoff
+      parameters:
+        - { name: minutes, in: query, schema: { type: integer, default: 15, minimum: 1, maximum: 10080 } }
+      responses:
+        "200":
+          description: Stale and never-seen agents
   /v1/agents:
     get:
       summary: List enrolled agents (admin)

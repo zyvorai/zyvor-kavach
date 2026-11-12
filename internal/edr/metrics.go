@@ -103,6 +103,7 @@ func (m *Metrics) Write(w http.ResponseWriter, store *Store, registry *Credentia
 	fmt.Fprintf(&b, "# HELP kavach_findings_total Total findings.\n# TYPE kavach_findings_total gauge\nkavach_findings_total %d\n", total)
 
 	b.WriteString(riskGauges(store, time.Now()))
+	b.WriteString(fleetHGauges(store, registry, time.Now()))
 
 	online, all := 0, 0
 	if registry != nil {
