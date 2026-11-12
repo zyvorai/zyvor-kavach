@@ -170,7 +170,7 @@ func (s *Store) IngestNetwork(n NetworkEvent) ([]Finding, error) {
 	s.seen[key] = struct{}{}
 	s.networkEvents = append(s.networkEvents, n)
 	s.trimRecent()
-	findings := []Finding{}
+	findings := contentNetworkFindings(n)
 	for _, e := range s.recentEvents {
 		if correlates(e, n) {
 			findings = append(findings, correlationFinding(e, n))
@@ -221,6 +221,7 @@ func (s *Store) IngestFile(e FileEvent, detector *FileDetections) ([]Finding, er
 	}
 	findings := detector.Observe(e)
 	findings = append(findings, RansomwareFindings(e.Host, []FileEvent{e}, e.Time)...)
+	findings = append(findings, contentFileFindings(e)...)
 	for _, f := range findings {
 		if err := s.appendFindingLocked(f); err != nil {
 			return findings, err

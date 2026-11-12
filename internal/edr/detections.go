@@ -56,7 +56,7 @@ var detectionMu sync.Mutex
 var detectionStates = map[string]detectionState{}
 
 func MapDetection(f Finding) Detection {
-	m, ok := ruleMITRE[f.Rule]
+	m, ok := mitreFor(f.Rule)
 	if !ok {
 		m = struct{ Tactic, Technique, ID string }{"Discovery", "System Information Discovery", "T1082"}
 	}

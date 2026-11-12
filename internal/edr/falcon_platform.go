@@ -96,4 +96,5 @@ func RegisterFalconPlatform(mux *http.ServeMux, token string, store *Store, regi
 	RegisterEBPFPlatform(mux, token, store, registry)
 	RegisterFinancePlatform(mux, token, store, registry)
 	RegisterSectorsPlatform(mux, token, store, registry)
+	RegisterContentFramework(mux, token)
 }

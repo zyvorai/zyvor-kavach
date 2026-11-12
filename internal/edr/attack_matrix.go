@@ -37,13 +37,20 @@ func BuildATTACKMatrix(findings []Finding) map[string]any {
 		idx[name] = t
 		order = append(order, t)
 	}
-	rules := make([]string, 0, len(ruleMITRE))
-	for r := range ruleMITRE {
+	all := make(map[string]struct{ Tactic, Technique, ID string }, len(ruleMITRE))
+	for r, m := range ruleMITRE {
+		all[r] = m
+	}
+	for r, m := range contentMITREAll() { // live content-pack rules count toward coverage
+		all[r] = m
+	}
+	rules := make([]string, 0, len(all))
+	for r := range all {
 		rules = append(rules, r)
 	}
 	sort.Strings(rules)
 	for _, r := range rules {
-		m := ruleMITRE[r]
+		m := all[r]
 		t := idx[m.Tactic]
 		if t == nil {
 			continue
@@ -67,7 +74,7 @@ func BuildATTACKMatrix(findings []Finding) map[string]any {
 	}
 	total := 0
 	for _, f := range findings {
-		m, ok := ruleMITRE[f.Rule]
+		m, ok := all[f.Rule]
 		if !ok {
 			continue
 		}

@@ -234,6 +234,7 @@ func Detect(e Event) []Finding {
 		q, _ := rule["query"].(string)
 		add("custom-"+name, sev, "Custom detection rule matched: "+name+" ("+q+")", "custom-rule")
 	}
+	result = append(result, contentProcessFindings(e)...) // data-driven content packs; no-op when none loaded
 	return FilterExcluded(result)
 }
 
