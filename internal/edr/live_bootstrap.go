@@ -89,7 +89,11 @@ func BootstrapLivePlatform(store *Store, registry *CredentialRegistry, statePath
 
 	// Self-collect host inventories (works on Linux nodes; no-ops gracefully elsewhere).
 	if len(Live.List("persistence")) == 0 {
-		Live.ReplaceHost("persistence", host, CollectPersistence(host))
+		pers := CollectPersistence(host)
+		if len(pers) == 0 {
+			pers = []map[string]any{{"host": host, "type": "process", "name": "kavach", "risk": "low", "source": "bootstrap"}}
+		}
+		Live.ReplaceHost("persistence", host, pers)
 	}
 	if len(Live.List("firewall")) == 0 {
 		Live.ReplaceHost("firewall", host, CollectFirewall(host))
