@@ -29,6 +29,11 @@ Kavach {{ .Chart.AppVersion | default .Chart.Version }}
   Opt out only with --set tls.enabled=false (trusted ingress/proxy termination).
 {{- end }}
 
+{{- if .Values.envoyGateway.enabled }}
+  Envoy Gateway: ENABLED (GatewayClass {{ .Values.envoyGateway.gatewayClassName | default "eg" }})
+  Edge HTTPS: https://{{ .Values.envoyGateway.hostname | default (printf "kavach.%s.sslip.io" (.Values.envoyGateway.addressHint | default "<node-ip>")) }}:{{ .Values.envoyGateway.httpsNodePort | default 30943 }}
+  (preferred Gateway API front door — Ingress Nginx is retiring)
+{{- end }}
 {{- if .Values.gateway.enabled }}
   Gateway HTTPRoute: attached via gateway.parentRefs
 {{- end }}
@@ -36,5 +41,5 @@ Kavach {{ .Chart.AppVersion | default .Chart.Version }}
   Gateway API (Cilium/LE): https://{{ .Values.gatewayApi.hostname }}
 {{- end }}
 {{- if .Values.ingress.enabled }}
-  Ingress: enabled
+  Ingress: enabled (prefer envoyGateway / Gateway API)
 {{- end }}

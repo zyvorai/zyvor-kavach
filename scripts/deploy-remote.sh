@@ -12,7 +12,10 @@
 #   --verify-only     curl healthz on the remote NodePort; no sync/build
 #
 # Opt-in:
-#   --cilium-gateway  Sets KAVACH_GATEWAY_API=1 and notes Gateway is optional.
+#   --envoy-gateway   Preferred Gateway API front door via Envoy Gateway
+#                     (GatewayClass eg). Sets KAVACH_ENVOY_GATEWAY=1 and runs
+#                     k8s/bootstrap/ensure-envoy-gateway.sh when present.
+#   --cilium-gateway  Sets KAVACH_GATEWAY_API=1 (Cilium GatewayClass; optional).
 #                     Calls k8s/bootstrap/ensure-kavach-cilium-gateway-tls.sh when present.
 #
 # Usage:
@@ -36,6 +39,7 @@ ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 PROFILE="k3s"
 VERIFY_ONLY=false
 CILIUM_GATEWAY=false
+ENVOY_GATEWAY=false
 DRY_RUN=false
 TARGET=""
 # shellcheck disable=SC2034
@@ -47,9 +51,10 @@ IMAGE_REF="ghcr.io/zyvorai/kavach:0.1.0"
 IMAGE_REPO="ghcr.io/zyvorai/kavach"
 IMAGE_TAG="0.1.0"
 NODE_PORT="${KAVACH_NODE_PORT:-30899}"
+ENVOY_HTTPS_NODE_PORT="${KAVACH_ENVOY_HTTPS_NODE_PORT:-30943}"
 
 usage() {
-  sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'
   exit 0
 }
 
@@ -60,6 +65,7 @@ while [[ $# -gt 0 ]]; do
     --k8s) PROFILE="k8s"; shift ;;
     --quick) PROFILE="quick"; shift ;;
     --verify-only) VERIFY_ONLY=true; shift ;;
+    --envoy-gateway) ENVOY_GATEWAY=true; shift ;;
     --cilium-gateway) CILIUM_GATEWAY=true; shift ;;
     --dry-run) DRY_RUN=true; shift ;;
     -*)
@@ -97,6 +103,9 @@ fi
 
 if $CILIUM_GATEWAY; then
   export KAVACH_GATEWAY_API=1
+fi
+if $ENVOY_GATEWAY; then
+  export KAVACH_ENVOY_GATEWAY=1
 fi
 
 # Default matches lab demo login. Override with KAVACH_ADMIN_TOKEN for production.
@@ -148,6 +157,10 @@ GATEWAY_API_FLAG="${KAVACH_GATEWAY_API:-0}"
 if $CILIUM_GATEWAY; then
   GATEWAY_API_FLAG=1
 fi
+ENVOY_GATEWAY_FLAG="${KAVACH_ENVOY_GATEWAY:-0}"
+if $ENVOY_GATEWAY; then
+  ENVOY_GATEWAY_FLAG=1
+fi
 
 remote_script=$(cat <<EOF
 set -euo pipefail
@@ -156,16 +169,22 @@ export PATH="/usr/local/go/bin:/usr/local/bin:\$HOME/go/bin:/usr/bin:\$PATH"
 export GOTOOLCHAIN=auto
 PROFILE="${PROFILE}"
 GATEWAY_API="${GATEWAY_API_FLAG}"
+ENVOY_GATEWAY="${ENVOY_GATEWAY_FLAG}"
 ADMIN_TOKEN="${ADMIN_TOKEN_LOCAL}"
 IMAGE_REF="${IMAGE_REF}"
 IMAGE_REPO="${IMAGE_REPO}"
 IMAGE_TAG="${IMAGE_TAG}"
 NODE_PORT="${NODE_PORT}"
+ENVOY_HTTPS_NODE_PORT="${ENVOY_HTTPS_NODE_PORT}"
+HOST_IP_HINT="\$(hostname -I | awk '{print \$1}')"
 
 log() { printf '[kavach-deploy] %s\n' "\$*"; }
 
 mkdir -p "\$HOME/.kube"
-if [[ -r /etc/rancher/k3s/k3s.yaml ]]; then
+# Prefer the user's working kubeconfig (lab installs often already have Envoy Gateway here).
+if [[ -r "\$HOME/.kube/config" ]]; then
+  export KUBECONFIG="\$HOME/.kube/config"
+elif [[ -r /etc/rancher/k3s/k3s.yaml ]]; then
   if [[ ! -r "\$HOME/.kube/kavach-k3s.yaml" ]] || [[ /etc/rancher/k3s/k3s.yaml -nt "\$HOME/.kube/kavach-k3s.yaml" ]]; then
     sudo cat /etc/rancher/k3s/k3s.yaml > "\$HOME/.kube/kavach-k3s.yaml"
     chmod 600 "\$HOME/.kube/kavach-k3s.yaml"
@@ -346,18 +365,33 @@ fi
 HELM_SET=(
   --set "auth.token=\${ADMIN_TOKEN}"
   --set tls.enabled=true
+  --set agent.enabled=false
   --set image.repository="\${IMAGE_REPO}"
   --set image.tag="\${IMAGE_TAG}"
   --set image.pullPolicy=IfNotPresent
   --set service.type=NodePort
   --set service.port="\${NODE_PORT}"
-  # agent disabled until dedicated image
-  --set agent.enabled=false \
   --set service.nodePort="\${NODE_PORT}"
 )
 
+if [[ "\$ENVOY_GATEWAY" == "1" ]]; then
+  log "Envoy Gateway opt-in (preferred Gateway API front door; class eg)"
+  if [[ -x k8s/bootstrap/ensure-envoy-gateway.sh ]]; then
+    bash k8s/bootstrap/ensure-envoy-gateway.sh || log "ensure-envoy-gateway.sh reported prerequisites missing (continuing; Helm may fail)"
+  fi
+  HELM_SET+=(
+    --set envoyGateway.enabled=true
+    --set envoyGateway.gatewayClassName=eg
+    --set-string "envoyGateway.addressHint=\${HOST_IP_HINT}"
+    --set-string "envoyGateway.hostname=kavach.\${HOST_IP_HINT}.sslip.io"
+    --set envoyGateway.httpsNodePort="\${ENVOY_HTTPS_NODE_PORT}"
+  )
+else
+  HELM_SET+=(--set envoyGateway.enabled=false)
+fi
+
 if [[ "\$GATEWAY_API" == "1" ]]; then
-  log "Gateway API opt-in (KAVACH_GATEWAY_API=1) — Gateway remains optional; NodePort :\${NODE_PORT} stays the default path"
+  log "Cilium Gateway API opt-in (KAVACH_GATEWAY_API=1) — prefer --envoy-gateway for Envoy"
   HELM_SET+=(--set gatewayApi.enabled=true)
   if [[ -x k8s/bootstrap/ensure-kavach-cilium-gateway-tls.sh ]]; then
     bash k8s/bootstrap/ensure-kavach-cilium-gateway-tls.sh || log "ensure-kavach-cilium-gateway-tls.sh reported prerequisites missing (continuing with NodePort)"
@@ -390,6 +424,13 @@ curl -skf "https://127.0.0.1:\${NODE_PORT}/healthz" \\
   || curl -skf "https://\${HOST_IP}:\${NODE_PORT}/healthz" \\
   || log "healthz not ready yet — retry with --verify-only"
 echo
+if [[ "\$ENVOY_GATEWAY" == "1" ]]; then
+  log "Envoy Gateway URL=https://kavach.\${HOST_IP}.sslip.io:\${ENVOY_HTTPS_NODE_PORT}/"
+  curl -skf -H "Host: kavach.\${HOST_IP}.sslip.io" "https://127.0.0.1:\${ENVOY_HTTPS_NODE_PORT}/healthz" \\
+    || curl -skf "https://kavach.\${HOST_IP}.sslip.io:\${ENVOY_HTTPS_NODE_PORT}/healthz" \\
+    || log "Envoy healthz not ready yet — check HTTPRoute/Gateway status"
+  echo
+fi
 log "Kavach ready (HTTPS NodePort :\${NODE_PORT})"
 EOF
 )

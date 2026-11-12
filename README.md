@@ -29,7 +29,7 @@ curl -H "Authorization: Bearer $KAVACH_TOKEN" http://127.0.0.1:8099/v1/findings
 ## Deploy
 
 ```bash
-./scripts/deploy-remote.sh sus@80.79.5.173 --k8s
+./scripts/deploy-remote.sh sus@80.79.5.173 --k8s --envoy-gateway
 # → https://HOST:30899
 ```
 

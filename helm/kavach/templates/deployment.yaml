@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
 {{- $mtls := include "kavach.mtlsMode" . }}
+{{- $tlsSecret := include "kavach.tlsSecretName" . }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -34,7 +35,7 @@ spec:
         command: ["/bin/sh", "-c"]
         args:
         - |
-          {{- if .Values.tls.existingSecret }}
+          {{- if $tlsSecret }}
           cp /tls-secret/tls.crt /tls-secret/tls.key /certs/
           {{- else }}
           openssl req -x509 -nodes -days 3650 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 \
@@ -47,7 +48,7 @@ spec:
         securityContext: {runAsUser: 0, runAsNonRoot: false}
         volumeMounts:
         - {name: tls-certs, mountPath: /certs}
-        {{- if .Values.tls.existingSecret }}
+        {{- if $tlsSecret }}
         - {name: tls-secret, mountPath: /tls-secret, readOnly: true}
         {{- end }}
       {{- end }}
@@ -162,8 +163,8 @@ spec:
       volumes:
       {{- if .Values.tls.enabled }}
       - {name: tls-certs, emptyDir: {}}
-      {{- if .Values.tls.existingSecret }}
-      - {name: tls-secret, secret: {secretName: {{ .Values.tls.existingSecret | quote }}}}
+      {{- if $tlsSecret }}
+      - {name: tls-secret, secret: {secretName: {{ $tlsSecret | quote }}}}
       {{- end }}
       {{- end }}
       {{- if ne $mtls "off" }}

@@ -51,7 +51,8 @@ mtls:
   secretName: ""
 
 # Envoy / Gateway API HTTPRoute in front of the API (attach to an existing Gateway).
-# Off by default. See Netra docs/envoy-gateway.md for the same shape.
+# Off by default. Prefer envoyGateway.* to create a dedicated Envoy Gateway.
+# See docs/envoy-gateway.md.
 gateway:
   enabled: false
   # Gateway to attach to, e.g. [{name: eg, namespace: envoy-gateway-system}].
@@ -75,8 +76,41 @@ gateway:
     enabled: false
     useClientProtocol: true
 
+# First-class Envoy Gateway front door (recommended Gateway API path).
+# Creates EnvoyProxy + Gateway (GatewayClass eg) + HTTPRoute + stable TLS Secret
+# + BackendTLSPolicy. Use this for cloud-native / microservices edge traffic
+# management (gRPC/HTTP3-ready Envoy data plane) — especially as Ingress Nginx
+# Controllers are retiring in favor of Gateway API.
+# Requires Envoy Gateway installed (GatewayClass "eg"). Off by default; NodePort
+# :30899 remains the direct lab path. Enable with --envoy-gateway on deploy.
+envoyGateway:
+  enabled: false
+  gatewayClassName: eg
+  name: kavach
+  # Public hostname for the HTTPS listener (sslip.io-friendly if addressHint set).
+  hostname: ""
+  # Used only to build a default hostname when hostname is empty.
+  addressHint: "80.79.5.173"
+  path: /
+  requestTimeout: "0s"
+  httpRedirect: true
+  httpsPort: 8443
+  httpPort: 8080
+  httpsNodePort: 30943
+  httpNodePort: 30980
+  serviceType: NodePort
+  tlsSecretName: kavach-tls
+  caConfigMapName: kavach-ca
+  # When true, chart also expects tls.existingSecret=kavach-tls (set by deploy).
+  backendTLS:
+    enabled: true
+    apiVersion: gateway.networking.k8s.io/v1
+  backendTrafficPolicy:
+    enabled: true
+    useClientProtocol: true
+
 # PacketWolf-style: create a Cilium Gateway + optional cert-manager Certificate.
-# Independent of gateway.* (HTTPRoute to an existing Gateway). Off by default.
+# Prefer envoyGateway.* for Envoy Gateway. Off by default.
 gatewayApi:
   enabled: false
   gatewayClassName: cilium

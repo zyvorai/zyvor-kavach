@@ -27,6 +27,15 @@ kavach-auth
 {{- if .Values.tls.enabled -}}https{{- else -}}http{{- end -}}
 {{- end -}}
 
+{{/* Stable TLS Secret: explicit tls.existingSecret, else Envoy Gateway minted secret. */}}
+{{- define "kavach.tlsSecretName" -}}
+{{- if .Values.tls.existingSecret -}}
+{{ .Values.tls.existingSecret }}
+{{- else if .Values.envoyGateway.enabled -}}
+{{ .Values.envoyGateway.tlsSecretName | default "kavach-tls" }}
+{{- end -}}
+{{- end -}}
+
 {{- define "kavach.serverURL" -}}
 {{- default (printf "%s://kavach.%s.svc:%v" (include "kavach.scheme" .) .Release.Namespace .Values.service.port) .Values.agent.server -}}
 {{- end -}}
