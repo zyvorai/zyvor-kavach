@@ -684,6 +684,24 @@ paths:
       summary: Overall compliance grade across CIS/NIST/SOC2/ISO
       security: [{bearerAuth: []}]
       responses: {'200': {description: OK}}
+  /v1/export/findings:
+    get:
+      summary: Download findings (csv, json, ndjson); filters severity, host, rule, since (RFC3339); max 50000 rows
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: format, in: query, schema: {type: string, enum: [csv, json, ndjson]}}
+        - {name: severity, in: query, schema: {type: string}}
+        - {name: host, in: query, schema: {type: string}}
+        - {name: rule, in: query, schema: {type: string}}
+        - {name: since, in: query, schema: {type: string, format: date-time}}
+      responses: {'200': {description: Attachment}, '400': {description: Bad filter}}
+  /v1/export/report:
+    get:
+      summary: Executive posture report (self-contained HTML or JSON)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: format, in: query, schema: {type: string, enum: [html, json]}}
+      responses: {'200': {description: OK}}
   /v1/stream:
     get:
       summary: Server-Sent Events of new detections (event "finding")
