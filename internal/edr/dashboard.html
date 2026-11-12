@@ -1829,7 +1829,7 @@ footer {
       <h3 style="margin:24px 0 0;font-size:17px">Compliance frameworks</h3>
       <div class="obs-gauges" id="obs-gauges"></div>
       <h3 style="margin:24px 0 0;font-size:17px">Live detections</h3>
-      <ul class="obs-feed" id="obs-feed" aria-live="polite"></ul>
+      <ul class="obs-feed" id="obs-feed" aria-live="polite"><li class="obs-empty" id="obs-empty">Waiting for new detections…</li></ul>
     </section>
 
     <section id="page-ebpf" class="page" hidden>
@@ -3320,6 +3320,7 @@ footer {
       obsStream.addEventListener('finding', (ev) => {
         let d; try { d = JSON.parse(ev.data); } catch (_) { return; }
         const feed = $('obs-feed'); if (!feed) return;
+        const empty = $('obs-empty'); if (empty) empty.remove();
         const li = document.createElement('li');
         li.append(severityTag(d.severity), ' ', d.host + ' — ' + d.rule + ' (' + (d.technique_id || '') + ') ');
         feed.prepend(li);
