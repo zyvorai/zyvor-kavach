@@ -253,6 +253,13 @@ func deriveDLP(store *Store) []map[string]any {
 		})
 	}
 	deviceMu.Unlock()
+	for _, row := range Live.List("fim") {
+		out = append(out, map[string]any{
+			"id": "dlp-fim-" + fmt.Sprint(row["id"], row["path"]), "host": row["host"], "channel": "fim",
+			"label": "critical_path", "path": row["path"], "action": row["change"],
+			"severity": row["severity"], "source": "fim",
+		})
+	}
 	return out
 }
 

@@ -23,22 +23,31 @@ func CollectPersistence(host string) []map[string]any {
 	add := func(typ, name, risk string) {
 		out = append(out, map[string]any{"host": host, "type": typ, "name": name, "risk": risk, "source": "agent"})
 	}
-	// systemd unit names
-	for _, dir := range []string{"/etc/systemd/system", "/lib/systemd/system", "/usr/lib/systemd/system"} {
+	// systemd / OpenRC unit names
+	for _, dir := range []string{"/etc/systemd/system", "/lib/systemd/system", "/usr/lib/systemd/system", "/etc/init.d", "/etc/periodic/daily", "/etc/periodic/hourly"} {
 		entries, err := os.ReadDir(dir)
 		if err != nil {
 			continue
 		}
 		for _, e := range entries {
-			if e.IsDir() || !strings.HasSuffix(e.Name(), ".service") {
+			if e.IsDir() {
 				continue
+			}
+			if strings.Contains(dir, "systemd") && !strings.HasSuffix(e.Name(), ".service") {
+				continue
+			}
+			typ := "systemd"
+			if strings.Contains(dir, "init.d") {
+				typ = "openrc"
+			} else if strings.Contains(dir, "periodic") {
+				typ = "periodic"
 			}
 			risk := "low"
 			n := strings.ToLower(e.Name())
 			if strings.Contains(n, "curl") || strings.Contains(n, "nc") || strings.Contains(n, "miner") {
 				risk = "high"
 			}
-			add("systemd", e.Name(), risk)
+			add(typ, e.Name(), risk)
 			if len(out) > 200 {
 				return out
 			}
@@ -113,6 +122,28 @@ func CollectFirewall(host string) []map[string]any {
 	}
 	if len(out) == 0 {
 		try("iptables", "-S")
+	}
+	// Fallback: listening sockets as observed allow rules (containers often lack iptables).
+	if len(out) == 0 {
+		if b, err := os.ReadFile("/proc/net/tcp"); err == nil {
+			lines := strings.Split(string(b), "\n")
+			for i, line := range lines {
+				if i == 0 || strings.TrimSpace(line) == "" {
+					continue
+				}
+				fields := strings.Fields(line)
+				if len(fields) < 4 || fields[3] != "0A" { // listen
+					continue
+				}
+				out = append(out, map[string]any{
+					"id": "fw-listen-" + formatInt(i), "host": host, "name": "listen:" + fields[1],
+					"direction": "in", "proto": "tcp", "action": "allow", "enabled": true, "source": "proc-net",
+				})
+				if len(out) >= 50 {
+					break
+				}
+			}
+		}
 	}
 	return out
 }
@@ -259,6 +290,36 @@ func CollectPackages(host string) []map[string]any {
 			parts := strings.Split(sc.Text(), "\t")
 			if len(parts) >= 2 {
 				addLine(parts[0], parts[1])
+			}
+			if len(out) >= 300 {
+				break
+			}
+		}
+		if len(out) > 0 {
+			return out
+		}
+	}
+	// Alpine
+	if b, err := exec.CommandContext(ctx, "apk", "info", "-v").Output(); err == nil {
+		sc := bufio.NewScanner(bytes.NewReader(b))
+		for sc.Scan() {
+			line := strings.TrimSpace(sc.Text())
+			if line == "" {
+				continue
+			}
+			// name-version-release
+			idx := strings.LastIndex(line, "-")
+			if idx <= 0 {
+				addLine(line, "")
+				continue
+			}
+			rest := line[:idx]
+			ver := line[idx+1:]
+			idx2 := strings.LastIndex(rest, "-")
+			if idx2 > 0 && rest[idx2+1] >= '0' && rest[idx2+1] <= '9' {
+				addLine(rest[:idx2], rest[idx2+1:]+"-"+ver)
+			} else {
+				addLine(rest, ver)
 			}
 			if len(out) >= 300 {
 				break

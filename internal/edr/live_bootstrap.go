@@ -191,29 +191,27 @@ func readFile(p string) string {
 
 func syncSpotlightFromSBOM() {
 	rows := Live.List("sbom")
-	if len(rows) == 0 {
-		return
-	}
 	vulnMu.Lock()
 	defer vulnMu.Unlock()
-	// Prefer live SBOM-linked vulns over demo seeds when packages exist.
 	live := []Vulnerability{}
 	now := time.Now().UTC()
+	interesting := func(name string) bool {
+		low := strings.ToLower(name)
+		return strings.Contains(low, "openssl") || strings.Contains(low, "openssh") ||
+			strings.Contains(low, "curl") || strings.Contains(low, "nginx") ||
+			strings.Contains(low, "kernel") || strings.Contains(low, "libssl") ||
+			strings.Contains(low, "busybox") || strings.Contains(low, "musl")
+	}
 	for _, r := range rows {
 		comp, _ := r["component"].(string)
 		ver, _ := r["version"].(string)
 		host, _ := r["host"].(string)
-		if comp == "" {
+		if comp == "" || !interesting(comp) {
 			continue
 		}
 		sev, _ := r["severity"].(string)
 		if sev == "" {
 			sev = "low"
-		}
-		// Only promote interesting packages into Spotlight.
-		low := strings.ToLower(comp)
-		if !(strings.Contains(low, "openssl") || strings.Contains(low, "openssh") || strings.Contains(low, "curl") || strings.Contains(low, "nginx") || strings.Contains(low, "kernel")) {
-			continue
 		}
 		score := 5.0
 		if sev == "high" || sev == "medium" {
@@ -227,6 +225,22 @@ func syncSpotlightFromSBOM() {
 		})
 		if len(live) >= 50 {
 			break
+		}
+	}
+	// Fallback: well-known binaries present on disk.
+	if len(live) == 0 {
+		host, _ := os.Hostname()
+		for _, p := range []string{"/usr/bin/curl", "/usr/bin/openssl", "/usr/sbin/sshd", "/bin/busybox"} {
+			if !fileExists(p) {
+				continue
+			}
+			name := filepath.Base(p)
+			live = append(live, Vulnerability{
+				ID: "bin-" + name, CVE: "INV-" + strings.ToUpper(name),
+				Severity: "low", Host: host, Product: name,
+				Exploited: false, ExPRTScore: 4.0,
+				Description: "Binary present on host filesystem", DetectedAt: now,
+			})
 		}
 	}
 	if len(live) > 0 {
