@@ -55,6 +55,7 @@ Honest about what ships today:
 | Hunt (FQL-lite) + threat graph | Falcon Hunt / Threat Graph | Shipping |
 | Charlotte-lite assist | Charlotte AI | Assistive triage |
 | **Kavach AI Platform (22+)** | **Beyond Charlotte / Complete** | Chat, NL hunt, narratives, clusters, attack-path, forecast, multi-agent SOC, what-if, Guardian, XDR fusion, autopilot |
+| **World catalog (35+)** | **S1 / Defender / Cortex / Elastic / Trend / Cisco…** | Storyline, AIR, KQL hunt, Ranger, deception, CASB, email, DLP, CNAPP, ASRM, compliance, forensics, FIM, YARA/Sigma, BAS, ZT, MDR, hyperautomation |
 | Cloud / Mobile | Falcon Cloud / Mobile | Preview stubs |
 | XDR via Netra | Insight XDR network | Bridge / poller |
 | SIEM export + connectors | Next-Gen SIEM | Webhook / syslog / NDJSON |

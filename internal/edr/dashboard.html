@@ -1024,6 +1024,7 @@ footer {
         <button type="button" data-page="overwatch" role="tab" aria-selected="false">OverWatch</button>
         <button type="button" data-page="response" role="tab" aria-selected="false">Response</button>
         <button type="button" data-page="ai" role="tab" aria-selected="false">AI Hub</button>
+        <button type="button" data-page="world" role="tab" aria-selected="false">World</button>
         <button type="button" data-page="modules" role="tab" aria-selected="false">Modules</button>
         <button type="button" data-page="integrations" role="tab" aria-selected="false">Integrations</button>
       </div>
@@ -1468,6 +1469,35 @@ footer {
       </div>
     </section>
 
+    <section id="page-world" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Global parity</p>
+        <h1>World catalog</h1>
+        <p class="lede">Capabilities from SentinelOne, Defender, Cortex, Elastic, Trend, Cisco, and peers — observation-only.</p>
+      </header>
+      <div class="work-panel">
+        <h3>Storyline / KQL hunt</h3>
+        <div class="work-grid">
+          <div class="field field--wide">
+            <label for="world-kql">KQL-lite</label>
+            <input class="input-field" id="world-kql" type="text" placeholder='Findings | where Severity == "high"' autocomplete="off">
+          </div>
+        </div>
+        <div class="work-actions">
+          <button type="button" class="primary" id="world-kql-run">Run hunt</button>
+          <button type="button" class="secondary" id="world-story-btn">Load storyline</button>
+        </div>
+        <pre class="token-box" id="world-out" style="white-space:pre-wrap;max-height:220px;overflow:auto;margin-top:12px" hidden></pre>
+        <p class="work-msg" id="world-msg" role="status"></p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Capability</th><th>Vendors</th><th>Status</th><th>Note</th></tr></thead>
+          <tbody id="world-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
     <section id="page-modules" class="page" hidden>
       <header class="page-hero">
         <p class="apple-eyebrow">Platform</p>
@@ -1571,7 +1601,7 @@ footer {
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ai', 'modules', 'integrations'];
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ai', 'world', 'modules', 'integrations'];
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -2146,6 +2176,47 @@ footer {
     });
   }
 
+  function renderWorld(payload) {
+    const mods = (payload && payload.modules) || payload || [];
+    const tbody = $('world-rows');
+    tbody.innerHTML = '';
+    (mods || []).forEach((m) => {
+      tableRow(tbody, [m.name || '—', (m.vendors || []).join(', '), statusTag(m.status || 'active'), m.note || '—']);
+    });
+  }
+
+  async function runWorldKQL() {
+    const query = ($('world-kql').value || '').trim();
+    try {
+      const res = await request('/v1/hunt/kql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+      });
+      $('world-out').hidden = false;
+      $('world-out').textContent = JSON.stringify(res, null, 2);
+      $('world-msg').className = 'work-msg is-ok';
+      $('world-msg').textContent = (res.count || 0) + ' rows';
+    } catch (e) {
+      $('world-msg').className = 'work-msg is-error';
+      $('world-msg').textContent = e.message || 'KQL failed';
+    }
+  }
+
+  async function loadStoryline() {
+    try {
+      const id = (cache.findings[0] && cache.findings[0].id) || '';
+      const res = await request('/v1/storyline' + (id ? ('?id=' + encodeURIComponent(id)) : ''));
+      $('world-out').hidden = false;
+      $('world-out').textContent = JSON.stringify(res, null, 2);
+      $('world-msg').className = 'work-msg is-ok';
+      $('world-msg').textContent = 'Storyline loaded';
+    } catch (e) {
+      $('world-msg').className = 'work-msg is-error';
+      $('world-msg').textContent = e.message || 'Storyline failed';
+    }
+  }
+
   function renderAICaps(payload) {
     const caps = (payload && payload.capabilities) || payload || [];
     const tbody = $('ai-cap-rows');
@@ -2485,7 +2556,7 @@ footer {
         renderTimeline([], []);
       }
 
-      const [siem, sensor, detections, hosts, actors, iocs, idEvents, idEntities, vulns, assets, ow, fusion, modules, report, aiCaps, aiClusters, aiForecast] = await Promise.all([
+      const [siem, sensor, detections, hosts, actors, iocs, idEvents, idEntities, vulns, assets, ow, fusion, modules, report, aiCaps, aiClusters, aiForecast, world] = await Promise.all([
         request('/v1/siem/status'),
         request('/v1/sensor'),
         request('/v1/detections'),
@@ -2503,6 +2574,7 @@ footer {
         request('/v1/ai/capabilities'),
         request('/v1/ai/cluster'),
         request('/v1/ai/forecast'),
+        request('/v1/world/modules'),
       ]);
       renderIntegrations(siem || {}, sensor || {});
       renderDetections(detections);
@@ -2517,6 +2589,7 @@ footer {
       renderAICaps(aiCaps);
       renderAIClusters(aiClusters);
       renderAIForecast(aiForecast);
+      renderWorld(world);
       if (report) {
         countUp($('m-ow'), report.overwatch_open || 0);
         countUp($('m-cve'), report.critical_cves || 0);
@@ -2562,6 +2635,8 @@ footer {
   $('ai-autopilot-btn').addEventListener('click', runAIAutopilot);
   $('ai-nl-run').addEventListener('click', runAINLHunt);
   $('ai-chat-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendAIChat(); });
+  $('world-kql-run').addEventListener('click', runWorldKQL);
+  $('world-story-btn').addEventListener('click', loadStoryline);
   $('incident-transition').addEventListener('click', transitionIncident);
   $('incident-finding').addEventListener('change', () => {
     selectedFindingId = $('incident-finding').value || '';

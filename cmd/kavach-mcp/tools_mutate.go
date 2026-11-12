@@ -75,6 +75,14 @@ func registerMutateTools(srv *mcpserver.Server, c *client) error {
 		}, "playbook_id"), bodyFields: true},
 		{name: "kavach_agents_enroll", method: "POST", path: "/v1/agents/enroll", description: "Enroll a host agent (returns one-time token).", schema: objSchema(map[string]any{"host": strProp("Hostname")}, "host"), bodyFields: true},
 		{name: "kavach_agents_revoke", method: "POST", path: "/v1/agents/revoke", description: "Revoke an enrolled host agent.", schema: objSchema(map[string]any{"host": strProp("Hostname")}, "host"), bodyFields: true},
+		{name: "kavach_hunt_kql", method: "POST", path: "/v1/hunt/kql", description: "Advanced hunting KQL-lite query.", schema: objSchema(map[string]any{"query": strProp("KQL-lite query")}, "query"), bodyFields: true},
+		{name: "kavach_forensics_request", method: "POST", path: "/v1/forensics", description: "Request forensic package (ledger only).", schema: objSchema(map[string]any{"host": strProp("Hostname"), "scope": strProp("Scope")}, "host"), bodyFields: true},
+		{name: "kavach_bas_run", method: "POST", path: "/v1/bas", description: "Schedule BAS simulation (ledger only).", schema: objSchema(map[string]any{"scenario": strProp("Scenario name")}, "scenario"), bodyFields: true},
+		{name: "kavach_itsm_create", method: "POST", path: "/v1/itsm/tickets", description: "Create ITSM ticket ledger entry.", schema: objSchema(map[string]any{"title": strProp("Title"), "system": strProp("jira|servicenow")}, "title"), bodyFields: true},
+		{name: "kavach_watchlist_create", method: "POST", path: "/v1/watchlists", description: "Create entity watchlist.", schema: objSchema(map[string]any{"name": strProp("Name"), "type": strProp("user|host|ip")}, "name"), bodyFields: true},
+		{name: "kavach_exclusion_create", method: "POST", path: "/v1/exclusions", description: "Create detection exclusion.", schema: objSchema(map[string]any{"pattern": strProp("Pattern"), "reason": strProp("Reason")}, "pattern"), bodyFields: true},
+		{name: "kavach_rule_create", method: "POST", path: "/v1/rules", description: "Create custom detection rule.", schema: objSchema(map[string]any{"name": strProp("Name"), "query": strProp("Query")}, "name", "query"), bodyFields: true},
+		{name: "kavach_deception_trigger", method: "POST", path: "/v1/deception/trigger", description: "Mark deception decoy as triggered.", schema: objSchema(map[string]any{"id": strProp("Decoy ID")}, "id"), bodyFields: true},
 	}
 	for _, t := range tools {
 		if err := registerEndpointTool(srv, c, t); err != nil {

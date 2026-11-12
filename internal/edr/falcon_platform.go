@@ -45,6 +45,7 @@ func FalconModules() []FalconModule {
 		{ID: "mobile", Name: "Mobile", CrowdStrike: "Falcon for Mobile", Status: "preview", APIs: []string{"/v1/mobile/devices"}, Note: "Mobile device inventory stub"},
 		{ID: "audit", Name: "Audit & Reports", CrowdStrike: "Audit Logs / Dashboards", Status: "active", APIs: []string{"/v1/audit", "/v1/reports/summary"}, Note: "Console audit + SOC summary"},
 		{ID: "connectors", Name: "Connectors", CrowdStrike: "Falcon Connectors", Status: "active", APIs: []string{"/v1/connectors"}, Note: "Third-party data source registry"},
+		{ID: "world", Name: "Global XDR Catalog", CrowdStrike: "Beyond Falcon (world)", Status: "active", APIs: []string{"/v1/world/modules"}, Note: "SentinelOne/Defender/Cortex/Elastic/… parity map"},
 	}
 }
 
@@ -81,4 +82,5 @@ func RegisterFalconPlatform(mux *http.ServeMux, token string, store *Store, regi
 	RegisterCloudMobile(mux, token)
 	RegisterCharlotteAssist(mux, token, store)
 	RegisterAIPlatform(mux, token, store)
+	RegisterWorldPlatform(mux, token, store, registry)
 }
