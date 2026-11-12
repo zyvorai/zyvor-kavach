@@ -1202,6 +1202,23 @@ paths:
       summary: Delete a saved search by id query parameter
       security: [{bearerAuth: []}]
       responses: {'204': {description: Deleted}, '404': {description: Not found}}
+  /v1/queries/library:
+    get:
+      summary: Curated ready-made queries (filters tactic, tag, q); languages fql-lite, kql-lite, console-filter
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/queries/library/{id}:
+    get:
+      summary: One library query
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}]
+      responses: {'200': {description: OK}, '404': {description: Not found}}
+  /v1/queries/library/{id}/save:
+    post:
+      summary: Copy a library query into the caller's saved searches (journaled)
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}]
+      responses: {'201': {description: Created}, '400': {description: Limit reached}, '404': {description: Not found}}
   /v1/notes:
     get:
       summary: List notes for a finding (finding_id query parameter)
