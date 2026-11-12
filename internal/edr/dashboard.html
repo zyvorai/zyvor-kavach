@@ -1318,6 +1318,11 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
             <button type="button" data-page="canaries" role="menuitem">Canaries</button>
             <button type="button" data-page="governance" role="menuitem">Governance</button>
             <button type="button" data-page="tuning" role="menuitem">Tuning</button>
+            <button type="button" data-page="itdr" role="menuitem">Identity threats</button>
+            <button type="button" data-page="vulns" role="menuitem">Vulnerabilities</button>
+            <button type="button" data-page="cases" role="menuitem">Cases</button>
+            <button type="button" data-page="huntpacks" role="menuitem">Hunt packs</button>
+            <button type="button" data-page="ransomware" role="menuitem">Ransomware</button>
           </div>
         </div>
       </div>
@@ -2747,6 +2752,169 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     </section>
     <!-- === end ops-intel pages === -->
 
+    <!-- === itdr / vulns / cases / huntpacks / ransomware pages === -->
+    <section id="page-itdr" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Identity threats</p>
+        <h1>Identity threat detection.</h1>
+        <p class="lede">Credential theft, Kerberoasting, pass-the-hash, impossible travel and privileged use. Observe-only.</p>
+      </header>
+      <p class="work-msg" id="itdr-msg" role="status"></p>
+      <p class="hint" id="itdr-summary">Loading summary…</p>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">User risk</h3>
+        <div class="px-actions"><label for="itdr-priv-only" class="hint">Privileged only</label><input type="checkbox" id="itdr-priv-only"></div>
+        <table><thead><tr><th>User</th><th>Score</th><th>Level</th><th>Privileged</th><th>Indicators</th><th>Factors</th></tr></thead><tbody id="itdr-risk-rows"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Indicators</h3>
+        <div class="field"><label for="itdr-kind">Kind</label><select class="select-field" id="itdr-kind"><option value="">All</option><option value="credential-dumping">credential-dumping</option><option value="kerberoasting">kerberoasting</option><option value="pass-the-hash">pass-the-hash</option><option value="impossible-travel">impossible-travel</option><option value="odd-hour-login">odd-hour-login</option><option value="privileged-usage">privileged-usage</option></select></div>
+        <table><thead><tr><th>Time</th><th>Kind</th><th>User</th><th>Host</th><th>Severity</th><th>Detail</th></tr></thead><tbody id="itdr-ind-rows"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px" id="itdr-tl-title">User timeline</h3>
+        <p class="hint">Select a user in the risk table.</p>
+        <table><thead><tr><th>Time</th><th>Source</th><th>Kind</th><th>Host</th><th>Detail</th></tr></thead><tbody id="itdr-tl-rows"></tbody></table>
+      </div>
+    </section>
+
+    <section id="page-vulns" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Vulnerabilities</p>
+        <h1>Vulnerabilities and SBOM.</h1>
+        <p class="lede">Installed software matched against advisories. Remediation is advice only; nothing is patched.</p>
+      </header>
+      <p class="work-msg" id="vm-msg" role="status"></p>
+      <p class="hint" id="vm-source"></p>
+      <div class="work-grid">
+        <div class="field"><label for="vm-host">Host filter</label><input class="input-field" id="vm-host" type="text" autocomplete="off" placeholder="hostname"></div>
+        <div class="field px-actions"><button type="button" id="vm-apply" class="secondary">Apply</button><button type="button" id="vm-sbom">Download SBOM</button></div>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Exposure by host</h3>
+        <table><thead><tr><th>Host</th><th>Exposure score</th><th>Vulnerabilities</th></tr></thead><tbody id="vm-exp-rows"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Top vulnerable packages</h3>
+        <table><thead><tr><th>Package</th><th>Affected hosts</th><th>Max CVSS</th><th>CVEs</th><th>Guidance</th></tr></thead><tbody id="vm-top-rows"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Findings</h3>
+        <table><thead><tr><th>Host</th><th>Package</th><th>Version</th><th>CVE</th><th>CVSS</th><th>Fixed in</th><th>Summary</th></tr></thead><tbody id="vm-find-rows"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Advisories</h3>
+        <table><thead><tr><th>CVE</th><th>Package</th><th>Fixed in</th><th>CVSS</th><th>Summary</th></tr></thead><tbody id="vm-adv-rows"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Software inventory</h3>
+        <table><thead><tr><th>Host</th><th>Component</th><th>Version</th></tr></thead><tbody id="vm-sw-rows"></tbody></table>
+      </div>
+    </section>
+
+    <section id="page-cases" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Cases</p>
+        <h1>Incidents and cases.</h1>
+        <p class="lede">Correlated incidents, case tracking, SLA clocks and exportable reports.</p>
+      </header>
+      <p class="work-msg" id="cs-msg" role="status"></p>
+      <div class="work-panel"><h3>New case</h3>
+        <div class="work-grid">
+          <div class="field"><label for="cs-title">Title</label><input class="input-field" id="cs-title" type="text" maxlength="200" autocomplete="off"></div>
+          <div class="field"><label for="cs-sev">Severity</label><select class="select-field" id="cs-sev"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="critical">Critical</option></select></div>
+          <div class="field"><label for="cs-assignee">Assignee</label><input class="input-field" id="cs-assignee" type="text" autocomplete="off"></div>
+          <div class="field"><label for="cs-notes">Notes</label><input class="input-field" id="cs-notes" type="text" autocomplete="off"></div>
+          <div class="field px-actions"><button type="button" id="cs-create">Create case</button></div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Correlated incidents</h3>
+        <table><thead><tr><th>Incident</th><th>Severity</th><th>Hosts</th><th>Techniques</th><th>Findings</th><th>Window</th><th>Case</th></tr></thead><tbody id="cs-inc-rows"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Cases</h3>
+        <div class="field"><label for="cs-filter">Status</label><select class="select-field" id="cs-filter"><option value="">All</option><option value="open">Open</option><option value="investigating">Investigating</option><option value="contained">Contained</option><option value="closed">Closed</option></select></div>
+        <table><thead><tr><th>ID</th><th>Title</th><th>Severity</th><th>Status</th><th>Assignee</th><th>SLA</th><th>Updated</th></tr></thead><tbody id="cs-rows"></tbody></table>
+      </div>
+      <div class="work-panel" id="cs-detail" hidden><h3 id="cs-d-title">Case</h3>
+        <p class="hint" id="cs-d-meta"></p>
+        <p class="hint" id="cs-d-sla"></p>
+        <div class="work-grid">
+          <div class="field"><label for="cs-d-status">Status</label><select class="select-field" id="cs-d-status"><option value="open">Open</option><option value="investigating">Investigating</option><option value="contained">Contained</option></select></div>
+          <div class="field"><label for="cs-d-sevsel">Severity</label><select class="select-field" id="cs-d-sevsel"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option></select></div>
+          <div class="field"><label for="cs-d-assignee">Assignee</label><input class="input-field" id="cs-d-assignee" type="text" autocomplete="off"></div>
+          <div class="field px-actions"><button type="button" id="cs-d-save">Save changes</button><button type="button" id="cs-d-export" class="secondary">Export markdown</button><button type="button" id="cs-d-close" class="secondary">Hide</button></div>
+        </div>
+        <div class="work-grid">
+          <div class="field"><label for="cs-d-resolution">Resolution</label><input class="input-field" id="cs-d-resolution" type="text" autocomplete="off"></div>
+          <div class="field px-actions" id="cs-d-closeslot"></div>
+        </div>
+        <h3>Timeline</h3>
+        <table><thead><tr><th>Time</th><th>Actor</th><th>Kind</th><th>Detail</th></tr></thead><tbody id="cs-d-tl"></tbody></table>
+        <h3>Comments</h3>
+        <table><thead><tr><th>Time</th><th>Author</th><th>Comment</th></tr></thead><tbody id="cs-d-cm"></tbody></table>
+        <div class="work-grid">
+          <div class="field"><label for="cs-d-comment">Add comment</label><input class="input-field" id="cs-d-comment" type="text" autocomplete="off"></div>
+          <div class="field px-actions"><button type="button" id="cs-d-addcm">Post comment</button></div>
+        </div>
+        <pre class="px-pre" id="cs-d-md" hidden></pre>
+      </div>
+    </section>
+
+    <section id="page-huntpacks" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Hunt packs</p>
+        <h1>Hunt packs and schedules.</h1>
+        <p class="lede">Run prepared hunts over findings and events, schedule them, and review history.</p>
+      </header>
+      <p class="work-msg" id="hp-msg" role="status"></p>
+      <div class="px-actions"><button type="button" id="hp-runall">Run all packs</button></div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Packs</h3>
+        <table><thead><tr><th>Name</th><th>Technique</th><th>Tactic</th><th>Terms</th><th>Actions</th></tr></thead><tbody id="hp-pack-rows"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Schedules</h3>
+        <table><thead><tr><th>ID</th><th>Pack</th><th>Interval</th><th>Last run</th><th>Action</th></tr></thead><tbody id="hp-sch-rows"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">History</h3>
+        <table><thead><tr><th>Time</th><th>Pack</th><th>Technique</th><th>Finding hits</th><th>Event hits</th><th>Total</th><th>Hosts</th></tr></thead><tbody id="hp-hist-rows"></tbody></table>
+      </div>
+      <div class="work-panel"><h3>Removable media</h3>
+        <p class="hint" id="hp-rem-sum">Loading…</p>
+        <table><thead><tr><th>Host</th><th>Events</th></tr></thead><tbody id="hp-rem-rows"></tbody></table>
+      </div>
+    </section>
+
+    <section id="page-ransomware" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Workload risk</p>
+        <h1>Ransomware and workload risk.</h1>
+        <p class="lede">Ransomware precursors, container posture and lateral movement. Report only.</p>
+      </header>
+      <p class="work-msg" id="rw-msg" role="status"></p>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Ransomware risk</h3>
+        <table><thead><tr><th>Host</th><th>Score</th><th>Level</th><th>Indicators</th></tr></thead><tbody id="rw-risk-rows"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px" id="rw-host-title">Host timeline</h3>
+        <p class="hint">Select a host above.</p>
+        <table><thead><tr><th>Time</th><th>Kind</th><th>Weight</th><th>Detail</th></tr></thead><tbody id="rw-host-rows"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Container risk</h3>
+        <table><thead><tr><th>Host</th><th>Score</th><th>Level</th><th>Indicators</th></tr></thead><tbody id="rw-ctr-rows"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Lateral movement edges</h3>
+        <table><thead><tr><th>Source</th><th>Target</th><th>Protocol</th><th>Count</th><th>Last seen</th></tr></thead><tbody id="rw-lat-rows"></tbody></table>
+      </div>
+    </section>
+    <!-- === end itdr / vulns / cases / huntpacks / ransomware pages === -->
+
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
@@ -2817,8 +2985,8 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -2941,7 +3109,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -2984,6 +3152,11 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     if (current === 'canaries' && typeof loadCanaries === 'function') loadCanaries();
     if (current === 'governance' && typeof loadGovernance === 'function') loadGovernance();
     if (current === 'tuning' && typeof loadTuning === 'function') loadTuning();
+    if (current === 'itdr' && typeof loadItdr === 'function') loadItdr();
+    if (current === 'vulns' && typeof loadVulns === 'function') loadVulns();
+    if (current === 'cases' && typeof loadCases === 'function') loadCases();
+    if (current === 'huntpacks' && typeof loadHuntPacks === 'function') loadHuntPacks();
+    if (current === 'ransomware' && typeof loadRansomware === 'function') loadRansomware();
   }
 
   function fmtTime(v) {
@@ -5035,7 +5208,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
   });
 
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
@@ -5657,6 +5830,227 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     catch (e) { setMsg('dg-msg', 'Could not create digest: ' + e.message, true); }
   });
   /* === end ops-intel pages === */
+
+  /* === itdr / vulns / cases / huntpacks / ransomware pages === */
+  function rxSev(s) { return el('span', s || '-', 'tag ' + String(s || '').toLowerCase()); }
+  function rxJoin(a) { return Array.isArray(a) && a.length ? a.join(', ') : '-'; }
+  function rxSave(name, text, type) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([text], { type }));
+    a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+  async function rxText(path) {
+    const res = await fetch(path, { credentials: 'same-origin' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.text();
+  }
+
+  /* identity threat detection */
+  let itdrRisk = [];
+  function itdrRenderRisk() {
+    const only = $('itdr-priv-only').checked;
+    pxFill('itdr-risk-rows', 6, itdrRisk.filter((r) => !only || r.privileged), 'No users', 'No identity activity has been observed yet.', (tb, x) =>
+      tableRow(tb, [x.user, x.score, rxSev(x.level), x.privileged ? 'Yes' : 'No', x.indicators, rxJoin(x.factors)], { onClick: () => itdrTimeline(x.user) }));
+  }
+  async function itdrTimeline(user) {
+    $('itdr-tl-title').textContent = 'User timeline: ' + user;
+    try {
+      const r = await pgApi('/v1/identity/itdr/timeline?user=' + encodeURIComponent(user));
+      pxFill('itdr-tl-rows', 5, r && r.events, 'No events', 'No timeline entries for this user.', (tb, x) => tableRow(tb, [pxTime(x.time), x.source, x.kind, x.host || '-', x.detail]));
+    } catch (e) { pxFail('itdr-tl-rows', 5, 'timeline', e); }
+  }
+  async function itdrIndicators() {
+    const k = $('itdr-kind').value;
+    try {
+      const r = await pgApi('/v1/identity/itdr/indicators' + (k ? '?kind=' + encodeURIComponent(k) : ''));
+      pxFill('itdr-ind-rows', 6, r, 'No indicators', 'No identity threat indicators match.', (tb, x) => tableRow(tb, [pxTime(x.time), x.kind, x.user, x.host || '-', rxSev(x.severity), x.detail]));
+    } catch (e) { pxFail('itdr-ind-rows', 6, 'indicators', e); }
+  }
+  async function loadItdr() {
+    setMsg('itdr-msg', '', false);
+    const [s, r] = await Promise.allSettled([pgApi('/v1/identity/itdr/summary'), pgApi('/v1/identity/itdr/risk')]);
+    if (s.status === 'fulfilled' && s.value) {
+      const v = s.value;
+      const kinds = Object.keys(v.by_kind || {}).map((k) => k + ' ' + v.by_kind[k]).join(', ') || 'none';
+      const lv = Object.keys(v.by_risk_level || {}).map((k) => k + ' ' + v.by_risk_level[k]).join(', ') || 'none';
+      $('itdr-summary').textContent = v.users + ' users, ' + v.indicators + ' indicators, ' + v.privileged_users + ' privileged. Kinds: ' + kinds + '. Risk levels: ' + lv + '. Mode: ' + v.mode + '.';
+    } else $('itdr-summary').textContent = 'Could not load summary: ' + (s.reason && s.reason.message);
+    if (r.status === 'fulfilled') { itdrRisk = r.value || []; itdrRenderRisk(); } else pxFail('itdr-risk-rows', 6, 'user risk', r.reason);
+    itdrIndicators();
+  }
+  $('itdr-kind').addEventListener('change', itdrIndicators);
+  $('itdr-priv-only').addEventListener('change', itdrRenderRisk);
+
+  /* vulnerabilities and sbom */
+  function vmHost() { return $('vm-host').value.trim(); }
+  async function loadVulns() {
+    setMsg('vm-msg', '', false);
+    const h = vmHost(), q = h ? '?host=' + encodeURIComponent(h) : '';
+    const [ex, top, fi, ad, sw] = await Promise.allSettled([pgApi('/v1/vulns/exposure'), pgApi('/v1/vulns/top' + q), pgApi('/v1/vulns/findings' + q), pgApi('/v1/vulns/advisories'), pgApi('/v1/vulns/software' + q)]);
+    if (ex.status === 'fulfilled' && ex.value) {
+      $('vm-source').textContent = 'Advisory source: ' + ex.value.advisory_source + '. Remediation is advice only.';
+      pxFill('vm-exp-rows', 3, (ex.value.hosts || []).filter((x) => !h || x.host === h), 'No hosts', 'No software inventory has been collected.', (tb, x) => tableRow(tb, [x.host, x.exposure_score, x.vulnerabilities]));
+    } else pxFail('vm-exp-rows', 3, 'exposure', ex.reason);
+    if (top.status === 'fulfilled' && top.value) pxFill('vm-top-rows', 5, top.value.top, 'Nothing vulnerable', 'No installed package matches an advisory.', (tb, x) => tableRow(tb, [x.package, x.affected_hosts, x.max_cvss, rxJoin(x.cves), x.remediation_guidance]));
+    else pxFail('vm-top-rows', 5, 'top packages', top.reason);
+    if (fi.status === 'fulfilled' && fi.value) pxFill('vm-find-rows', 7, fi.value.findings, 'No findings', 'No vulnerable packages detected.', (tb, x) => tableRow(tb, [x.host, x.package, x.version, x.cve, x.cvss, x.fixed_in, x.summary]));
+    else pxFail('vm-find-rows', 7, 'findings', fi.reason);
+    if (ad.status === 'fulfilled' && ad.value) pxFill('vm-adv-rows', 5, ad.value.advisories, 'No advisories', 'The advisory dataset is empty.', (tb, x) => tableRow(tb, [x.cve, x.package, x.fixed_in, x.cvss, x.summary]));
+    else pxFail('vm-adv-rows', 5, 'advisories', ad.reason);
+    if (sw.status === 'fulfilled' && sw.value) pxFill('vm-sw-rows', 3, sw.value.software, 'No software', 'No SBOM inventory rows have been reported.', (tb, x) => tableRow(tb, [x.host, x.component, x.version]));
+    else pxFail('vm-sw-rows', 3, 'software', sw.reason);
+  }
+  $('vm-apply').addEventListener('click', loadVulns);
+  $('vm-sbom').addEventListener('click', async () => {
+    const h = vmHost();
+    if (!h) { setMsg('vm-msg', 'Enter a host to download its SBOM.', true); return; }
+    try { const t = await rxText('/v1/sbom/' + encodeURIComponent(h)); rxSave('sbom-' + h + '.cdx.json', t, 'application/json'); setMsg('vm-msg', 'SBOM downloaded.', false); }
+    catch (e) { setMsg('vm-msg', 'Could not download SBOM: ' + e.message, true); }
+  });
+
+  /* incidents and cases */
+  let csOpen = '';
+  function csSla(s) {
+    if (!s) return '-';
+    return s.resolve_breached ? 'Resolve breached' : (s.respond_breached ? 'Respond breached' : s.resolve_remaining_minutes + ' min left');
+  }
+  async function csShow(id) {
+    csOpen = id;
+    try {
+      const c = await pgApi('/v1/cases/' + encodeURIComponent(id));
+      $('cs-detail').hidden = false;
+      $('cs-d-title').textContent = c.id + ': ' + c.title;
+      $('cs-d-meta').textContent = 'Created ' + pxTime(c.created_at) + ', updated ' + pxTime(c.updated_at) + (c.incident_id ? ', incident ' + c.incident_id : '') + (c.tags && c.tags.length ? ', tags ' + c.tags.join(', ') : '') + (c.notes ? '. Notes: ' + c.notes : '');
+      $('cs-d-sla').textContent = 'Status ' + c.status + '. SLA: ' + csSla(c.sla) + (c.sla ? ' (respond due ' + pxTime(c.sla.respond_due) + ', resolve due ' + pxTime(c.sla.resolve_due) + ')' : '') + (c.resolution ? '. Resolution: ' + c.resolution : '');
+      const closed = c.status === 'closed';
+      if (!closed) $('cs-d-status').value = c.status;
+      $('cs-d-sevsel').value = c.severity;
+      $('cs-d-assignee').value = c.assignee || '';
+      $('cs-d-resolution').value = c.resolution || '';
+      $('cs-d-md').hidden = true;
+      const slot = $('cs-d-closeslot'); slot.replaceChildren();
+      if (!closed) slot.appendChild(pxConfirm('Close case', 'Close with the resolution entered?', 'Close case', csCloseCase));
+      pxFill('cs-d-tl', 4, c.timeline, 'No timeline', 'Nothing recorded yet.', (tb, x) => tableRow(tb, [pxTime(x.time), x.actor, x.kind, x.detail]));
+      pxFill('cs-d-cm', 3, c.comments, 'No comments', 'Add the first comment below.', (tb, x) => tableRow(tb, [pxTime(x.time), x.author, x.text]));
+    } catch (e) { setMsg('cs-msg', 'Could not load case: ' + e.message, true); }
+  }
+  async function csPatch(body, okMsg) {
+    try {
+      await pgApi('/v1/cases/' + encodeURIComponent(csOpen), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      setMsg('cs-msg', okMsg, false); await csShow(csOpen); loadCases();
+    } catch (e) { setMsg('cs-msg', 'Update failed: ' + e.message, true); }
+  }
+  async function csCloseCase() {
+    const res = $('cs-d-resolution').value.trim();
+    if (!res) { setMsg('cs-msg', 'A resolution is required to close a case.', true); return; }
+    await csPatch({ status: 'closed', resolution: res }, 'Case closed.');
+  }
+  async function csOpenFromIncident(inc) {
+    try {
+      const c = await pgApi('/v1/cases', pgJSON({ incident_id: inc.id, severity: inc.severity, finding_ids: inc.finding_ids }));
+      setMsg('cs-msg', 'Case ' + c.id + ' created.', false); loadCases(); csShow(c.id);
+    } catch (e) { setMsg('cs-msg', 'Could not create case: ' + e.message, true); }
+  }
+  async function loadCases() {
+    const f = $('cs-filter').value;
+    const [inc, cs] = await Promise.allSettled([pgApi('/v1/incidents/correlated'), pgApi('/v1/cases' + (f ? '?status=' + encodeURIComponent(f) : ''))]);
+    if (inc.status === 'fulfilled') pxFill('cs-inc-rows', 7, inc.value, 'No correlated incidents', 'Findings have not clustered into incidents.', (tb, x) =>
+      tableRow(tb, [x.id, rxSev(x.severity), rxJoin(x.hosts), rxJoin(x.techniques), x.count, pxTime(x.start) + ' to ' + pxTime(x.end),
+        x.case_id ? pgBtn(x.case_id, 'secondary', () => csShow(x.case_id)) : pgBtn('Open case', 'secondary', () => csOpenFromIncident(x))]));
+    else pxFail('cs-inc-rows', 7, 'incidents', inc.reason);
+    if (cs.status === 'fulfilled') pxFill('cs-rows', 7, cs.value, 'No cases', 'Create a case above or from an incident.', (tb, x) =>
+      tableRow(tb, [x.id, x.title, rxSev(x.severity), statusTag(x.status), x.assignee || '-', csSla(x.sla), pxTime(x.updated_at)], { onClick: () => csShow(x.id) }));
+    else pxFail('cs-rows', 7, 'cases', cs.reason);
+  }
+  $('cs-filter').addEventListener('change', loadCases);
+  $('cs-create').addEventListener('click', async () => {
+    const title = $('cs-title').value.trim();
+    if (!title) { setMsg('cs-msg', 'Title is required.', true); return; }
+    try {
+      const c = await pgApi('/v1/cases', pgJSON({ title, severity: $('cs-sev').value, assignee: $('cs-assignee').value.trim(), notes: $('cs-notes').value.trim() }));
+      $('cs-title').value = ''; $('cs-notes').value = '';
+      setMsg('cs-msg', 'Case ' + c.id + ' created.', false); loadCases(); csShow(c.id);
+    } catch (e) { setMsg('cs-msg', 'Could not create case: ' + e.message, true); }
+  });
+  $('cs-d-save').addEventListener('click', () => csPatch({ status: $('cs-d-status').value, severity: $('cs-d-sevsel').value, assignee: $('cs-d-assignee').value.trim() }, 'Case updated.'));
+  $('cs-d-close').addEventListener('click', () => { $('cs-detail').hidden = true; csOpen = ''; });
+  $('cs-d-addcm').addEventListener('click', async () => {
+    const text = $('cs-d-comment').value.trim();
+    if (!text || !csOpen) { setMsg('cs-msg', 'Enter a comment.', true); return; }
+    try { await pgApi('/v1/cases/' + encodeURIComponent(csOpen) + '/comments', pgJSON({ text })); $('cs-d-comment').value = ''; setMsg('cs-msg', 'Comment added.', false); csShow(csOpen); }
+    catch (e) { setMsg('cs-msg', 'Could not add comment: ' + e.message, true); }
+  });
+  $('cs-d-export').addEventListener('click', async () => {
+    if (!csOpen) return;
+    try { const t = await rxText('/v1/cases/' + encodeURIComponent(csOpen) + '/export'); pxShow('cs-d-md', t); rxSave(csOpen + '.md', t, 'text/markdown'); }
+    catch (e) { setMsg('cs-msg', 'Export failed: ' + e.message, true); }
+  });
+
+  /* hunt packs */
+  async function hpRun(id) {
+    try { const r = await pgApi('/v1/hunts/packs/' + encodeURIComponent(id) + '/run', { method: 'POST' }); setMsg('hp-msg', r.name + ': ' + r.total + ' hits (' + r.finding_hits + ' findings, ' + r.event_hits + ' events).', false); loadHuntPacks(); }
+    catch (e) { setMsg('hp-msg', 'Run failed: ' + e.message, true); }
+  }
+  async function hpSchedule(id, sec) {
+    try { await pgApi('/v1/hunts/schedules', pgJSON({ pack_id: id, interval_sec: sec })); setMsg('hp-msg', 'Schedule created.', false); loadHuntPacks(); }
+    catch (e) { setMsg('hp-msg', 'Could not schedule: ' + e.message, true); }
+  }
+  async function hpUnschedule(id) {
+    try { await pgApi('/v1/hunts/schedules?id=' + encodeURIComponent(id), { method: 'DELETE' }); setMsg('hp-msg', 'Schedule deleted.', false); loadHuntPacks(); }
+    catch (e) { setMsg('hp-msg', 'Could not delete: ' + e.message, true); }
+  }
+  async function loadHuntPacks() {
+    const [p, s, h, r] = await Promise.allSettled([pgApi('/v1/hunts/packs'), pgApi('/v1/hunts/schedules'), pgApi('/v1/hunts/history'), pgApi('/v1/devices/removable')]);
+    if (p.status === 'fulfilled' && p.value) pxFill('hp-pack-rows', 5, p.value.packs, 'No packs', 'No hunt packs are defined.', (tb, x) => {
+      const acts = el('span', '', 'px-actions');
+      acts.appendChild(pgBtn('Run', 'secondary', () => hpRun(x.id)));
+      const sel = document.createElement('select'); sel.className = 'select-field'; sel.setAttribute('aria-label', 'Schedule interval for ' + x.name);
+      [['300', 'Every 5 min'], ['3600', 'Hourly'], ['86400', 'Daily']].forEach((o) => { const op = el('option', o[1]); op.value = o[0]; sel.appendChild(op); });
+      acts.appendChild(sel);
+      acts.appendChild(pgBtn('Schedule', 'secondary', () => hpSchedule(x.id, parseInt(sel.value, 10))));
+      tableRow(tb, [x.name, x.technique, x.tactic, rxJoin(x.terms), acts]);
+    });
+    else pxFail('hp-pack-rows', 5, 'packs', p.reason);
+    if (s.status === 'fulfilled' && s.value) pxFill('hp-sch-rows', 5, s.value.schedules, 'No schedules', 'Schedule a pack from the table above.', (tb, x) =>
+      tableRow(tb, [x.id, x.pack_id, x.interval_sec + 's', pxTime(x.last_run), pxConfirm('Delete', 'Delete ' + x.id + '?', 'Delete', () => hpUnschedule(x.id))]));
+    else pxFail('hp-sch-rows', 5, 'schedules', s.reason);
+    if (h.status === 'fulfilled' && h.value) pxFill('hp-hist-rows', 7, (h.value.history || []).slice().reverse(), 'No hunts run', 'Run a pack to see results here.', (tb, x) =>
+      tableRow(tb, [pxTime(x.time), x.name, x.technique, x.finding_hits, x.event_hits, x.total, rxJoin(x.hosts)]));
+    else pxFail('hp-hist-rows', 7, 'history', h.reason);
+    if (r.status === 'fulfilled' && r.value) {
+      const v = r.value;
+      $('hp-rem-sum').textContent = (v.events || 0) + ' removable-media events across ' + (v.hosts || []).length + ' hosts. New devices: ' + rxJoin(v.new_devices) + '. ' + (v.note || '');
+      pxFill('hp-rem-rows', 2, Object.keys(v.by_host || {}).map((k) => ({ host: k, n: v.by_host[k] })), 'No removable media', 'No removable-media activity observed.', (tb, x) => tableRow(tb, [x.host, x.n]));
+    } else { $('hp-rem-sum').textContent = 'Could not load removable media: ' + (r.reason && r.reason.message); pxFail('hp-rem-rows', 2, 'removable media', r.reason); }
+  }
+  $('hp-runall').addEventListener('click', async () => {
+    try { const r = await pgApi('/v1/hunts/run-all', { method: 'POST' }); setMsg('hp-msg', r.packs_run + ' packs run, ' + r.packs_with_hits + ' with hits.', false); loadHuntPacks(); }
+    catch (e) { setMsg('hp-msg', 'Run failed: ' + e.message, true); }
+  });
+
+  /* ransomware and workload risk */
+  function rwInds(list) { return (list || []).length ? list.map((i) => i.kind).join(', ') : '-'; }
+  async function rwHost(host) {
+    $('rw-host-title').textContent = 'Host timeline: ' + host;
+    try {
+      const r = await pgApi('/v1/ransomware/host/' + encodeURIComponent(host));
+      pxFill('rw-host-rows', 4, r && r.timeline, 'No indicators', 'No ransomware indicators for this host.', (tb, x) => tableRow(tb, [pxTime(x.time), x.kind, x.weight, x.detail]));
+    } catch (e) { pxFail('rw-host-rows', 4, 'host timeline', e); }
+  }
+  async function loadRansomware() {
+    setMsg('rw-msg', '', false);
+    const [r, c, l] = await Promise.allSettled([pgApi('/v1/ransomware/risk'), pgApi('/v1/containers/risk'), pgApi('/v1/lateral/edges')]);
+    if (r.status === 'fulfilled' && r.value) pxFill('rw-risk-rows', 4, r.value.hosts, 'No ransomware risk', 'No host shows ransomware indicators.', (tb, x) =>
+      tableRow(tb, [x.host, x.score, rxSev(x.level), (x.timeline || []).length], { onClick: () => rwHost(x.host) }));
+    else pxFail('rw-risk-rows', 4, 'ransomware risk', r.reason);
+    if (c.status === 'fulfilled' && c.value) pxFill('rw-ctr-rows', 4, c.value.hosts, 'No container risk', 'No container posture issues observed.', (tb, x) => tableRow(tb, [x.host, x.score, rxSev(x.level), rwInds(x.indicators)]));
+    else pxFail('rw-ctr-rows', 4, 'container risk', c.reason);
+    if (l.status === 'fulfilled' && l.value) pxFill('rw-lat-rows', 5, l.value.edges, 'No lateral edges', 'No remote logon edges between hosts.', (tb, x) => tableRow(tb, [x.source, x.target, x.protocol, x.count, pxTime(x.last)]));
+    else pxFail('rw-lat-rows', 5, 'lateral edges', l.reason);
+  }
+  /* === end itdr / vulns / cases / huntpacks / ransomware pages === */
 
   const appVisible = () => !$('app').hidden;
   let lastFocus = null;
