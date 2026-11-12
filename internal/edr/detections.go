@@ -134,6 +134,7 @@ func RegisterDetections(mux *http.ServeMux, token string, store *Store) {
 		detectionMu.Lock()
 		detectionStates[body.ID] = detectionState{Status: body.Status, Assignee: body.Assignee}
 		detectionMu.Unlock()
+		recordDetectionTransition(body.ID, body.Status)
 		AppendAudit(token, "detections.triage", body.ID+" -> "+body.Status)
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(body)

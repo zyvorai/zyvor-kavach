@@ -484,7 +484,32 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]int{"correlations": len(findings)})
 	})
-	return mux
+	metrics := NewMetrics()
+	RegisterHealth(mux, store)
+	RegisterATTACK(mux, token, store)
+	RegisterComplianceScore(mux, token, store, registry)
+	RegisterStream(mux, token, store)
+	RegisterRiskTrends(mux, token, store)
+	RegisterFleetHealth(mux, token, store, registry)
+	RegisterPrevalenceGraph(mux, token, store)
+	RegisterIntelFeeds(mux, token, store)
+	alertDispatcher := RegisterAlerts(mux, token, store)
+	RegisterComplianceEvidence(mux, token, store, registry, incidents, alertDispatcher)
+	RegisterExport(mux, token, store, registry)
+	RegisterAnalystWorkspace(mux, token, store)
+	RegisterDetectionLab(mux, token, store)
+	RegisterSOCOps(mux, token, store)
+	RegisterTuningDigest(mux, token, store, alertDispatcher)
+	RegisterPosturePlus(mux, token, store)
+	RegisterDeceptionTokens(mux, token, store)
+	RegisterDataGovernance(mux, token, store, registry)
+	mux.HandleFunc("GET /metrics", func(w http.ResponseWriter, r *http.Request) {
+		if !requireAuth(w, r, token) {
+			return
+		}
+		metrics.Write(w, store, registry)
+	})
+	return Harden(metrics.Middleware(mux))
 }
 func Poll(ctx context.Context, scanner *Scanner, endpoint, token string, interval time.Duration, client *http.Client) error {
 	if interval < time.Second {

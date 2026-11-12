@@ -37,6 +37,12 @@ func buildServer(c *client, allowMutations bool) (*mcpserver.Server, error) {
 	if err := registerReadTools(srv, c); err != nil {
 		return nil, err
 	}
+	if err := registerAnalystReadTools(srv, c); err != nil {
+		return nil, err
+	}
+	if err := registerOpsReadTools(srv, c); err != nil {
+		return nil, err
+	}
 	if err := registerPrompts(srv); err != nil {
 		return nil, err
 	}
@@ -48,6 +54,9 @@ func buildServer(c *client, allowMutations bool) (*mcpserver.Server, error) {
 	}
 	if allowMutations {
 		if err := registerMutateTools(srv, c); err != nil {
+			return nil, err
+		}
+		if err := registerOpsMutateTools(srv, c); err != nil {
 			return nil, err
 		}
 	}

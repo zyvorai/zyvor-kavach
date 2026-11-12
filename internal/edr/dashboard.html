@@ -54,6 +54,8 @@
   --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-2: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --scrim: rgba(0, 0, 0, 0.4);
+  --shadow-overlay: 0 20px 60px rgba(0, 0, 0, 0.3);
   --focus-ring: 0 0 0 4px rgba(0, 113, 227, 0.3);
   --hero-glow-a: rgba(0, 113, 227, 0.14);
   --hero-glow-b: rgba(50, 173, 230, 0.12);
@@ -526,6 +528,19 @@ main {
   animation: livePing 1.8s var(--ease-apple) infinite;
 }
 
+.obs-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; margin-top:16px; }
+.obs-tactic { border:1px solid var(--border); border-radius:14px; padding:12px; background:var(--surface-1); }
+.obs-tactic h4 { margin:0 0 8px; font-size:13px; font-weight:600; }
+.obs-tactic.covered { border-color: var(--accent-green); }
+.obs-tactic.hit { border-color: var(--accent-amber); box-shadow:0 0 0 1px var(--accent-amber) inset; }
+.obs-tech { display:block; font-size:12px; color:var(--text-secondary, #6e6e73); margin:2px 0; }
+.obs-gauges { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-top:16px; }
+.obs-gauge { border:1px solid var(--border); border-radius:14px; padding:14px; background:var(--surface-1); }
+.obs-gauge b { display:block; font-size:28px; letter-spacing:-.02em; }
+.obs-bar { height:6px; border-radius:3px; background:var(--border); margin-top:8px; overflow:hidden; }
+.obs-bar > i { display:block; height:100%; background:var(--accent-green); }
+.obs-feed { list-style:none; margin:12px 0 0; padding:0; max-height:260px; overflow:auto; }
+.obs-feed li { padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; }
 .apple-metric-band {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -729,6 +744,35 @@ main {
 .tag.online { background: var(--success-bg); color: var(--success-text); }
 .tag.offline, .tag.stale, .tag.pending { background: var(--warning-bg); color: var(--warning-text); }
 .tag.xdr { background: var(--info-bg); color: var(--apple-link); }
+.tag.delivered { background: var(--success-bg); color: var(--success-text); }
+.tag.failed { background: var(--danger-bg); color: var(--danger); }
+.alert-url { font-family: var(--font-mono, ui-monospace, monospace); word-break: break-all; }
+.risk-bar { display:inline-block; width:96px; height:8px; border-radius:4px; background:var(--fill-tertiary); vertical-align:middle; overflow:hidden; margin-right:8px; }
+.risk-bar > i { display:block; height:100%; background:var(--text-secondary); }
+.risk-bar > i.critical, .risk-bar > i.high { background:var(--danger); }
+.risk-bar > i.medium { background:var(--accent-amber); }
+.risk-toggle { display:inline-flex; gap:6px; flex-wrap:wrap; margin-right:12px; }
+.risk-toggle button[aria-pressed="true"] { background:var(--apple-blue); color:var(--bg-page); border-color:var(--apple-blue); }
+.trend-chart { width:100%; height:auto; display:block; }
+.trend-chart .tc-axis { stroke:var(--hairline-1); }
+.trend-chart text { fill:var(--text-tertiary); font-size:11px; font-family:var(--font); }
+.trend-chart .tc-critical { fill:var(--danger); }
+.trend-chart .tc-high { fill:var(--zyvor-orange); }
+.trend-chart .tc-medium { fill:var(--accent-amber); }
+.trend-chart .tc-low { fill:var(--apple-blue); }
+.trend-legend { display:flex; gap:14px; flex-wrap:wrap; font-size:13px; color:var(--text-secondary); margin:8px 0; }
+.trend-legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; vertical-align:middle; }
+.trend-legend i.tc-critical { background:var(--danger); } .trend-legend i.tc-high { background:var(--zyvor-orange); }
+.trend-legend i.tc-medium { background:var(--accent-amber); } .trend-legend i.tc-low { background:var(--apple-blue); }
+.chip-row { display:flex; gap:8px; flex-wrap:wrap; margin:0 0 12px; align-items:center; }
+.chip-row .chip { display:inline-flex; align-items:center; gap:4px; border:1px solid var(--border); border-radius:var(--radius-pill); background:var(--surface-1); color:var(--text-primary); padding:2px 4px 2px 12px; min-height:32px; font-size:13px; }
+.chip-row .chip button { border:0; background:transparent; color:var(--text-secondary); cursor:pointer; min-width:28px; min-height:28px; font-size:15px; }
+.chip-row .chip button.chip-apply { color:var(--text-primary); padding:0 8px 0 0; font-size:13px; }
+.note-item { border-bottom:1px solid var(--hairline-1); padding:8px 0; font-size:14px; }
+.note-item .note-meta { font-size:12px; color:var(--text-tertiary); display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.note-item .note-text { white-space:pre-wrap; overflow-wrap:anywhere; margin:4px 0 0; }
+.note-form textarea { width:100%; min-height:64px; box-sizing:border-box; }
+.alert-confirm { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .tag.deny { background: var(--danger-bg); color: var(--danger); }
 
 .eyebrow {
@@ -1100,6 +1144,95 @@ footer {
   .navlinks { justify-content: flex-start; }
   .table-wrap th, .table-wrap td { padding: 12px 10px; }
 }
+
+/* UX: palette, help overlay, focus, states */
+a:focus-visible, [tabindex]:focus-visible, summary:focus-visible, select:focus-visible, textarea:focus-visible, .obs-tech.is-link:focus-visible { outline: 2px solid var(--apple-blue); outline-offset: 2px; }
+.skip-link { position: absolute; left: 16px; top: -48px; z-index: 1000; background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--hairline); border-radius: 8px; padding: 8px 14px; }
+.skip-link:focus { top: 8px; }
+.overlay { position: fixed; inset: 0; z-index: 900; display: flex; align-items: flex-start; justify-content: center; padding: 12vh 16px 16px; background: var(--scrim); }
+.overlay[hidden] { display: none; }
+.overlay-card { width: 100%; max-width: 560px; max-height: 76vh; overflow: auto; background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--hairline); border-radius: 14px; box-shadow: var(--shadow-overlay); padding: 12px; }
+.overlay-card h2 { margin: 4px 8px 12px; font-size: var(--fs-h3, 17px); }
+.pal-input { width: 100%; box-sizing: border-box; }
+.pal-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.pal-list li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 15px; }
+.pal-list li small { color: var(--text-tertiary); }
+.pal-list li[aria-selected="true"], .pal-list li:hover { background: var(--surface-hover); }
+.pal-empty { padding: 12px; color: var(--text-secondary); cursor: default; }
+.kbd-table { width: 100%; border-collapse: collapse; }
+.kbd-table td { padding: 8px; border-top: 1px solid var(--hairline); font-size: 14px; }
+.kbd-table td:first-child { white-space: nowrap; }
+kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--fill-tertiary); border: 1px solid var(--hairline); border-radius: 5px; padding: 1px 6px; }
+.obs-tech.is-link { cursor: pointer; background: none; border: 0; padding: 2px 0; text-align: left; font: inherit; font-size: 12px; color: var(--apple-link); width: 100%; white-space: normal; overflow-wrap: anywhere; line-height: 1.35; }
+.obs-tech.is-link:hover { text-decoration: underline; }
+.state-error { text-align: center; padding: 28px 16px; color: var(--text-secondary); }
+.state-error h3 { margin: 0 0 6px; font-size: var(--fs-h3, 17px); color: var(--text-primary); }
+@media (max-width: 640px) { .overlay { padding-top: 6vh; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+/* === soc-ops page === */
+.soc-split { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr)); gap:16px; margin:0 0 16px; }
+.soc-split .table-wrap { margin:0; }
+.soc-sub { margin:0 0 8px; font-size:var(--fs-h3); font-weight:600; }
+.soc-controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:0 0 12px; }
+.soc-controls .select-field { width:auto; min-width:min(100%,220px); }
+.story-burst { margin:0 0 14px; padding:0; list-style:none; border-left:2px solid var(--hairline-1); }
+.story-burst > li { position:relative; padding:6px 0 6px 14px; display:flex; flex-wrap:wrap; gap:6px 10px; align-items:baseline; }
+.story-burst > li::before { content:""; position:absolute; left:-5px; top:14px; width:8px; height:8px; border-radius:50%; background:var(--text-secondary); }
+.story-burst time, .story-meta { color:var(--text-secondary); font-size:12px; }
+.story-sum { flex:1 1 220px; min-width:0; overflow-wrap:anywhere; }
+.story-head { margin:12px 0 4px; font-weight:600; font-size:13px; color:var(--text-secondary); }
+.shift-card dl { display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px; margin:0 0 14px; }
+.shift-card dt { color:var(--text-secondary); font-size:12px; }
+.shift-card dd { margin:0; font-size:22px; font-weight:600; }
+.shift-card ul { margin:0 0 12px; padding-left:20px; }
+.shift-card li { margin:3px 0; overflow-wrap:anywhere; }
+/* === posture page === */
+.pv-detail td { background:var(--fill-tertiary); }
+.pv-break { width:100%; font-size:13px; }
+.pv-break th, .pv-break td { padding:4px 8px; text-align:left; }
+.drift-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); gap:12px; }
+.drift-grid ul { margin:0; padding:0; list-style:none; }
+.drift-grid li { margin:0 0 8px; padding:8px 10px; border:1px solid var(--hairline-1); border-radius:var(--radius-xl); overflow-wrap:anywhere; font-size:13px; }
+.confirm-inline { display:inline-flex; flex-wrap:wrap; gap:6px; align-items:center; }
+/* === soc print === */
+@media print {
+  body.print-shift .nav, body.print-shift footer, body.print-shift .shift-noprint { display:none !important; }
+  body.print-shift main > section:not(#page-soc) { display:none !important; }
+  body.print-shift #page-soc > *:not(#shift-card) { display:none !important; }
+  body.print-shift #shift-card { box-shadow:none; border:0; }
+}
+/* === detection-lab page === */
+.lab-banner { display:inline-block; margin:0 0 12px; padding:4px 12px; border-radius:var(--radius-pill); background:var(--warning-bg); color:var(--warning-text); border:1px solid var(--warning-border); font-size:13px; font-weight:600; }
+.lab-code { width:100%; box-sizing:border-box; min-height:220px; font-family:var(--font-mono); font-size:13px; line-height:1.45; resize:vertical; white-space:pre; overflow:auto; }
+.lab-code--sm { min-height:120px; }
+.lab-trace, .lab-trace ul { list-style:none; margin:4px 0 0; padding-left:16px; border-left:1px solid var(--hairline-1); font-size:13px; }
+.lab-trace li { margin:2px 0; overflow-wrap:anywhere; }
+.lab-trace .lt-yes { color:var(--success-text); font-weight:600; }
+.lab-trace .lt-no { color:var(--text-tertiary); font-weight:600; }
+.lab-event { border:1px solid var(--hairline-1); border-radius:var(--radius-md); padding:10px 14px; margin:8px 0; }
+.lab-event summary { cursor:pointer; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.lab-bars .lb-bar { fill:var(--apple-blue); }
+.lab-bars .lb-axis { stroke:var(--hairline-1); }
+.lab-bars text { fill:var(--text-tertiary); font-size:11px; font-family:var(--font); }
+.lab-chart { width:100%; height:auto; display:block; }
+.lab-stats { display:flex; gap:24px; flex-wrap:wrap; margin:8px 0; }
+.lab-stats span { display:block; font-size:13px; color:var(--text-secondary); }
+.lab-stats b { font-size:20px; font-weight:600; }
+.tag.pass, .tag.ok { background:var(--success-bg); color:var(--success-text); }
+.tag.partial, .tag.manual, .tag.not_modified, .tag.never { background:var(--warning-bg); color:var(--warning-text); }
+.tag.fail, .tag.error, .tag.overdue { background:var(--danger-bg); color:var(--danger); }
+.tag.not_applicable { background:var(--fill-tertiary); color:var(--text-secondary); }
+/* === end detection-lab page === */
+/* === threat-intel feeds page === */
+.feed-err { color:var(--danger); font-size:13px; overflow-wrap:anywhere; }
+/* === end threat-intel feeds page === */
+/* === compliance evidence page === */
+.ev-notice { padding:12px 16px; border:1px solid var(--warning-border); background:var(--warning-bg); color:var(--warning-text); border-radius:var(--radius-md); margin:0 0 16px; font-size:14px; }
+.ev-counts { display:flex; gap:6px 14px; flex-wrap:wrap; margin:0; padding:0; list-style:none; font-size:13px; }
+.ev-clock { font-variant-numeric:tabular-nums; font-weight:600; }
+.ev-clock.is-overdue, tr.ev-overdue td { color:var(--danger); }
+.ev-link { display:inline-flex; align-items:center; min-height:var(--hit-min); }
+/* === end compliance evidence page === */
 </style>
 </head>
 <body>
@@ -1132,6 +1265,7 @@ footer {
 </section>
 
 <div id="app" hidden>
+  <a class="skip-link" href="#main-content">Skip to content</a>
   <nav class="nav" aria-label="Global">
     <div class="nav-inner">
       <button type="button" class="brand" id="brand-home" aria-label="Kavach home">
@@ -1159,11 +1293,19 @@ footer {
             <button type="button" data-page="overwatch" role="menuitem">OverWatch</button>
             <button type="button" data-page="response" role="menuitem">Response</button>
             <button type="button" data-page="ops" role="menuitem">Ops</button>
+            <button type="button" data-page="observe" role="menuitem">Observe</button>
             <button type="button" data-page="ebpf" role="menuitem">eBPF</button>
+            <button type="button" data-page="alerts" role="menuitem">Alerts</button>
+            <button type="button" data-page="risk" role="menuitem">Risk</button>
+            <button type="button" data-page="soc" role="menuitem">SOC</button>
+            <button type="button" data-page="posture" role="menuitem">Posture</button>
             <button type="button" data-page="finance" role="menuitem">Finance</button>
             <button type="button" data-page="sectors" role="menuitem">Sectors</button>
             <button type="button" data-page="modules" role="menuitem">Modules</button>
             <button type="button" data-page="integrations" role="menuitem">Integrations</button>
+            <button type="button" data-page="lab" role="menuitem">Detection lab</button>
+            <button type="button" data-page="feeds" role="menuitem">Intel feeds</button>
+            <button type="button" data-page="evidence" role="menuitem">Evidence</button>
           </div>
         </div>
       </div>
@@ -1179,7 +1321,7 @@ footer {
     </div>
   </nav>
 
-  <main>
+  <main id="main-content" tabindex="-1">
     <section id="page-overview" class="page">
       <div class="apple-section apple-section--hero">
         <div class="status-pill" id="overview-status" role="status">
@@ -1355,7 +1497,15 @@ footer {
       </header>
       <div class="toolbar-pill">
         <input class="input-field" id="detections-filter" type="search" placeholder="Filter detections" aria-label="Filter detections" autocomplete="off">
+        <button type="button" class="secondary" id="ss-save">Save search</button>
       </div>
+      <div class="chip-row" id="ss-chips" aria-label="Saved searches"></div>
+      <div class="field" id="ss-form" hidden>
+        <label for="ss-name">Name for this search</label>
+        <input class="input-field" id="ss-name" type="text" maxlength="80" autocomplete="off">
+        <div class="work-actions"><button type="button" class="primary" id="ss-confirm">Save</button><button type="button" class="secondary" id="ss-cancel">Cancel</button></div>
+      </div>
+      <p class="work-msg" id="ss-msg" role="status"></p>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Severity</th><th>Status</th><th>Rule</th><th>MITRE</th><th>Host</th><th>Score</th><th>Time</th></tr></thead>
@@ -1798,6 +1948,26 @@ footer {
       </div>
     </section>
 
+    <section id="page-observe" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Posture</p>
+        <h1>Observe. Live.</h1>
+        <p class="lede">MITRE ATT&amp;CK coverage, compliance grade, and a live detection feed. Read-only — Kavach never contains.</p>
+      </header>
+      <div class="apple-metric-band" aria-label="Observe summary">
+        <div><span>ATT&amp;CK coverage</span><b id="obs-cov">—</b></div>
+        <div><span>Observed hits</span><b id="obs-hits">—</b></div>
+        <div><span>Compliance</span><b id="obs-grade">—</b></div>
+        <div><span>Live feed</span><b id="obs-live">connecting</b></div>
+      </div>
+      <h3 style="margin:24px 0 0;font-size:17px">ATT&amp;CK matrix</h3>
+      <div class="obs-grid" id="obs-matrix"></div>
+      <h3 style="margin:24px 0 0;font-size:17px">Compliance frameworks</h3>
+      <div class="obs-gauges" id="obs-gauges"></div>
+      <h3 style="margin:24px 0 0;font-size:17px">Live detections</h3>
+      <ul class="obs-feed" id="obs-feed" aria-live="polite"><li class="obs-empty" id="obs-empty">Waiting for new detections…</li></ul>
+    </section>
+
     <section id="page-ebpf" class="page" hidden>
       <header class="page-hero">
         <p class="apple-eyebrow">Sensors</p>
@@ -1826,6 +1996,119 @@ footer {
             <tbody id="ebpf-event-rows"></tbody>
           </table>
         </div>
+      </div>
+    </section>
+
+    <section id="page-risk" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Posture</p>
+        <h1>Risk. Observe only.</h1>
+        <p class="lede">Fleet risk index, ranked hosts and finding trends. Read-only scoring; nothing is contained or changed.</p>
+      </header>
+      <div class="apple-metric-band" aria-label="Fleet risk">
+        <div><span>Fleet risk index</span><b id="rk-index">&mdash;</b></div>
+        <div><span>Critical hosts</span><b id="rk-critical">&mdash;</b></div>
+        <div><span>High hosts</span><b id="rk-high">&mdash;</b></div>
+        <div><span>Medium hosts</span><b id="rk-medium">&mdash;</b></div>
+        <div><span>Low hosts</span><b id="rk-low">&mdash;</b></div>
+      </div>
+      <p class="work-msg" id="risk-msg" role="status"></p>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Ranked hosts</h3>
+        <table>
+          <thead><tr><th>#</th><th>Host</th><th>Risk</th><th>Band</th><th>Findings</th><th>Top rules</th><th>Last seen</th></tr></thead>
+          <tbody id="risk-rows"></tbody>
+        </table>
+      </div>
+      <div class="work-panel" id="trend-panel">
+        <h3>Finding trend</h3>
+        <div class="work-actions">
+          <div class="risk-toggle" role="group" aria-label="Range"><button type="button" class="secondary" data-trend-days="7" aria-pressed="true">7 days</button><button type="button" class="secondary" data-trend-days="14" aria-pressed="false">14 days</button><button type="button" class="secondary" data-trend-days="30" aria-pressed="false">30 days</button></div>
+          <div class="risk-toggle" role="group" aria-label="Bucket"><button type="button" class="secondary" data-trend-bucket="day" aria-pressed="true">By day</button><button type="button" class="secondary" data-trend-bucket="hour" aria-pressed="false">By hour</button></div>
+        </div>
+        <p class="hint" id="trend-summary"></p>
+        <div id="trend-chart"></div>
+        <div class="trend-legend" aria-hidden="true"><span><i class="tc-critical"></i>critical</span><span><i class="tc-high"></i>high</span><span><i class="tc-medium"></i>medium</span><span><i class="tc-low"></i>low</span></div>
+        <details><summary>Show as table</summary>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Period start</th><th>Total</th><th>Critical</th><th>High</th><th>Medium</th><th>Low</th></tr></thead>
+            <tbody id="trend-rows"></tbody>
+          </table></div>
+        </details>
+        <p class="hint" id="trend-rules"></p>
+      </div>
+      <div class="work-panel" id="export-panel">
+        <h3>Export</h3>
+        <p class="hint">Download findings or open the report. Read-only; nothing is changed on the controller.</p>
+        <div class="work-actions">
+          <button type="button" class="secondary" data-export="csv">Findings CSV</button>
+          <button type="button" class="secondary" data-export="json">Findings JSON</button>
+          <button type="button" class="secondary" data-export="ndjson">Findings NDJSON</button>
+          <button type="button" class="secondary" id="export-report">Open report (HTML)</button>
+        </div>
+        <p class="work-msg" id="export-msg" role="status"></p>
+      </div>
+    </section>
+
+    <section id="page-alerts" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Notifications</p>
+        <h1>Alerts. Observe only.</h1>
+        <p class="lede">Route findings to a webhook or Slack. Rules only notify; they never contain, block, or change anything.</p>
+      </header>
+      <div class="work-panel" id="alert-work">
+        <h3>Add rule</h3>
+        <p class="hint">Webhook URLs must be https (http only for loopback). Only the host is shown after saving.</p>
+        <form id="alert-form" novalidate>
+          <div class="work-grid">
+            <div class="field">
+              <label for="alert-sev">Minimum severity</label>
+              <select class="select-field" id="alert-sev">
+                <option value="low">low</option>
+                <option value="medium">medium</option>
+                <option value="high" selected>high</option>
+                <option value="critical">critical</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="alert-type">Type</label>
+              <select class="select-field" id="alert-type">
+                <option value="webhook">webhook</option>
+                <option value="slack">slack</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="alert-rule">Rule contains</label>
+              <input class="input-field" id="alert-rule" type="text" maxlength="128" placeholder="Optional" autocomplete="off">
+            </div>
+            <div class="field">
+              <label for="alert-host">Host contains</label>
+              <input class="input-field" id="alert-host" type="text" maxlength="128" placeholder="Optional" autocomplete="off">
+            </div>
+            <div class="field field--wide">
+              <label for="alert-url">Destination URL</label>
+              <input class="input-field" id="alert-url" type="url" placeholder="https://hooks.example.com/..." autocomplete="off" spellcheck="false">
+            </div>
+          </div>
+          <div class="work-actions">
+            <button type="submit" class="primary" id="alert-add">Add rule</button>
+          </div>
+          <p class="work-msg" id="alert-msg" role="status"></p>
+        </form>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Rules</h3>
+        <table>
+          <thead><tr><th>Min severity</th><th>Type</th><th>Rule</th><th>Host</th><th>Destination</th><th>Created</th><th></th></tr></thead>
+          <tbody id="alert-rule-rows"></tbody>
+        </table>
+      </div>
+      <div class="table-wrap" style="margin-top:24px">
+        <h3 style="margin:0 0 12px;font-size:17px">Deliveries <small class="hint" id="alert-refresh">refreshes every 10s</small></h3>
+        <table>
+          <thead><tr><th>Status</th><th>Time</th><th>Rule</th><th>Finding</th><th>Destination</th><th>Attempts</th><th>Detail</th></tr></thead>
+          <tbody id="alert-delivery-rows"></tbody>
+        </table>
       </div>
     </section>
 
@@ -2046,8 +2329,256 @@ footer {
         </article>
       </div>
     </section>
+    <!-- === soc-ops page === -->
+    <section id="page-soc" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Operations</p>
+        <h1>SOC. Observe only.</h1>
+        <p class="lede">Response metrics, backlog, noisy rules, host storylines and the shift handoff. Read-only analytics; nothing is contained or changed.</p>
+      </header>
+      <div class="work-actions">
+        <div class="risk-toggle" role="group" aria-label="Metrics window"><button type="button" class="secondary" data-soc-days="7" aria-pressed="false">7 days</button><button type="button" class="secondary" data-soc-days="30" aria-pressed="true">30 days</button><button type="button" class="secondary" data-soc-days="90" aria-pressed="false">90 days</button></div>
+      </div>
+      <div class="apple-metric-band" aria-label="SOC metrics">
+        <div><span>MTTA</span><b id="soc-mtta">&mdash;</b></div>
+        <div><span>MTTR</span><b id="soc-mttr">&mdash;</b></div>
+        <div><span>Open backlog</span><b id="soc-backlog">&mdash;</b></div>
+        <div><span>SLA breaches</span><b id="soc-breach">&mdash;</b></div>
+      </div>
+      <p class="work-msg" id="soc-msg" role="status"></p>
+      <div class="table-wrap">
+        <h3 class="soc-sub">Open backlog by severity and age</h3>
+        <table>
+          <thead><tr><th>Severity</th><th>&lt; 1h</th><th>1h&ndash;24h</th><th>1d&ndash;7d</th><th>&gt; 7d</th><th>SLA breaches (ack / resolve)</th></tr></thead>
+          <tbody id="soc-backlog-rows"></tbody>
+        </table>
+      </div>
+      <div class="soc-split" style="margin-top:16px">
+        <div class="table-wrap">
+          <h3 class="soc-sub">Noisiest rules</h3>
+          <table><thead><tr><th>Rule</th><th>Findings</th></tr></thead><tbody id="soc-noisy-rows"></tbody></table>
+        </div>
+        <div class="table-wrap">
+          <h3 class="soc-sub">False-positive rate</h3>
+          <table><thead><tr><th>Rule</th><th>FP</th><th>Total</th><th>Rate</th></tr></thead><tbody id="soc-fp-rows"></tbody></table>
+        </div>
+      </div>
+      <div class="work-panel" id="story-panel">
+        <h3>Host storyline</h3>
+        <p class="hint">Ordered activity for one host, grouped into bursts and tagged by ATT&amp;CK tactic.</p>
+        <div class="soc-controls">
+          <label for="story-host" class="hint" style="margin:0">Host</label>
+          <select class="select-field" id="story-host"></select>
+          <label for="story-hours" class="hint" style="margin:0">Window</label>
+          <select class="select-field" id="story-hours">
+            <option value="24" selected>24 hours</option><option value="72">3 days</option><option value="168">7 days</option><option value="720">30 days</option>
+          </select>
+        </div>
+        <p class="work-msg" id="story-msg" role="status"></p>
+        <div id="story-body"></div>
+      </div>
+      <div class="work-panel shift-card" id="shift-card">
+        <h3>Shift report</h3>
+        <p class="hint" id="shift-sub">Handoff summary for the last 12 hours.</p>
+        <div class="work-actions shift-noprint">
+          <select class="select-field" id="shift-hours" aria-label="Shift length" style="width:auto">
+            <option value="8">8 hours</option><option value="12" selected>12 hours</option><option value="24">24 hours</option><option value="72">3 days</option>
+          </select>
+          <button type="button" class="secondary" id="shift-print">Print report</button>
+        </div>
+        <p class="work-msg" id="shift-msg" role="status"></p>
+        <div id="shift-body"></div>
+      </div>
+    </section>
+
+    <!-- === posture page === -->
+    <section id="page-posture" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Posture</p>
+        <h1>Exposure. Observe only.</h1>
+        <p class="lede">Vulnerability priority, asset criticality and configuration drift. Read-only; nothing is patched or changed on hosts.</p>
+      </header>
+      <div class="apple-metric-band" aria-label="Posture summary">
+        <div><span>Assets registered</span><b id="ps-assets">&mdash;</b></div>
+        <div><span>Vulnerabilities</span><b id="ps-vulns">&mdash;</b></div>
+        <div><span>Score 70+</span><b id="ps-high">&mdash;</b></div>
+        <div><span>Baselined hosts</span><b id="ps-base">&mdash;</b></div>
+        <div><span>Hosts drifting</span><b id="ps-drift">&mdash;</b></div>
+      </div>
+      <p class="work-msg" id="posture-msg" role="status"></p>
+      <div class="table-wrap">
+        <h3 class="soc-sub">Vulnerability priority</h3>
+        <p class="hint" id="pv-model"></p>
+        <table>
+          <thead><tr><th>#</th><th>CVE</th><th>Host</th><th>Product</th><th>Severity</th><th>Score</th><th>Breakdown</th></tr></thead>
+          <tbody id="pv-rows"></tbody>
+        </table>
+      </div>
+      <div class="work-panel" id="asset-panel" style="margin-top:16px">
+        <h3>Asset criticality</h3>
+        <p class="hint">Rate how important a host is (1 low, 5 crown jewel). Higher criticality raises vulnerability priority.</p>
+        <form id="asset-form" novalidate>
+          <div class="work-grid">
+            <div class="field"><label for="asset-host">Host</label><input class="input-field" id="asset-host" type="text" maxlength="128" autocomplete="off" list="asset-host-list"><datalist id="asset-host-list"></datalist></div>
+            <div class="field"><label for="asset-crit">Criticality</label>
+              <select class="select-field" id="asset-crit"><option value="1">1 low</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5 crown jewel</option></select></div>
+            <div class="field"><label for="asset-owner">Owner</label><input class="input-field" id="asset-owner" type="text" maxlength="64" placeholder="Optional" autocomplete="off"></div>
+            <div class="field"><label for="asset-tags">Tags</label><input class="input-field" id="asset-tags" type="text" maxlength="200" placeholder="Comma separated, optional" autocomplete="off"></div>
+          </div>
+          <div class="work-actions"><button type="submit" class="primary" id="asset-add">Save asset</button></div>
+          <p class="work-msg" id="asset-msg" role="status"></p>
+        </form>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Host</th><th>Criticality</th><th>Owner</th><th>Tags</th><th>Updated</th><th></th></tr></thead>
+            <tbody id="asset-rows"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="work-panel" id="drift-panel">
+        <h3>Configuration drift</h3>
+        <p class="hint">Compare a host against its saved baseline.</p>
+        <div class="soc-controls">
+          <label for="drift-host" class="hint" style="margin:0">Host</label>
+          <select class="select-field" id="drift-host"></select>
+          <button type="button" class="secondary" id="drift-baseline">Take baseline</button>
+        </div>
+        <p class="work-msg" id="drift-msg" role="status"></p>
+        <div id="drift-body"></div>
+      </div>
+    </section>
+    <!-- === detection-lab page === -->
+    <section id="page-lab" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Detection as code</p>
+        <h1>Detection lab. Sandbox only.</h1>
+        <p class="lede">Write, test and backtest detection rules against sample and stored telemetry. Rules here never go live and never contain anything.</p>
+        <span class="lab-banner">SANDBOX &mdash; rules in this lab never go live</span>
+      </header>
+      <div class="work-panel">
+        <h3>Rule editor</h3>
+        <p class="hint">Rule JSON: id, name, technique, enabled, condition (field/op/value or all/any/not) and optional threshold.</p>
+        <label for="lab-rule" class="hint">Rule JSON</label>
+        <textarea class="input-field lab-code" id="lab-rule" spellcheck="false" autocomplete="off" aria-describedby="lab-msg"></textarea>
+        <div class="work-actions">
+          <button type="button" class="secondary" id="lab-template">Starter template</button>
+          <button type="button" class="primary" id="lab-validate">Validate</button>
+          <button type="button" class="secondary" id="lab-backtest">Backtest</button>
+          <button type="button" class="secondary" id="lab-save">Save to lab</button>
+        </div>
+        <p class="work-msg" id="lab-msg" role="status"></p>
+      </div>
+      <div class="work-panel">
+        <h3>Test against sample events</h3>
+        <p class="hint">JSON array of events (kind, time, host, executable, parent_exe, command, path, destination, uid ...).</p>
+        <label for="lab-events" class="hint">Sample events JSON</label>
+        <textarea class="input-field lab-code lab-code--sm" id="lab-events" spellcheck="false" autocomplete="off"></textarea>
+        <div class="work-actions"><button type="button" class="primary" id="lab-test">Test rule</button></div>
+        <p class="work-msg" id="lab-test-msg" role="status"></p>
+        <div id="lab-test-out"></div>
+      </div>
+      <div class="work-panel" id="lab-bt-panel" hidden>
+        <h3>Backtest <small class="hint">sandbox, stored telemetry</small></h3>
+        <div id="lab-bt-out"></div>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Saved lab rules</h3>
+        <p class="work-msg" id="lab-list-msg" role="status"></p>
+        <table>
+          <thead><tr><th>Rule</th><th>Technique</th><th>Enabled</th><th>Updated</th><th>Actions</th></tr></thead>
+          <tbody id="lab-rule-rows"></tbody>
+        </table>
+      </div>
+    </section>
+    <!-- === end detection-lab page === -->
+
+    <!-- === threat-intel feeds page === -->
+    <section id="page-feeds" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Threat intelligence</p>
+        <h1>Intel feeds. Observe only.</h1>
+        <p class="lede">Pull indicators from external feeds into the IOC list. Feeds only add indicators for matching; nothing is blocked or changed.</p>
+      </header>
+      <div class="work-panel">
+        <h3>Add feed</h3>
+        <p class="hint">URLs must be https (http only for loopback). Only the host is shown after saving.</p>
+        <form id="feed-form" novalidate>
+          <div class="work-grid">
+            <div class="field"><label for="feed-name">Name</label><input class="input-field" id="feed-name" type="text" maxlength="64" autocomplete="off"></div>
+            <div class="field"><label for="feed-format">Format</label>
+              <select class="select-field" id="feed-format"><option value="csv">csv</option><option value="plain">plain</option><option value="stix-lite-json">stix-lite-json</option></select></div>
+            <div class="field field--wide"><label for="feed-url">Feed URL</label><input class="input-field" id="feed-url" type="url" placeholder="https://feeds.example.com/iocs.csv" autocomplete="off" spellcheck="false"></div>
+            <div class="field"><label for="feed-interval">Interval (minutes, 15 to 10080)</label><input class="input-field" id="feed-interval" type="number" min="15" max="10080" value="60"></div>
+            <div class="field"><label for="feed-ttl">TTL (days, 0 to 365)</label><input class="input-field" id="feed-ttl" type="number" min="0" max="365" value="30"></div>
+            <div class="field"><label for="feed-tlp">TLP</label>
+              <select class="select-field" id="feed-tlp"><option value="">unset</option><option value="clear">clear</option><option value="white">white</option><option value="green">green</option><option value="amber">amber</option><option value="amber+strict">amber+strict</option><option value="red">red</option></select></div>
+          </div>
+          <div class="work-actions"><button type="submit" class="primary" id="feed-add">Add feed</button></div>
+          <p class="work-msg" id="feed-msg" role="status"></p>
+        </form>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Feeds <small class="hint" id="feed-refresh">refreshes every 30s</small></h3>
+        <table>
+          <thead><tr><th>Name</th><th>Status</th><th>URL</th><th>Format</th><th>Last fetch</th><th>Added</th><th>Expired</th><th>Active</th><th>Error</th><th>Actions</th></tr></thead>
+          <tbody id="feed-rows"></tbody>
+        </table>
+      </div>
+    </section>
+    <!-- === end threat-intel feeds page === -->
+
+    <!-- === compliance evidence page === -->
+    <section id="page-evidence" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Compliance</p>
+        <h1>Evidence. Observe only.</h1>
+        <p class="lede">Map observed signals to framework controls and export an evidence pack for your auditor.</p>
+      </header>
+      <p class="ev-notice" role="note"><strong>Not a certification.</strong> This is supporting evidence from observed telemetry. It does not certify compliance with any framework, and manual controls need your own evidence.</p>
+      <div class="work-panel">
+        <div class="work-grid">
+          <div class="field"><label for="ev-fw">Framework</label>
+            <select class="select-field" id="ev-fw">
+              <option value="cis-v8">CIS Controls v8</option><option value="nist-csf-2">NIST CSF 2.0</option><option value="soc2">SOC 2</option><option value="iso27001">ISO 27001</option><option value="rbi">RBI</option><option value="cert-in">CERT-In</option><option value="dpdp">DPDP</option>
+            </select></div>
+          <div class="field"><a class="apple-text-link ev-link" id="ev-pack" target="_blank" rel="noopener" href="#">Open evidence pack</a></div>
+        </div>
+        <p class="work-msg" id="ev-msg" role="status"></p>
+      </div>
+      <div class="work-panel" id="ev-clock-card">
+        <h3>CERT-In 6-hour clock</h3>
+        <p class="hint" id="ev-clock-note">Open high and critical findings against the 6-hour reporting window. Informational only; Kavach does not file reports.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Finding</th><th>Rule</th><th>Host</th><th>Severity</th><th>Status</th><th>Time remaining</th></tr></thead>
+          <tbody id="ev-clock-rows"></tbody>
+        </table></div>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Controls</h3>
+        <table>
+          <thead><tr><th>Control</th><th>Title</th><th>Status</th><th>Evidence</th></tr></thead>
+          <tbody id="ev-rows"></tbody>
+        </table>
+      </div>
+    </section>
+    <!-- === end compliance evidence page === -->
+
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
+</div>
+
+<div class="overlay" id="palette-root" hidden role="dialog" aria-modal="true" aria-label="Command palette">
+  <div class="overlay-card">
+    <input class="input-field pal-input" id="palette-input" type="search" placeholder="Jump to a page…" aria-label="Search pages" autocomplete="off" role="combobox" aria-expanded="true" aria-controls="palette-list">
+    <ul class="pal-list" id="palette-list" role="listbox" aria-label="Pages"></ul>
+  </div>
+</div>
+<div class="overlay" id="help-root" hidden role="dialog" aria-modal="true" aria-labelledby="help-title">
+  <div class="overlay-card">
+    <h2 id="help-title">Keyboard shortcuts</h2>
+    <table class="kbd-table"><tbody id="help-rows"></tbody></table>
+    <p style="margin:12px 8px 4px"><button type="button" id="help-close">Close</button></p>
+  </div>
 </div>
 
 <div id="drawer-root" hidden>
@@ -2083,6 +2614,16 @@ footer {
         <p class="work-msg" id="ai-score-msg"></p>
       </div>
       <div class="drawer-section">
+        <h3>Analyst notes</h3>
+        <div id="note-list"></div>
+        <div class="note-form">
+          <label for="note-text" class="hint">Add a note (max 2000 characters)</label>
+          <textarea class="input-field" id="note-text" maxlength="2000"></textarea>
+          <div class="work-actions"><button type="button" class="secondary" id="note-add">Add note</button></div>
+        </div>
+        <p class="work-msg" id="note-msg" role="status"></p>
+      </div>
+      <div class="drawer-section">
         <button type="button" class="apple-text-link" id="drawer-to-incident">Use in Incidents Work</button>
       </div>
     </div>
@@ -2092,7 +2633,8 @@ footer {
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'ebpf', 'finance', 'sectors', 'modules', 'integrations'];
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -2215,7 +2757,7 @@ footer {
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'ebpf', 'finance', 'sectors']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -2241,6 +2783,18 @@ footer {
     const toggle = $('nav-browse-toggle');
     if (toggle) toggle.classList.toggle('active', browsePages.has(current));
     closeBrowse();
+    try { localStorage.setItem('kavach-page', current); } catch (_) {}
+    const want = '#/' + current;
+    if (location.hash !== want) { try { history.replaceState(null, '', want); } catch (_) { location.hash = want; } }
+    document.title = 'Kavach · ' + (pageLabels[current] || current);
+    if (current === 'alerts' && typeof loadAlerts === 'function') loadAlerts();
+    if (current === 'detections' && typeof loadSaved === 'function') loadSaved();
+    if (current === 'risk' && typeof loadRisk === 'function') loadRisk();
+    if (current === 'soc' && typeof loadSoc === 'function') loadSoc();
+    if (current === 'posture' && typeof loadPosture === 'function') loadPosture();
+    if (current === 'lab' && typeof loadLab === 'function') loadLab();
+    if (current === 'feeds' && typeof loadFeeds === 'function') loadFeeds();
+    if (current === 'evidence' && typeof loadEvidence === 'function') loadEvidence();
   }
 
   function fmtTime(v) {
@@ -2267,7 +2821,7 @@ footer {
 
   function matchFilter(hay, q) {
     if (!q) return true;
-    return String(hay).toLowerCase().includes(q);
+    return String(hay).toLowerCase().includes(String(q).toLowerCase());
   }
 
   function hasXdr(f) {
@@ -2326,6 +2880,7 @@ footer {
     $('ai-factors').replaceChildren();
     $('ai-score-msg').textContent = '';
     $('drawer-root').hidden = false;
+    if (typeof loadNotes === 'function') loadNotes();
     syncIncidentFindingSelect();
     loadAIScore(finding.id);
   }
@@ -2581,7 +3136,8 @@ footer {
     tbody.innerHTML = '';
     const rows = cache.detections.filter((d) => matchFilter([d.rule, d.host, d.technique_id, d.status, d.severity].join(' '), q));
     if (!rows.length) {
-      listEmpty(tbody, 7, 'No detections', 'Findings become detections with MITRE mapping once agents report.', '', null);
+      if (q) listEmpty(tbody, 7, 'No matches', 'Nothing matches "' + q + '".', 'Clear filter', () => { $('detections-filter').value = ''; renderDetections(cache.detections); });
+      else listEmpty(tbody, 7, 'No detections', 'Findings become detections with MITRE mapping once agents report.', '', null);
       return;
     }
     rows.forEach((d) => {
@@ -2593,8 +3149,15 @@ footer {
         d.host || '—',
         String(d.score != null ? d.score : '—'),
         fmtTime(d.time),
-      ]);
+      ], { onClick: () => openDrawer(findingForDetection(d)) });
     });
+  }
+
+  // A detection maps 1:1 to a finding; fall back to the detection's own fields if the finding is not cached.
+  function findingForDetection(d) {
+    const id = d.finding_id || '';
+    const f = cache.findings.find((x) => x.id === id);
+    return f || { id, rule: d.rule, host: d.host, severity: d.severity, description: d.description, time: d.time, evidence: {} };
   }
 
   function renderHosts(items) {
@@ -3247,6 +3810,94 @@ footer {
     }
   }
 
+  function renderObserve(matrix, score) {
+    const m = matrix || {}, sc = score || {};
+    if ($('obs-cov')) $('obs-cov').textContent = m.coverage_pct != null ? m.coverage_pct + '%' : '—';
+    if ($('obs-hits')) $('obs-hits').textContent = m.observed_hits != null ? String(m.observed_hits) : '—';
+    if ($('obs-grade')) $('obs-grade').textContent = sc.grade ? sc.grade + ' · ' + sc.overall : '—';
+    const grid = $('obs-matrix');
+    if (grid) {
+      grid.replaceChildren();
+      for (const t of (m.tactics || [])) {
+        const card = el('div', '', 'obs-tactic' + (t.covered ? ' covered' : '') + (t.hits ? ' hit' : ''));
+        card.appendChild(el('h4', t.tactic + (t.hits ? ' · ' + t.hits : '')));
+        for (const x of (t.techniques || [])) {
+          const label = x.id + ' ' + x.name + (x.hits ? ' (' + x.hits + ')' : '');
+          const b = el('button', label, 'obs-tech is-link');
+          b.type = 'button';
+          b.setAttribute('aria-label', 'Filter detections by ' + x.id + ' ' + x.name);
+          b.addEventListener('click', () => { $('detections-filter').value = x.id; renderDetections(cache.detections); showPage('detections'); $('detections-filter').focus(); });
+          card.appendChild(b);
+        }
+        if (!(t.techniques || []).length) card.appendChild(el('span', 'No rule yet', 'obs-tech'));
+        grid.appendChild(card);
+      }
+    }
+    const g = $('obs-gauges');
+    if (g) {
+      g.replaceChildren();
+      for (const f of (sc.frameworks || [])) {
+        const c = el('div', '', 'obs-gauge');
+        c.appendChild(el('span', f.framework));
+        c.appendChild(el('b', f.grade + ' · ' + f.score));
+        const bar = el('div', '', 'obs-bar'); const fill = document.createElement('i'); fill.style.width = Math.max(0, Math.min(100, f.score)) + '%'; bar.appendChild(fill); c.appendChild(bar);
+        g.appendChild(c);
+      }
+    }
+  }
+
+  let obsStream = null;
+  function startObserveStream() {
+    if (obsStream || typeof EventSource === 'undefined') return;
+    try {
+      obsStream = new EventSource('/v1/stream');
+      obsStream.onopen = () => { if ($('obs-live')) $('obs-live').textContent = 'live'; };
+      obsStream.onerror = () => { if ($('obs-live')) $('obs-live').textContent = 'reconnecting'; };
+      obsStream.addEventListener('finding', (ev) => {
+        let d; try { d = JSON.parse(ev.data); } catch (_) { return; }
+        const feed = $('obs-feed'); if (!feed) return;
+        const empty = $('obs-empty'); if (empty) empty.remove();
+        const li = document.createElement('li');
+        li.append(severityTag(d.severity), ' ', d.host + ' — ' + d.rule + ' (' + (d.technique_id || '') + ') ');
+        feed.prepend(li);
+        while (feed.children.length > 50) feed.lastChild.remove();
+        loadObserve();
+      });
+    } catch (_) { /* optional */ }
+  }
+
+  function obsError(on) {
+    let box = $('obs-error');
+    if (!on) { if (box) box.remove(); return; }
+    if (box) return;
+    box = document.createElement('div');
+    box.id = 'obs-error';
+    box.className = 'state-error';
+    box.setAttribute('role', 'alert');
+    box.appendChild(el('h3', 'Could not load posture data'));
+    box.appendChild(el('p', 'The controller did not answer. Check the connection and try again.'));
+    const b = el('button', 'Retry', 'primary');
+    b.type = 'button';
+    b.addEventListener('click', () => { b.disabled = true; b.textContent = 'Retrying…'; loadObserve(); });
+    box.appendChild(b);
+    $('obs-matrix').before(box);
+  }
+
+  async function loadObserve() {
+    const mx = $('obs-matrix');
+    if (mx && !mx.children.length) { mx.setAttribute('aria-busy', 'true'); mx.replaceChildren(el('span', 'Loading…', 'obs-tech')); }
+    try {
+      const [matrix, score] = await Promise.all([request('/v1/attack/matrix'), request('/v1/compliance/score')]);
+      if (mx) mx.removeAttribute('aria-busy');
+      renderObserve(matrix, score);
+      obsError(false);
+    } catch (_) {
+      if (mx) { mx.removeAttribute('aria-busy'); mx.replaceChildren(); }
+      renderObserve({}, {});
+      obsError(true);
+    }
+  }
+
   async function load() {
     skeletonRows($('findings-rows'), findingsCols(), 4);
     skeletonRows($('incident-rows'), 6, 3);
@@ -3340,6 +3991,8 @@ footer {
       renderAIClusters(aiClusters);
       renderAIForecast(aiForecast);
       renderWorld(world);
+      loadObserve();
+      startObserveStream();
       try {
         const [ebpfStatus, ebpfHealth, ebpfFeatures, ebpfEvents] = await Promise.all([
           request('/v1/ebpf/status'),
@@ -3517,7 +4170,7 @@ footer {
       $('password').value = '';
       try {
         await load();
-        showPage('overview');
+        showPage(initialPage());
       } catch (_) {
         $('error').textContent = 'Signed in, but the console failed to load data.';
       }
@@ -3527,7 +4180,1132 @@ footer {
     btn.disabled = false;
   });
 
-  showPage('overview');
+  // --- Alerts: rules and deliveries (observe only; notifications) ---
+  let alertConfirmId = '';
+  let alertRules = [];
+  function maskAlertURL(raw) {
+    try {
+      const u = new URL(String(raw));
+      return u.protocol + '//' + u.host + (u.pathname.length > 1 || u.search || u.hash ? '/\u2022\u2022\u2022' : '');
+    } catch (_) { return '\u2022\u2022\u2022'; }
+  }
+  function alertMsg(text, bad) {
+    const m = $('alert-msg');
+    m.textContent = text || '';
+    m.classList.toggle('is-error', !!bad); m.classList.toggle('is-ok', !bad && !!text);
+  }
+  async function alertFetch(path, opts) {
+    const res = await fetch(path, { credentials: 'same-origin', ...opts });
+    if (!res.ok) {
+      let t = '';
+      try { t = (await res.text()).trim(); } catch (_) {}
+      throw new Error(t && t.length < 200 ? t : 'HTTP ' + res.status);
+    }
+    const ct = res.headers.get('content-type') || '';
+    return ct.includes('application/json') ? res.json() : null;
+  }
+  function renderAlertRules() {
+    const tbody = $('alert-rule-rows');
+    if (!alertRules.length) {
+      listEmpty(tbody, 7, 'No alert rules', 'Add a rule above to be notified when findings match.', '', null);
+      return;
+    }
+    tbody.replaceChildren();
+    for (const r of alertRules) {
+      const act = document.createElement('div');
+      act.className = 'alert-confirm';
+      if (alertConfirmId === r.id) {
+        const yes = el('button', 'Delete', 'danger');
+        yes.type = 'button';
+        yes.addEventListener('click', async () => {
+          yes.disabled = true;
+          try {
+            await alertFetch('/v1/alerts/rules?id=' + encodeURIComponent(r.id), { method: 'DELETE' });
+            alertConfirmId = '';
+            alertMsg('Rule deleted.', false);
+          } catch (e) { alertMsg('Delete failed: ' + e.message, true); }
+          loadAlerts();
+        });
+        const no = el('button', 'Cancel', 'secondary');
+        no.type = 'button';
+        no.addEventListener('click', () => { alertConfirmId = ''; renderAlertRules(); });
+        act.append(el('span', 'Delete this rule?'), yes, no);
+      } else {
+        const del = el('button', 'Delete', 'secondary');
+        del.type = 'button';
+        del.setAttribute('aria-label', 'Delete rule ' + r.id);
+        del.addEventListener('click', () => { alertConfirmId = r.id; renderAlertRules(); });
+        act.appendChild(del);
+      }
+      tableRow(tbody, [
+        el('span', r.min_severity, 'tag ' + String(r.min_severity)),
+        r.type, r.rule_contains || '\u2014', r.host_contains || '\u2014',
+        el('span', maskAlertURL(r.url), 'alert-url'), fmtTime(r.created), act,
+      ]);
+    }
+  }
+  function renderAlertDeliveries(list) {
+    const tbody = $('alert-delivery-rows');
+    if (!list.length) {
+      listEmpty(tbody, 7, 'No deliveries yet', 'Notification attempts appear here once a rule matches a finding.', '', null);
+      return;
+    }
+    tbody.replaceChildren();
+    for (const d of list) {
+      const detail = [d.http_status ? 'HTTP ' + d.http_status : '', d.error || ''].filter(Boolean).join(' \u00b7 ') || '\u2014';
+      tableRow(tbody, [
+        el('span', d.status, 'tag ' + (d.status === 'delivered' ? 'delivered' : 'failed')),
+        fmtTime(d.time), d.rule_id, d.finding_id, d.destination_host || '\u2014', d.attempts, detail,
+      ]);
+    }
+  }
+  async function loadAlerts() {
+    try {
+      const [rules, dl] = await Promise.all([alertFetch('/v1/alerts/rules'), alertFetch('/v1/alerts/deliveries')]);
+      alertRules = Array.isArray(rules) ? rules : (rules && rules.rules) || [];
+      renderAlertRules();
+      renderAlertDeliveries((dl && dl.deliveries) || []);
+      $('alert-refresh').textContent = 'updated ' + new Date().toLocaleTimeString() + ' \u00b7 refreshes every 10s';
+    } catch (e) {
+      alertMsg('Could not load alerts: ' + e.message, true);
+    }
+  }
+  $('alert-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const url = $('alert-url').value.trim();
+    const rc = $('alert-rule').value.trim();
+    const hc = $('alert-host').value.trim();
+    if (!url) { alertMsg('Destination URL is required.', true); $('alert-url').focus(); return; }
+    if (rc.length > 128 || hc.length > 128) { alertMsg('filter too long', true); return; }
+    const btn = $('alert-add');
+    btn.disabled = true;
+    try {
+      await alertFetch('/v1/alerts/rules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ min_severity: $('alert-sev').value, type: $('alert-type').value, rule_contains: rc, host_contains: hc, url }),
+      });
+      $('alert-url').value = '';
+      $('alert-rule').value = '';
+      $('alert-host').value = '';
+      alertMsg('Rule added.', false);
+      loadAlerts();
+    } catch (err) {
+      alertMsg(err.message, true);
+    }
+    btn.disabled = false;
+  });
+  setInterval(() => { if (current === 'alerts' && !document.hidden && appVisible()) loadAlerts(); }, 10000);
+
+  // --- Risk, trends, export, notes, saved searches ---
+  async function wsFetch(path, opts) {
+    const res = await fetch(path, { credentials: 'same-origin', ...opts });
+    if (!res.ok) {
+      let t = '';
+      try { t = (await res.text()).trim(); } catch (_) {}
+      throw new Error(t && t.length < 200 ? t : 'HTTP ' + res.status);
+    }
+    const ct = res.headers.get('content-type') || '';
+    return ct.includes('application/json') ? res.json() : null;
+  }
+  function setMsg(id, text, bad) {
+    const m = $(id);
+    m.textContent = text || '';
+    m.classList.toggle('is-error', !!bad); m.classList.toggle('is-ok', !bad && !!text);
+  }
+  let trendDays = 7, trendBucket = 'day';
+  function renderTrend(t) {
+    const buckets = (t && t.buckets) || [];
+    const sevs = ['critical', 'high', 'medium', 'low'];
+    const rows = $('trend-rows');
+    const chart = $('trend-chart');
+    chart.replaceChildren();
+    if (!buckets.length) {
+      listEmpty(rows, 6, 'No trend data', 'Findings will appear here as they are observed.', '', null);
+      $('trend-summary').textContent = '';
+      $('trend-rules').textContent = '';
+      return;
+    }
+    rows.replaceChildren();
+    const delta = t.delta > 0 ? '+' + t.delta : String(t.delta);
+    $('trend-summary').textContent = t.total + ' findings in the last ' + t.days + ' days (' + delta + (t.previous_total ? ', ' + t.delta_pct + '%' : '') + ' vs previous period).';
+    $('trend-rules').textContent = (t.top_rules || []).length ? 'Top rules: ' + t.top_rules.map((r) => r.rule + ' (' + r.count + ')').join(', ') : '';
+    const NS = 'http://www.w3.org/2000/svg';
+    const W = 640, H = 200, L = 32, B = 20, T = 8;
+    const max = Math.max(1, ...buckets.map((b) => b.total || 0));
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.setAttribute('class', 'trend-chart');
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', 'Findings per ' + t.bucket + ' over ' + t.days + ' days, ' + t.total + ' total. A table follows.');
+    const mk = (tag, attrs, text) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); if (text != null) n.textContent = text; return n; };
+    svg.appendChild(mk('line', { x1: L, y1: H - B, x2: W, y2: H - B, class: 'tc-axis' }));
+    svg.appendChild(mk('line', { x1: L, y1: T, x2: L, y2: H - B, class: 'tc-axis' }));
+    svg.appendChild(mk('text', { x: L - 4, y: T + 8, 'text-anchor': 'end' }, String(max)));
+    svg.appendChild(mk('text', { x: L - 4, y: H - B, 'text-anchor': 'end' }, '0'));
+    const slot = (W - L) / buckets.length;
+    const bw = Math.max(1, slot * 0.7);
+    const plotH = H - B - T;
+    buckets.forEach((b, i) => {
+      const x = L + i * slot + (slot - bw) / 2;
+      let y = H - B;
+      const sv = b.severity || {};
+      const g = mk('g', {});
+      g.appendChild(mk('title', {}, fmtTime(b.start) + ': ' + (b.total || 0) + ' findings'));
+      let drawn = 0;
+      for (const sev of sevs) {
+        const n = sv[sev] || 0;
+        if (!n) continue;
+        const h = n / max * plotH;
+        y -= h; drawn += n;
+        g.appendChild(mk('rect', { x: x, y: y, width: bw, height: h, class: 'tc-' + sev }));
+      }
+      if (!drawn && b.total) {
+        const h = b.total / max * plotH;
+        g.appendChild(mk('rect', { x: x, y: H - B - h, width: bw, height: h, class: 'tc-low' }));
+      }
+      svg.appendChild(g);
+      tableRow(rows, [fmtTime(b.start), b.total || 0, sv.critical || 0, sv.high || 0, sv.medium || 0, sv.low || 0]);
+    });
+    const lbl = (i) => { const d = new Date(buckets[i].start); return Number.isNaN(d.getTime()) ? '' : (t.bucket === 'hour' ? d.toISOString().slice(11, 16) : d.toISOString().slice(5, 10)); };
+    svg.appendChild(mk('text', { x: L, y: H - 4 }, lbl(0)));
+    svg.appendChild(mk('text', { x: W, y: H - 4, 'text-anchor': 'end' }, lbl(buckets.length - 1)));
+    chart.appendChild(svg);
+  }
+  async function loadTrends() {
+    try { renderTrend(await wsFetch('/v1/trends?days=' + trendDays + '&bucket=' + trendBucket)); }
+    catch (e) { setMsg('risk-msg', 'Could not load trends: ' + e.message, true); }
+  }
+  async function loadRisk() {
+    setMsg('risk-msg', '', false);
+    try {
+      const [sum, hosts] = await Promise.all([wsFetch('/v1/risk/summary'), wsFetch('/v1/risk/hosts')]);
+      $('rk-index').textContent = sum ? sum.fleet_risk_index + (sum.band ? ' · ' + sum.band : '') : '—';
+      const b = (sum && sum.bands) || {};
+      for (const k of ['critical', 'high', 'medium', 'low']) $('rk-' + k).textContent = String(b[k] || 0);
+      const list = (hosts && hosts.hosts) || [];
+      const tbody = $('risk-rows');
+      if (!list.length) listEmpty(tbody, 7, 'No hosts scored', 'Hosts appear here once findings are observed.', '', null);
+      else {
+        tbody.replaceChildren();
+        for (const h of list) {
+          const bar = el('span', '', 'risk-bar');
+          const fill = el('i', '', h.band);
+          fill.style.width = Math.max(0, Math.min(100, h.risk)) + '%';
+          bar.appendChild(fill);
+          bar.setAttribute('role', 'img');
+          bar.setAttribute('aria-label', 'Risk ' + h.risk + ' of 100');
+          const risk = document.createElement('span');
+          risk.append(bar, String(h.risk));
+          tableRow(tbody, [h.rank, h.host, risk, el('span', h.band, 'tag ' + h.band), h.findings,
+            (h.top_rules || []).map((r) => r.rule + ' (' + r.count + ')').join(', ') || '—', fmtTime(h.last_seen)]);
+        }
+      }
+    } catch (e) { setMsg('risk-msg', 'Could not load risk: ' + e.message, true); }
+    loadTrends();
+  }
+  document.querySelectorAll('[data-trend-days]').forEach((b) => b.addEventListener('click', () => {
+    trendDays = Number(b.getAttribute('data-trend-days'));
+    document.querySelectorAll('[data-trend-days]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+    loadTrends();
+  }));
+  document.querySelectorAll('[data-trend-bucket]').forEach((b) => b.addEventListener('click', () => {
+    trendBucket = b.getAttribute('data-trend-bucket');
+    document.querySelectorAll('[data-trend-bucket]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+    loadTrends();
+  }));
+  document.querySelectorAll('[data-export]').forEach((b) => b.addEventListener('click', async () => {
+    const fmt = b.getAttribute('data-export');
+    b.disabled = true;
+    try {
+      const res = await fetch('/v1/export/findings?format=' + encodeURIComponent(fmt), { credentials: 'same-origin' });
+      if (!res.ok) {
+        let t = ''; try { t = (await res.text()).trim(); } catch (_) {}
+        throw new Error(t && t.length < 200 ? t : 'HTTP ' + res.status);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'kavach-findings.' + fmt;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setMsg('export-msg', 'Downloaded kavach-findings.' + fmt + '.', false);
+    } catch (e) { setMsg('export-msg', 'Export failed: ' + e.message, true); }
+    b.disabled = false;
+  }));
+  $('export-report').addEventListener('click', () => { window.open('/v1/export/report?format=html', '_blank', 'noopener'); });
+
+  // Analyst notes (drawer)
+  let noteConfirmId = '';
+  async function loadNotes() {
+    const fid = selectedFindingId;
+    const box = $('note-list');
+    box.replaceChildren();
+    setMsg('note-msg', '', false);
+    if (!fid) return;
+    try {
+      const r = await wsFetch('/v1/notes?finding_id=' + encodeURIComponent(fid));
+      if (fid !== selectedFindingId) return;
+      const notes = (r && r.notes) || [];
+      if (!notes.length) { box.appendChild(el('p', 'No notes yet.', 'hint')); return; }
+      for (const n of notes) {
+        const item = el('div', '', 'note-item');
+        const meta = el('div', '', 'note-meta');
+        meta.append(el('strong', n.author || 'unknown'), el('span', fmtTime(n.created)));
+        if (noteConfirmId === n.id) {
+          const yes = el('button', 'Delete', 'danger'); yes.type = 'button';
+          yes.addEventListener('click', async () => {
+            yes.disabled = true;
+            try { await wsFetch('/v1/notes?id=' + encodeURIComponent(n.id), { method: 'DELETE' }); noteConfirmId = ''; setMsg('note-msg', 'Note deleted.', false); }
+            catch (e) { setMsg('note-msg', 'Delete failed: ' + e.message, true); }
+            loadNotes();
+          });
+          const no = el('button', 'Cancel', 'secondary'); no.type = 'button';
+          no.addEventListener('click', () => { noteConfirmId = ''; loadNotes(); });
+          meta.append(el('span', 'Delete this note?'), yes, no);
+        } else {
+          const del = el('button', 'Delete', 'secondary'); del.type = 'button';
+          del.setAttribute('aria-label', 'Delete note by ' + (n.author || 'unknown'));
+          del.addEventListener('click', () => { noteConfirmId = n.id; loadNotes(); });
+          meta.appendChild(del);
+        }
+        item.append(meta, el('p', n.text, 'note-text'));
+        box.appendChild(item);
+      }
+    } catch (e) { setMsg('note-msg', 'Could not load notes: ' + e.message, true); }
+  }
+  $('note-add').addEventListener('click', async () => {
+    const text = $('note-text').value.trim();
+    if (!selectedFindingId) return;
+    if (!text) { setMsg('note-msg', 'Note text is required.', true); return; }
+    const btn = $('note-add'); btn.disabled = true;
+    try {
+      await wsFetch('/v1/notes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ finding_id: selectedFindingId, text }) });
+      $('note-text').value = '';
+      setMsg('note-msg', 'Note added.', false);
+      loadNotes();
+    } catch (e) { setMsg('note-msg', e.message, true); }
+    btn.disabled = false;
+  });
+
+  // Saved searches (detections)
+  let savedSearches = [], savedConfirmId = '';
+  function renderSaved() {
+    const row = $('ss-chips');
+    row.replaceChildren();
+    const list = savedSearches.filter((x) => x.scope === 'detections');
+    for (const s of list) {
+      const chip = el('span', '', 'chip');
+      const apply = el('button', s.name, 'chip-apply'); apply.type = 'button';
+      apply.title = s.query || '';
+      apply.setAttribute('aria-label', 'Apply saved search ' + s.name);
+      apply.addEventListener('click', () => { $('detections-filter').value = s.query || ''; renderDetections(cache.detections); });
+      chip.appendChild(apply);
+      if (savedConfirmId === s.id) {
+        const yes = el('button', 'Delete', 'danger'); yes.type = 'button';
+        yes.addEventListener('click', async () => {
+          yes.disabled = true;
+          try { await wsFetch('/v1/saved-searches?id=' + encodeURIComponent(s.id), { method: 'DELETE' }); setMsg('ss-msg', 'Saved search deleted.', false); }
+          catch (e) { setMsg('ss-msg', 'Delete failed: ' + e.message, true); }
+          savedConfirmId = ''; loadSaved();
+        });
+        const no = el('button', 'Cancel', 'secondary'); no.type = 'button';
+        no.addEventListener('click', () => { savedConfirmId = ''; renderSaved(); });
+        chip.append(el('span', 'Delete?'), yes, no);
+      } else {
+        const x = el('button', '×'); x.type = 'button';
+        x.setAttribute('aria-label', 'Delete saved search ' + s.name);
+        x.addEventListener('click', () => { savedConfirmId = s.id; renderSaved(); });
+        chip.appendChild(x);
+      }
+      row.appendChild(chip);
+    }
+  }
+  async function loadSaved() {
+    try { const r = await wsFetch('/v1/saved-searches'); savedSearches = (r && r.saved_searches) || []; renderSaved(); }
+    catch (e) { setMsg('ss-msg', 'Could not load saved searches: ' + e.message, true); }
+  }
+  $('ss-save').addEventListener('click', () => {
+    if (!($('detections-filter').value || '').trim()) { setMsg('ss-msg', 'Type a filter first, then save it.', true); return; }
+    setMsg('ss-msg', '', false);
+    $('ss-form').hidden = false; $('ss-name').focus();
+  });
+  $('ss-cancel').addEventListener('click', () => { $('ss-form').hidden = true; });
+  $('ss-confirm').addEventListener('click', async () => {
+    const name = $('ss-name').value.trim();
+    const query = ($('detections-filter').value || '').trim();
+    if (!name) { setMsg('ss-msg', 'Name is required.', true); return; }
+    try {
+      await wsFetch('/v1/saved-searches', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, query, scope: 'detections' }) });
+      $('ss-name').value = ''; $('ss-form').hidden = true;
+      setMsg('ss-msg', 'Search saved.', false);
+      loadSaved();
+    } catch (e) { setMsg('ss-msg', e.message, true); }
+  });
+
+  // === soc-ops page ===
+  let socDays = 30;
+  function socHosts() {
+    const set = new Set();
+    for (const f of (cache.findings || [])) if (f && f.host) set.add(String(f.host));
+    return Array.from(set).sort();
+  }
+  async function fillHostSelect(sel, extra) {
+    let hosts = socHosts();
+    if (!hosts.length) {
+      try { const r = await wsFetch('/v1/risk/hosts'); hosts = ((r && r.hosts) || []).map((h) => String(h.host)); } catch (_) {}
+    }
+    for (const h of (extra || [])) if (h && !hosts.includes(h)) hosts.push(h);
+    const prev = sel.value;
+    sel.replaceChildren();
+    if (!hosts.length) { const o = el('option', 'No hosts observed yet'); o.value = ''; sel.appendChild(o); return ''; }
+    for (const h of hosts) { const o = el('option', h); o.value = h; sel.appendChild(o); }
+    if (prev && hosts.includes(prev)) sel.value = prev;
+    return sel.value;
+  }
+  function fmtMin(v) {
+    if (v === null || v === undefined) return '—';
+    const n = Number(v);
+    if (!Number.isFinite(n)) return '—';
+    return n >= 120 ? (n / 60).toFixed(1) + ' h' : n.toFixed(1) + ' min';
+  }
+  function renderSoc(m) {
+    $('soc-mtta').textContent = fmtMin(m.mtta_minutes);
+    $('soc-mttr').textContent = fmtMin(m.mttr_minutes);
+    $('soc-backlog').textContent = String(m.open_backlog || 0);
+    const br = m.sla_breaches || {};
+    let nb = 0;
+    for (const k of Object.keys(br)) nb += (br[k].ack || 0) + (br[k].resolve || 0);
+    $('soc-breach').textContent = String(nb);
+    const bl = m.backlog_by_severity || {};
+    const sevs = ['critical', 'high', 'medium', 'low'];
+    Object.keys(bl).forEach((s) => { if (!sevs.includes(s)) sevs.push(s); });
+    const tb = $('soc-backlog-rows');
+    if (!m.open_backlog) listEmpty(tb, 6, 'No open backlog', 'Open findings appear here by severity and age.', '', null);
+    else {
+      tb.replaceChildren();
+      for (const s of sevs) {
+        const b = bl[s] || {}, x = br[s] || {};
+        tableRow(tb, [el('span', s, 'tag ' + s), b.lt_1h || 0, b['1h_24h'] || 0, b['1d_7d'] || 0, b.gt_7d || 0, (x.ack || 0) + ' / ' + (x.resolve || 0)]);
+      }
+    }
+    const noisy = m.top_noisy_rules || [];
+    const nt = $('soc-noisy-rows');
+    if (!noisy.length) listEmpty(nt, 2, 'No findings', 'Rules appear here once findings are observed.', '', null);
+    else { nt.replaceChildren(); for (const r of noisy) tableRow(nt, [r.rule, r.total]); }
+    const fp = (m.false_positive_rules || []).slice(0, 10);
+    const ft = $('soc-fp-rows');
+    if (!fp.length) listEmpty(ft, 4, 'No findings', 'False-positive rates appear once findings are triaged.', '', null);
+    else { ft.replaceChildren(); for (const r of fp) tableRow(ft, [r.rule, r.false_positives, r.total, r.false_positive_rate + '%']); }
+  }
+  async function loadSocMetrics() {
+    setMsg('soc-msg', '', false);
+    try { renderSoc(await wsFetch('/v1/soc/metrics?days=' + socDays)); }
+    catch (e) { setMsg('soc-msg', 'Could not load SOC metrics: ' + e.message, true); }
+  }
+  function renderStory(s) {
+    const body = $('story-body');
+    body.replaceChildren();
+    const steps = (s && s.steps) || [];
+    if (!steps.length) { body.appendChild(el('p', 'No activity for this host in the selected window.', 'hint')); return; }
+    if ((s.tactics || []).length) body.appendChild(el('p', 'Tactics observed: ' + s.tactics.join(' → '), 'hint'));
+    const bursts = new Map();
+    for (const st of steps) { if (!bursts.has(st.burst)) bursts.set(st.burst, []); bursts.get(st.burst).push(st); }
+    for (const [id, list] of bursts) {
+      const meta = (s.bursts || []).find((b) => b.id === id);
+      body.appendChild(el('p', 'Burst ' + id + ' · ' + list.length + ' step(s)' + (meta ? ' · ' + fmtTime(meta.start) : ''), 'story-head'));
+      const ul = el('ul', '', 'story-burst');
+      for (const st of list) {
+        const li = document.createElement('li');
+        const t = document.createElement('time');
+        t.textContent = fmtTime(st.time);
+        if (st.time) t.setAttribute('datetime', st.time);
+        li.appendChild(t);
+        li.appendChild(el('span', st.tactic + (st.phase ? ' (phase ' + st.phase + ')' : ''), 'tag'));
+        if (st.technique_id) li.appendChild(el('span', st.technique_id, 'tag'));
+        if (st.severity) li.appendChild(el('span', st.severity, 'tag ' + st.severity));
+        li.appendChild(el('span', st.kind + (st.rule ? ' · ' + st.rule : ''), 'story-meta'));
+        li.appendChild(el('span', st.summary, 'story-sum'));
+        ul.appendChild(li);
+      }
+      body.appendChild(ul);
+    }
+  }
+  async function loadStory() {
+    const host = $('story-host').value;
+    setMsg('story-msg', '', false);
+    if (!host) { $('story-body').replaceChildren(el('p', 'Pick a host once findings are observed.', 'hint')); return; }
+    try { renderStory(await wsFetch('/v1/storyline/host?host=' + encodeURIComponent(host) + '&hours=' + encodeURIComponent($('story-hours').value))); }
+    catch (e) { setMsg('story-msg', 'Could not load storyline: ' + e.message, true); }
+  }
+  function shiftList(title, items, empty) {
+    const box = document.createElement('div');
+    box.appendChild(el('p', title, 'story-head'));
+    if (!items.length) { box.appendChild(el('p', empty, 'hint')); return box; }
+    const ul = document.createElement('ul');
+    for (const t of items) ul.appendChild(el('li', t));
+    box.appendChild(ul);
+    return box;
+  }
+  function renderShift(r) {
+    const body = $('shift-body');
+    body.replaceChildren();
+    $('shift-sub').textContent = 'Handoff summary for the last ' + (r.hours || '') + ' hours' + (r.generated_at ? ', generated ' + fmtTime(r.generated_at) : '') + '.';
+    const c = r.counts || {};
+    const dl = document.createElement('dl');
+    for (const k of ['new', 'open', 'closed']) {
+      const d = document.createElement('div');
+      d.appendChild(el('dt', k === 'new' ? 'New findings' : k === 'open' ? 'Open' : 'Closed'));
+      d.appendChild(el('dd', c[k] || 0));
+      dl.appendChild(d);
+    }
+    body.appendChild(dl);
+    body.appendChild(shiftList('Highest-risk hosts', (r.highest_risk_hosts || []).map((h) => h.host + ' · risk ' + h.risk + (h.band ? ' (' + h.band + ')' : '')), 'No scored hosts.'));
+    body.appendChild(shiftList('Unresolved criticals', (r.unresolved_criticals || []).map((x) => x.host + ' · ' + x.rule + ' · ' + x.state + ' · ' + fmtTime(x.time)), 'No unresolved critical findings.'));
+    body.appendChild(shiftList('Recommended questions', r.recommended_questions || [], 'None.'));
+  }
+  async function loadShift() {
+    setMsg('shift-msg', '', false);
+    try { renderShift(await wsFetch('/v1/soc/shift-report?hours=' + encodeURIComponent($('shift-hours').value))); }
+    catch (e) { setMsg('shift-msg', 'Could not load shift report: ' + e.message, true); }
+  }
+  async function loadSoc() {
+    loadSocMetrics();
+    loadShift();
+    await fillHostSelect($('story-host'));
+    loadStory();
+  }
+  document.querySelectorAll('[data-soc-days]').forEach((b) => b.addEventListener('click', () => {
+    socDays = Number(b.getAttribute('data-soc-days'));
+    document.querySelectorAll('[data-soc-days]').forEach((o) => o.setAttribute('aria-pressed', o === b ? 'true' : 'false'));
+    loadSocMetrics();
+  }));
+  $('story-host').addEventListener('change', loadStory);
+  $('story-hours').addEventListener('change', loadStory);
+  $('shift-hours').addEventListener('change', loadShift);
+  $('shift-print').addEventListener('click', () => {
+    document.body.classList.add('print-shift');
+    const done = () => { document.body.classList.remove('print-shift'); window.removeEventListener('afterprint', done); };
+    window.addEventListener('afterprint', done);
+    window.print();
+  });
+
+  // === posture page ===
+  let postureConfirm = '';
+  const pvOpen = new Set();
+  let pvItems = [];
+  function renderPosture(s) {
+    const a = (s && s.assets) || {}, v = (s && s.vulnerabilities) || {}, d = (s && s.drift) || {};
+    $('ps-assets').textContent = String(a.registered || 0);
+    $('ps-vulns').textContent = String(v.total || 0);
+    $('ps-high').textContent = String(v.score_70_plus || 0);
+    $('ps-base').textContent = String(d.baselined_hosts || 0);
+    $('ps-drift').textContent = String((d.hosts_with_drift || []).length);
+  }
+  function renderVulns() {
+    const tb = $('pv-rows');
+    if (!pvItems.length) { listEmpty(tb, 7, 'No vulnerabilities', 'Prioritised vulnerabilities appear here once they are observed.', '', null); return; }
+    tb.replaceChildren();
+    for (const v of pvItems) {
+      const open = pvOpen.has(v.id);
+      const btn = el('button', open ? 'Hide' : 'Score', 'secondary');
+      btn.type = 'button';
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btn.setAttribute('aria-label', (open ? 'Hide' : 'Show') + ' score breakdown for ' + (v.cve || v.id));
+      btn.addEventListener('click', () => { if (pvOpen.has(v.id)) pvOpen.delete(v.id); else pvOpen.add(v.id); renderVulns(); });
+      tableRow(tb, [v.rank, v.cve || v.id, v.host, v.product || '—', el('span', v.severity, 'tag ' + String(v.severity).toLowerCase()), Number(v.score).toFixed(1), btn]);
+      if (open) {
+        const tr = document.createElement('tr');
+        tr.className = 'pv-detail';
+        const td = document.createElement('td');
+        td.colSpan = 7;
+        if (v.description) td.appendChild(el('p', v.description, 'hint'));
+        const t = document.createElement('table');
+        t.className = 'pv-break';
+        const th = document.createElement('thead');
+        const hr = document.createElement('tr');
+        for (const h of ['Factor', 'Points', 'Detail']) hr.appendChild(el('th', h));
+        th.appendChild(hr);
+        t.appendChild(th);
+        const bd = document.createElement('tbody');
+        for (const c of (v.breakdown || [])) tableRow(bd, [c.factor, c.points + ' / ' + c.max, c.detail || '—']);
+        t.appendChild(bd);
+        td.appendChild(t);
+        tr.appendChild(td);
+        tb.appendChild(tr);
+      }
+    }
+  }
+  let postureAssets = [];
+  function renderAssets() {
+    const tb = $('asset-rows');
+    const dl = $('asset-host-list');
+    dl.replaceChildren();
+    for (const h of socHosts()) { const o = document.createElement('option'); o.value = h; dl.appendChild(o); }
+    if (!postureAssets.length) { listEmpty(tb, 6, 'No assets rated', 'Add a host above to weight its vulnerabilities by criticality.', '', null); return; }
+    tb.replaceChildren();
+    for (const a of postureAssets) {
+      const act = document.createElement('div');
+      act.className = 'confirm-inline';
+      if (postureConfirm === a.host) {
+        const yes = el('button', 'Delete', 'danger');
+        yes.type = 'button';
+        yes.addEventListener('click', async () => {
+          yes.disabled = true;
+          try { await wsFetch('/v1/posture/assets?host=' + encodeURIComponent(a.host), { method: 'DELETE' }); postureConfirm = ''; setMsg('asset-msg', 'Asset removed.', false); }
+          catch (e) { setMsg('asset-msg', 'Delete failed: ' + e.message, true); }
+          loadPosture();
+        });
+        const no = el('button', 'Cancel', 'secondary');
+        no.type = 'button';
+        no.addEventListener('click', () => { postureConfirm = ''; renderAssets(); });
+        act.append(el('span', 'Delete this asset?'), yes, no);
+      } else {
+        const del = el('button', 'Delete', 'secondary');
+        del.type = 'button';
+        del.setAttribute('aria-label', 'Delete asset ' + a.host);
+        del.addEventListener('click', () => { postureConfirm = a.host; renderAssets(); });
+        act.appendChild(del);
+      }
+      tableRow(tb, [a.host, a.criticality + ' / 5', a.owner || '—', (a.tags || []).join(', ') || '—', fmtTime(a.updated), act]);
+    }
+  }
+  function driftList(title, items) {
+    const box = document.createElement('div');
+    box.appendChild(el('p', title + ' (' + items.length + ')', 'story-head'));
+    if (!items.length) { box.appendChild(el('p', 'None.', 'hint')); return box; }
+    const ul = document.createElement('ul');
+    for (const it of items) {
+      const li = document.createElement('li');
+      li.appendChild(el('span', it.severity_hint || 'low', 'tag ' + (it.severity_hint || 'low')));
+      li.appendChild(el('span', ' ' + it.domain + ' · ' + it.key));
+      const ch = it.before && it.after ? it.before + ' → ' + it.after : (it.after || it.before || '');
+      if (ch) li.appendChild(el('div', ch, 'story-meta'));
+      if (it.reason) li.appendChild(el('div', it.reason, 'story-meta'));
+      ul.appendChild(li);
+    }
+    box.appendChild(ul);
+    return box;
+  }
+  function renderDrift(d) {
+    const body = $('drift-body');
+    body.replaceChildren();
+    if (!d || !d.has_baseline) { body.appendChild(el('p', 'No baseline yet for this host. Use Take baseline to record its current state.', 'hint')); return; }
+    body.appendChild(el('p', 'Baseline taken ' + fmtTime(d.baseline_at) + ' · ' + d.total + ' difference(s)' + (d.highest_severity ? ' · highest ' + d.highest_severity : ''), 'hint'));
+    const g = document.createElement('div');
+    g.className = 'drift-grid';
+    g.append(driftList('Added', d.added || []), driftList('Removed', d.removed || []), driftList('Changed', d.changed || []));
+    body.appendChild(g);
+  }
+  async function loadDrift() {
+    const host = $('drift-host').value;
+    setMsg('drift-msg', '', false);
+    $('drift-baseline').disabled = !host;
+    if (!host) { $('drift-body').replaceChildren(el('p', 'Pick a host once findings are observed.', 'hint')); return; }
+    try { renderDrift(await wsFetch('/v1/posture/drift?host=' + encodeURIComponent(host))); }
+    catch (e) { setMsg('drift-msg', 'Could not load drift: ' + e.message, true); }
+  }
+  async function loadPosture() {
+    setMsg('posture-msg', '', false);
+    try {
+      const [sum, vp, assets] = await Promise.all([wsFetch('/v1/posture/summary'), wsFetch('/v1/posture/vuln-priority'), wsFetch('/v1/posture/assets')]);
+      renderPosture(sum);
+      $('pv-model').textContent = (vp && vp.model) ? 'Model: ' + vp.model : '';
+      pvItems = (vp && vp.items) || [];
+      renderVulns();
+      postureAssets = Array.isArray(assets) ? assets : [];
+      renderAssets();
+    } catch (e) { setMsg('posture-msg', 'Could not load posture: ' + e.message, true); }
+    await fillHostSelect($('drift-host'), postureAssets.map((a) => a.host));
+    loadDrift();
+  }
+  $('drift-host').addEventListener('change', loadDrift);
+  $('drift-baseline').addEventListener('click', async () => {
+    const host = $('drift-host').value;
+    if (!host) return;
+    const btn = $('drift-baseline');
+    btn.disabled = true;
+    try { await wsFetch('/v1/posture/baseline?host=' + encodeURIComponent(host), { method: 'POST' }); setMsg('drift-msg', 'Baseline saved for ' + host + '.', false); loadPosture(); }
+    catch (e) { setMsg('drift-msg', 'Baseline failed: ' + e.message, true); }
+    btn.disabled = false;
+  });
+  $('asset-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const host = $('asset-host').value.trim();
+    if (!host) { setMsg('asset-msg', 'Host is required.', true); $('asset-host').focus(); return; }
+    const tags = $('asset-tags').value.split(',').map((t) => t.trim()).filter(Boolean);
+    const btn = $('asset-add');
+    btn.disabled = true;
+    try {
+      await wsFetch('/v1/posture/assets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ host, criticality: Number($('asset-crit').value), owner: $('asset-owner').value.trim(), tags }) });
+      $('asset-host').value = ''; $('asset-owner').value = ''; $('asset-tags').value = '';
+      setMsg('asset-msg', 'Asset saved.', false);
+      loadPosture();
+    } catch (err) { setMsg('asset-msg', err.message, true); }
+    btn.disabled = false;
+  });
+
+  // --- Command palette, shortcuts, help, hash routing ---
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence' };
+  /* === lab/feeds/evidence pages: shared helper === */
+  // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
+  async function pgApi(path, opts) {
+    const res = await fetch(path, { credentials: 'same-origin', ...opts });
+    const ct = res.headers.get('content-type') || '';
+    if (!res.ok) {
+      let t = '';
+      try { t = (await res.text()).trim(); } catch (_) {}
+      try { const j = JSON.parse(t); if (j && typeof j.error === 'string') t = j.error; } catch (_) {}
+      throw new Error(t && t.length < 300 ? t : 'HTTP ' + res.status);
+    }
+    return ct.includes('application/json') ? res.json() : null;
+  }
+  function pgJSON(body) { return { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: typeof body === 'string' ? body : JSON.stringify(body) }; }
+  function pgMask(raw) {
+    try {
+      const u = new URL(String(raw));
+      return u.protocol + '//' + u.host + (u.pathname.length > 1 || u.search || u.hash ? '/•••' : '');
+    } catch (_) { return '•••'; }
+  }
+  function pgBtn(label, cls, fn, aria) {
+    const b = el('button', label, cls);
+    b.type = 'button';
+    if (aria) b.setAttribute('aria-label', aria);
+    b.addEventListener('click', fn);
+    return b;
+  }
+  /* === end shared helper === */
+
+  /* === detection-lab page === */
+  const LAB_TEMPLATE = {
+    id: 'lab-shell-from-web',
+    name: 'Shell spawned by web server',
+    description: 'Sandbox example: a shell started by a web server process.',
+    technique: 'T1059.004',
+    enabled: true,
+    condition: { all: [
+      { field: 'executable', op: 'in', values: ['/bin/sh', '/bin/bash'] },
+      { field: 'parent_exe', op: 'contains', value: 'nginx' },
+    ] },
+  };
+  const LAB_SAMPLE_EVENTS = [
+    { kind: 'process', time: '2026-01-01T10:00:00Z', host: 'web-01', executable: '/bin/bash', parent_exe: '/usr/sbin/nginx', command: 'bash -c id' },
+    { kind: 'process', time: '2026-01-01T10:01:00Z', host: 'web-01', executable: '/usr/bin/ls', parent_exe: '/bin/bash', command: 'ls -la' },
+  ];
+  let labConfirmId = '';
+  let labRules = [];
+  function labSet(id, text, bad) { setMsg(id, text, bad); }
+  function labParse(id, what) {
+    try { return { v: JSON.parse($(id).value) }; }
+    catch (e) { return { err: what + ' is not valid JSON: ' + e.message }; }
+  }
+  function labTraceList(tr) {
+    const li = document.createElement('li');
+    li.appendChild(el('span', tr.matched ? 'match' : 'no match', tr.matched ? 'lt-yes' : 'lt-no'));
+    let line = ' ' + (tr.cond || '');
+    if (tr.actual) line += ' (actual: ' + tr.actual + ')';
+    if (tr.missing) line += ' (field missing)';
+    if (tr.reason) line += ' — ' + tr.reason;
+    li.appendChild(document.createTextNode(line));
+    if (tr.children && tr.children.length) {
+      const ul = document.createElement('ul');
+      for (const c of tr.children) ul.appendChild(labTraceList(c));
+      li.appendChild(ul);
+    }
+    return li;
+  }
+  function labEventSummary(ev) {
+    return [ev.host, ev.executable || ev.path || ev.destination || ev.rule, ev.command].filter(Boolean).join(' · ') || ev.kind || 'event';
+  }
+  function renderLabTest(r, events) {
+    const out = $('lab-test-out');
+    out.replaceChildren();
+    out.appendChild(el('p', r.condition_matched + ' of ' + r.events + ' event(s) matched; ' + ((r.hits || []).length) + ' hit(s) after threshold.', 'hint'));
+    (r.results || []).forEach((x) => {
+      const d = document.createElement('details');
+      d.className = 'lab-event';
+      if (x.matched) d.open = true;
+      const s = document.createElement('summary');
+      s.appendChild(el('span', x.matched ? 'matched' : 'not matched', 'tag ' + (x.matched ? 'pass' : 'not_applicable')));
+      s.appendChild(el('span', '#' + (x.index + 1) + ' ' + labEventSummary(events[x.index] || {})));
+      d.appendChild(s);
+      if (x.trace) {
+        const ul = document.createElement('ul');
+        ul.className = 'lab-trace';
+        ul.appendChild(labTraceList(x.trace));
+        d.appendChild(ul);
+      }
+      out.appendChild(d);
+    });
+  }
+  function labBars(days) {
+    const W = 560, H = 140, padL = 28, padB = 22, padT = 8;
+    const max = Math.max(1, ...days.map((d) => d.hits));
+    const bw = (W - padL) / days.length;
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.setAttribute('class', 'lab-chart lab-bars');
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', 'Hits per day, ' + days.length + ' day(s), peak ' + max);
+    const mk = (n, a, t) => { const e = document.createElementNS(ns, n); for (const k in a) e.setAttribute(k, a[k]); if (t != null) e.textContent = t; return e; };
+    svg.appendChild(mk('line', { x1: padL, y1: H - padB, x2: W, y2: H - padB, class: 'lb-axis' }));
+    svg.appendChild(mk('text', { x: 0, y: padT + 8 }, String(max)));
+    svg.appendChild(mk('text', { x: 0, y: H - padB }, '0'));
+    days.forEach((d, i) => {
+      const h = Math.round((d.hits / max) * (H - padB - padT - 10));
+      const x = padL + i * bw + bw * 0.15;
+      const r = mk('rect', { x, y: H - padB - h, width: Math.max(1, bw * 0.7), height: h, class: 'lb-bar' });
+      r.appendChild(mk('title', {}, d.day + ': ' + d.hits));
+      svg.appendChild(r);
+      if (days.length <= 10 || i % Math.ceil(days.length / 8) === 0) svg.appendChild(mk('text', { x: x, y: H - 6 }, String(d.day).slice(5)));
+    });
+    return svg;
+  }
+  function renderLabBacktest(b) {
+    $('lab-bt-panel').hidden = false;
+    const out = $('lab-bt-out');
+    out.replaceChildren();
+    const stats = el('div', '', 'lab-stats');
+    const stat = (k, v) => { const s = document.createElement('div'); s.appendChild(el('span', k)); s.appendChild(el('b', v)); stats.appendChild(s); };
+    stat('Hits', b.hit_count);
+    stat('Noise per host per day', (Number(b.noise_per_host_per_day) || 0).toFixed(2));
+    stat('Events scanned', b.events_scanned);
+    stat('Hosts observed', b.hosts_observed);
+    out.appendChild(stats);
+    if (b.truncated) out.appendChild(el('p', 'Telemetry was truncated at ' + b.event_cap + ' events; results are partial.', 'hint'));
+    const days = b.hits_per_day || [];
+    out.appendChild(el('h3', 'Hits per day'));
+    if (days.length) {
+      out.appendChild(labBars(days));
+      const det = document.createElement('details');
+      det.appendChild(el('summary', 'Show as table'));
+      const wrap = el('div', '', 'table-wrap');
+      const tb = document.createElement('tbody');
+      const tbl = document.createElement('table');
+      const th = document.createElement('thead');
+      const trh = document.createElement('tr'); trh.append(el('th', 'Day'), el('th', 'Hits')); th.appendChild(trh);
+      tbl.append(th, tb); wrap.appendChild(tbl); det.appendChild(wrap);
+      days.forEach((d) => tableRow(tb, [d.day, d.hits]));
+      out.appendChild(det);
+    } else out.appendChild(el('p', 'No hits in the scanned telemetry.', 'hint'));
+    const hosts = b.top_hosts || [];
+    out.appendChild(el('h3', 'Top hosts'));
+    const ht = document.createElement('table'), hb = document.createElement('tbody');
+    const hh = document.createElement('thead'), hr = document.createElement('tr'); hr.append(el('th', 'Host'), el('th', 'Hits')); hh.appendChild(hr);
+    ht.append(hh, hb);
+    if (hosts.length) hosts.forEach((h) => tableRow(hb, [h.host || '—', h.hits])); else listEmpty(hb, 2, 'No hosts', 'No host produced a hit.', '', null);
+    const hw = el('div', '', 'table-wrap'); hw.appendChild(ht); out.appendChild(hw);
+    const sample = (b.hit_sample || []).slice(0, 20);
+    out.appendChild(el('h3', 'Sample hits (up to 20)'));
+    const st = document.createElement('table'), sb = document.createElement('tbody');
+    const sh = document.createElement('thead'), sr = document.createElement('tr');
+    ['Time', 'Host', 'Event', 'Why', 'Count'].forEach((c) => sr.appendChild(el('th', c))); sh.appendChild(sr);
+    st.append(sh, sb);
+    if (sample.length) sample.forEach((h) => tableRow(sb, [fmtTime(h.event && h.event.time), (h.event && h.event.host) || '—', labEventSummary(h.event || {}), h.why || '', h.count || '—']));
+    else listEmpty(sb, 5, 'No sample hits', 'The rule did not match stored telemetry.', '', null);
+    const sw = el('div', '', 'table-wrap'); sw.appendChild(st); out.appendChild(sw);
+  }
+  function renderLabRules() {
+    const tbody = $('lab-rule-rows');
+    if (!labRules.length) { listEmpty(tbody, 5, 'No saved lab rules', 'Save a rule from the editor to keep it here. Saved rules stay in the sandbox.', '', null); return; }
+    tbody.replaceChildren();
+    for (const r of labRules) {
+      const act = el('div', '', 'alert-confirm');
+      if (labConfirmId === r.id) {
+        const yes = pgBtn('Delete', 'danger', async () => {
+          yes.disabled = true;
+          try { await pgApi('/v1/lab/rules?id=' + encodeURIComponent(r.id), { method: 'DELETE' }); labConfirmId = ''; labSet('lab-list-msg', 'Rule deleted.', false); }
+          catch (e) { labSet('lab-list-msg', 'Delete failed: ' + e.message, true); }
+          loadLab();
+        });
+        act.append(el('span', 'Delete this rule?'), yes, pgBtn('Cancel', 'secondary', () => { labConfirmId = ''; renderLabRules(); }));
+      } else {
+        act.append(
+          pgBtn('Load', 'secondary', () => { $('lab-rule').value = JSON.stringify(r, null, 2); labSet('lab-msg', 'Loaded ' + r.id + ' into the editor.', false); $('lab-rule').focus(); }, 'Load rule ' + r.id + ' into editor'),
+          pgBtn('Delete', 'secondary', () => { labConfirmId = r.id; renderLabRules(); }, 'Delete rule ' + r.id));
+      }
+      const en = pgBtn(r.enabled ? 'Enabled' : 'Disabled', 'secondary', async () => {
+        try { await pgApi('/v1/lab/rules', pgJSON({ ...r, enabled: !r.enabled })); labSet('lab-list-msg', '', false); }
+        catch (e) { labSet('lab-list-msg', 'Update failed: ' + e.message, true); }
+        loadLab();
+      }, (r.enabled ? 'Disable' : 'Enable') + ' rule ' + r.id + ' (sandbox only)');
+      en.setAttribute('aria-pressed', r.enabled ? 'true' : 'false');
+      tableRow(tbody, [(r.name ? r.name + ' ' : '') + '(' + r.id + ')', r.technique || '—', en, fmtTime(r.updated), act]);
+    }
+  }
+  async function loadLab() {
+    try { const r = await pgApi('/v1/lab/rules'); labRules = (r && r.rules) || []; renderLabRules(); }
+    catch (e) { labSet('lab-list-msg', 'Could not load lab rules: ' + e.message, true); }
+  }
+  $('lab-rule').value = JSON.stringify(LAB_TEMPLATE, null, 2);
+  $('lab-events').value = JSON.stringify(LAB_SAMPLE_EVENTS, null, 2);
+  $('lab-template').addEventListener('click', () => { $('lab-rule').value = JSON.stringify(LAB_TEMPLATE, null, 2); labSet('lab-msg', 'Starter template loaded.', false); });
+  $('lab-validate').addEventListener('click', async () => {
+    labSet('lab-msg', 'Validating…', false);
+    try { await pgApi('/v1/lab/rules/validate', pgJSON($('lab-rule').value)); labSet('lab-msg', 'Rule is valid (sandbox).', false); }
+    catch (e) { labSet('lab-msg', 'Invalid: ' + e.message, true); }
+  });
+  $('lab-save').addEventListener('click', async () => {
+    try { const r = await pgApi('/v1/lab/rules', pgJSON($('lab-rule').value)); labSet('lab-msg', 'Saved to the lab' + (r && r.rule ? ' as ' + r.rule.id : '') + '.', false); loadLab(); }
+    catch (e) { labSet('lab-msg', 'Save failed: ' + e.message, true); }
+  });
+  $('lab-test').addEventListener('click', async () => {
+    const rule = labParse('lab-rule', 'Rule'), ev = labParse('lab-events', 'Sample events');
+    if (rule.err || ev.err) { labSet('lab-test-msg', rule.err || ev.err, true); return; }
+    if (!Array.isArray(ev.v)) { labSet('lab-test-msg', 'Sample events must be a JSON array.', true); return; }
+    labSet('lab-test-msg', 'Testing…', false);
+    try { const r = await pgApi('/v1/lab/rules/test', pgJSON({ rule: rule.v, events: ev.v })); labSet('lab-test-msg', '', false); renderLabTest(r, ev.v); }
+    catch (e) { $('lab-test-out').replaceChildren(); labSet('lab-test-msg', e.message, true); }
+  });
+  $('lab-backtest').addEventListener('click', async () => {
+    const rule = labParse('lab-rule', 'Rule');
+    if (rule.err) { labSet('lab-msg', rule.err, true); return; }
+    labSet('lab-msg', 'Backtesting…', false);
+    try { const b = await pgApi('/v1/lab/rules/backtest', pgJSON({ rule: rule.v })); labSet('lab-msg', 'Backtest complete.', false); renderLabBacktest(b); }
+    catch (e) { labSet('lab-msg', 'Backtest failed: ' + e.message, true); }
+  });
+  /* === end detection-lab page === */
+
+  /* === threat-intel feeds page === */
+  let feedConfirmId = '';
+  let feedList = [];
+  let feedStatus = {};
+  function renderFeeds() {
+    const tbody = $('feed-rows');
+    if (!feedList.length) { listEmpty(tbody, 10, 'No feeds', 'Add a feed above to pull indicators automatically.', '', null); return; }
+    tbody.replaceChildren();
+    for (const f of feedList) {
+      const s = feedStatus[f.id] || { status: 'never' };
+      const act = el('div', '', 'alert-confirm');
+      if (feedConfirmId === f.id) {
+        const yes = pgBtn('Delete', 'danger', async () => {
+          yes.disabled = true;
+          try { await pgApi('/v1/intel/feeds?id=' + encodeURIComponent(f.id), { method: 'DELETE' }); feedConfirmId = ''; setMsg('feed-msg', 'Feed deleted along with its indicators.', false); }
+          catch (e) { setMsg('feed-msg', 'Delete failed: ' + e.message, true); }
+          loadFeeds();
+        });
+        act.append(el('span', 'Delete feed and its indicators?'), yes, pgBtn('Cancel', 'secondary', () => { feedConfirmId = ''; renderFeeds(); }));
+      } else {
+        const rf = pgBtn('Refresh now', 'secondary', async () => {
+          rf.disabled = true;
+          try { await pgApi('/v1/intel/feeds/refresh?id=' + encodeURIComponent(f.id), { method: 'POST' }); setMsg('feed-msg', 'Refreshed ' + f.name + '.', false); }
+          catch (e) { setMsg('feed-msg', 'Refresh failed: ' + e.message, true); }
+          loadFeeds();
+        }, 'Refresh feed ' + f.name + ' now');
+        if (f.enabled === false) rf.disabled = true;
+        act.append(rf, pgBtn('Delete', 'secondary', () => { feedConfirmId = f.id; renderFeeds(); }, 'Delete feed ' + f.name));
+      }
+      tableRow(tbody, [
+        f.name, el('span', s.status || 'never', 'tag ' + (s.status || 'never')),
+        el('span', pgMask(f.url), 'alert-url'), f.format + (f.tlp ? ' · TLP:' + f.tlp : ''),
+        s.last_fetch && s.last_fetch.indexOf('0001-') !== 0 ? fmtTime(s.last_fetch) : 'Never',
+        s.added || 0, s.expired || 0, s.active || 0,
+        s.error ? el('span', s.error, 'feed-err') : '—', act,
+      ]);
+    }
+  }
+  async function loadFeeds() {
+    try {
+      const [fl, st] = await Promise.all([pgApi('/v1/intel/feeds'), pgApi('/v1/intel/feeds/status')]);
+      feedList = (fl && fl.feeds) || [];
+      feedStatus = {};
+      ((st && st.status) || []).forEach((x) => { feedStatus[x.id] = x; });
+      renderFeeds();
+      $('feed-refresh').textContent = 'updated ' + new Date().toLocaleTimeString() + ' · refreshes every 30s';
+    } catch (e) { setMsg('feed-msg', 'Could not load feeds: ' + e.message, true); }
+  }
+  $('feed-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = $('feed-name').value.trim(), url = $('feed-url').value.trim();
+    if (!name) { setMsg('feed-msg', 'Name is required.', true); $('feed-name').focus(); return; }
+    if (!url) { setMsg('feed-msg', 'Feed URL is required.', true); $('feed-url').focus(); return; }
+    const btn = $('feed-add');
+    btn.disabled = true;
+    try {
+      await pgApi('/v1/intel/feeds', pgJSON({
+        name, url, format: $('feed-format').value, tlp: $('feed-tlp').value,
+        interval: parseInt($('feed-interval').value, 10) || 0, ttl_days: parseInt($('feed-ttl').value, 10) || 0,
+      }));
+      $('feed-name').value = ''; $('feed-url').value = '';
+      setMsg('feed-msg', 'Feed added.', false);
+      loadFeeds();
+    } catch (err) { setMsg('feed-msg', err.message, true); }
+    btn.disabled = false;
+  });
+  setInterval(() => { if (current === 'feeds' && !document.hidden && appVisible()) loadFeeds(); }, 30000);
+  /* === end threat-intel feeds page === */
+
+  /* === compliance evidence page === */
+  let evClock = [];
+  function evFmtRemaining(sec) {
+    const neg = sec < 0, a = Math.abs(sec);
+    const h = Math.floor(a / 3600), m = Math.floor((a % 3600) / 60), s = a % 60;
+    const p = (n) => String(n).padStart(2, '0');
+    return (neg ? 'overdue by ' : '') + p(h) + ':' + p(m) + ':' + p(s);
+  }
+  function evTick() {
+    document.querySelectorAll('#ev-clock-rows [data-deadline]').forEach((n) => {
+      const sec = Math.floor((Date.parse(n.getAttribute('data-deadline')) - Date.now()) / 1000);
+      if (Number.isNaN(sec)) return;
+      n.textContent = evFmtRemaining(sec);
+      const over = sec < 0;
+      n.classList.toggle('is-overdue', over);
+      const tr = n.closest('tr');
+      if (tr) tr.classList.toggle('ev-overdue', over);
+    });
+  }
+  function renderEvClock() {
+    const tbody = $('ev-clock-rows');
+    if (!evClock.length) { listEmpty(tbody, 6, 'No open high or critical findings', 'Nothing is running against the 6-hour window right now.', '', null); return; }
+    tbody.replaceChildren();
+    for (const c of evClock) {
+      const t = el('span', '', 'ev-clock');
+      t.setAttribute('data-deadline', c.deadline);
+      tableRow(tbody, [c.finding_id, c.rule, c.host, el('span', c.severity, 'tag ' + c.severity), c.status, t]);
+    }
+    evTick();
+  }
+  function renderEvControls(list) {
+    const tbody = $('ev-rows');
+    if (!list.length) { listEmpty(tbody, 4, 'No controls', 'This framework has no mapped controls.', '', null); return; }
+    tbody.replaceChildren();
+    list.forEach((c, i) => {
+      const detId = 'ev-det-' + i;
+      const btn = el('button', 'Details', 'secondary');
+      btn.type = 'button';
+      btn.setAttribute('aria-expanded', 'false');
+      btn.setAttribute('aria-controls', detId);
+      btn.setAttribute('aria-label', 'Show evidence for control ' + c.id);
+      const tr = tableRow(tbody, [c.id, c.title, el('span', c.status, 'tag ' + c.status), btn]);
+      const dr = document.createElement('tr');
+      dr.id = detId; dr.hidden = true;
+      const td = document.createElement('td');
+      td.colSpan = 4;
+      if (c.note) td.appendChild(el('p', c.note, 'hint'));
+      if (c.signals && c.signals.length) td.appendChild(el('p', 'Signals: ' + c.signals.join(', '), 'hint'));
+      const ev = c.evidence || {};
+      const keys = Object.keys(ev).sort();
+      if (keys.length) {
+        const ul = el('ul', '', 'ev-counts');
+        keys.forEach((k) => ul.appendChild(el('li', k + ': ' + ev[k])));
+        td.appendChild(ul);
+      } else td.appendChild(el('p', 'No automated evidence counts for this control; provide your own evidence.', 'hint'));
+      dr.appendChild(td);
+      tbody.appendChild(dr);
+      btn.addEventListener('click', () => {
+        const open = dr.hidden;
+        dr.hidden = !open;
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      void tr;
+    });
+  }
+  async function loadEvidence() {
+    const fw = $('ev-fw').value;
+    $('ev-pack').href = '/v1/compliance/evidence?framework=' + encodeURIComponent(fw) + '&format=html';
+    setMsg('ev-msg', '', false);
+    try {
+      const [ctl, clk] = await Promise.all([pgApi('/v1/compliance/controls?framework=' + encodeURIComponent(fw)), pgApi('/v1/compliance/cert-in-clock')]);
+      renderEvControls((ctl && ctl.controls) || []);
+      evClock = (clk && clk.incidents) || [];
+      renderEvClock();
+    } catch (e) { setMsg('ev-msg', 'Could not load evidence: ' + e.message, true); }
+  }
+  $('ev-fw').addEventListener('change', loadEvidence);
+  setInterval(() => { if (current === 'evidence') evTick(); }, 1000);
+  setInterval(async () => {
+    if (current !== 'evidence' || document.hidden || !appVisible()) return;
+    try { const clk = await pgApi('/v1/compliance/cert-in-clock'); evClock = (clk && clk.incidents) || []; renderEvClock(); } catch (_) {}
+  }, 60000);
+  /* === end compliance evidence page === */
+
+  const appVisible = () => !$('app').hidden;
+  let lastFocus = null;
+  function overlayOpen(id) { lastFocus = document.activeElement; $(id).hidden = false; }
+  function overlayClose(id) { $(id).hidden = true; if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (_) {} } }
+
+  let palSel = 0, palItems = [];
+  function renderPalette() {
+    const q = ($('palette-input').value || '').trim().toLowerCase();
+    palItems = pages.filter((p) => !q || p.includes(q) || pageLabels[p].toLowerCase().includes(q));
+    palSel = Math.min(palSel, Math.max(0, palItems.length - 1));
+    const ul = $('palette-list');
+    ul.replaceChildren();
+    if (!palItems.length) { ul.appendChild(el('li', 'No matching page', 'pal-empty')); return; }
+    palItems.forEach((p, i) => {
+      const li = document.createElement('li');
+      li.setAttribute('role', 'option');
+      li.setAttribute('aria-selected', i === palSel ? 'true' : 'false');
+      li.id = 'pal-' + p;
+      li.appendChild(el('span', pageLabels[p]));
+      const g = Object.keys(gKeys).find((k) => gKeys[k] === p);
+      if (g) li.appendChild(el('small', 'g ' + g));
+      li.addEventListener('click', () => { closePalette(); showPage(p); });
+      ul.appendChild(li);
+    });
+    if (palItems[palSel]) $('palette-input').setAttribute('aria-activedescendant', 'pal-' + palItems[palSel]);
+  }
+  function openPalette() { if (!appVisible()) return; palSel = 0; $('palette-input').value = ''; overlayOpen('palette-root'); renderPalette(); $('palette-input').focus(); }
+  function closePalette() { overlayClose('palette-root'); }
+  function openHelp() {
+    const rows = $('help-rows');
+    rows.replaceChildren();
+    const add = (keys, d) => {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      keys.forEach((k, i) => { if (i) td.append(' '); const kb = document.createElement('kbd'); kb.textContent = k; td.appendChild(kb); });
+      tr.appendChild(td);
+      tr.appendChild(el('td', d));
+      rows.appendChild(tr);
+    };
+    add(['Ctrl/Cmd', 'K'], 'Open command palette');
+    add(['/'], 'Open command palette');
+    add(['?'], 'Show this help');
+    add(['Esc'], 'Close overlay or drawer');
+    Object.keys(gKeys).forEach((k) => add(['g', k], 'Go to ' + pageLabels[gKeys[k]]));
+    overlayOpen('help-root');
+    $('help-close').focus();
+  }
+  function closeHelp() { overlayClose('help-root'); }
+  $('help-close').addEventListener('click', closeHelp);
+  $('palette-root').addEventListener('mousedown', (e) => { if (e.target === $('palette-root')) closePalette(); });
+  $('help-root').addEventListener('mousedown', (e) => { if (e.target === $('help-root')) closeHelp(); });
+  $('palette-input').addEventListener('input', () => { palSel = 0; renderPalette(); });
+  $('palette-input').addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); palSel = Math.min(palItems.length - 1, palSel + 1); renderPalette(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); palSel = Math.max(0, palSel - 1); renderPalette(); }
+    else if (e.key === 'Enter' && palItems[palSel]) { e.preventDefault(); const p = palItems[palSel]; closePalette(); showPage(p); }
+  });
+  let gPending = 0;
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (!$('palette-root').hidden) { closePalette(); return; }
+      if (!$('help-root').hidden) { closeHelp(); return; }
+    }
+    if (!appVisible()) return;
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); if ($('palette-root').hidden) openPalette(); else closePalette(); return; }
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const t = e.target;
+    const typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+    if (typing || !$('palette-root').hidden || !$('help-root').hidden || !$('drawer-root').hidden) return;
+    if (e.key === '/') { e.preventDefault(); openPalette(); return; }
+    if (e.key === '?') { e.preventDefault(); openHelp(); return; }
+    if (gPending && Date.now() - gPending < 1200 && gKeys[e.key]) { e.preventDefault(); gPending = 0; showPage(gKeys[e.key]); return; }
+    gPending = e.key === 'g' ? Date.now() : 0;
+  });
+  window.addEventListener('hashchange', () => {
+    const p = location.hash.replace(/^#\/?/, '');
+    if (pages.includes(p) && p !== current) showPage(p);
+  });
+  function initialPage() {
+    const h = location.hash.replace(/^#\/?/, '');
+    if (pages.includes(h)) return h;
+    try { const s = localStorage.getItem('kavach-page'); if (pages.includes(s)) return s; } catch (_) {}
+    return 'overview';
+  }
+
+  showPage(initialPage());
   load();
 })();
 </script>

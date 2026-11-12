@@ -154,7 +154,7 @@ spec:
           capabilities: {drop: ["ALL"]}
         readinessProbe:
           httpGet:
-            path: /healthz
+            path: /readyz
             port: {{ if .Values.tls.enabled }}https{{ else }}http{{ end }}
             {{- if .Values.tls.enabled }}
             scheme: HTTPS
@@ -165,7 +165,7 @@ spec:
           failureThreshold: 2
         livenessProbe:
           httpGet:
-            path: /healthz
+            path: /livez
             port: {{ if .Values.tls.enabled }}https{{ else }}http{{ end }}
             {{- if .Values.tls.enabled }}
             scheme: HTTPS
