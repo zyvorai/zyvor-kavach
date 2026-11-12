@@ -2,6 +2,9 @@ package edr
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"sort"
@@ -36,15 +39,29 @@ var vmSampleAdvisories = []VMAdvisory{
 
 // vmLoadAdvisories returns advisories from KAVACH_CVE_FILE or the sample set.
 func vmLoadAdvisories() ([]VMAdvisory, string) {
+	a, s, _ := vmLoadAdvisoriesErr()
+	return a, s
+}
+
+// vmLoadAdvisoriesErr is like vmLoadAdvisories but reports load/parse
+// failures (also logged) instead of silently falling back.
+func vmLoadAdvisoriesErr() ([]VMAdvisory, string, error) {
 	if p := os.Getenv("KAVACH_CVE_FILE"); p != "" {
-		if b, err := os.ReadFile(p); err == nil {
+		b, err := os.ReadFile(p)
+		if err == nil {
 			var a []VMAdvisory
-			if json.Unmarshal(b, &a) == nil && len(a) > 0 {
-				return a, "file:" + p
+			if err = json.Unmarshal(b, &a); err == nil && len(a) == 0 {
+				err = errors.New("no advisories in file")
+			}
+			if err == nil {
+				return a, "file:" + p, nil
 			}
 		}
+		err = fmt.Errorf("KAVACH_CVE_FILE %s: %w; using embedded sample", p, err)
+		log.Printf("kavach vuln: %v", err)
+		return vmSampleAdvisories, "embedded-sample", err
 	}
-	return vmSampleAdvisories, "embedded-sample"
+	return vmSampleAdvisories, "embedded-sample", nil
 }
 
 // vmCmpVersion compares versions part by part; numeric parts numerically,
@@ -125,6 +142,10 @@ type VMFinding struct {
 	FixedIn  string  `json:"fixed_in"`
 	Summary  string  `json:"summary"`
 	Guidance string  `json:"remediation_guidance"`
+
+	Source         string `json:"source,omitempty"`
+	KnownExploited bool   `json:"known_exploited,omitempty"`
+	KEVDateAdded   string `json:"kev_date_added,omitempty"`
 }
 
 func vmPackages(host string) []map[string]any {
@@ -168,7 +189,14 @@ func vmExposure(f []VMFinding) int {
 			mx = x.CVSS
 		}
 	}
-	return minInt(int(mx*8)+len(f)*2, 100)
+	sc := int(mx*8) + len(f)*2
+	for _, x := range f {
+		if x.KnownExploited {
+			sc += 20 // CISA KEV: exploitation observed in the wild
+			break
+		}
+	}
+	return minInt(sc, 100)
 }
 
 func vmHosts() []string {
@@ -208,28 +236,32 @@ func RegisterVulnMgmt(mux *http.ServeMux, token string) {
 	})
 	get("/v1/vulns/advisories", func(r *http.Request) any {
 		a, src := vmLoadAdvisories()
-		return map[string]any{"source": src, "note": "sample dataset unless KAVACH_CVE_FILE is set", "count": len(a), "advisories": a}
+		_, st := vmFindings(nil)
+		return map[string]any{"source": src, "source_status": st, "feed_errors": st["feed_errors"], "note": "sample dataset unless KAVACH_CVE_FILE or KAVACH_VULN_FEED is set", "count": len(a), "advisories": a}
 	})
 	get("/v1/vulns/findings", func(r *http.Request) any {
-		a, src := vmLoadAdvisories()
-		f := vmMatch(vmPackages(r.URL.Query().Get("host")), a)
-		return map[string]any{"advisory_source": src, "count": len(f), "findings": f}
+		f, st := vmFindings(vmPackages(r.URL.Query().Get("host")))
+		return map[string]any{"advisory_source": st["advisory_source"], "source_status": st, "feed_errors": st["feed_errors"], "count": len(f), "findings": f}
 	})
 	get("/v1/vulns/exposure", func(r *http.Request) any {
-		a, src := vmLoadAdvisories()
 		rows := []map[string]any{}
+		var st map[string]any
 		for _, h := range vmHosts() {
-			f := vmMatch(vmPackages(h), a)
-			rows = append(rows, map[string]any{"host": h, "exposure_score": vmExposure(f), "vulnerabilities": len(f)})
+			var f []VMFinding
+			f, st = vmFindings(vmPackages(h))
+			rows = append(rows, map[string]any{"host": h, "exposure_score": vmExposure(f), "vulnerabilities": len(f), "known_exploited": vmAnyKEV(f)})
 		}
 		sort.Slice(rows, func(i, j int) bool { return rows[i]["exposure_score"].(int) > rows[j]["exposure_score"].(int) })
-		return map[string]any{"advisory_source": src, "hosts": rows}
+		if st == nil {
+			_, st = vmFindings(nil)
+		}
+		return map[string]any{"advisory_source": st["advisory_source"], "source_status": st, "feed_errors": st["feed_errors"], "hosts": rows}
 	})
 	get("/v1/vulns/top", func(r *http.Request) any {
-		a, src := vmLoadAdvisories()
+		allF, st := vmFindings(vmPackages(""))
 		hosts := map[string]map[string]bool{}
 		m := map[string]*vmTop{}
-		for _, f := range vmMatch(vmPackages(""), a) {
+		for _, f := range allF {
 			g := m[f.Package]
 			if g == nil {
 				g = &vmTop{Package: f.Package, Fix: f.Guidance}
@@ -253,8 +285,9 @@ func RegisterVulnMgmt(mux *http.ServeMux, token string) {
 			}
 			return out[i].MaxCVSS > out[j].MaxCVSS
 		})
-		return map[string]any{"advisory_source": src, "top": out}
+		return map[string]any{"advisory_source": st["advisory_source"], "source_status": st, "feed_errors": st["feed_errors"], "top": out}
 	})
+	registerVulnFeedRoutes(mux, token)
 	mux.HandleFunc("GET /v1/sbom/{host}", func(w http.ResponseWriter, r *http.Request) {
 		if !requireAuth(w, r, token) {
 			return
@@ -265,7 +298,6 @@ func RegisterVulnMgmt(mux *http.ServeMux, token string) {
 
 // vmCycloneDX builds a CycloneDX 1.5-style BOM with matched vulnerabilities.
 func vmCycloneDX(host string) map[string]any {
-	a, _ := vmLoadAdvisories()
 	pkgs := vmPackages(host)
 	comps := []map[string]any{}
 	for _, p := range pkgs {
@@ -274,7 +306,7 @@ func vmCycloneDX(host string) map[string]any {
 			"bom-ref": n + "@" + v, "purl": "pkg:generic/" + n + "@" + v})
 	}
 	vulns := []map[string]any{}
-	for _, f := range vmMatch(pkgs, a) {
+	for _, f := range vmFindingsOnly(pkgs) {
 		vulns = append(vulns, map[string]any{"id": f.CVE, "description": f.Summary,
 			"ratings":        []map[string]any{{"score": f.CVSS, "method": "CVSSv3"}},
 			"recommendation": f.Guidance,

@@ -1429,6 +1429,16 @@ paths:
         content:
           application/json:
             schema: {type: object}
+  /v1/vulns/feeds/status:
+    get:
+      summary: Vulnerability feed status (last refresh, counts, errors, source)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/vulns/feeds/refresh:
+    post:
+      summary: Refresh KEV/OSV feeds now (409 when KAVACH_VULN_FEED is unset)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}, '409': {description: Feeds disabled}}
   /v1/vulns/software:
     get:
       summary: Vulnerability management software
