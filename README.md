@@ -54,6 +54,7 @@ Honest about what ships today:
 | Host containment requests | Host Management | Request ledger — never enforced |
 | Hunt (FQL-lite) + threat graph | Falcon Hunt / Threat Graph | Shipping |
 | Charlotte-lite assist | Charlotte AI | Assistive triage |
+| **Kavach AI Platform (22+)** | **Beyond Charlotte / Complete** | Chat, NL hunt, narratives, clusters, attack-path, forecast, multi-agent SOC, what-if, Guardian, XDR fusion, autopilot |
 | Cloud / Mobile | Falcon Cloud / Mobile | Preview stubs |
 | XDR via Netra | Insight XDR network | Bridge / poller |
 | SIEM export + connectors | Next-Gen SIEM | Webhook / syslog / NDJSON |

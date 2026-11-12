@@ -34,6 +34,13 @@ func FalconModules() []FalconModule {
 		{ID: "siem", Name: "Next-Gen SIEM", CrowdStrike: "Falcon Next-Gen SIEM", Status: "active", APIs: []string{"/v1/siem/status", "/v1/cases", "/v1/ueba"}, Note: "Export, cases, UEBA"},
 		{ID: "hunt", Name: "Threat Hunting", CrowdStrike: "Falcon Hunt / FQL", Status: "active", APIs: []string{"/v1/hunt/query", "/v1/threat-graph"}, Note: "Structured hunt + correlation graph"},
 		{ID: "charlotte", Name: "Charlotte AI", CrowdStrike: "Charlotte AI", Status: "active", APIs: []string{"/v1/ai/score", "/v1/ai/assist"}, Note: "Assistive triage (heuristic + optional LLM)"},
+		{ID: "kavach-ai", Name: "Kavach AI Platform", CrowdStrike: "Beyond Charlotte / Complete", Status: "active", APIs: []string{"/v1/ai/capabilities"}, Note: "22+ AI capabilities beyond Falcon"},
+		{ID: "multi-agent", Name: "Multi-Agent SOC", CrowdStrike: "Beyond Falcon Complete agents", Status: "active", APIs: []string{"/v1/ai/agents", "/v1/ai/agents/run"}, Note: "Triage/Hunt/Intel/IR/Reporter agents"},
+		{ID: "nl-hunt", Name: "NL Threat Hunt", CrowdStrike: "Beyond FQL", Status: "active", APIs: []string{"/v1/ai/nl-hunt"}, Note: "Natural language → hunt"},
+		{ID: "forecast", Name: "Breach Forecast", CrowdStrike: "Beyond ExPRT", Status: "active", APIs: []string{"/v1/ai/forecast"}, Note: "72h risk forecast"},
+		{ID: "what-if", Name: "What-If Simulator", CrowdStrike: "n/a", Status: "active", APIs: []string{"/v1/ai/what-if"}, Note: "Adversary progression simulation"},
+		{ID: "guardian-ai", Name: "AI Workload Guardian", CrowdStrike: "Falcon Guardian+", Status: "active", APIs: []string{"/v1/ai/guardian"}, Note: "Observe AI/agent processes"},
+		{ID: "xdr-ai", Name: "Netra×Kavach AI Fusion", CrowdStrike: "Beyond Insight XDR", Status: "active", APIs: []string{"/v1/ai/xdr-fusion"}, Note: "Cross-domain AI correlation"},
 		{ID: "cloud", Name: "Cloud Security", CrowdStrike: "Falcon Cloud / Horizon", Status: "preview", APIs: []string{"/v1/cloud/posture"}, Note: "CSPM posture inventory"},
 		{ID: "mobile", Name: "Mobile", CrowdStrike: "Falcon for Mobile", Status: "preview", APIs: []string{"/v1/mobile/devices"}, Note: "Mobile device inventory stub"},
 		{ID: "audit", Name: "Audit & Reports", CrowdStrike: "Audit Logs / Dashboards", Status: "active", APIs: []string{"/v1/audit", "/v1/reports/summary"}, Note: "Console audit + SOC summary"},
@@ -73,4 +80,5 @@ func RegisterFalconPlatform(mux *http.ServeMux, token string, store *Store, regi
 	RegisterConnectors(mux, token)
 	RegisterCloudMobile(mux, token)
 	RegisterCharlotteAssist(mux, token, store)
+	RegisterAIPlatform(mux, token, store)
 }

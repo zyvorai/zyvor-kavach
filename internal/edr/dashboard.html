@@ -1023,6 +1023,7 @@ footer {
         <button type="button" data-page="spotlight" role="tab" aria-selected="false">Spotlight</button>
         <button type="button" data-page="overwatch" role="tab" aria-selected="false">OverWatch</button>
         <button type="button" data-page="response" role="tab" aria-selected="false">Response</button>
+        <button type="button" data-page="ai" role="tab" aria-selected="false">AI Hub</button>
         <button type="button" data-page="modules" role="tab" aria-selected="false">Modules</button>
         <button type="button" data-page="integrations" role="tab" aria-selected="false">Integrations</button>
       </div>
@@ -1408,6 +1409,65 @@ footer {
       </div>
     </section>
 
+    <section id="page-ai" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Beyond Falcon</p>
+        <h1>AI Hub</h1>
+        <p class="lede">22+ AI capabilities — multi-agent SOC, NL hunt, narratives, forecast, what-if. Assistive only.</p>
+      </header>
+      <div class="work-panel">
+        <h3>SOC Copilot</h3>
+        <p class="hint">Multi-turn chat — sister to Netra, beyond Charlotte.</p>
+        <div class="work-grid">
+          <div class="field field--wide">
+            <label for="ai-chat-input">Message</label>
+            <input class="input-field" id="ai-chat-input" type="text" placeholder="Brief me on ransomware risk" autocomplete="off">
+          </div>
+        </div>
+        <div class="work-actions">
+          <button type="button" class="primary" id="ai-chat-send">Send</button>
+          <button type="button" class="secondary" id="ai-brief-btn">Daily briefing</button>
+          <button type="button" class="secondary" id="ai-autopilot-btn">Triage autopilot</button>
+        </div>
+        <pre class="token-box" id="ai-chat-out" style="white-space:pre-wrap;max-height:220px;overflow:auto;margin-top:12px" hidden></pre>
+        <p class="work-msg" id="ai-chat-msg" role="status"></p>
+      </div>
+      <div class="work-panel" style="margin-top:16px">
+        <h3>Natural-language hunt</h3>
+        <div class="work-grid">
+          <div class="field field--wide">
+            <label for="ai-nl-input">Hypothesis</label>
+            <input class="input-field" id="ai-nl-input" type="text" placeholder="high severity shells on demo-host" autocomplete="off">
+          </div>
+        </div>
+        <div class="work-actions">
+          <button type="button" class="primary" id="ai-nl-run">Hunt</button>
+        </div>
+        <p class="work-msg" id="ai-nl-msg" role="status"></p>
+      </div>
+      <p class="table-caption table-caption--spaced">Capabilities</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>AI feature</th><th>Beyond Falcon</th><th>Mode</th><th>Note</th></tr></thead>
+          <tbody id="ai-cap-rows"></tbody>
+        </table>
+      </div>
+      <p class="table-caption table-caption--spaced">Alert clusters</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Cluster</th><th>Severity</th><th>Count</th><th>Hosts</th><th>Summary</th></tr></thead>
+          <tbody id="ai-cluster-rows"></tbody>
+        </table>
+      </div>
+      <p class="table-caption table-caption--spaced">Forecast</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Horizon</th><th>Score</th><th>Level</th><th>Drivers</th></tr></thead>
+          <tbody id="ai-forecast-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
     <section id="page-modules" class="page" hidden>
       <header class="page-hero">
         <p class="apple-eyebrow">Platform</p>
@@ -1511,7 +1571,7 @@ footer {
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'modules', 'integrations'];
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ai', 'modules', 'integrations'];
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -2086,6 +2146,102 @@ footer {
     });
   }
 
+  function renderAICaps(payload) {
+    const caps = (payload && payload.capabilities) || payload || [];
+    const tbody = $('ai-cap-rows');
+    tbody.innerHTML = '';
+    (caps || []).forEach((c) => {
+      tableRow(tbody, [c.name || '—', c.beyond_falcon || '—', c.mode || '—', c.note || '—']);
+    });
+  }
+
+  function renderAIClusters(items) {
+    const tbody = $('ai-cluster-rows');
+    tbody.innerHTML = '';
+    if (!(items || []).length) {
+      listEmpty(tbody, 5, 'No clusters', 'Findings will cluster by rule and severity.', '', null);
+      return;
+    }
+    (items || []).forEach((c) => {
+      tableRow(tbody, [c.label || c.id || '—', severityTag(c.severity), String(c.count || 0), (c.hosts || []).join(', '), c.summary || '—']);
+    });
+  }
+
+  function renderAIForecast(fc) {
+    const tbody = $('ai-forecast-rows');
+    tbody.innerHTML = '';
+    if (!fc) return;
+    const drivers = (fc.drivers || []).join('; ');
+    tableRow(tbody, ['now', String(fc.breach_risk_score != null ? fc.breach_risk_score : '—'), severityTag(fc.level), drivers]);
+    (fc.forecast || []).forEach((row) => {
+      tableRow(tbody, [String(row.hours) + 'h', String(row.score), '—', drivers]);
+    });
+  }
+
+  async function sendAIChat() {
+    const message = ($('ai-chat-input').value || '').trim();
+    if (!message) return;
+    try {
+      const res = await request('/v1/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message }),
+      });
+      $('ai-chat-out').hidden = false;
+      $('ai-chat-out').textContent = (res.reply && res.reply.content) || JSON.stringify(res, null, 2);
+      $('ai-chat-msg').className = 'work-msg is-ok';
+      $('ai-chat-msg').textContent = 'Copilot replied';
+      $('ai-chat-input').value = '';
+    } catch (e) {
+      $('ai-chat-msg').className = 'work-msg is-error';
+      $('ai-chat-msg').textContent = e.message || 'Chat failed';
+    }
+  }
+
+  async function loadAIBriefing() {
+    try {
+      const b = await request('/v1/ai/briefing');
+      $('ai-chat-out').hidden = false;
+      $('ai-chat-out').textContent = (b.headline || '') + '\n\n' + JSON.stringify(b, null, 2);
+      $('ai-chat-msg').className = 'work-msg is-ok';
+      $('ai-chat-msg').textContent = 'Briefing ready';
+    } catch (e) {
+      $('ai-chat-msg').className = 'work-msg is-error';
+      $('ai-chat-msg').textContent = e.message || 'Briefing failed';
+    }
+  }
+
+  async function runAIAutopilot() {
+    try {
+      const res = await request('/v1/ai/autopilot', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+      $('ai-chat-out').hidden = false;
+      $('ai-chat-out').textContent = JSON.stringify(res, null, 2);
+      $('ai-chat-msg').className = 'work-msg is-ok';
+      $('ai-chat-msg').textContent = 'Suggestions only — nothing auto-applied';
+    } catch (e) {
+      $('ai-chat-msg').className = 'work-msg is-error';
+      $('ai-chat-msg').textContent = e.message || 'Autopilot failed';
+    }
+  }
+
+  async function runAINLHunt() {
+    const text = ($('ai-nl-input').value || '').trim();
+    try {
+      const res = await request('/v1/ai/nl-hunt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+      $('ai-nl-msg').className = 'work-msg is-ok';
+      $('ai-nl-msg').textContent = 'Translated: ' + (res.translated_query || '(free text)') + ' · ' + (res.count || 0) + ' hits';
+      $('ai-chat-out').hidden = false;
+      $('ai-chat-out').textContent = JSON.stringify(res.findings || [], null, 2);
+    } catch (e) {
+      $('ai-nl-msg').className = 'work-msg is-error';
+      $('ai-nl-msg').textContent = e.message || 'NL hunt failed';
+    }
+  }
+
   async function runHunt() {
     const q = ($('hunt-query').value || '').trim();
     $('hunt-msg').className = 'work-msg';
@@ -2329,7 +2485,7 @@ footer {
         renderTimeline([], []);
       }
 
-      const [siem, sensor, detections, hosts, actors, iocs, idEvents, idEntities, vulns, assets, ow, fusion, modules, report] = await Promise.all([
+      const [siem, sensor, detections, hosts, actors, iocs, idEvents, idEntities, vulns, assets, ow, fusion, modules, report, aiCaps, aiClusters, aiForecast] = await Promise.all([
         request('/v1/siem/status'),
         request('/v1/sensor'),
         request('/v1/detections'),
@@ -2344,6 +2500,9 @@ footer {
         request('/v1/fusion/playbooks'),
         request('/v1/modules'),
         request('/v1/reports/summary'),
+        request('/v1/ai/capabilities'),
+        request('/v1/ai/cluster'),
+        request('/v1/ai/forecast'),
       ]);
       renderIntegrations(siem || {}, sensor || {});
       renderDetections(detections);
@@ -2355,6 +2514,9 @@ footer {
       renderOverWatch(ow);
       renderFusion(fusion);
       renderModules(modules);
+      renderAICaps(aiCaps);
+      renderAIClusters(aiClusters);
+      renderAIForecast(aiForecast);
       if (report) {
         countUp($('m-ow'), report.overwatch_open || 0);
         countUp($('m-cve'), report.critical_cves || 0);
@@ -2395,6 +2557,11 @@ footer {
   $('hunt-run').addEventListener('click', runHunt);
   $('contain-btn').addEventListener('click', requestContainment);
   $('rtr-run').addEventListener('click', runRTR);
+  $('ai-chat-send').addEventListener('click', sendAIChat);
+  $('ai-brief-btn').addEventListener('click', loadAIBriefing);
+  $('ai-autopilot-btn').addEventListener('click', runAIAutopilot);
+  $('ai-nl-run').addEventListener('click', runAINLHunt);
+  $('ai-chat-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendAIChat(); });
   $('incident-transition').addEventListener('click', transitionIncident);
   $('incident-finding').addEventListener('change', () => {
     selectedFindingId = $('incident-finding').value || '';
