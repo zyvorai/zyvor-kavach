@@ -47,6 +47,13 @@ Observation-only notifications: Kavach reports matching findings; it never block
 
 - `GET/POST/DELETE /v1/alerts/rules` manage rules (`min_severity`, optional `rule_contains` / `host_contains`
   substrings, `type` of `webhook` or `slack`, and `url`). Rules persist in `<findings file>.alerts.json`.
+- Analyst workspace, persisted in `<findings file>.workspace.json`: `GET/POST/DELETE /v1/saved-searches`
+  (name, scope `detections|findings|hosts`, query; max 100), `GET/POST/DELETE /v1/notes` (`?finding_id=`
+  to list, `?id=` to delete; text max 2000 chars, max 200 per finding, author is `admin` or `session`),
+  and a SHA-256 hash-chained activity journal at `GET /v1/journal`. Note and saved-search mutations are
+  journaled automatically; alert-rule changes are recorded by `POST /v1/journal` with action
+  `alert_rule.create|delete`. `GET /v1/journal/verify` re-walks the chain and returns `valid` plus
+  `first_broken_seq` and `reason` on tampering. Input is HTML-escaped; writes need admin token or session.
 - `GET /v1/alerts/deliveries` returns the last 100 delivery results (newest first).
 - A dispatcher polls the store each second, notifies once per (rule, finding), and retries failures 4 times
   with exponential backoff. Findings that already exist at startup are not re-notified.
