@@ -1113,6 +1113,31 @@ footer {
   .navlinks { justify-content: flex-start; }
   .table-wrap th, .table-wrap td { padding: 12px 10px; }
 }
+
+/* UX: palette, help overlay, focus, states */
+a:focus-visible, [tabindex]:focus-visible, summary:focus-visible, select:focus-visible, textarea:focus-visible, .obs-tech.is-link:focus-visible { outline: 2px solid var(--apple-blue); outline-offset: 2px; }
+.skip-link { position: absolute; left: 16px; top: -48px; z-index: 1000; background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--hairline); border-radius: 8px; padding: 8px 14px; }
+.skip-link:focus { top: 8px; }
+.overlay { position: fixed; inset: 0; z-index: 900; display: flex; align-items: flex-start; justify-content: center; padding: 12vh 16px 16px; background: rgba(0,0,0,0.4); }
+.overlay[hidden] { display: none; }
+.overlay-card { width: 100%; max-width: 560px; max-height: 76vh; overflow: auto; background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--hairline); border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); padding: 12px; }
+.overlay-card h2 { margin: 4px 8px 12px; font-size: var(--fs-h3, 17px); }
+.pal-input { width: 100%; box-sizing: border-box; }
+.pal-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.pal-list li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 15px; }
+.pal-list li small { color: var(--text-tertiary); }
+.pal-list li[aria-selected="true"], .pal-list li:hover { background: var(--surface-hover); }
+.pal-empty { padding: 12px; color: var(--text-secondary); cursor: default; }
+.kbd-table { width: 100%; border-collapse: collapse; }
+.kbd-table td { padding: 8px; border-top: 1px solid var(--hairline); font-size: 14px; }
+.kbd-table td:first-child { white-space: nowrap; }
+kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--fill-tertiary); border: 1px solid var(--hairline); border-radius: 5px; padding: 1px 6px; }
+.obs-tech.is-link { cursor: pointer; background: none; border: 0; padding: 2px 0; text-align: left; font: inherit; font-size: 12px; color: var(--apple-link); width: 100%; }
+.obs-tech.is-link:hover { text-decoration: underline; }
+.state-error { text-align: center; padding: 28px 16px; color: var(--text-secondary); }
+.state-error h3 { margin: 0 0 6px; font-size: var(--fs-h3, 17px); color: var(--text-primary); }
+@media (max-width: 640px) { .overlay { padding-top: 6vh; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
 </style>
 </head>
 <body>
@@ -1145,6 +1170,7 @@ footer {
 </section>
 
 <div id="app" hidden>
+  <a class="skip-link" href="#main-content">Skip to content</a>
   <nav class="nav" aria-label="Global">
     <div class="nav-inner">
       <button type="button" class="brand" id="brand-home" aria-label="Kavach home">
@@ -1193,7 +1219,7 @@ footer {
     </div>
   </nav>
 
-  <main>
+  <main id="main-content" tabindex="-1">
     <section id="page-overview" class="page">
       <div class="apple-section apple-section--hero">
         <div class="status-pill" id="overview-status" role="status">
@@ -2084,6 +2110,20 @@ footer {
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
 
+<div class="overlay" id="palette-root" hidden role="dialog" aria-modal="true" aria-label="Command palette">
+  <div class="overlay-card">
+    <input class="input-field pal-input" id="palette-input" type="search" placeholder="Jump to a page…" aria-label="Search pages" autocomplete="off" role="combobox" aria-expanded="true" aria-controls="palette-list">
+    <ul class="pal-list" id="palette-list" role="listbox" aria-label="Pages"></ul>
+  </div>
+</div>
+<div class="overlay" id="help-root" hidden role="dialog" aria-modal="true" aria-labelledby="help-title">
+  <div class="overlay-card">
+    <h2 id="help-title">Keyboard shortcuts</h2>
+    <table class="kbd-table"><tbody id="help-rows"></tbody></table>
+    <p style="margin:12px 8px 4px"><button type="button" id="help-close">Close</button></p>
+  </div>
+</div>
+
 <div id="drawer-root" hidden>
   <button type="button" class="drawer-backdrop" id="drawer-backdrop" aria-label="Close finding drawer"></button>
   <aside class="drawer" id="finding-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
@@ -2127,6 +2167,7 @@ footer {
 (function () {
   const $ = (id) => document.getElementById(id);
   const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'finance', 'sectors', 'modules', 'integrations'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -2275,6 +2316,10 @@ footer {
     const toggle = $('nav-browse-toggle');
     if (toggle) toggle.classList.toggle('active', browsePages.has(current));
     closeBrowse();
+    try { localStorage.setItem('kavach-page', current); } catch (_) {}
+    const want = '#/' + current;
+    if (location.hash !== want) { try { history.replaceState(null, '', want); } catch (_) { location.hash = want; } }
+    document.title = 'Kavach · ' + (pageLabels[current] || current);
   }
 
   function fmtTime(v) {
@@ -2615,7 +2660,8 @@ footer {
     tbody.innerHTML = '';
     const rows = cache.detections.filter((d) => matchFilter([d.rule, d.host, d.technique_id, d.status, d.severity].join(' '), q));
     if (!rows.length) {
-      listEmpty(tbody, 7, 'No detections', 'Findings become detections with MITRE mapping once agents report.', '', null);
+      if (q) listEmpty(tbody, 7, 'No matches', 'Nothing matches "' + q + '".', 'Clear filter', () => { $('detections-filter').value = ''; renderDetections(cache.detections); });
+      else listEmpty(tbody, 7, 'No detections', 'Findings become detections with MITRE mapping once agents report.', '', null);
       return;
     }
     rows.forEach((d) => {
@@ -3292,7 +3338,14 @@ footer {
       for (const t of (m.tactics || [])) {
         const card = el('div', '', 'obs-tactic' + (t.covered ? ' covered' : '') + (t.hits ? ' hit' : ''));
         card.appendChild(el('h4', t.tactic + (t.hits ? ' · ' + t.hits : '')));
-        for (const x of (t.techniques || [])) card.appendChild(el('span', x.id + ' ' + x.name + (x.hits ? ' (' + x.hits + ')' : ''), 'obs-tech'));
+        for (const x of (t.techniques || [])) {
+          const label = x.id + ' ' + x.name + (x.hits ? ' (' + x.hits + ')' : '');
+          const b = el('button', label, 'obs-tech is-link');
+          b.type = 'button';
+          b.setAttribute('aria-label', 'Filter detections by ' + x.id + ' ' + x.name);
+          b.addEventListener('click', () => { $('detections-filter').value = x.id; renderDetections(cache.detections); showPage('detections'); $('detections-filter').focus(); });
+          card.appendChild(b);
+        }
         if (!(t.techniques || []).length) card.appendChild(el('span', 'No rule yet', 'obs-tech'));
         grid.appendChild(card);
       }
@@ -3330,11 +3383,36 @@ footer {
     } catch (_) { /* optional */ }
   }
 
+  function obsError(on) {
+    let box = $('obs-error');
+    if (!on) { if (box) box.remove(); return; }
+    if (box) return;
+    box = document.createElement('div');
+    box.id = 'obs-error';
+    box.className = 'state-error';
+    box.setAttribute('role', 'alert');
+    box.appendChild(el('h3', 'Could not load posture data'));
+    box.appendChild(el('p', 'The controller did not answer. Check the connection and try again.'));
+    const b = el('button', 'Retry', 'primary');
+    b.type = 'button';
+    b.addEventListener('click', () => { b.disabled = true; b.textContent = 'Retrying…'; loadObserve(); });
+    box.appendChild(b);
+    $('obs-matrix').before(box);
+  }
+
   async function loadObserve() {
+    const mx = $('obs-matrix');
+    if (mx && !mx.children.length) { mx.setAttribute('aria-busy', 'true'); mx.replaceChildren(el('span', 'Loading…', 'obs-tech')); }
     try {
       const [matrix, score] = await Promise.all([request('/v1/attack/matrix'), request('/v1/compliance/score')]);
+      if (mx) mx.removeAttribute('aria-busy');
       renderObserve(matrix, score);
-    } catch (_) { renderObserve({}, {}); }
+      obsError(false);
+    } catch (_) {
+      if (mx) { mx.removeAttribute('aria-busy'); mx.replaceChildren(); }
+      renderObserve({}, {});
+      obsError(true);
+    }
   }
 
   async function load() {
@@ -3609,7 +3687,7 @@ footer {
       $('password').value = '';
       try {
         await load();
-        showPage('overview');
+        showPage(initialPage());
       } catch (_) {
         $('error').textContent = 'Signed in, but the console failed to load data.';
       }
@@ -3619,7 +3697,94 @@ footer {
     btn.disabled = false;
   });
 
-  showPage('overview');
+  // --- Command palette, shortcuts, help, hash routing ---
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', m: 'modules', l: 'timeline' };
+  const appVisible = () => !$('app').hidden;
+  let lastFocus = null;
+  function overlayOpen(id) { lastFocus = document.activeElement; $(id).hidden = false; }
+  function overlayClose(id) { $(id).hidden = true; if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (_) {} } }
+
+  let palSel = 0, palItems = [];
+  function renderPalette() {
+    const q = ($('palette-input').value || '').trim().toLowerCase();
+    palItems = pages.filter((p) => !q || p.includes(q) || pageLabels[p].toLowerCase().includes(q));
+    palSel = Math.min(palSel, Math.max(0, palItems.length - 1));
+    const ul = $('palette-list');
+    ul.replaceChildren();
+    if (!palItems.length) { ul.appendChild(el('li', 'No matching page', 'pal-empty')); return; }
+    palItems.forEach((p, i) => {
+      const li = document.createElement('li');
+      li.setAttribute('role', 'option');
+      li.setAttribute('aria-selected', i === palSel ? 'true' : 'false');
+      li.id = 'pal-' + p;
+      li.appendChild(el('span', pageLabels[p]));
+      const g = Object.keys(gKeys).find((k) => gKeys[k] === p);
+      if (g) li.appendChild(el('small', 'g ' + g));
+      li.addEventListener('click', () => { closePalette(); showPage(p); });
+      ul.appendChild(li);
+    });
+    if (palItems[palSel]) $('palette-input').setAttribute('aria-activedescendant', 'pal-' + palItems[palSel]);
+  }
+  function openPalette() { if (!appVisible()) return; palSel = 0; $('palette-input').value = ''; overlayOpen('palette-root'); renderPalette(); $('palette-input').focus(); }
+  function closePalette() { overlayClose('palette-root'); }
+  function openHelp() {
+    const rows = $('help-rows');
+    rows.replaceChildren();
+    const add = (keys, d) => {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      keys.forEach((k, i) => { if (i) td.append(' '); const kb = document.createElement('kbd'); kb.textContent = k; td.appendChild(kb); });
+      tr.appendChild(td);
+      tr.appendChild(el('td', d));
+      rows.appendChild(tr);
+    };
+    add(['Ctrl/Cmd', 'K'], 'Open command palette');
+    add(['/'], 'Open command palette');
+    add(['?'], 'Show this help');
+    add(['Esc'], 'Close overlay or drawer');
+    Object.keys(gKeys).forEach((k) => add(['g', k], 'Go to ' + pageLabels[gKeys[k]]));
+    overlayOpen('help-root');
+    $('help-close').focus();
+  }
+  function closeHelp() { overlayClose('help-root'); }
+  $('help-close').addEventListener('click', closeHelp);
+  $('palette-root').addEventListener('mousedown', (e) => { if (e.target === $('palette-root')) closePalette(); });
+  $('help-root').addEventListener('mousedown', (e) => { if (e.target === $('help-root')) closeHelp(); });
+  $('palette-input').addEventListener('input', () => { palSel = 0; renderPalette(); });
+  $('palette-input').addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); palSel = Math.min(palItems.length - 1, palSel + 1); renderPalette(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); palSel = Math.max(0, palSel - 1); renderPalette(); }
+    else if (e.key === 'Enter' && palItems[palSel]) { e.preventDefault(); const p = palItems[palSel]; closePalette(); showPage(p); }
+  });
+  let gPending = 0;
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (!$('palette-root').hidden) { closePalette(); return; }
+      if (!$('help-root').hidden) { closeHelp(); return; }
+    }
+    if (!appVisible()) return;
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); if ($('palette-root').hidden) openPalette(); else closePalette(); return; }
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const t = e.target;
+    const typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+    if (typing || !$('palette-root').hidden || !$('help-root').hidden || !$('drawer-root').hidden) return;
+    if (e.key === '/') { e.preventDefault(); openPalette(); return; }
+    if (e.key === '?') { e.preventDefault(); openHelp(); return; }
+    if (gPending && Date.now() - gPending < 1200 && gKeys[e.key]) { e.preventDefault(); gPending = 0; showPage(gKeys[e.key]); return; }
+    gPending = e.key === 'g' ? Date.now() : 0;
+  });
+  window.addEventListener('hashchange', () => {
+    const p = location.hash.replace(/^#\/?/, '');
+    if (pages.includes(p) && p !== current) showPage(p);
+  });
+  function initialPage() {
+    const h = location.hash.replace(/^#\/?/, '');
+    if (pages.includes(h)) return h;
+    try { const s = localStorage.getItem('kavach-page'); if (pages.includes(s)) return s; } catch (_) {}
+    return 'overview';
+  }
+
+  showPage(initialPage());
   load();
 })();
 </script>
