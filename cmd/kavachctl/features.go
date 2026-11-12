@@ -528,7 +528,7 @@ func topLevelCommands() []string {
 		"ueba", "watchlists", "ioc", "ioa", "exclusions", "rules", "overwatch", "dns", "modules", "world",
 		"discover", "spotlight", "exposure", "compliance", "attack", "metrics", "zero-trust", "sbom", "fim",
 		"persistence", "firewall", "browser", "casb", "cnapp", "ot", "ai", "audit", "report", "siem", "fusion",
-		"connectors", "cloud", "mobile", "get", "watch", "doctor", "completion", "help",
+		"connectors", "cloud", "mobile", "risk", "trends", "export", "notes", "saved-searches", "alerts", "journal", "get", "watch", "doctor", "completion", "help",
 	}
 }
 
@@ -544,7 +544,7 @@ func completionCmd(out io.Writer, args []string) error {
   if [ "$COMP_CWORD" -eq 1 ]; then
     COMPREPLY=( $(compgen -W "%s" -- "$cur") )
   else
-    COMPREPLY=( $(compgen -W "--json --output --severity --host --rule --status --help" -- "$cur") )
+    COMPREPLY=( $(compgen -W "--json --output --severity --host --rule --status --help --days --bucket --format --out --force --since --finding --min-severity --type --url --rule-contains --host-contains" -- "$cur") )
   fi
 }
 complete -F _kavachctl kavachctl
@@ -557,7 +557,7 @@ _kavachctl() {
   if (( CURRENT == 2 )); then
     _describe 'command' cmds
   else
-    _arguments '--json[raw JSON]' '--output[table|json|yaml]:format:(table json yaml)' '--severity[severity filter]:sev:(low medium high critical)' '--host[host]' '--rule[rule]' '--status[status]'
+    _arguments '--json[raw JSON]' '--output[table|json|yaml]:format:(table json yaml)' '--severity[severity filter]:sev:(low medium high critical)' '--host[host]' '--rule[rule]' '--status[status]' '--days[trend window]:days:(7 14 30)' '--bucket[bucket]:bucket:(hour day)' '--format[export format]:fmt:(csv json ndjson html)' '--out[output file]:file:_files' '--force[overwrite]' '--since[RFC3339]' '--finding[finding id]' '--min-severity[alert min severity]:sev:(low medium high critical)' '--type[alert type]:type:(webhook slack)' '--url[destination]' '--rule-contains[substring]' '--host-contains[substring]'
   fi
 }
 compdef _kavachctl kavachctl
@@ -568,6 +568,13 @@ compdef _kavachctl kavachctl
 		fmt.Fprintln(out, "complete -c kavachctl -l json -d 'raw JSON'")
 		fmt.Fprintln(out, "complete -c kavachctl -l output -x -a 'table json yaml'")
 		fmt.Fprintln(out, "complete -c kavachctl -l severity -x -a 'low medium high critical'")
+		fmt.Fprintln(out, "complete -c kavachctl -l days -x -a '7 14 30'")
+		fmt.Fprintln(out, "complete -c kavachctl -l bucket -x -a 'hour day'")
+		fmt.Fprintln(out, "complete -c kavachctl -l format -x -a 'csv json ndjson html'")
+		fmt.Fprintln(out, "complete -c kavachctl -l out -r")
+		fmt.Fprintln(out, "complete -c kavachctl -l force")
+		fmt.Fprintln(out, "complete -c kavachctl -l min-severity -x -a 'low medium high critical'")
+		fmt.Fprintln(out, "complete -c kavachctl -l type -x -a 'webhook slack'")
 	default:
 		return fmt.Errorf("unknown shell %q (bash|zsh|fish)", args[0])
 	}

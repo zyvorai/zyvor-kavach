@@ -138,6 +138,20 @@ func run(args []string) error {
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		defer stop()
 		return watchCmd(ctx, os.Stdout, args[1:])
+	case "risk":
+		return riskCmd(os.Stdout, args[1:])
+	case "trends":
+		return trendsCmd(os.Stdout, args[1:])
+	case "export":
+		return exportCmd(os.Stdout, args[1:])
+	case "notes":
+		return notesCmd(os.Stdout, args[1:])
+	case "saved-searches", "searches":
+		return savedSearchesCmd(os.Stdout, args[1:])
+	case "alerts":
+		return alertsCmd(os.Stdout, args[1:])
+	case "journal":
+		return journalCmd(os.Stdout, args[1:])
 	case "doctor":
 		return doctorCmd(os.Stdout)
 	case "completion":
