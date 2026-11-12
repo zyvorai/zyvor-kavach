@@ -2841,8 +2841,15 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
         d.host || '—',
         String(d.score != null ? d.score : '—'),
         fmtTime(d.time),
-      ]);
+      ], { onClick: () => openDrawer(findingForDetection(d)) });
     });
+  }
+
+  // A detection maps 1:1 to a finding; fall back to the detection's own fields if the finding is not cached.
+  function findingForDetection(d) {
+    const id = d.finding_id || '';
+    const f = cache.findings.find((x) => x.id === id);
+    return f || { id, rule: d.rule, host: d.host, severity: d.severity, description: d.description, time: d.time, evidence: {} };
   }
 
   function renderHosts(items) {
