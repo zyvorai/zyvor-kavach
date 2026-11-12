@@ -41,6 +41,9 @@ func run(args []string) error {
 		return nil
 	}
 	ensureConfig()
+	if handled, err := om2Dispatch(args, os.Stdout); handled {
+		return err
+	}
 	if handled, err := omDispatch(args, os.Stdout); handled {
 		return err
 	}
