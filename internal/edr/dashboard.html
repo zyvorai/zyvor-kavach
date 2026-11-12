@@ -1169,6 +1169,38 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 .state-error h3 { margin: 0 0 6px; font-size: var(--fs-h3, 17px); color: var(--text-primary); }
 @media (max-width: 640px) { .overlay { padding-top: 6vh; } }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+/* === detection-lab page === */
+.lab-banner { display:inline-block; margin:0 0 12px; padding:4px 12px; border-radius:var(--radius-pill); background:var(--warning-bg); color:var(--warning-text); border:1px solid var(--warning-border); font-size:13px; font-weight:600; }
+.lab-code { width:100%; box-sizing:border-box; min-height:220px; font-family:var(--font-mono); font-size:13px; line-height:1.45; resize:vertical; white-space:pre; overflow:auto; }
+.lab-code--sm { min-height:120px; }
+.lab-trace, .lab-trace ul { list-style:none; margin:4px 0 0; padding-left:16px; border-left:1px solid var(--hairline-1); font-size:13px; }
+.lab-trace li { margin:2px 0; overflow-wrap:anywhere; }
+.lab-trace .lt-yes { color:var(--success-text); font-weight:600; }
+.lab-trace .lt-no { color:var(--text-tertiary); font-weight:600; }
+.lab-event { border:1px solid var(--hairline-1); border-radius:var(--radius-md); padding:10px 14px; margin:8px 0; }
+.lab-event summary { cursor:pointer; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.lab-bars .lb-bar { fill:var(--apple-blue); }
+.lab-bars .lb-axis { stroke:var(--hairline-1); }
+.lab-bars text { fill:var(--text-tertiary); font-size:11px; font-family:var(--font); }
+.lab-chart { width:100%; height:auto; display:block; }
+.lab-stats { display:flex; gap:24px; flex-wrap:wrap; margin:8px 0; }
+.lab-stats span { display:block; font-size:13px; color:var(--text-secondary); }
+.lab-stats b { font-size:20px; font-weight:600; }
+.tag.pass, .tag.ok { background:var(--success-bg); color:var(--success-text); }
+.tag.partial, .tag.manual, .tag.not_modified, .tag.never { background:var(--warning-bg); color:var(--warning-text); }
+.tag.fail, .tag.error, .tag.overdue { background:var(--danger-bg); color:var(--danger); }
+.tag.not_applicable { background:var(--fill-tertiary); color:var(--text-secondary); }
+/* === end detection-lab page === */
+/* === threat-intel feeds page === */
+.feed-err { color:var(--danger); font-size:13px; overflow-wrap:anywhere; }
+/* === end threat-intel feeds page === */
+/* === compliance evidence page === */
+.ev-notice { padding:12px 16px; border:1px solid var(--warning-border); background:var(--warning-bg); color:var(--warning-text); border-radius:var(--radius-md); margin:0 0 16px; font-size:14px; }
+.ev-counts { display:flex; gap:6px 14px; flex-wrap:wrap; margin:0; padding:0; list-style:none; font-size:13px; }
+.ev-clock { font-variant-numeric:tabular-nums; font-weight:600; }
+.ev-clock.is-overdue, tr.ev-overdue td { color:var(--danger); }
+.ev-link { display:inline-flex; align-items:center; min-height:var(--hit-min); }
+/* === end compliance evidence page === */
 </style>
 </head>
 <body>
@@ -1237,6 +1269,9 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
             <button type="button" data-page="sectors" role="menuitem">Sectors</button>
             <button type="button" data-page="modules" role="menuitem">Modules</button>
             <button type="button" data-page="integrations" role="menuitem">Integrations</button>
+            <button type="button" data-page="lab" role="menuitem">Detection lab</button>
+            <button type="button" data-page="feeds" role="menuitem">Intel feeds</button>
+            <button type="button" data-page="evidence" role="menuitem">Evidence</button>
           </div>
         </div>
       </div>
@@ -2260,6 +2295,122 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
         </article>
       </div>
     </section>
+    <!-- === detection-lab page === -->
+    <section id="page-lab" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Detection as code</p>
+        <h1>Detection lab. Sandbox only.</h1>
+        <p class="lede">Write, test and backtest detection rules against sample and stored telemetry. Rules here never go live and never contain anything.</p>
+        <span class="lab-banner">SANDBOX &mdash; rules in this lab never go live</span>
+      </header>
+      <div class="work-panel">
+        <h3>Rule editor</h3>
+        <p class="hint">Rule JSON: id, name, technique, enabled, condition (field/op/value or all/any/not) and optional threshold.</p>
+        <label for="lab-rule" class="hint">Rule JSON</label>
+        <textarea class="input-field lab-code" id="lab-rule" spellcheck="false" autocomplete="off" aria-describedby="lab-msg"></textarea>
+        <div class="work-actions">
+          <button type="button" class="secondary" id="lab-template">Starter template</button>
+          <button type="button" class="primary" id="lab-validate">Validate</button>
+          <button type="button" class="secondary" id="lab-backtest">Backtest</button>
+          <button type="button" class="secondary" id="lab-save">Save to lab</button>
+        </div>
+        <p class="work-msg" id="lab-msg" role="status"></p>
+      </div>
+      <div class="work-panel">
+        <h3>Test against sample events</h3>
+        <p class="hint">JSON array of events (kind, time, host, executable, parent_exe, command, path, destination, uid ...).</p>
+        <label for="lab-events" class="hint">Sample events JSON</label>
+        <textarea class="input-field lab-code lab-code--sm" id="lab-events" spellcheck="false" autocomplete="off"></textarea>
+        <div class="work-actions"><button type="button" class="primary" id="lab-test">Test rule</button></div>
+        <p class="work-msg" id="lab-test-msg" role="status"></p>
+        <div id="lab-test-out"></div>
+      </div>
+      <div class="work-panel" id="lab-bt-panel" hidden>
+        <h3>Backtest <small class="hint">sandbox, stored telemetry</small></h3>
+        <div id="lab-bt-out"></div>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Saved lab rules</h3>
+        <p class="work-msg" id="lab-list-msg" role="status"></p>
+        <table>
+          <thead><tr><th>Rule</th><th>Technique</th><th>Enabled</th><th>Updated</th><th>Actions</th></tr></thead>
+          <tbody id="lab-rule-rows"></tbody>
+        </table>
+      </div>
+    </section>
+    <!-- === end detection-lab page === -->
+
+    <!-- === threat-intel feeds page === -->
+    <section id="page-feeds" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Threat intelligence</p>
+        <h1>Intel feeds. Observe only.</h1>
+        <p class="lede">Pull indicators from external feeds into the IOC list. Feeds only add indicators for matching; nothing is blocked or changed.</p>
+      </header>
+      <div class="work-panel">
+        <h3>Add feed</h3>
+        <p class="hint">URLs must be https (http only for loopback). Only the host is shown after saving.</p>
+        <form id="feed-form" novalidate>
+          <div class="work-grid">
+            <div class="field"><label for="feed-name">Name</label><input class="input-field" id="feed-name" type="text" maxlength="64" autocomplete="off"></div>
+            <div class="field"><label for="feed-format">Format</label>
+              <select class="select-field" id="feed-format"><option value="csv">csv</option><option value="plain">plain</option><option value="stix-lite-json">stix-lite-json</option></select></div>
+            <div class="field field--wide"><label for="feed-url">Feed URL</label><input class="input-field" id="feed-url" type="url" placeholder="https://feeds.example.com/iocs.csv" autocomplete="off" spellcheck="false"></div>
+            <div class="field"><label for="feed-interval">Interval (minutes, 15 to 10080)</label><input class="input-field" id="feed-interval" type="number" min="15" max="10080" value="60"></div>
+            <div class="field"><label for="feed-ttl">TTL (days, 0 to 365)</label><input class="input-field" id="feed-ttl" type="number" min="0" max="365" value="30"></div>
+            <div class="field"><label for="feed-tlp">TLP</label>
+              <select class="select-field" id="feed-tlp"><option value="">unset</option><option value="clear">clear</option><option value="white">white</option><option value="green">green</option><option value="amber">amber</option><option value="amber+strict">amber+strict</option><option value="red">red</option></select></div>
+          </div>
+          <div class="work-actions"><button type="submit" class="primary" id="feed-add">Add feed</button></div>
+          <p class="work-msg" id="feed-msg" role="status"></p>
+        </form>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Feeds <small class="hint" id="feed-refresh">refreshes every 30s</small></h3>
+        <table>
+          <thead><tr><th>Name</th><th>Status</th><th>URL</th><th>Format</th><th>Last fetch</th><th>Added</th><th>Expired</th><th>Active</th><th>Error</th><th>Actions</th></tr></thead>
+          <tbody id="feed-rows"></tbody>
+        </table>
+      </div>
+    </section>
+    <!-- === end threat-intel feeds page === -->
+
+    <!-- === compliance evidence page === -->
+    <section id="page-evidence" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Compliance</p>
+        <h1>Evidence. Observe only.</h1>
+        <p class="lede">Map observed signals to framework controls and export an evidence pack for your auditor.</p>
+      </header>
+      <p class="ev-notice" role="note"><strong>Not a certification.</strong> This is supporting evidence from observed telemetry. It does not certify compliance with any framework, and manual controls need your own evidence.</p>
+      <div class="work-panel">
+        <div class="work-grid">
+          <div class="field"><label for="ev-fw">Framework</label>
+            <select class="select-field" id="ev-fw">
+              <option value="cis-v8">CIS Controls v8</option><option value="nist-csf-2">NIST CSF 2.0</option><option value="soc2">SOC 2</option><option value="iso27001">ISO 27001</option><option value="rbi">RBI</option><option value="cert-in">CERT-In</option><option value="dpdp">DPDP</option>
+            </select></div>
+          <div class="field"><a class="apple-text-link ev-link" id="ev-pack" target="_blank" rel="noopener" href="#">Open evidence pack</a></div>
+        </div>
+        <p class="work-msg" id="ev-msg" role="status"></p>
+      </div>
+      <div class="work-panel" id="ev-clock-card">
+        <h3>CERT-In 6-hour clock</h3>
+        <p class="hint" id="ev-clock-note">Open high and critical findings against the 6-hour reporting window. Informational only; Kavach does not file reports.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Finding</th><th>Rule</th><th>Host</th><th>Severity</th><th>Status</th><th>Time remaining</th></tr></thead>
+          <tbody id="ev-clock-rows"></tbody>
+        </table></div>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Controls</h3>
+        <table>
+          <thead><tr><th>Control</th><th>Title</th><th>Status</th><th>Evidence</th></tr></thead>
+          <tbody id="ev-rows"></tbody>
+        </table>
+      </div>
+    </section>
+    <!-- === end compliance evidence page === -->
+
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
@@ -2330,8 +2481,8 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'finance', 'sectors', 'modules', 'integrations'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -2454,7 +2605,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'finance', 'sectors']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'finance', 'sectors', 'lab', 'feeds', 'evidence']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -2487,6 +2638,9 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     if (current === 'alerts' && typeof loadAlerts === 'function') loadAlerts();
     if (current === 'detections' && typeof loadSaved === 'function') loadSaved();
     if (current === 'risk' && typeof loadRisk === 'function') loadRisk();
+    if (current === 'lab' && typeof loadLab === 'function') loadLab();
+    if (current === 'feeds' && typeof loadFeeds === 'function') loadFeeds();
+    if (current === 'evidence' && typeof loadEvidence === 'function') loadEvidence();
   }
 
   function fmtTime(v) {
@@ -4236,7 +4390,380 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
   });
 
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', m: 'modules', l: 'timeline' };
+  /* === lab/feeds/evidence pages: shared helper === */
+  // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
+  async function pgApi(path, opts) {
+    const res = await fetch(path, { credentials: 'same-origin', ...opts });
+    const ct = res.headers.get('content-type') || '';
+    if (!res.ok) {
+      let t = '';
+      try { t = (await res.text()).trim(); } catch (_) {}
+      try { const j = JSON.parse(t); if (j && typeof j.error === 'string') t = j.error; } catch (_) {}
+      throw new Error(t && t.length < 300 ? t : 'HTTP ' + res.status);
+    }
+    return ct.includes('application/json') ? res.json() : null;
+  }
+  function pgJSON(body) { return { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: typeof body === 'string' ? body : JSON.stringify(body) }; }
+  function pgMask(raw) {
+    try {
+      const u = new URL(String(raw));
+      return u.protocol + '//' + u.host + (u.pathname.length > 1 || u.search || u.hash ? '/•••' : '');
+    } catch (_) { return '•••'; }
+  }
+  function pgBtn(label, cls, fn, aria) {
+    const b = el('button', label, cls);
+    b.type = 'button';
+    if (aria) b.setAttribute('aria-label', aria);
+    b.addEventListener('click', fn);
+    return b;
+  }
+  /* === end shared helper === */
+
+  /* === detection-lab page === */
+  const LAB_TEMPLATE = {
+    id: 'lab-shell-from-web',
+    name: 'Shell spawned by web server',
+    description: 'Sandbox example: a shell started by a web server process.',
+    technique: 'T1059.004',
+    enabled: true,
+    condition: { all: [
+      { field: 'executable', op: 'in', values: ['/bin/sh', '/bin/bash'] },
+      { field: 'parent_exe', op: 'contains', value: 'nginx' },
+    ] },
+  };
+  const LAB_SAMPLE_EVENTS = [
+    { kind: 'process', time: '2026-01-01T10:00:00Z', host: 'web-01', executable: '/bin/bash', parent_exe: '/usr/sbin/nginx', command: 'bash -c id' },
+    { kind: 'process', time: '2026-01-01T10:01:00Z', host: 'web-01', executable: '/usr/bin/ls', parent_exe: '/bin/bash', command: 'ls -la' },
+  ];
+  let labConfirmId = '';
+  let labRules = [];
+  function labSet(id, text, bad) { setMsg(id, text, bad); }
+  function labParse(id, what) {
+    try { return { v: JSON.parse($(id).value) }; }
+    catch (e) { return { err: what + ' is not valid JSON: ' + e.message }; }
+  }
+  function labTraceList(tr) {
+    const li = document.createElement('li');
+    li.appendChild(el('span', tr.matched ? 'match' : 'no match', tr.matched ? 'lt-yes' : 'lt-no'));
+    let line = ' ' + (tr.cond || '');
+    if (tr.actual) line += ' (actual: ' + tr.actual + ')';
+    if (tr.missing) line += ' (field missing)';
+    if (tr.reason) line += ' — ' + tr.reason;
+    li.appendChild(document.createTextNode(line));
+    if (tr.children && tr.children.length) {
+      const ul = document.createElement('ul');
+      for (const c of tr.children) ul.appendChild(labTraceList(c));
+      li.appendChild(ul);
+    }
+    return li;
+  }
+  function labEventSummary(ev) {
+    return [ev.host, ev.executable || ev.path || ev.destination || ev.rule, ev.command].filter(Boolean).join(' · ') || ev.kind || 'event';
+  }
+  function renderLabTest(r, events) {
+    const out = $('lab-test-out');
+    out.replaceChildren();
+    out.appendChild(el('p', r.condition_matched + ' of ' + r.events + ' event(s) matched; ' + ((r.hits || []).length) + ' hit(s) after threshold.', 'hint'));
+    (r.results || []).forEach((x) => {
+      const d = document.createElement('details');
+      d.className = 'lab-event';
+      if (x.matched) d.open = true;
+      const s = document.createElement('summary');
+      s.appendChild(el('span', x.matched ? 'matched' : 'not matched', 'tag ' + (x.matched ? 'pass' : 'not_applicable')));
+      s.appendChild(el('span', '#' + (x.index + 1) + ' ' + labEventSummary(events[x.index] || {})));
+      d.appendChild(s);
+      if (x.trace) {
+        const ul = document.createElement('ul');
+        ul.className = 'lab-trace';
+        ul.appendChild(labTraceList(x.trace));
+        d.appendChild(ul);
+      }
+      out.appendChild(d);
+    });
+  }
+  function labBars(days) {
+    const W = 560, H = 140, padL = 28, padB = 22, padT = 8;
+    const max = Math.max(1, ...days.map((d) => d.hits));
+    const bw = (W - padL) / days.length;
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.setAttribute('class', 'lab-chart lab-bars');
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', 'Hits per day, ' + days.length + ' day(s), peak ' + max);
+    const mk = (n, a, t) => { const e = document.createElementNS(ns, n); for (const k in a) e.setAttribute(k, a[k]); if (t != null) e.textContent = t; return e; };
+    svg.appendChild(mk('line', { x1: padL, y1: H - padB, x2: W, y2: H - padB, class: 'lb-axis' }));
+    svg.appendChild(mk('text', { x: 0, y: padT + 8 }, String(max)));
+    svg.appendChild(mk('text', { x: 0, y: H - padB }, '0'));
+    days.forEach((d, i) => {
+      const h = Math.round((d.hits / max) * (H - padB - padT - 10));
+      const x = padL + i * bw + bw * 0.15;
+      const r = mk('rect', { x, y: H - padB - h, width: Math.max(1, bw * 0.7), height: h, class: 'lb-bar' });
+      r.appendChild(mk('title', {}, d.day + ': ' + d.hits));
+      svg.appendChild(r);
+      if (days.length <= 10 || i % Math.ceil(days.length / 8) === 0) svg.appendChild(mk('text', { x: x, y: H - 6 }, String(d.day).slice(5)));
+    });
+    return svg;
+  }
+  function renderLabBacktest(b) {
+    $('lab-bt-panel').hidden = false;
+    const out = $('lab-bt-out');
+    out.replaceChildren();
+    const stats = el('div', '', 'lab-stats');
+    const stat = (k, v) => { const s = document.createElement('div'); s.appendChild(el('span', k)); s.appendChild(el('b', v)); stats.appendChild(s); };
+    stat('Hits', b.hit_count);
+    stat('Noise per host per day', (Number(b.noise_per_host_per_day) || 0).toFixed(2));
+    stat('Events scanned', b.events_scanned);
+    stat('Hosts observed', b.hosts_observed);
+    out.appendChild(stats);
+    if (b.truncated) out.appendChild(el('p', 'Telemetry was truncated at ' + b.event_cap + ' events; results are partial.', 'hint'));
+    const days = b.hits_per_day || [];
+    out.appendChild(el('h3', 'Hits per day'));
+    if (days.length) {
+      out.appendChild(labBars(days));
+      const det = document.createElement('details');
+      det.appendChild(el('summary', 'Show as table'));
+      const wrap = el('div', '', 'table-wrap');
+      const tb = document.createElement('tbody');
+      const tbl = document.createElement('table');
+      const th = document.createElement('thead');
+      const trh = document.createElement('tr'); trh.append(el('th', 'Day'), el('th', 'Hits')); th.appendChild(trh);
+      tbl.append(th, tb); wrap.appendChild(tbl); det.appendChild(wrap);
+      days.forEach((d) => tableRow(tb, [d.day, d.hits]));
+      out.appendChild(det);
+    } else out.appendChild(el('p', 'No hits in the scanned telemetry.', 'hint'));
+    const hosts = b.top_hosts || [];
+    out.appendChild(el('h3', 'Top hosts'));
+    const ht = document.createElement('table'), hb = document.createElement('tbody');
+    const hh = document.createElement('thead'), hr = document.createElement('tr'); hr.append(el('th', 'Host'), el('th', 'Hits')); hh.appendChild(hr);
+    ht.append(hh, hb);
+    if (hosts.length) hosts.forEach((h) => tableRow(hb, [h.host || '—', h.hits])); else listEmpty(hb, 2, 'No hosts', 'No host produced a hit.', '', null);
+    const hw = el('div', '', 'table-wrap'); hw.appendChild(ht); out.appendChild(hw);
+    const sample = (b.hit_sample || []).slice(0, 20);
+    out.appendChild(el('h3', 'Sample hits (up to 20)'));
+    const st = document.createElement('table'), sb = document.createElement('tbody');
+    const sh = document.createElement('thead'), sr = document.createElement('tr');
+    ['Time', 'Host', 'Event', 'Why', 'Count'].forEach((c) => sr.appendChild(el('th', c))); sh.appendChild(sr);
+    st.append(sh, sb);
+    if (sample.length) sample.forEach((h) => tableRow(sb, [fmtTime(h.event && h.event.time), (h.event && h.event.host) || '—', labEventSummary(h.event || {}), h.why || '', h.count || '—']));
+    else listEmpty(sb, 5, 'No sample hits', 'The rule did not match stored telemetry.', '', null);
+    const sw = el('div', '', 'table-wrap'); sw.appendChild(st); out.appendChild(sw);
+  }
+  function renderLabRules() {
+    const tbody = $('lab-rule-rows');
+    if (!labRules.length) { listEmpty(tbody, 5, 'No saved lab rules', 'Save a rule from the editor to keep it here. Saved rules stay in the sandbox.', '', null); return; }
+    tbody.replaceChildren();
+    for (const r of labRules) {
+      const act = el('div', '', 'alert-confirm');
+      if (labConfirmId === r.id) {
+        const yes = pgBtn('Delete', 'danger', async () => {
+          yes.disabled = true;
+          try { await pgApi('/v1/lab/rules?id=' + encodeURIComponent(r.id), { method: 'DELETE' }); labConfirmId = ''; labSet('lab-list-msg', 'Rule deleted.', false); }
+          catch (e) { labSet('lab-list-msg', 'Delete failed: ' + e.message, true); }
+          loadLab();
+        });
+        act.append(el('span', 'Delete this rule?'), yes, pgBtn('Cancel', 'secondary', () => { labConfirmId = ''; renderLabRules(); }));
+      } else {
+        act.append(
+          pgBtn('Load', 'secondary', () => { $('lab-rule').value = JSON.stringify(r, null, 2); labSet('lab-msg', 'Loaded ' + r.id + ' into the editor.', false); $('lab-rule').focus(); }, 'Load rule ' + r.id + ' into editor'),
+          pgBtn('Delete', 'secondary', () => { labConfirmId = r.id; renderLabRules(); }, 'Delete rule ' + r.id));
+      }
+      const en = pgBtn(r.enabled ? 'Enabled' : 'Disabled', 'secondary', async () => {
+        try { await pgApi('/v1/lab/rules', pgJSON({ ...r, enabled: !r.enabled })); labSet('lab-list-msg', '', false); }
+        catch (e) { labSet('lab-list-msg', 'Update failed: ' + e.message, true); }
+        loadLab();
+      }, (r.enabled ? 'Disable' : 'Enable') + ' rule ' + r.id + ' (sandbox only)');
+      en.setAttribute('aria-pressed', r.enabled ? 'true' : 'false');
+      tableRow(tbody, [(r.name ? r.name + ' ' : '') + '(' + r.id + ')', r.technique || '—', en, fmtTime(r.updated), act]);
+    }
+  }
+  async function loadLab() {
+    try { const r = await pgApi('/v1/lab/rules'); labRules = (r && r.rules) || []; renderLabRules(); }
+    catch (e) { labSet('lab-list-msg', 'Could not load lab rules: ' + e.message, true); }
+  }
+  $('lab-rule').value = JSON.stringify(LAB_TEMPLATE, null, 2);
+  $('lab-events').value = JSON.stringify(LAB_SAMPLE_EVENTS, null, 2);
+  $('lab-template').addEventListener('click', () => { $('lab-rule').value = JSON.stringify(LAB_TEMPLATE, null, 2); labSet('lab-msg', 'Starter template loaded.', false); });
+  $('lab-validate').addEventListener('click', async () => {
+    labSet('lab-msg', 'Validating…', false);
+    try { await pgApi('/v1/lab/rules/validate', pgJSON($('lab-rule').value)); labSet('lab-msg', 'Rule is valid (sandbox).', false); }
+    catch (e) { labSet('lab-msg', 'Invalid: ' + e.message, true); }
+  });
+  $('lab-save').addEventListener('click', async () => {
+    try { const r = await pgApi('/v1/lab/rules', pgJSON($('lab-rule').value)); labSet('lab-msg', 'Saved to the lab' + (r && r.rule ? ' as ' + r.rule.id : '') + '.', false); loadLab(); }
+    catch (e) { labSet('lab-msg', 'Save failed: ' + e.message, true); }
+  });
+  $('lab-test').addEventListener('click', async () => {
+    const rule = labParse('lab-rule', 'Rule'), ev = labParse('lab-events', 'Sample events');
+    if (rule.err || ev.err) { labSet('lab-test-msg', rule.err || ev.err, true); return; }
+    if (!Array.isArray(ev.v)) { labSet('lab-test-msg', 'Sample events must be a JSON array.', true); return; }
+    labSet('lab-test-msg', 'Testing…', false);
+    try { const r = await pgApi('/v1/lab/rules/test', pgJSON({ rule: rule.v, events: ev.v })); labSet('lab-test-msg', '', false); renderLabTest(r, ev.v); }
+    catch (e) { $('lab-test-out').replaceChildren(); labSet('lab-test-msg', e.message, true); }
+  });
+  $('lab-backtest').addEventListener('click', async () => {
+    const rule = labParse('lab-rule', 'Rule');
+    if (rule.err) { labSet('lab-msg', rule.err, true); return; }
+    labSet('lab-msg', 'Backtesting…', false);
+    try { const b = await pgApi('/v1/lab/rules/backtest', pgJSON({ rule: rule.v })); labSet('lab-msg', 'Backtest complete.', false); renderLabBacktest(b); }
+    catch (e) { labSet('lab-msg', 'Backtest failed: ' + e.message, true); }
+  });
+  /* === end detection-lab page === */
+
+  /* === threat-intel feeds page === */
+  let feedConfirmId = '';
+  let feedList = [];
+  let feedStatus = {};
+  function renderFeeds() {
+    const tbody = $('feed-rows');
+    if (!feedList.length) { listEmpty(tbody, 10, 'No feeds', 'Add a feed above to pull indicators automatically.', '', null); return; }
+    tbody.replaceChildren();
+    for (const f of feedList) {
+      const s = feedStatus[f.id] || { status: 'never' };
+      const act = el('div', '', 'alert-confirm');
+      if (feedConfirmId === f.id) {
+        const yes = pgBtn('Delete', 'danger', async () => {
+          yes.disabled = true;
+          try { await pgApi('/v1/intel/feeds?id=' + encodeURIComponent(f.id), { method: 'DELETE' }); feedConfirmId = ''; setMsg('feed-msg', 'Feed deleted along with its indicators.', false); }
+          catch (e) { setMsg('feed-msg', 'Delete failed: ' + e.message, true); }
+          loadFeeds();
+        });
+        act.append(el('span', 'Delete feed and its indicators?'), yes, pgBtn('Cancel', 'secondary', () => { feedConfirmId = ''; renderFeeds(); }));
+      } else {
+        const rf = pgBtn('Refresh now', 'secondary', async () => {
+          rf.disabled = true;
+          try { await pgApi('/v1/intel/feeds/refresh?id=' + encodeURIComponent(f.id), { method: 'POST' }); setMsg('feed-msg', 'Refreshed ' + f.name + '.', false); }
+          catch (e) { setMsg('feed-msg', 'Refresh failed: ' + e.message, true); }
+          loadFeeds();
+        }, 'Refresh feed ' + f.name + ' now');
+        if (f.enabled === false) rf.disabled = true;
+        act.append(rf, pgBtn('Delete', 'secondary', () => { feedConfirmId = f.id; renderFeeds(); }, 'Delete feed ' + f.name));
+      }
+      tableRow(tbody, [
+        f.name, el('span', s.status || 'never', 'tag ' + (s.status || 'never')),
+        el('span', pgMask(f.url), 'alert-url'), f.format + (f.tlp ? ' · TLP:' + f.tlp : ''),
+        s.last_fetch && s.last_fetch.indexOf('0001-') !== 0 ? fmtTime(s.last_fetch) : 'Never',
+        s.added || 0, s.expired || 0, s.active || 0,
+        s.error ? el('span', s.error, 'feed-err') : '—', act,
+      ]);
+    }
+  }
+  async function loadFeeds() {
+    try {
+      const [fl, st] = await Promise.all([pgApi('/v1/intel/feeds'), pgApi('/v1/intel/feeds/status')]);
+      feedList = (fl && fl.feeds) || [];
+      feedStatus = {};
+      ((st && st.status) || []).forEach((x) => { feedStatus[x.id] = x; });
+      renderFeeds();
+      $('feed-refresh').textContent = 'updated ' + new Date().toLocaleTimeString() + ' · refreshes every 30s';
+    } catch (e) { setMsg('feed-msg', 'Could not load feeds: ' + e.message, true); }
+  }
+  $('feed-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = $('feed-name').value.trim(), url = $('feed-url').value.trim();
+    if (!name) { setMsg('feed-msg', 'Name is required.', true); $('feed-name').focus(); return; }
+    if (!url) { setMsg('feed-msg', 'Feed URL is required.', true); $('feed-url').focus(); return; }
+    const btn = $('feed-add');
+    btn.disabled = true;
+    try {
+      await pgApi('/v1/intel/feeds', pgJSON({
+        name, url, format: $('feed-format').value, tlp: $('feed-tlp').value,
+        interval: parseInt($('feed-interval').value, 10) || 0, ttl_days: parseInt($('feed-ttl').value, 10) || 0,
+      }));
+      $('feed-name').value = ''; $('feed-url').value = '';
+      setMsg('feed-msg', 'Feed added.', false);
+      loadFeeds();
+    } catch (err) { setMsg('feed-msg', err.message, true); }
+    btn.disabled = false;
+  });
+  setInterval(() => { if (current === 'feeds' && !document.hidden && appVisible()) loadFeeds(); }, 30000);
+  /* === end threat-intel feeds page === */
+
+  /* === compliance evidence page === */
+  let evClock = [];
+  function evFmtRemaining(sec) {
+    const neg = sec < 0, a = Math.abs(sec);
+    const h = Math.floor(a / 3600), m = Math.floor((a % 3600) / 60), s = a % 60;
+    const p = (n) => String(n).padStart(2, '0');
+    return (neg ? 'overdue by ' : '') + p(h) + ':' + p(m) + ':' + p(s);
+  }
+  function evTick() {
+    document.querySelectorAll('#ev-clock-rows [data-deadline]').forEach((n) => {
+      const sec = Math.floor((Date.parse(n.getAttribute('data-deadline')) - Date.now()) / 1000);
+      if (Number.isNaN(sec)) return;
+      n.textContent = evFmtRemaining(sec);
+      const over = sec < 0;
+      n.classList.toggle('is-overdue', over);
+      const tr = n.closest('tr');
+      if (tr) tr.classList.toggle('ev-overdue', over);
+    });
+  }
+  function renderEvClock() {
+    const tbody = $('ev-clock-rows');
+    if (!evClock.length) { listEmpty(tbody, 6, 'No open high or critical findings', 'Nothing is running against the 6-hour window right now.', '', null); return; }
+    tbody.replaceChildren();
+    for (const c of evClock) {
+      const t = el('span', '', 'ev-clock');
+      t.setAttribute('data-deadline', c.deadline);
+      tableRow(tbody, [c.finding_id, c.rule, c.host, el('span', c.severity, 'tag ' + c.severity), c.status, t]);
+    }
+    evTick();
+  }
+  function renderEvControls(list) {
+    const tbody = $('ev-rows');
+    if (!list.length) { listEmpty(tbody, 4, 'No controls', 'This framework has no mapped controls.', '', null); return; }
+    tbody.replaceChildren();
+    list.forEach((c, i) => {
+      const detId = 'ev-det-' + i;
+      const btn = el('button', 'Details', 'secondary');
+      btn.type = 'button';
+      btn.setAttribute('aria-expanded', 'false');
+      btn.setAttribute('aria-controls', detId);
+      btn.setAttribute('aria-label', 'Show evidence for control ' + c.id);
+      const tr = tableRow(tbody, [c.id, c.title, el('span', c.status, 'tag ' + c.status), btn]);
+      const dr = document.createElement('tr');
+      dr.id = detId; dr.hidden = true;
+      const td = document.createElement('td');
+      td.colSpan = 4;
+      if (c.note) td.appendChild(el('p', c.note, 'hint'));
+      if (c.signals && c.signals.length) td.appendChild(el('p', 'Signals: ' + c.signals.join(', '), 'hint'));
+      const ev = c.evidence || {};
+      const keys = Object.keys(ev).sort();
+      if (keys.length) {
+        const ul = el('ul', '', 'ev-counts');
+        keys.forEach((k) => ul.appendChild(el('li', k + ': ' + ev[k])));
+        td.appendChild(ul);
+      } else td.appendChild(el('p', 'No automated evidence counts for this control; provide your own evidence.', 'hint'));
+      dr.appendChild(td);
+      tbody.appendChild(dr);
+      btn.addEventListener('click', () => {
+        const open = dr.hidden;
+        dr.hidden = !open;
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      void tr;
+    });
+  }
+  async function loadEvidence() {
+    const fw = $('ev-fw').value;
+    $('ev-pack').href = '/v1/compliance/evidence?framework=' + encodeURIComponent(fw) + '&format=html';
+    setMsg('ev-msg', '', false);
+    try {
+      const [ctl, clk] = await Promise.all([pgApi('/v1/compliance/controls?framework=' + encodeURIComponent(fw)), pgApi('/v1/compliance/cert-in-clock')]);
+      renderEvControls((ctl && ctl.controls) || []);
+      evClock = (clk && clk.incidents) || [];
+      renderEvClock();
+    } catch (e) { setMsg('ev-msg', 'Could not load evidence: ' + e.message, true); }
+  }
+  $('ev-fw').addEventListener('change', loadEvidence);
+  setInterval(() => { if (current === 'evidence') evTick(); }, 1000);
+  setInterval(async () => {
+    if (current !== 'evidence' || document.hidden || !appVisible()) return;
+    try { const clk = await pgApi('/v1/compliance/cert-in-clock'); evClock = (clk && clk.incidents) || []; renderEvClock(); } catch (_) {}
+  }, 60000);
+  /* === end compliance evidence page === */
+
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence' };
   const appVisible = () => !$('app').hidden;
   let lastFocus = null;
   function overlayOpen(id) { lastFocus = document.activeElement; $(id).hidden = false; }
