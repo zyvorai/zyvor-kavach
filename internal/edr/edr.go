@@ -158,8 +158,12 @@ func Detect(e Event) []Finding {
 	cmd := strings.ToLower(e.Command)
 	base := strings.ToLower(filepath.Base(e.Executable))
 	result := []Finding{}
-	add := func(rule, severity, description string) {
-		result = append(result, Finding{ID: fmt.Sprintf("%s:%d:%s:%d", e.Host, e.PID, rule, e.Time.UnixNano()), Time: e.Time, Host: e.Host, PID: e.PID, Rule: rule, Severity: severity, Description: description, Evidence: e})
+	add := func(rule, severity, description string, tags ...string) {
+		result = append(result, Finding{
+			ID: fmt.Sprintf("%s:%d:%s:%d", e.Host, e.PID, rule, e.Time.UnixNano()),
+			Time: e.Time, Host: e.Host, PID: e.PID, Rule: rule, Severity: severity,
+			Description: description, Evidence: e, Tags: tags,
+		})
 	}
 	if (base == "bash" || base == "sh" || base == "zsh") && (strings.Contains(cmd, "/dev/tcp/") || strings.Contains(cmd, " -i >&")) {
 		add("shell-network-redirection", "high", "Shell command contains a potential reverse-shell network redirection")
@@ -195,7 +199,42 @@ func Detect(e Event) []Finding {
 	if e.UID == 0 && (base == "bash" || base == "sh") && strings.Contains(cmd, "history -c") {
 		add("root-history-clear", "medium", "Root shell clearing history")
 	}
-	return result
+
+	haystack := strings.Join([]string{e.Command, e.Executable, e.ParentExe, e.Host}, " ")
+	for _, ioc := range MatchIOCs(haystack) {
+		sev := ioc.Severity
+		if sev == "" {
+			sev = "medium"
+		}
+		add("ioc-"+ioc.Type, sev, "IOC match ("+ioc.Type+"): "+ioc.Value+" — "+ioc.Description, "ioc", ioc.Source)
+	}
+	for _, ioa := range MatchIOAs(haystack) {
+		sev := ioa.Severity
+		if sev == "" {
+			sev = "high"
+		}
+		desc := "IOA " + ioa.Name
+		if ioa.TechniqueID != "" {
+			desc += " [" + ioa.TechniqueID + "]"
+		}
+		if ioa.Description != "" {
+			desc += " — " + ioa.Description
+		}
+		add("ioa-"+ioa.ID, sev, desc, "ioa", ioa.TechniqueID)
+	}
+	for _, rule := range MatchCustomRules(haystack) {
+		name, _ := rule["name"].(string)
+		if name == "" {
+			name = "custom-rule"
+		}
+		sev, _ := rule["severity"].(string)
+		if sev == "" {
+			sev = "medium"
+		}
+		q, _ := rule["query"].(string)
+		add("custom-"+name, sev, "Custom detection rule matched: "+name+" ("+q+")", "custom-rule")
+	}
+	return FilterExcluded(result)
 }
 
 type Store struct {

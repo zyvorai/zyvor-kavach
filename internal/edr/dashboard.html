@@ -1018,11 +1018,13 @@ footer {
         <button type="button" data-page="incidents" role="tab" aria-selected="false">Incidents</button>
         <button type="button" data-page="hosts" role="tab" aria-selected="false">Hosts</button>
         <button type="button" data-page="fleet" role="tab" aria-selected="false">Fleet</button>
+        <button type="button" data-page="prevent" role="tab" aria-selected="false">Prevent</button>
         <button type="button" data-page="intel" role="tab" aria-selected="false">Intel</button>
         <button type="button" data-page="identity" role="tab" aria-selected="false">Identity</button>
         <button type="button" data-page="spotlight" role="tab" aria-selected="false">Spotlight</button>
         <button type="button" data-page="overwatch" role="tab" aria-selected="false">OverWatch</button>
         <button type="button" data-page="response" role="tab" aria-selected="false">Response</button>
+        <button type="button" data-page="ops" role="tab" aria-selected="false">Ops</button>
         <button type="button" data-page="ai" role="tab" aria-selected="false">AI Hub</button>
         <button type="button" data-page="world" role="tab" aria-selected="false">World</button>
         <button type="button" data-page="modules" role="tab" aria-selected="false">Modules</button>
@@ -1292,6 +1294,35 @@ footer {
       </div>
     </section>
 
+    <section id="page-prevent" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Prevent</p>
+        <h1>IOA / Policies</h1>
+        <p class="lede">Detect-only IOA rules and prevention policies — never quarantine.</p>
+      </header>
+      <p class="table-caption">IOA rules</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Pattern</th><th>Severity</th><th>MITRE</th><th>Enabled</th></tr></thead>
+          <tbody id="ioa-rows"></tbody>
+        </table>
+      </div>
+      <p class="table-caption table-caption--spaced">Prevention policies</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Mode</th><th>ML</th><th>Script</th><th>Ransomware</th><th>Note</th></tr></thead>
+          <tbody id="policy-rows"></tbody>
+        </table>
+      </div>
+      <p class="table-caption table-caption--spaced">Exclusions</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Pattern</th><th>Reason</th></tr></thead>
+          <tbody id="exclusion-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
     <section id="page-intel" class="page" hidden>
       <header class="page-hero">
         <p class="apple-eyebrow">Adversary intel</p>
@@ -1310,6 +1341,13 @@ footer {
         <table>
           <thead><tr><th>Type</th><th>Value</th><th>Severity</th><th>Action</th><th>Source</th></tr></thead>
           <tbody id="ioc-rows"></tbody>
+        </table>
+      </div>
+      <p class="table-caption table-caption--spaced">Intel indicators</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Type</th><th>Value</th><th>Actor</th><th>Confidence</th></tr></thead>
+          <tbody id="indicator-rows"></tbody>
         </table>
       </div>
     </section>
@@ -1333,6 +1371,13 @@ footer {
           <tbody id="identity-entity-rows"></tbody>
         </table>
       </div>
+      <p class="table-caption table-caption--spaced">UEBA</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Entity</th><th>Score</th><th>Baseline</th><th>Anomaly</th></tr></thead>
+          <tbody id="ueba-rows"></tbody>
+        </table>
+      </div>
     </section>
 
     <section id="page-spotlight" class="page" hidden>
@@ -1352,6 +1397,13 @@ footer {
         <table>
           <thead><tr><th>Hostname</th><th>Platform</th><th>Sensor</th><th>Online</th><th>Tags</th></tr></thead>
           <tbody id="discover-rows"></tbody>
+        </table>
+      </div>
+      <p class="table-caption table-caption--spaced">Discover apps</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Vendor</th><th>Hosts</th><th>Category</th></tr></thead>
+          <tbody id="discover-app-rows"></tbody>
         </table>
       </div>
     </section>
@@ -1408,6 +1460,86 @@ footer {
           <tbody id="fusion-rows"></tbody>
         </table>
       </div>
+      <p class="table-caption table-caption--spaced">Fusion runs</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Playbook</th><th>Status</th><th>Trigger</th><th>Time</th></tr></thead>
+          <tbody id="fusion-run-rows"></tbody>
+        </table>
+      </div>
+      <p class="table-caption table-caption--spaced">RTR commands</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody id="rtr-cmd-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="page-ops" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Operations</p>
+        <h1>Cases · Audit · Inventory</h1>
+        <p class="lede">Cases, audit trail, device/firewall inventory, cloud/mobile preview, connectors, threat graph.</p>
+      </header>
+      <p class="table-caption">Cases</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Title</th><th>Severity</th><th>Status</th><th>Assignee</th><th>Updated</th></tr></thead>
+          <tbody id="cases-rows"></tbody>
+        </table>
+      </div>
+      <p class="table-caption table-caption--spaced">Audit</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Time</th><th>Action</th><th>Detail</th><th>Actor</th></tr></thead>
+          <tbody id="audit-rows"></tbody>
+        </table>
+      </div>
+      <p class="table-caption table-caption--spaced">Device control</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Host</th><th>Vendor</th><th>Product</th><th>Action</th><th>Time</th></tr></thead>
+          <tbody id="device-rows"></tbody>
+        </table>
+      </div>
+      <p class="table-caption table-caption--spaced">Firewall</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Direction</th><th>Proto</th><th>Port</th><th>Action</th></tr></thead>
+          <tbody id="firewall-rows"></tbody>
+        </table>
+      </div>
+      <p class="table-caption table-caption--spaced">Threat graph</p>
+      <pre class="token-box" id="graph-out" style="white-space:pre-wrap;max-height:180px;overflow:auto"></pre>
+      <p class="table-caption table-caption--spaced">Cloud posture (preview)</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Control</th><th>Status</th><th>Severity</th><th>Resource</th></tr></thead>
+          <tbody id="cloud-rows"></tbody>
+        </table>
+      </div>
+      <p class="table-caption table-caption--spaced">Mobile (preview)</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Platform</th><th>Owner</th><th>Status</th></tr></thead>
+          <tbody id="mobile-rows"></tbody>
+        </table>
+      </div>
+      <p class="table-caption table-caption--spaced">Connectors</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Type</th><th>Status</th><th>Note</th></tr></thead>
+          <tbody id="connector-rows"></tbody>
+        </table>
+      </div>
+      <p class="table-caption table-caption--spaced">Host groups</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Hosts</th><th>Policy</th></tr></thead>
+          <tbody id="hostgroup-rows"></tbody>
+        </table>
+      </div>
     </section>
 
     <section id="page-ai" class="page" hidden>
@@ -1429,6 +1561,10 @@ footer {
           <button type="button" class="primary" id="ai-chat-send">Send</button>
           <button type="button" class="secondary" id="ai-brief-btn">Daily briefing</button>
           <button type="button" class="secondary" id="ai-autopilot-btn">Triage autopilot</button>
+          <button type="button" class="secondary" id="ai-agents-btn">Multi-agent</button>
+          <button type="button" class="secondary" id="ai-whatif-btn">What-if</button>
+          <button type="button" class="secondary" id="ai-xdr-btn">XDR fusion</button>
+          <button type="button" class="secondary" id="ai-guardian-btn">Guardian</button>
         </div>
         <pre class="token-box" id="ai-chat-out" style="white-space:pre-wrap;max-height:220px;overflow:auto;margin-top:12px" hidden></pre>
         <p class="work-msg" id="ai-chat-msg" role="status"></p>
@@ -1482,10 +1618,37 @@ footer {
             <label for="world-kql">KQL-lite</label>
             <input class="input-field" id="world-kql" type="text" placeholder='Findings | where Severity == "high"' autocomplete="off">
           </div>
+          <div class="field">
+            <label for="world-domain">Domain API</label>
+            <select class="select-field" id="world-domain">
+              <option value="/v1/casb/apps">CASB</option>
+              <option value="/v1/email/threats">Email</option>
+              <option value="/v1/dlp/events">DLP</option>
+              <option value="/v1/cnapp/workloads">CNAPP</option>
+              <option value="/v1/exposure">Exposure</option>
+              <option value="/v1/compliance">Compliance</option>
+              <option value="/v1/fim">FIM</option>
+              <option value="/v1/persistence">Persistence</option>
+              <option value="/v1/yara">YARA</option>
+              <option value="/v1/sigma">Sigma</option>
+              <option value="/v1/network-discovery">Ranger</option>
+              <option value="/v1/deception">Deception</option>
+              <option value="/v1/air/investigations">AIR</option>
+              <option value="/v1/bas">BAS</option>
+              <option value="/v1/zero-trust">Zero Trust</option>
+              <option value="/v1/dns/threats">DNS</option>
+              <option value="/v1/mdr/queue">MDR</option>
+              <option value="/v1/sandbox">Sandbox</option>
+              <option value="/v1/sbom">SBOM</option>
+              <option value="/v1/sensor-health">Sensor health</option>
+              <option value="/v1/itdr/mfa">ITDR MFA</option>
+            </select>
+          </div>
         </div>
         <div class="work-actions">
           <button type="button" class="primary" id="world-kql-run">Run hunt</button>
           <button type="button" class="secondary" id="world-story-btn">Load storyline</button>
+          <button type="button" class="secondary" id="world-domain-btn">Load domain</button>
         </div>
         <pre class="token-box" id="world-out" style="white-space:pre-wrap;max-height:220px;overflow:auto;margin-top:12px" hidden></pre>
         <p class="work-msg" id="world-msg" role="status"></p>
@@ -1601,7 +1764,7 @@ footer {
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ai', 'world', 'modules', 'integrations'];
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'modules', 'integrations'];
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -2126,7 +2289,7 @@ footer {
     });
   }
 
-  function renderIdentity(events, entities) {
+  function renderIdentity(events, entities, ueba) {
     const tbody = $('identity-rows');
     tbody.innerHTML = '';
     (events || []).forEach((e) => {
@@ -2137,9 +2300,16 @@ footer {
     (entities || []).forEach((e) => {
       tableRow(et, [e.user || '—', String(e.risk_score != null ? e.risk_score : '—'), e.privileged ? 'yes' : 'no', (e.signals || []).join(', ')]);
     });
+    const ut = $('ueba-rows');
+    if (ut) {
+      ut.innerHTML = '';
+      (ueba || []).forEach((u) => {
+        tableRow(ut, [u.entity || u.user || u.id || '—', String(u.score != null ? u.score : '—'), String(u.baseline != null ? u.baseline : '—'), u.anomaly || u.reason || '—']);
+      });
+    }
   }
 
-  function renderSpotlight(vulns, assets) {
+  function renderSpotlight(vulns, assets, apps) {
     const tbody = $('spotlight-rows');
     tbody.innerHTML = '';
     (vulns || []).forEach((v) => {
@@ -2150,6 +2320,13 @@ footer {
     (assets || []).forEach((a) => {
       tableRow(at, [a.hostname || '—', a.platform || '—', a.sensor || '—', a.online ? 'online' : 'offline', (a.tags || []).join(', ')]);
     });
+    const ap = $('discover-app-rows');
+    if (ap) {
+      ap.innerHTML = '';
+      (apps || []).forEach((a) => {
+        tableRow(ap, [a.name || '—', a.vendor || '—', String(a.hosts != null ? a.hosts : (a.host_count || '—')), a.category || '—']);
+      });
+    }
   }
 
   function renderOverWatch(items) {
@@ -2160,12 +2337,25 @@ footer {
     });
   }
 
-  function renderFusion(items) {
+  function renderFusion(items, runs, commands) {
     const tbody = $('fusion-rows');
     tbody.innerHTML = '';
     (items || []).forEach((p) => {
       tableRow(tbody, [p.name || '—', p.trigger || '—', (p.actions || []).join(', '), p.enabled ? 'yes' : 'no']);
     });
+    const rt = $('fusion-run-rows');
+    if (rt) {
+      rt.innerHTML = '';
+      (runs || []).forEach((r) => tableRow(rt, [r.playbook_id || r.playbook || r.name || '—', statusTag(r.status || '—'), r.trigger_ref || r.trigger || '—', fmtTime(r.time || r.created_at)]));
+    }
+    const ct = $('rtr-cmd-rows');
+    if (ct) {
+      ct.innerHTML = '';
+      (commands || []).forEach((c) => {
+        if (typeof c === 'string') tableRow(ct, [c, '—']);
+        else tableRow(ct, [c.command || c.name || '—', c.description || c.note || '—']);
+      });
+    }
   }
 
   function renderModules(items) {
@@ -2183,6 +2373,35 @@ footer {
     (mods || []).forEach((m) => {
       tableRow(tbody, [m.name || '—', (m.vendors || []).join(', '), statusTag(m.status || 'active'), m.note || '—']);
     });
+  }
+
+  function renderPrevent(ioas, policies, exclusions) {
+    const it = $('ioa-rows'); it.innerHTML = '';
+    (ioas || []).forEach((r) => tableRow(it, [r.name || '—', r.pattern || '—', severityTag(r.severity), r.technique_id || '—', r.enabled ? 'yes' : 'no']));
+    const pt = $('policy-rows'); pt.innerHTML = '';
+    (policies || []).forEach((p) => tableRow(pt, [p.name || '—', p.mode || '—', p.ml_sensitivity || '—', p.script_control ? 'on' : 'off', p.ransomware_guard ? 'on' : 'off', p.note || '—']));
+    const et = $('exclusion-rows'); et.innerHTML = '';
+    (exclusions || []).forEach((e) => tableRow(et, [e.id || '—', e.pattern || '—', e.reason || '—']));
+  }
+
+  function renderOps(bundle) {
+    const ct = $('cases-rows'); ct.innerHTML = '';
+    (bundle.cases || []).forEach((c) => tableRow(ct, [c.title || '—', severityTag(c.severity), statusTag(c.status || 'open'), c.assignee || '—', fmtTime(c.updated_at || c.created_at)]));
+    const at = $('audit-rows'); at.innerHTML = '';
+    (bundle.audit || []).slice(0, 50).forEach((a) => tableRow(at, [fmtTime(a.time || a.ts), a.action || '—', a.detail || a.resource || '—', a.actor || '—']));
+    const dt = $('device-rows'); dt.innerHTML = '';
+    (bundle.devices || []).forEach((d) => tableRow(dt, [d.host || '—', d.vendor || '—', d.product || '—', d.action || '—', fmtTime(d.time)]));
+    const ft = $('firewall-rows'); ft.innerHTML = '';
+    (bundle.firewall || []).forEach((f) => tableRow(ft, [f.name || '—', f.direction || '—', f.proto || '—', String(f.port || '—'), f.action || '—']));
+    $('graph-out').textContent = JSON.stringify(bundle.graph || {}, null, 2);
+    const cl = $('cloud-rows'); cl.innerHTML = '';
+    (bundle.cloud || []).forEach((c) => tableRow(cl, [c.control || c.name || '—', statusTag(c.status || '—'), severityTag(c.severity), c.resource || c.note || '—']));
+    const mt = $('mobile-rows'); mt.innerHTML = '';
+    (bundle.mobile || []).forEach((m) => tableRow(mt, [m.id || '—', m.platform || '—', m.owner || '—', statusTag(m.status || '—')]));
+    const cn = $('connector-rows'); cn.innerHTML = '';
+    (bundle.connectors || []).forEach((c) => tableRow(cn, [c.name || '—', c.type || '—', statusTag(c.status || '—'), c.note || '—']));
+    const hg = $('hostgroup-rows'); hg.innerHTML = '';
+    (bundle.hostGroups || []).forEach((g) => tableRow(hg, [g.name || '—', (g.hosts || []).join(', ') || '—', g.policy || g.prevention_policy || '—']));
   }
 
   async function runWorldKQL() {
@@ -2214,6 +2433,42 @@ footer {
     } catch (e) {
       $('world-msg').className = 'work-msg is-error';
       $('world-msg').textContent = e.message || 'Storyline failed';
+    }
+  }
+
+  async function loadWorldDomain() {
+    const path = $('world-domain').value;
+    try {
+      const res = await request(path);
+      $('world-out').hidden = false;
+      $('world-out').textContent = JSON.stringify(res, null, 2);
+      $('world-msg').className = 'work-msg is-ok';
+      $('world-msg').textContent = path + ' loaded';
+    } catch (e) {
+      $('world-msg').className = 'work-msg is-error';
+      $('world-msg').textContent = e.message || 'Domain load failed';
+    }
+  }
+
+  async function loadAIExtras(kind) {
+    try {
+      let res;
+      if (kind === 'agents') {
+        res = await request('/v1/ai/agents/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ agent: 'triage' }) });
+      } else if (kind === 'whatif') {
+        res = await request('/v1/ai/what-if', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scenario: 'ransomware' }) });
+      } else if (kind === 'xdr') {
+        res = await request('/v1/ai/xdr-fusion');
+      } else {
+        res = await request('/v1/ai/guardian');
+      }
+      $('ai-chat-out').hidden = false;
+      $('ai-chat-out').textContent = JSON.stringify(res, null, 2);
+      $('ai-chat-msg').className = 'work-msg is-ok';
+      $('ai-chat-msg').textContent = kind + ' ready';
+    } catch (e) {
+      $('ai-chat-msg').className = 'work-msg is-error';
+      $('ai-chat-msg').textContent = e.message || 'AI extra failed';
     }
   }
 
@@ -2556,35 +2811,59 @@ footer {
         renderTimeline([], []);
       }
 
-      const [siem, sensor, detections, hosts, actors, iocs, idEvents, idEntities, vulns, assets, ow, fusion, modules, report, aiCaps, aiClusters, aiForecast, world] = await Promise.all([
+      const [siem, sensor, detections, hosts, actors, iocs, indicators, idEvents, idEntities, ueba, vulns, assets, apps, ow, fusion, fusionRuns, rtrCmds, modules, report, aiCaps, aiClusters, aiForecast, world, ioas, policies, exclusions, cases, audit, devices, firewall, graph, cloud, mobile, connectors, hostGroups] = await Promise.all([
         request('/v1/siem/status'),
         request('/v1/sensor'),
         request('/v1/detections'),
         request('/v1/hosts'),
         request('/v1/intel/actors'),
         request('/v1/ioc'),
+        request('/v1/intel/indicators'),
         request('/v1/identity/events'),
         request('/v1/identity/entities'),
+        request('/v1/ueba'),
         request('/v1/spotlight/vulnerabilities'),
         request('/v1/discover/assets'),
+        request('/v1/discover/apps'),
         request('/v1/overwatch/alerts'),
         request('/v1/fusion/playbooks'),
+        request('/v1/fusion/runs'),
+        request('/v1/rtr/commands'),
         request('/v1/modules'),
         request('/v1/reports/summary'),
         request('/v1/ai/capabilities'),
         request('/v1/ai/cluster'),
         request('/v1/ai/forecast'),
         request('/v1/world/modules'),
+        request('/v1/ioa'),
+        request('/v1/prevention/policies'),
+        request('/v1/exclusions'),
+        request('/v1/cases'),
+        request('/v1/audit'),
+        request('/v1/device-control'),
+        request('/v1/firewall/rules'),
+        request('/v1/threat-graph'),
+        request('/v1/cloud/posture'),
+        request('/v1/mobile/devices'),
+        request('/v1/connectors'),
+        request('/v1/host-groups'),
       ]);
       renderIntegrations(siem || {}, sensor || {});
       renderDetections(detections);
       renderHosts(hosts);
       renderActors(actors);
       renderIOCs(iocs);
-      renderIdentity(idEvents, idEntities);
-      renderSpotlight(vulns, assets);
+      const ind = $('indicator-rows');
+      if (ind) {
+        ind.innerHTML = '';
+        (indicators || []).forEach((i) => tableRow(ind, [i.type || '—', i.value || '—', i.actor || i.source || '—', String(i.confidence != null ? i.confidence : '—')]));
+      }
+      renderIdentity(idEvents, idEntities, ueba);
+      renderSpotlight(vulns, assets, apps);
       renderOverWatch(ow);
-      renderFusion(fusion);
+      renderFusion(fusion, fusionRuns, rtrCmds);
+      renderPrevent(ioas, policies, exclusions);
+      renderOps({ cases, audit, devices, firewall, graph, cloud, mobile, connectors, hostGroups });
       renderModules(modules);
       renderAICaps(aiCaps);
       renderAIClusters(aiClusters);
@@ -2637,6 +2916,11 @@ footer {
   $('ai-chat-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendAIChat(); });
   $('world-kql-run').addEventListener('click', runWorldKQL);
   $('world-story-btn').addEventListener('click', loadStoryline);
+  $('world-domain-btn').addEventListener('click', loadWorldDomain);
+  $('ai-agents-btn').addEventListener('click', () => loadAIExtras('agents'));
+  $('ai-whatif-btn').addEventListener('click', () => loadAIExtras('whatif'));
+  $('ai-xdr-btn').addEventListener('click', () => loadAIExtras('xdr'));
+  $('ai-guardian-btn').addEventListener('click', () => loadAIExtras('guardian'));
   $('incident-transition').addEventListener('click', transitionIncident);
   $('incident-finding').addEventListener('change', () => {
     selectedFindingId = $('incident-finding').value || '';

@@ -105,16 +105,32 @@ func registerDashboard(mux *http.ServeMux, token string, store *Store) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]any{"findings": len(findings), "hosts": len(hosts), "severities": severities})
 	})
-	mux.HandleFunc("GET /v1/recent-events", func(w http.ResponseWriter, r *http.Request) {
-		if !isAuthorized(w, r) {
-			return
-		}
+	writeTimeline := func(w http.ResponseWriter) {
 		store.mu.Lock()
 		events := append([]Event{}, store.recentEvents...)
 		net := append([]NetworkEvent{}, store.networkEvents...)
 		store.mu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{"process": events, "network": net})
+		json.NewEncoder(w).Encode(map[string]any{
+			"process": events,
+			"network": net,
+			"findings": store.List(),
+			"product":  "kavach",
+			"note":     "Falcon Insight timeline analogue — observation only",
+		})
+	}
+	mux.HandleFunc("GET /v1/recent-events", func(w http.ResponseWriter, r *http.Request) {
+		if !isAuthorized(w, r) {
+			return
+		}
+		writeTimeline(w)
+	})
+	// Falcon Insight module advertises /v1/timeline — alias of recent-events + findings.
+	mux.HandleFunc("GET /v1/timeline", func(w http.ResponseWriter, r *http.Request) {
+		if !isAuthorized(w, r) {
+			return
+		}
+		writeTimeline(w)
 	})
 }
 

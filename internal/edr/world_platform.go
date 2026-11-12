@@ -65,18 +65,81 @@ func WorldModules() []WorldModule {
 }
 
 var (
-	worldMu       sync.Mutex
-	yaraRules     = defaultYARA()
-	sigmaRules    = defaultSigma()
-	watchlists    = []map[string]any{{"id": "wl-vip", "name": "VIP users", "entities": []string{"admin", "ceo"}, "type": "user"}}
-	exclusions    = []map[string]any{}
-	customRules   = defaultCustomRules()
+	worldMu         sync.Mutex
+	yaraRules       = defaultYARA()
+	sigmaRules      = defaultSigma()
+	watchlists      = []map[string]any{{"id": "wl-vip", "name": "VIP users", "entities": []string{"admin", "ceo"}, "type": "user"}}
+	exclusions      = []map[string]any{}
+	customRules     = defaultCustomRules()
 	deceptionDecoys = defaultDeception()
-	forensicReqs  []map[string]any
-	basRuns       []map[string]any
-	itsmTickets   []map[string]any
-	hyperFlows    = defaultHyper()
+	forensicReqs    []map[string]any
+	basRuns         []map[string]any
+	itsmTickets     []map[string]any
+	hyperFlows      = defaultHyper()
 )
+
+// MatchCustomRules returns enabled STAR-style rules whose query tokens hit haystack.
+func MatchCustomRules(haystack string) []map[string]any {
+	worldMu.Lock()
+	defer worldMu.Unlock()
+	h := strings.ToLower(haystack)
+	var out []map[string]any
+	for _, rule := range customRules {
+		enabled, _ := rule["enabled"].(bool)
+		if !enabled {
+			continue
+		}
+		q, _ := rule["query"].(string)
+		if q == "" {
+			continue
+		}
+		needle := q
+		if i := strings.Index(strings.ToLower(q), "contains"); i >= 0 {
+			rest := strings.TrimSpace(q[i+len("contains"):])
+			rest = strings.Trim(rest, " '\"")
+			if rest != "" {
+				needle = rest
+			}
+		}
+		if strings.Contains(h, strings.ToLower(needle)) {
+			cp := map[string]any{}
+			for k, v := range rule {
+				cp[k] = v
+			}
+			out = append(out, cp)
+		}
+	}
+	return out
+}
+
+// FilterExcluded drops findings matching exclusion patterns (rule/host/description).
+func FilterExcluded(findings []Finding) []Finding {
+	worldMu.Lock()
+	ex := append([]map[string]any{}, exclusions...)
+	worldMu.Unlock()
+	if len(ex) == 0 {
+		return findings
+	}
+	var kept []Finding
+	for _, f := range findings {
+		blob := strings.ToLower(f.Rule + " " + f.Host + " " + f.Description + " " + f.Evidence.Command)
+		skip := false
+		for _, e := range ex {
+			pat, _ := e["pattern"].(string)
+			if pat == "" {
+				continue
+			}
+			if strings.Contains(blob, strings.ToLower(pat)) {
+				skip = true
+				break
+			}
+		}
+		if !skip {
+			kept = append(kept, f)
+		}
+	}
+	return kept
+}
 
 func defaultYARA() []map[string]any {
 	return []map[string]any{

@@ -3,6 +3,7 @@ package edr
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"sync"
@@ -377,17 +378,30 @@ func RegisterCloudMobile(mux *http.ServeMux, token string) {
 	})
 }
 
+var (
+	deviceMu   sync.Mutex
+	deviceInv  = defaultDeviceInventory()
+)
+
+func defaultDeviceInventory() []map[string]any {
+	now := time.Now().UTC()
+	return []map[string]any{
+		{"id": "usb-1", "host": "demo-host", "vendor": "Generic", "product": "USB Storage", "serial": "SEED001", "action": "observed", "time": now},
+		{"id": "usb-2", "host": "demo-host", "vendor": "YubiKey", "product": "OTP+FIDO", "serial": "SEED002", "action": "allowed", "time": now},
+	}
+}
+
 func RegisterDeviceControl(mux *http.ServeMux, token string, store *Store) {
 	mux.HandleFunc("GET /v1/device-control", func(w http.ResponseWriter, r *http.Request) {
 		if !requireAuth(w, r, token) {
 			return
 		}
 		_ = store
+		deviceMu.Lock()
+		out := append([]map[string]any{}, deviceInv...)
+		deviceMu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"id": "usb-1", "host": "demo-host", "vendor": "Generic", "product": "USB Storage", "serial": "SEED001", "action": "observed", "time": time.Now().UTC()},
-			{"id": "usb-2", "host": "demo-host", "vendor": "YubiKey", "product": "OTP+FIDO", "serial": "SEED002", "action": "allowed", "time": time.Now().UTC()},
-		})
+		_ = json.NewEncoder(w).Encode(out)
 	})
 	mux.HandleFunc("POST /v1/device-control", func(w http.ResponseWriter, r *http.Request) {
 		if !requireAuth(w, r, token) {
@@ -400,9 +414,22 @@ func RegisterDeviceControl(mux *http.ServeMux, token string, store *Store) {
 			http.Error(w, "invalid", 400)
 			return
 		}
-		AppendAudit(token, "device-control.event", "ingest")
+		if body["id"] == nil {
+			body["id"] = "usb-" + time.Now().UTC().Format("150405.000")
+		}
+		if body["action"] == nil {
+			body["action"] = "observed"
+		}
+		body["time"] = time.Now().UTC()
+		deviceMu.Lock()
+		deviceInv = append(deviceInv, body)
+		if len(deviceInv) > 500 {
+			deviceInv = deviceInv[len(deviceInv)-500:]
+		}
+		deviceMu.Unlock()
+		AppendAudit(token, "device-control.event", fmt.Sprint(body["id"]))
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "note": "observed only"})
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "device": body, "note": "observed only — never blocks USB"})
 	})
 }
 

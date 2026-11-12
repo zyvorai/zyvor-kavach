@@ -4,6 +4,7 @@ package edr
 import (
 	"encoding/json"
 	"net/http"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -89,6 +90,26 @@ func MatchIOCs(haystack string) []IOC {
 	for _, i := range iocs {
 		if i.Enabled && strings.Contains(h, strings.ToLower(i.Value)) {
 			out = append(out, i)
+		}
+	}
+	return out
+}
+
+// MatchIOAs evaluates enabled IOA regex patterns against process/command haystack.
+func MatchIOAs(haystack string) []IOARule {
+	ioaMu.Lock()
+	defer ioaMu.Unlock()
+	var out []IOARule
+	for _, rule := range ioas {
+		if !rule.Enabled || rule.Pattern == "" {
+			continue
+		}
+		re, err := regexp.Compile("(?i)" + rule.Pattern)
+		if err != nil {
+			continue
+		}
+		if re.MatchString(haystack) {
+			out = append(out, rule)
 		}
 	}
 	return out

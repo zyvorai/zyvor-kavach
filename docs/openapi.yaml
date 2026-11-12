@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Kavach API
   version: "1.0"
-  description: Brief stub of live Kavach controller endpoints. Bearer auth unless noted.
+  description: Full Kavach controller API surface (observation-only). Bearer auth unless noted.
 servers:
   - url: https://127.0.0.1:8099
     description: Local / NodePort HTTPS
@@ -208,7 +208,7 @@ paths:
       responses:
         "200":
           description: Status JSON
-/v1/modules:
+  /v1/modules:
     get:
       summary: CrowdStrike Falcon module capability map
       security: [{bearerAuth: []}]
@@ -232,16 +232,36 @@ paths:
       summary: Create detect-only IOC
       security: [{bearerAuth: []}]
       responses: {'200': {description: Created}}
+    delete:
+      summary: DELETE /v1/ioc
+      security: [{bearerAuth: []}]
+      responses: {'204': {description: Deleted}}
   /v1/ioa:
     get:
       summary: Custom IOA rules
       security: [{bearerAuth: []}]
       responses: {'200': {description: IOAs}}
+    post:
+      summary: POST /v1/ioa
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
   /v1/prevention/policies:
     get:
       summary: Prevention policies (detect-only)
       security: [{bearerAuth: []}]
       responses: {'200': {description: Policies}}
+    post:
+      summary: POST /v1/prevention/policies
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
   /v1/hosts:
     get:
       summary: Host management inventory
@@ -252,6 +272,14 @@ paths:
       summary: Host groups
       security: [{bearerAuth: []}]
       responses: {'200': {description: Groups}}
+    post:
+      summary: POST /v1/host-groups
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
   /v1/containment:
     get:
       summary: Containment request ledger
@@ -285,6 +313,14 @@ paths:
       summary: USB/device control events
       security: [{bearerAuth: []}]
       responses: {'200': {description: Devices}}
+    post:
+      summary: POST /v1/device-control
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
   /v1/firewall/rules:
     get:
       summary: Host firewall inventory
@@ -305,11 +341,27 @@ paths:
       summary: Spotlight CVE inventory
       security: [{bearerAuth: []}]
       responses: {'200': {description: Vulnerabilities}}
+    post:
+      summary: POST /v1/spotlight/vulnerabilities
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
   /v1/overwatch/alerts:
     get:
       summary: OverWatch managed hunting alerts
       security: [{bearerAuth: []}]
       responses: {'200': {description: Alerts}}
+    post:
+      summary: POST /v1/overwatch/alerts
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
   /v1/intel/actors:
     get:
       summary: Threat actor profiles
@@ -325,6 +377,14 @@ paths:
       summary: Identity threat events
       security: [{bearerAuth: []}]
       responses: {'200': {description: Events}}
+    post:
+      summary: POST /v1/identity/events
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
   /v1/identity/entities:
     get:
       summary: Identity entities with risk
@@ -340,11 +400,27 @@ paths:
       summary: Fusion SOAR playbooks
       security: [{bearerAuth: []}]
       responses: {'200': {description: Playbooks}}
+    post:
+      summary: POST /v1/fusion/playbooks
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
   /v1/fusion/runs:
     get:
       summary: Fusion playbook runs
       security: [{bearerAuth: []}]
       responses: {'200': {description: Runs}}
+    post:
+      summary: POST /v1/fusion/runs
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
   /v1/cases:
     get:
       summary: Case management
@@ -394,6 +470,462 @@ paths:
       summary: Charlotte-lite assistive triage
       security: [{bearerAuth: []}]
       responses: {'200': {description: Answer}}
+  /:
+    get:
+      summary: 
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/ai/agents:
+    get:
+      summary: v1 ai agents
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/ai/agents/run:
+    post:
+      summary: v1 ai agents run
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
+  /v1/ai/anomaly:
+    get:
+      summary: v1 ai anomaly
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/ai/attack-path:
+    get:
+      summary: v1 ai attack-path
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/ai/autopilot:
+    post:
+      summary: v1 ai autopilot
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
+  /v1/ai/briefing:
+    get:
+      summary: v1 ai briefing
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/ai/capabilities:
+    get:
+      summary: v1 ai capabilities
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/ai/chat:
+    get:
+      summary: v1 ai chat
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: v1 ai chat
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
+  /v1/ai/classify:
+    get:
+      summary: v1 ai classify
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/ai/cluster:
+    get:
+      summary: v1 ai cluster
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/ai/embeddings:
+    get:
+      summary: v1 ai embeddings
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/ai/forecast:
+    get:
+      summary: v1 ai forecast
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/ai/fp-score:
+    get:
+      summary: v1 ai fp-score
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/ai/guardian:
+    get:
+      summary: v1 ai guardian
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/ai/memory:
+    get:
+      summary: v1 ai memory
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: v1 ai memory
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
+  /v1/ai/narrative:
+    get:
+      summary: v1 ai narrative
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/ai/nl-hunt:
+    post:
+      summary: v1 ai nl-hunt
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
+  /v1/ai/playbook-suggest:
+    get:
+      summary: v1 ai playbook-suggest
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/ai/remediation:
+    get:
+      summary: v1 ai remediation
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/ai/report:
+    get:
+      summary: v1 ai report
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/ai/similarity:
+    get:
+      summary: v1 ai similarity
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/ai/stream:
+    get:
+      summary: v1 ai stream
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/ai/what-if:
+    post:
+      summary: v1 ai what-if
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
+  /v1/ai/xdr-fusion:
+    get:
+      summary: v1 ai xdr-fusion
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/air/investigations:
+    get:
+      summary: v1 air investigations
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/bas:
+    get:
+      summary: v1 bas
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: v1 bas
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
+  /v1/browser/extensions:
+    get:
+      summary: v1 browser extensions
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/casb/apps:
+    get:
+      summary: v1 casb apps
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/cases/update:
+    post:
+      summary: v1 cases update
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
+  /v1/cnapp/misconfigs:
+    get:
+      summary: v1 cnapp misconfigs
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/cnapp/workloads:
+    get:
+      summary: v1 cnapp workloads
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/compliance:
+    get:
+      summary: v1 compliance
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/deception:
+    get:
+      summary: v1 deception
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/deception/trigger:
+    post:
+      summary: v1 deception trigger
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
+  /v1/dlp/events:
+    get:
+      summary: v1 dlp events
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/dns/threats:
+    get:
+      summary: v1 dns threats
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/email/threats:
+    get:
+      summary: v1 email threats
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/enrich/geo:
+    get:
+      summary: v1 enrich geo
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/exclusions:
+    get:
+      summary: v1 exclusions
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: v1 exclusions
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
+  /v1/exposure:
+    get:
+      summary: v1 exposure
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/fim:
+    get:
+      summary: v1 fim
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/forensics:
+    get:
+      summary: v1 forensics
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: v1 forensics
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
+  /v1/hunt/kql:
+    post:
+      summary: v1 hunt kql
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
+  /v1/hyperautomation/workflows:
+    get:
+      summary: v1 hyperautomation workflows
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/itdr/mfa:
+    get:
+      summary: v1 itdr mfa
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/itsm/tickets:
+    get:
+      summary: v1 itsm tickets
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: v1 itsm tickets
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
+  /v1/logout:
+    post:
+      summary: v1 logout
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
+  /v1/mdr/queue:
+    get:
+      summary: v1 mdr queue
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+    /v1/modules:
+    get:
+      summary: v1 modules
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/network-discovery:
+    get:
+      summary: v1 network-discovery
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/notify/channels:
+    get:
+      summary: v1 notify channels
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/ot/devices:
+    get:
+      summary: v1 ot devices
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/persistence:
+    get:
+      summary: v1 persistence
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/rbac/roles:
+    get:
+      summary: v1 rbac roles
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/retention:
+    get:
+      summary: v1 retention
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/rollback:
+    get:
+      summary: v1 rollback
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/rules:
+    get:
+      summary: v1 rules
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: v1 rules
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
+  /v1/sandbox:
+    get:
+      summary: v1 sandbox
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/sbom:
+    get:
+      summary: v1 sbom
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/sensor-health:
+    get:
+      summary: v1 sensor-health
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/sigma:
+    get:
+      summary: v1 sigma
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/storyline:
+    get:
+      summary: v1 storyline
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/tenants:
+    get:
+      summary: v1 tenants
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/timeline:
+    get:
+      summary: v1 timeline
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/tls/certs:
+    get:
+      summary: v1 tls certs
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/watchlists:
+    get:
+      summary: v1 watchlists
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: v1 watchlists
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object}
+  /v1/world/modules:
+    get:
+      summary: v1 world modules
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/yara:
+    get:
+      summary: v1 yara
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/zero-trust:
+    get:
+      summary: v1 zero-trust
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /zyvor-logomark.svg:
+    get:
+      summary: zyvor-logomark.svg
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /zyvor-mark.svg:
+    get:
+      summary: zyvor-mark.svg
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
 components:
   securitySchemes:
     bearerAuth:

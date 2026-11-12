@@ -42,8 +42,12 @@ func TestQueueRetryAndIdempotence(t *testing.T) {
 	if count, err := q.Flush(context.Background(), srv.URL, token, nil); err != nil || count != 2 {
 		t.Fatalf("flush: %d %v", count, err)
 	}
-	if len(store.List()) != 1 {
-		t.Fatalf("duplicate on retry: %+v", store.List())
+	want := len(Detect(e))
+	if want < 1 {
+		t.Fatal("fixture event produced no detections")
+	}
+	if len(store.List()) != want {
+		t.Fatalf("expected %d findings after deduped dual flush, got %+v", want, store.List())
 	}
 	reopened, err := NewStore(filepath.Join(dir, "findings.jsonl"), 50)
 	if err != nil {

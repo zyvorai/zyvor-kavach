@@ -152,7 +152,7 @@ persistence:
   # Mount path for findings.jsonl + agents.json
   mountPath: /app/data
 
-# Optional Netra poller / bridge settings (controller env placeholders).
+# Optional Netra poller — honored by NewNetraPollerFromEnv (KAVACH_NETRA_POLLER_ENABLED).
 netra:
   poller:
     enabled: false
@@ -160,14 +160,14 @@ netra:
     apiKey: ""
     insecureSkipVerify: false
 
-# SIEM export placeholders (webhook / syslog / etc.). Off until wired in-app.
+# SIEM export — honored by NewSIEMExporterFromEnv (KAVACH_SIEM_*).
 siem:
   enabled: false
   webhookURL: ""
   # Existing Secret keys: webhook-url, headers ("k=v,k2=v2")
   existingSecret: ""
-  format: json
-  # syslog | webhook | none
+  format: ecs
+  # webhook | syslog | both | none
   sink: webhook
 
 resources:

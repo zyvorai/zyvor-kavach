@@ -42,27 +42,28 @@ Honest about what ships today:
 | Capability | CrowdStrike analogue | Status |
 |---|---|---|
 | Insight detections + MITRE | Falcon Insight XDR | Shipping — observation only |
-| Prevent IOA/IOC + policies | Falcon Prevent | Detect-only (never quarantine) |
-| Device Control / Firewall inventory | Device Control / Firewall Mgmt | Visibility |
-| Discover assets & apps | Falcon Discover | Shipping |
+| Prevent IOA/IOC + policies | Falcon Prevent | Detect-only — IOC/IOA/custom rules drive `Detect()`; never quarantine |
+| Device Control / Firewall inventory | Device Control / Firewall Mgmt | Visibility + persisted USB observations |
+| Discover assets & apps | Falcon Discover | Shipping (inventory + seeds) |
 | Spotlight CVEs | Falcon Spotlight | Shipping (inventory + seeds) |
 | OverWatch hunting alerts | Falcon OverWatch | Shipping (feed API) |
-| Adversary intel / actors | Falcon X | Shipping |
-| Identity + UEBA | Falcon Identity | Shipping |
+| Adversary intel / actors | Falcon X | Shipping (profiles + indicators) |
+| Identity + UEBA | Falcon Identity | Shipping (events + UEBA scores) |
 | Fusion playbooks / cases | Falcon Fusion / NG-SIEM | Ledger-only SOAR |
 | RTR diagnostics | Falcon RTR | Read-only store-backed commands |
 | Host containment requests | Host Management | Request ledger — never enforced |
-| Hunt (FQL-lite) + threat graph | Falcon Hunt / Threat Graph | Shipping |
-| Charlotte-lite assist | Charlotte AI | Assistive triage |
+| Hunt (FQL-lite) + threat graph + timeline | Falcon Hunt / Threat Graph / Insight | Shipping |
+| Charlotte-lite assist | Charlotte AI | Assistive triage (+ optional `KAVACH_LLM_URL`) |
 | **Kavach AI Platform (22+)** | **Beyond Charlotte / Complete** | Chat, NL hunt, narratives, clusters, attack-path, forecast, multi-agent SOC, what-if, Guardian, XDR fusion, autopilot |
-| **World catalog (35+)** | **S1 / Defender / Cortex / Elastic / Trend / Cisco…** | Storyline, AIR, KQL hunt, Ranger, deception, CASB, email, DLP, CNAPP, ASRM, compliance, forensics, FIM, YARA/Sigma, BAS, ZT, MDR, hyperautomation |
-| Cloud / Mobile | Falcon Cloud / Mobile | Preview stubs |
-| XDR via Netra | Insight XDR network | Bridge / poller |
-| SIEM export + connectors | Next-Gen SIEM | Webhook / syslog / NDJSON |
-| eBPF exec sensor | Sensor | Scaffold (`bpf/`) |
+| **World catalog (35+)** | **S1 / Defender / Cortex / Elastic / Trend / Cisco…** | Storyline, AIR, KQL, Ranger, deception, CASB/email/DLP/CNAPP/ASRM, forensics, FIM, YARA/Sigma, BAS, ZT, MDR — APIs + console domain loader |
+| Cloud / Mobile / OT / Browser | Falcon Cloud / Mobile / IoT | Preview seeds |
+| XDR via Netra | Insight XDR network | Bridge / poller (`KAVACH_NETRA_POLLER_ENABLED`) |
+| SIEM export + connectors | Next-Gen SIEM | Webhook / syslog / NDJSON (`KAVACH_SIEM_SINK` / `FORMAT`) |
+| eBPF exec sensor | Sensor | Scaffold (`bpf/`) — proc poll + connector live |
 | Agent mTLS / Envoy Gateway | Platform | Opt-in docs |
+| MCP server | AI agent tooling | `kavach-mcp` stdio (read + opt-in mutations) |
 
-No automatic containment, process kill, or malware prevention is claimed. See `GET /v1/modules`.
+No automatic containment, process kill, or malware prevention is claimed. See `GET /v1/modules` and `GET /v1/world/modules`.
 
 ### Lab demo
 
@@ -92,7 +93,7 @@ See [docs/mcp-integration.md](docs/mcp-integration.md). Sister to `netra-mcp`.
 - [Envoy Gateway](docs/envoy-gateway.md)
 - [Remote deploy](docs/deploy-remote.md)
 - [MCP integration](docs/mcp-integration.md)
-- [OpenAPI stub](docs/openapi.yaml)
+- [OpenAPI](docs/openapi.yaml)
 - Site: https://zyvorai.github.io/zyvor-kavach/
 
 ## License

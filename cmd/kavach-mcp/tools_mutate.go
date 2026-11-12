@@ -43,6 +43,7 @@ func registerMutateTools(srv *mcpserver.Server, c *client) error {
 			"severity":    strProp("low|medium|high|critical"),
 			"description": strProp("Description"),
 		}, "type", "value"), bodyFields: true},
+		{name: "kavach_ioc_delete", method: "DELETE", path: "/v1/ioc", description: "Delete an IOC by id.", schema: objSchema(map[string]any{"id": strProp("IOC id")}, "id"), queryParams: []string{"id"}},
 		{name: "kavach_ioa_create", method: "POST", path: "/v1/ioa", description: "Create custom IOA rule.", schema: objSchema(map[string]any{
 			"name":         strProp("Rule name"),
 			"pattern":      strProp("Regex/pattern"),
@@ -50,11 +51,51 @@ func registerMutateTools(srv *mcpserver.Server, c *client) error {
 			"technique_id": strProp("MITRE ID"),
 			"description":  strProp("Description"),
 		}, "name", "pattern"), bodyFields: true},
+		{name: "kavach_prevention_policy_create", method: "POST", path: "/v1/prevention/policies", description: "Create detect-only prevention policy.", schema: objSchema(map[string]any{
+			"name":            strProp("Policy name"),
+			"ml_sensitivity":  strProp("aggressive|moderate|cautious"),
+			"script_control":  map[string]any{"type": "boolean"},
+			"ransomware_guard": map[string]any{"type": "boolean"},
+		}, "name"), bodyFields: true},
+		{name: "kavach_device_control_ingest", method: "POST", path: "/v1/device-control", description: "Ingest USB/device observation (never blocks).", schema: objSchema(map[string]any{
+			"host":    strProp("Hostname"),
+			"vendor":  strProp("Vendor"),
+			"product": strProp("Product"),
+			"serial":  strProp("Serial"),
+			"action":  strProp("observed|allowed"),
+		}, "host"), bodyFields: true},
+		{name: "kavach_host_group_create", method: "POST", path: "/v1/host-groups", description: "Create host group.", schema: objSchema(map[string]any{"name": strProp("Group name"), "hosts": strProp("Comma-separated hosts")}, "name"), bodyFields: true},
+		{name: "kavach_identity_event_ingest", method: "POST", path: "/v1/identity/events", description: "Ingest identity anomaly event.", schema: objSchema(map[string]any{
+			"user":     strProp("User"),
+			"host":     strProp("Host"),
+			"rule":     strProp("Rule"),
+			"severity": strProp("Severity"),
+		}, "user"), bodyFields: true},
+		{name: "kavach_overwatch_alert_create", method: "POST", path: "/v1/overwatch/alerts", description: "Add OverWatch hunting alert.", schema: objSchema(map[string]any{
+			"title":    strProp("Title"),
+			"host":     strProp("Host"),
+			"severity": strProp("Severity"),
+		}, "title"), bodyFields: true},
+		{name: "kavach_spotlight_vuln_create", method: "POST", path: "/v1/spotlight/vulnerabilities", description: "Add Spotlight CVE inventory row.", schema: objSchema(map[string]any{
+			"cve":      strProp("CVE id"),
+			"host":     strProp("Host"),
+			"severity": strProp("Severity"),
+			"product":  strProp("Product"),
+		}, "cve"), bodyFields: true},
+		{name: "kavach_fusion_playbook_create", method: "POST", path: "/v1/fusion/playbooks", description: "Create Fusion playbook (ledger).", schema: objSchema(map[string]any{
+			"name":    strProp("Playbook name"),
+			"trigger": strProp("Trigger"),
+		}, "name"), bodyFields: true},
 		{name: "kavach_case_create", method: "POST", path: "/v1/cases", description: "Create an investigation case.", schema: objSchema(map[string]any{
 			"title":    strProp("Case title"),
 			"severity": strProp("Severity"),
 			"notes":    strProp("Notes"),
 		}, "title"), bodyFields: true},
+		{name: "kavach_case_update", method: "POST", path: "/v1/cases/update", description: "Update investigation case status/notes.", schema: objSchema(map[string]any{
+			"id":     strProp("Case ID"),
+			"status": strProp("open|investigating|closed"),
+			"notes":  strProp("Notes"),
+		}, "id"), bodyFields: true},
 		{name: "kavach_containment_request", method: "POST", path: "/v1/containment", description: "Record containment request (ledger only — never isolates).", schema: objSchema(map[string]any{
 			"host":   strProp("Hostname"),
 			"action": strProp("contain_request|lift_request"),

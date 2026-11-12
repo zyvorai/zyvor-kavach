@@ -24,7 +24,7 @@ go run ./cmd/kavach -mode agent
 - [Remote deploy](./deploy-remote.md)
 - [Agent mTLS](./agent-mtls.md)
 - [Envoy Gateway](./envoy-gateway.md)
-- API stub: [docs/openapi.yaml](https://github.com/zyvorai/zyvor-kavach/blob/main/docs/openapi.yaml)
+- API: [docs/openapi.yaml](https://github.com/zyvorai/zyvor-kavach/blob/main/docs/openapi.yaml)
 - Lab demo: [scripts/demo-lab.sh](https://github.com/zyvorai/zyvor-kavach/blob/main/scripts/demo-lab.sh)
 
 Site: https://zyvorai.github.io/zyvor-kavach/  

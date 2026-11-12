@@ -20,6 +20,7 @@ func registerReadTools(srv *mcpserver.Server, c *client) error {
 		}), queryParams: []string{"severity", "status", "host"}},
 		{name: "kavach_incidents", method: "GET", path: "/v1/incidents", description: "Incident workflow state for findings.", schema: emptySchema()},
 		{name: "kavach_recent_events", method: "GET", path: "/v1/recent-events", description: "Recent process and network events.", schema: emptySchema()},
+		{name: "kavach_timeline", method: "GET", path: "/v1/timeline", description: "Insight timeline (process/network/findings).", schema: emptySchema()},
 		{name: "kavach_fleet", method: "GET", path: "/v1/fleet", description: "Enrolled agent fleet status.", schema: emptySchema()},
 		{name: "kavach_hosts", method: "GET", path: "/v1/hosts", description: "Host management inventory.", schema: emptySchema()},
 		{name: "kavach_host_groups", method: "GET", path: "/v1/host-groups", description: "Host groups.", schema: emptySchema()},

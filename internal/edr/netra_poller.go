@@ -54,9 +54,17 @@ func NetraPollerStatus() map[string]any {
 }
 
 func NewNetraPollerFromEnv() *NetraPoller {
+	enabled := firstEnv("KAVACH_NETRA_POLLER_ENABLED", "KAVACH_NETRA_ENABLED")
+	if enabled == "false" || enabled == "0" || enabled == "no" {
+		return nil
+	}
 	u := firstEnv("KAVACH_NETRA_URL", "KAVACH_NETRA_POLLER_URL")
 	if u == "" {
 		return nil
+	}
+	// When ENABLED is explicitly true, URL is required (already checked).
+	if enabled == "" {
+		// URL alone still arms the poller (backward compatible).
 	}
 	insecure, _ := strconv.ParseBool(firstEnv("KAVACH_NETRA_TLS_INSECURE", "KAVACH_NETRA_POLLER_INSECURE_SKIP_VERIFY"))
 	interval := 15 * time.Second

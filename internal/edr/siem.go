@@ -22,6 +22,8 @@ type SIEMConfig struct {
 	SyslogAddr string // host:port UDP
 	Headers    map[string]string
 	Enabled    bool
+	Sink       string // webhook|syslog|both|none — from KAVACH_SIEM_SINK
+	Format     string // json|ecs|syslog — from KAVACH_SIEM_FORMAT
 }
 
 type SIEMExporter struct {
@@ -67,11 +69,28 @@ func NewSIEMExporterFromEnv() *SIEMExporter {
 		WebhookURL: firstNonEmpty(os.Getenv("KAVACH_SIEM_WEBHOOK"), os.Getenv("KAVACH_SIEM_WEBHOOK_URL")),
 		SyslogAddr: firstNonEmpty(os.Getenv("KAVACH_SIEM_SYSLOG"), os.Getenv("KAVACH_SIEM_SYSLOG_ADDR")),
 		Headers:    parseHeaderKV(os.Getenv("KAVACH_SIEM_HEADERS")),
+		Sink:       strings.ToLower(strings.TrimSpace(firstNonEmpty(os.Getenv("KAVACH_SIEM_SINK"), "both"))),
+		Format:     strings.ToLower(strings.TrimSpace(firstNonEmpty(os.Getenv("KAVACH_SIEM_FORMAT"), "ecs"))),
 	}
-	if os.Getenv("KAVACH_SIEM_ENABLED") == "true" || os.Getenv("KAVACH_SIEM_ENABLED") == "1" {
-		cfg.Enabled = cfg.WebhookURL != "" || cfg.SyslogAddr != ""
-	} else {
-		cfg.Enabled = cfg.WebhookURL != "" || cfg.SyslogAddr != ""
+	explicitOff := os.Getenv("KAVACH_SIEM_ENABLED") == "false" || os.Getenv("KAVACH_SIEM_ENABLED") == "0" || cfg.Sink == "none"
+	hasSink := cfg.WebhookURL != "" || cfg.SyslogAddr != ""
+	switch {
+	case explicitOff:
+		cfg.Enabled = false
+	case os.Getenv("KAVACH_SIEM_ENABLED") == "true" || os.Getenv("KAVACH_SIEM_ENABLED") == "1":
+		cfg.Enabled = hasSink
+	default:
+		cfg.Enabled = hasSink
+	}
+	// Honor sink selection: webhook-only or syslog-only clears the other.
+	switch cfg.Sink {
+	case "webhook":
+		cfg.SyslogAddr = ""
+	case "syslog":
+		cfg.WebhookURL = ""
+	case "none":
+		cfg.WebhookURL, cfg.SyslogAddr = "", ""
+		cfg.Enabled = false
 	}
 	return &SIEMExporter{cfg: cfg, client: &http.Client{Timeout: 5 * time.Second}}
 }
@@ -188,6 +207,8 @@ func (s *SIEMExporter) Status() map[string]any {
 	defer s.mu.Unlock()
 	out := map[string]any{
 		"enabled":     s.cfg.Enabled,
+		"sink":        s.cfg.Sink,
+		"format":      s.cfg.Format,
 		"webhook_set": s.cfg.WebhookURL != "",
 		"syslog_set":  s.cfg.SyslogAddr != "",
 		"ok_count":    s.okCount.Load(),
