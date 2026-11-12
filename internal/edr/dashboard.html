@@ -744,6 +744,10 @@ main {
 .tag.online { background: var(--success-bg); color: var(--success-text); }
 .tag.offline, .tag.stale, .tag.pending { background: var(--warning-bg); color: var(--warning-text); }
 .tag.xdr { background: var(--info-bg); color: var(--apple-link); }
+.tag.delivered { background: var(--success-bg); color: var(--success-text); }
+.tag.failed { background: var(--danger-bg); color: var(--danger); }
+.alert-url { font-family: var(--font-mono, ui-monospace, monospace); word-break: break-all; }
+.alert-confirm { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .tag.deny { background: var(--danger-bg); color: var(--danger); }
 
 .eyebrow {
@@ -1202,6 +1206,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
             <button type="button" data-page="ops" role="menuitem">Ops</button>
             <button type="button" data-page="observe" role="menuitem">Observe</button>
             <button type="button" data-page="ebpf" role="menuitem">eBPF</button>
+            <button type="button" data-page="alerts" role="menuitem">Alerts</button>
             <button type="button" data-page="finance" role="menuitem">Finance</button>
             <button type="button" data-page="sectors" role="menuitem">Sectors</button>
             <button type="button" data-page="modules" role="menuitem">Modules</button>
@@ -1891,6 +1896,68 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
       </div>
     </section>
 
+    <section id="page-alerts" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Notifications</p>
+        <h1>Alerts. Observe only.</h1>
+        <p class="lede">Route findings to a webhook or Slack. Rules only notify; they never contain, block, or change anything.</p>
+      </header>
+      <div class="work-panel" id="alert-work">
+        <h3>Add rule</h3>
+        <p class="hint">Webhook URLs must be https (http only for loopback). Only the host is shown after saving.</p>
+        <form id="alert-form" novalidate>
+          <div class="work-grid">
+            <div class="field">
+              <label for="alert-sev">Minimum severity</label>
+              <select class="select-field" id="alert-sev">
+                <option value="low">low</option>
+                <option value="medium">medium</option>
+                <option value="high" selected>high</option>
+                <option value="critical">critical</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="alert-type">Type</label>
+              <select class="select-field" id="alert-type">
+                <option value="webhook">webhook</option>
+                <option value="slack">slack</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="alert-rule">Rule contains</label>
+              <input class="input-field" id="alert-rule" type="text" maxlength="128" placeholder="Optional" autocomplete="off">
+            </div>
+            <div class="field">
+              <label for="alert-host">Host contains</label>
+              <input class="input-field" id="alert-host" type="text" maxlength="128" placeholder="Optional" autocomplete="off">
+            </div>
+            <div class="field field--wide">
+              <label for="alert-url">Destination URL</label>
+              <input class="input-field" id="alert-url" type="url" placeholder="https://hooks.example.com/..." autocomplete="off" spellcheck="false">
+            </div>
+          </div>
+          <div class="work-actions">
+            <button type="submit" class="primary" id="alert-add">Add rule</button>
+          </div>
+          <p class="work-msg" id="alert-msg" role="status"></p>
+        </form>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Rules</h3>
+        <table>
+          <thead><tr><th>Min severity</th><th>Type</th><th>Rule</th><th>Host</th><th>Destination</th><th>Created</th><th></th></tr></thead>
+          <tbody id="alert-rule-rows"></tbody>
+        </table>
+      </div>
+      <div class="table-wrap" style="margin-top:24px">
+        <h3 style="margin:0 0 12px;font-size:17px">Deliveries <small class="hint" id="alert-refresh">refreshes every 10s</small></h3>
+        <table>
+          <thead><tr><th>Status</th><th>Time</th><th>Rule</th><th>Finding</th><th>Destination</th><th>Attempts</th><th>Detail</th></tr></thead>
+          <tbody id="alert-delivery-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
     <section id="page-finance" class="page" hidden>
       <header class="page-hero">
         <p class="apple-eyebrow">Dalal Street</p>
@@ -2168,8 +2235,8 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'finance', 'sectors', 'modules', 'integrations'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'finance', 'sectors', 'modules', 'integrations'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -2292,7 +2359,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'finance', 'sectors']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'finance', 'sectors']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -2322,6 +2389,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     const want = '#/' + current;
     if (location.hash !== want) { try { history.replaceState(null, '', want); } catch (_) { location.hash = want; } }
     document.title = 'Kavach · ' + (pageLabels[current] || current);
+    if (current === 'alerts' && typeof loadAlerts === 'function') loadAlerts();
   }
 
   function fmtTime(v) {
@@ -3699,8 +3767,125 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     btn.disabled = false;
   });
 
+  // --- Alerts: rules and deliveries (observe only; notifications) ---
+  let alertConfirmId = '';
+  let alertRules = [];
+  function maskAlertURL(raw) {
+    try {
+      const u = new URL(String(raw));
+      return u.protocol + '//' + u.host + (u.pathname.length > 1 || u.search || u.hash ? '/\u2022\u2022\u2022' : '');
+    } catch (_) { return '\u2022\u2022\u2022'; }
+  }
+  function alertMsg(text, bad) {
+    const m = $('alert-msg');
+    m.textContent = text || '';
+    m.classList.toggle('is-error', !!bad); m.classList.toggle('is-ok', !bad && !!text);
+  }
+  async function alertFetch(path, opts) {
+    const res = await fetch(path, { credentials: 'same-origin', ...opts });
+    if (!res.ok) {
+      let t = '';
+      try { t = (await res.text()).trim(); } catch (_) {}
+      throw new Error(t && t.length < 200 ? t : 'HTTP ' + res.status);
+    }
+    const ct = res.headers.get('content-type') || '';
+    return ct.includes('application/json') ? res.json() : null;
+  }
+  function renderAlertRules() {
+    const tbody = $('alert-rule-rows');
+    if (!alertRules.length) {
+      listEmpty(tbody, 7, 'No alert rules', 'Add a rule above to be notified when findings match.', '', null);
+      return;
+    }
+    tbody.replaceChildren();
+    for (const r of alertRules) {
+      const act = document.createElement('div');
+      act.className = 'alert-confirm';
+      if (alertConfirmId === r.id) {
+        const yes = el('button', 'Delete', 'danger');
+        yes.type = 'button';
+        yes.addEventListener('click', async () => {
+          yes.disabled = true;
+          try {
+            await alertFetch('/v1/alerts/rules?id=' + encodeURIComponent(r.id), { method: 'DELETE' });
+            alertConfirmId = '';
+            alertMsg('Rule deleted.', false);
+          } catch (e) { alertMsg('Delete failed: ' + e.message, true); }
+          loadAlerts();
+        });
+        const no = el('button', 'Cancel', 'secondary');
+        no.type = 'button';
+        no.addEventListener('click', () => { alertConfirmId = ''; renderAlertRules(); });
+        act.append(el('span', 'Delete this rule?'), yes, no);
+      } else {
+        const del = el('button', 'Delete', 'secondary');
+        del.type = 'button';
+        del.setAttribute('aria-label', 'Delete rule ' + r.id);
+        del.addEventListener('click', () => { alertConfirmId = r.id; renderAlertRules(); });
+        act.appendChild(del);
+      }
+      tableRow(tbody, [
+        el('span', r.min_severity, 'tag ' + String(r.min_severity)),
+        r.type, r.rule_contains || '\u2014', r.host_contains || '\u2014',
+        el('span', maskAlertURL(r.url), 'alert-url'), fmtTime(r.created), act,
+      ]);
+    }
+  }
+  function renderAlertDeliveries(list) {
+    const tbody = $('alert-delivery-rows');
+    if (!list.length) {
+      listEmpty(tbody, 7, 'No deliveries yet', 'Notification attempts appear here once a rule matches a finding.', '', null);
+      return;
+    }
+    tbody.replaceChildren();
+    for (const d of list) {
+      const detail = [d.http_status ? 'HTTP ' + d.http_status : '', d.error || ''].filter(Boolean).join(' \u00b7 ') || '\u2014';
+      tableRow(tbody, [
+        el('span', d.status, 'tag ' + (d.status === 'delivered' ? 'delivered' : 'failed')),
+        fmtTime(d.time), d.rule_id, d.finding_id, d.destination_host || '\u2014', d.attempts, detail,
+      ]);
+    }
+  }
+  async function loadAlerts() {
+    try {
+      const [rules, dl] = await Promise.all([alertFetch('/v1/alerts/rules'), alertFetch('/v1/alerts/deliveries')]);
+      alertRules = Array.isArray(rules) ? rules : (rules && rules.rules) || [];
+      renderAlertRules();
+      renderAlertDeliveries((dl && dl.deliveries) || []);
+      $('alert-refresh').textContent = 'updated ' + new Date().toLocaleTimeString() + ' \u00b7 refreshes every 10s';
+    } catch (e) {
+      alertMsg('Could not load alerts: ' + e.message, true);
+    }
+  }
+  $('alert-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const url = $('alert-url').value.trim();
+    const rc = $('alert-rule').value.trim();
+    const hc = $('alert-host').value.trim();
+    if (!url) { alertMsg('Destination URL is required.', true); $('alert-url').focus(); return; }
+    if (rc.length > 128 || hc.length > 128) { alertMsg('filter too long', true); return; }
+    const btn = $('alert-add');
+    btn.disabled = true;
+    try {
+      await alertFetch('/v1/alerts/rules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ min_severity: $('alert-sev').value, type: $('alert-type').value, rule_contains: rc, host_contains: hc, url }),
+      });
+      $('alert-url').value = '';
+      $('alert-rule').value = '';
+      $('alert-host').value = '';
+      alertMsg('Rule added.', false);
+      loadAlerts();
+    } catch (err) {
+      alertMsg(err.message, true);
+    }
+    btn.disabled = false;
+  });
+  setInterval(() => { if (current === 'alerts' && !document.hidden && appVisible()) loadAlerts(); }, 10000);
+
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', m: 'modules', l: 'timeline' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', m: 'modules', l: 'timeline' };
   const appVisible = () => !$('app').hidden;
   let lastFocus = null;
   function overlayOpen(id) { lastFocus = document.activeElement; $(id).hidden = false; }
