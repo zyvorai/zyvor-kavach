@@ -1553,6 +1553,29 @@ paths:
       summary: Recent digest delivery results
       security: [{bearerAuth: []}]
       responses: {'200': {description: OK}}
+  /v1/ransomware/risk:
+    get:
+      summary: Per-host ransomware early-warning scores (report-only)
+      responses:
+        "200": { description: Hosts with score, level and timeline }
+  /v1/ransomware/host/{host}:
+    get:
+      summary: Ransomware risk and timeline for one host (report-only)
+      parameters:
+        - { name: host, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Host risk }
+  /v1/containers/risk:
+    get:
+      summary: Container/Kubernetes posture risk per host (report-only)
+      responses:
+        "200": { description: Privileged, host mount, exec, root, image drift indicators }
+  /v1/lateral/edges:
+    get:
+      summary: Lateral-movement edges (rdp/ssh/smb/winrm) between hosts
+      responses:
+        "200": { description: Edge list with counts }
+
 components:
   securitySchemes:
     bearerAuth:
