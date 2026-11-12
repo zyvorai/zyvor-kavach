@@ -4,22 +4,22 @@ package main
 
 import "github.com/zyvorai/zyvor-kavach/internal/mcpserver"
 
-func intProp(desc string) map[string]any {
+func moreIntProp(desc string) map[string]any {
 	return map[string]any{"type": "integer", "description": desc}
 }
 
 func moreReadTools() []endpointTool {
 	host := strProp("Host name")
-	hours := intProp("Lookback window in hours (default 24)")
+	hours := moreIntProp("Lookback window in hours (default 24)")
 	return []endpointTool{
 		{name: "fleet_health", method: "GET", path: "/v1/fleet/health", description: "Fleet sensor health summary.", schema: emptySchema()},
 		{name: "fleet_coverage_gaps", method: "GET", path: "/v1/fleet/coverage-gaps", description: "Hosts with sensor coverage gaps.", schema: emptySchema()},
-		{name: "fleet_stale", method: "GET", path: "/v1/fleet/stale", description: "Hosts that have not reported recently.", schema: objSchema(map[string]any{"minutes": intProp("Staleness threshold in minutes")}), queryParams: []string{"minutes"}},
+		{name: "fleet_stale", method: "GET", path: "/v1/fleet/stale", description: "Hosts that have not reported recently.", schema: objSchema(map[string]any{"minutes": moreIntProp("Staleness threshold in minutes")}), queryParams: []string{"minutes"}},
 		{name: "fleet_host_health", method: "GET", path: "/v1/fleet/health/{host}", description: "Health detail for one host.", schema: objSchema(map[string]any{"host": host}, "host"), pathParams: []string{"host"}},
-		{name: "prevalence_executables", method: "GET", path: "/v1/prevalence/executables", description: "Executable prevalence across the fleet.", schema: objSchema(map[string]any{"min_hosts": intProp("Minimum host count"), "max_hosts": intProp("Maximum host count (0 = unbounded)"), "limit": intProp("Max rows")}), queryParams: []string{"min_hosts", "max_hosts", "limit"}},
+		{name: "prevalence_executables", method: "GET", path: "/v1/prevalence/executables", description: "Executable prevalence across the fleet.", schema: objSchema(map[string]any{"min_hosts": moreIntProp("Minimum host count"), "max_hosts": moreIntProp("Maximum host count (0 = unbounded)"), "limit": moreIntProp("Max rows")}), queryParams: []string{"min_hosts", "max_hosts", "limit"}},
 		{name: "prevalence_rare", method: "GET", path: "/v1/prevalence/rare", description: "Rarely seen executables in the window.", schema: objSchema(map[string]any{"hours": hours, "fraction": map[string]any{"type": "number", "description": "Rarity fraction (0,1]"}}), queryParams: []string{"hours", "fraction"}},
 		{name: "prevalence_first_seen", method: "GET", path: "/v1/prevalence/first-seen", description: "New executables and destinations first seen on a host.", schema: objSchema(map[string]any{"host": host, "hours": hours}, "host"), queryParams: []string{"host", "hours"}},
-		{name: "blast_radius", method: "GET", path: "/v1/graph/blast-radius", description: "Blast-radius graph from a host.", schema: objSchema(map[string]any{"host": host, "hours": hours, "depth": intProp("Graph depth (default 2)")}, "host"), queryParams: []string{"host", "hours", "depth"}},
+		{name: "blast_radius", method: "GET", path: "/v1/graph/blast-radius", description: "Blast-radius graph from a host.", schema: objSchema(map[string]any{"host": host, "hours": hours, "depth": moreIntProp("Graph depth (default 2)")}, "host"), queryParams: []string{"host", "hours", "depth"}},
 		{name: "canary_list", method: "GET", path: "/v1/deception/canaries", description: "List deception canaries.", schema: emptySchema()},
 		{name: "canary_trips", method: "GET", path: "/v1/deception/trips", description: "List canary trips (tripwire events).", schema: emptySchema()},
 		{name: "governance_inventory", method: "GET", path: "/v1/governance/inventory", description: "Data class inventory (observe-only).", schema: emptySchema()},
@@ -40,7 +40,7 @@ func moreMutateTools() []endpointTool {
 		{name: "tuning_apply", method: "POST", path: "/v1/tuning/apply", description: "Apply a tuning suppression (rule + specific pattern, no wildcards).", schema: objSchema(map[string]any{"rule": strProp("Rule name"), "pattern": strProp("Specific pattern (rule + host)"), "reason": strProp("Reason (max 256)")}, "rule", "pattern"), bodyFields: true},
 		{name: "tuning_revert", method: "POST", path: "/v1/tuning/revert", description: "Revert an applied tuning by history id.", schema: objSchema(map[string]any{"id": strProp("History id")}, "id"), queryParams: []string{"id"}},
 		{name: "digest_set", method: "POST", path: "/v1/digests", description: "Create a scheduled digest.", schema: objSchema(map[string]any{
-			"name": strProp("Name (max 80)"), "schedule": strProp("daily|weekly"), "hour_utc": intProp("0-23"),
+			"name": strProp("Name (max 80)"), "schedule": strProp("daily|weekly"), "hour_utc": moreIntProp("0-23"),
 			"content": strProp("shift-report|soc-metrics|top-risks"), "type": strProp("webhook|slack"), "url": strProp("Destination URL"),
 		}, "name", "schedule", "content", "type", "url"), bodyFields: true},
 		{name: "digest_send_now", method: "POST", path: "/v1/digests/send-now", description: "Send a digest immediately.", schema: objSchema(map[string]any{"id": strProp("Digest id")}, "id"), queryParams: []string{"id"}},
