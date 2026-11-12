@@ -122,3 +122,20 @@ Read-only analytics for SOC management (all require the bearer token or a sessio
   A gap over 15 minutes starts a new burst; its first step carries `gap_seconds`. `host` is required (400).
 - `GET /v1/soc/shift-report?hours=12` (max 168): counts of new/open/closed, top 5 risk hosts, unresolved
   criticals and deterministic template questions for the next shift (no LLM).
+
+## Prevalence and blast radius
+
+Observation-only analytics over the in-memory event stores (last 100k process/network events, no external calls).
+
+- `GET /v1/prevalence/executables?min_hosts=&max_hosts=&limit=` (limit max 1000): executable plus normalised command
+  shape (uuids, hex, PIDs and numbers replaced by `<uuid>`, `<hex>`, `<n>`) with distinct host count, first/last
+  seen, uids and parent executables; rarest first.
+- `GET /v1/prevalence/rare?hours=24&fraction=` (max 720): executables seen in the window on exactly one host, or on
+  at most `fraction` of the fleet. `rarity` = 1 - (hosts-1)/fleet; `in_findings` marks executables that appear as
+  finding evidence (listed first).
+- `GET /v1/prevalence/first-seen?host=&hours=24`: executables and network destinations first seen on that host inside
+  the window (never before it). `host` is required (400).
+- `GET /v1/graph/blast-radius?host=&hours=24&depth=2` (depth max 3, max 500 nodes, `truncated` when capped): hosts
+  linked by shared destinations (<=10 hosts), shared rare executables (<=3 hosts fleet-wide) and shared finding
+  rules. Nodes carry `risk` from the host risk model; `likely_affected` is ranked by edge weight / depth + risk/100
+  with the reason edges listed. Output is deterministic.
