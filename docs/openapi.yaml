@@ -37,6 +37,30 @@ paths:
       responses:
         "200":
           description: Summary JSON
+  /v1/guidance:
+    get:
+      summary: Advisory remediation/explainer catalogue (observation-only; nothing is applied). Filter kind=rule|technique, q=text
+      parameters:
+        - { name: kind, in: query, schema: { type: string, enum: [rule, technique] } }
+        - { name: q, in: query, schema: { type: string } }
+      responses:
+        "200": { description: count and entries }
+  /v1/guidance/{id}:
+    get:
+      summary: One guidance entry by rule name or ATT&CK technique id
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: guidance entry }
+        "404": { description: not found }
+  /v1/findings/{id}/guidance:
+    get:
+      summary: Guidance for a finding, resolved by rule then by ATT&CK technique
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: finding id, rule and guidance entry }
+        "404": { description: finding or guidance not found }
   /v1/findings:
     get:
       summary: List findings

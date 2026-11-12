@@ -67,6 +67,7 @@ func RegisterFalconPlatform(mux *http.ServeMux, token string, store *Store, regi
 		_ = json.NewEncoder(w).Encode(KavachModules())
 	})
 	RegisterDetections(mux, token, store)
+	RegisterGuidance(mux, token, store)
 	RegisterIOC(mux, token, store)
 	RegisterIOA(mux, token, store)
 	RegisterRansomwareCloud(mux, token, store)
