@@ -206,3 +206,77 @@ func TestAnalystToolsClassificationAndSchemas(t *testing.T) {
 		t.Fatalf("risk summary: %s", o)
 	}
 }
+
+func TestOpsToolsClassificationAndSchemas(t *testing.T) {
+	dir := t.TempDir()
+	store, err := edr.NewStore(filepath.Join(dir, "findings.jsonl"), 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ts := httptest.NewServer(edr.APIWithCredentials("test-token-12345678", store, nil))
+	defer ts.Close()
+	c := &client{base: ts.URL, token: "test-token-12345678", http: ts.Client(), actor: "test"}
+	ro := listToolsJSON(t, c, false)
+	rw := listToolsJSON(t, c, true)
+
+	reads := []string{"kavach_intel_feeds", "kavach_intel_feed_status", "kavach_lab_rules", "kavach_soc_metrics",
+		"kavach_host_storyline", "kavach_shift_report", "kavach_posture_summary", "kavach_vuln_priority",
+		"kavach_posture_assets", "kavach_posture_drift", "kavach_compliance_controls", "kavach_compliance_evidence", "kavach_cert_in_clock"}
+	mutates := []string{"kavach_lab_validate", "kavach_lab_test", "kavach_lab_backtest", "kavach_posture_asset_set"}
+	for _, n := range reads {
+		if ro[n] == nil || rw[n] == nil {
+			t.Fatalf("read tool %s missing", n)
+		}
+	}
+	for _, n := range mutates {
+		if ro[n] != nil {
+			t.Fatalf("%s leaked into read-only mode", n)
+		}
+		if rw[n] == nil {
+			t.Fatalf("%s missing with mutations on", n)
+		}
+	}
+	// Create/delete/refresh/baseline for feeds, lab rules and assets must not exist.
+	for _, set := range []map[string]map[string]any{ro, rw} {
+		for name := range set {
+			if !strings.HasPrefix(name, "kavach_intel_feed") && !strings.HasPrefix(name, "kavach_lab_") && !strings.HasPrefix(name, "kavach_posture_") {
+				continue
+			}
+			for _, bad := range []string{"create", "delete", "add", "remove", "refresh", "baseline"} {
+				if strings.Contains(name, bad) {
+					t.Fatalf("forbidden tool %s", name)
+				}
+			}
+		}
+	}
+	if len(ro) < 40 || len(rw) < len(ro)+len(mutates) {
+		t.Fatalf("tool counts: ro=%d rw=%d", len(ro), len(rw))
+	}
+	enum := func(tool, prop string) string {
+		p := ro[tool]["inputSchema"].(map[string]any)["properties"].(map[string]any)[prop].(map[string]any)
+		return fmt.Sprint(p["enum"])
+	}
+	if got := enum("kavach_compliance_controls", "framework"); got != "[cis-v8 nist-csf-2 soc2 iso27001 rbi cert-in dpdp]" {
+		t.Fatalf("framework enum: %s", got)
+	}
+	if got := enum("kavach_compliance_evidence", "format"); got != "[json]" {
+		t.Fatalf("evidence format enum must be json only: %s", got)
+	}
+	for _, n := range []string{"kavach_host_storyline", "kavach_posture_drift"} {
+		req, _ := ro[n]["inputSchema"].(map[string]any)["required"].([]any)
+		if len(req) != 1 || req[0] != "host" {
+			t.Fatalf("%s must require host: %v", n, req)
+		}
+	}
+	srv, _ := buildServer(c, false)
+	var out bytes.Buffer
+	in := bytes.NewBufferString(`{"jsonrpc":"2.0","id":1,"method":"prompts/list"}` + "\n")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_ = srv.Serve(ctx, in, &out)
+	for _, p := range []string{"kavach_shift_handoff", "kavach_compliance_gap_review"} {
+		if !strings.Contains(out.String(), p) {
+			t.Fatalf("prompt %s missing: %s", p, out.String())
+		}
+	}
+}
