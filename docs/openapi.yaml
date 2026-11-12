@@ -753,6 +753,59 @@ paths:
       parameters:
         - {name: id, in: query, required: true, schema: {type: string}}
       responses: {'204': {description: Deleted}, '404': {description: Not found}}
+  /v1/posture/assets:
+    get:
+      summary: List asset criticality records
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: Upsert an asset (criticality 1-5, owner, tags)
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [host, criticality]
+              properties:
+                host: {type: string}
+                criticality: {type: integer, minimum: 1, maximum: 5}
+                owner: {type: string}
+                tags: {type: array, items: {type: string}}
+      responses: {'201': {description: Saved}, '400': {description: Invalid}}
+    delete:
+      summary: Delete an asset by ?host=
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: host, in: query, required: true, schema: {type: string}}
+      responses: {'204': {description: Deleted}, '404': {description: Not found}}
+  /v1/posture/vuln-priority:
+    get:
+      summary: Vulnerabilities ranked by an auditable score with per-factor breakdown
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: limit, in: query, schema: {type: integer, maximum: 500}}
+      responses: {'200': {description: OK}}
+  /v1/posture/baseline:
+    post:
+      summary: Snapshot SBOM/FIM/persistence baseline for ?host= (all hosts if omitted)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: host, in: query, schema: {type: string}}
+      responses: {'200': {description: OK}, '400': {description: Baseline host limit reached}}
+  /v1/posture/drift:
+    get:
+      summary: Added/removed/changed items since baseline with severity hints
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: host, in: query, required: true, schema: {type: string}}
+      responses: {'200': {description: OK}, '400': {description: host required}}
+  /v1/posture/summary:
+    get:
+      summary: One-screen posture rollup
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
   /v1/alerts/deliveries:
     get:
       summary: Last 100 notification delivery results
