@@ -102,6 +102,17 @@ func printHelp(w io.Writer) {
 	row("ai cluster|forecast|anomaly|stream|guardian|xdr-fusion", "AI reads")
 	row("ai score|narrative|report [--id]", "Per-finding AI")
 
+	section("Analyst workspace / risk / alerts")
+	row("risk hosts|summary [--json]", "Per-host risk ranking / fleet risk index")
+	row("trends [--days 7|14|30] [--bucket hour|day]", "Finding trend table + sparkline")
+	row("export findings --format csv|json|ndjson [--severity --host --rule --since] [--out F] [--force]", "Stream findings")
+	row("export report --format html|json [--out F] [--force]", "Executive posture report")
+	row("notes list --finding ID | add --finding ID \"text\" | rm ID", "Finding notes")
+	row("saved-searches list | add --name N --scope S --query Q | rm ID", "Saved searches")
+	row("alerts rules list | add --url U [--type --min-severity ...] | rm ID", "Alert rules (URL path masked)")
+	row("alerts deliveries", "Alert delivery log")
+	row("journal [verify]", "Tamper-evident activity journal / chain check")
+
 	section("Ops / export")
 	row("audit", "Console audit log")
 	row("report", "SOC summary report")

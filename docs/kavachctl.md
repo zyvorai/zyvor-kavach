@@ -81,3 +81,34 @@ source <(kavachctl completion zsh)     # also: bash, fish
 ```
 
 `watch --severity` is a minimum (`high` shows high and critical); `--max-events N` exits after N events. A rejected token (401/403) stops `watch` instead of retrying. `doctor` exits non-zero if any check fails.
+
+## Risk, trends, export, notes, alerts, journal
+
+```bash
+kavachctl risk hosts                   # ranked hosts: risk 0-100, band, findings, top rules (--json)
+kavachctl risk summary                 # fleet risk index + host count per band
+kavachctl trends --days 14 --bucket day   # --days 7|14|30, --bucket hour|day; sparkline of totals + per-day table
+
+kavachctl export findings --format csv --severity high --since 2026-01-01T00:00:00Z --out findings.csv
+kavachctl export findings --format ndjson > findings.ndjson   # csv|json|ndjson; filters: --severity --host --rule --since
+kavachctl export report --format html --out report.html       # html|json
+
+kavachctl notes list --finding F-123
+kavachctl notes add --finding F-123 "isolated by the owner, benign"
+kavachctl notes rm note-ab12
+
+kavachctl saved-searches list
+kavachctl saved-searches add --name "hot hosts" --scope findings --query "severity:high"
+kavachctl saved-searches rm ss-ab12
+
+kavachctl alerts rules list            # destination URLs are masked (path and query hidden)
+kavachctl alerts rules add --url https://hooks.example.com/x --type webhook --min-severity high \
+    --rule-contains ssh --host-contains prod
+kavachctl alerts rules rm alr-ab12
+kavachctl alerts deliveries            # recent delivery attempts and outcomes
+
+kavachctl journal                      # tamper-evident activity journal
+kavachctl journal verify               # checks the hash chain; exits non-zero if broken
+```
+
+`export` streams the response straight to the file or stdout. With `--out`, an existing file is never overwritten unless you pass `--force`, and no file is created if the server returns an error. Server error messages (for example `days must be 7, 14 or 30`) are shown verbatim with the HTTP status. Adding or removing an alert rule also records `alert_rule.create` / `alert_rule.delete` in the journal. Writes (`notes add|rm`, `saved-searches add|rm`, `alerts rules add|rm`) need an admin token.
