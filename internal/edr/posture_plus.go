@@ -173,8 +173,6 @@ func hasExposureTag(tags []string) bool {
 	return false
 }
 
-func round1(f float64) float64 { return float64(int(f*10+0.5)) / 10 }
-
 func minInt(a, b int) int {
 	if a < b {
 		return a
