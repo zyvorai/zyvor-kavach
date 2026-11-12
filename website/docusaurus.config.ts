@@ -7,10 +7,6 @@ const config: Config = {
   tagline: 'Security without compromise.',
   favicon: 'img/favicon.svg',
 
-  future: {
-    v4: true,
-  },
-
   url: 'https://zyvorai.github.io',
   baseUrl: '/zyvor-kavach/',
 
