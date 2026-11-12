@@ -154,3 +154,19 @@ observes and describes; recommendations are plain-English suggestions, never act
 - `GET /v1/fleet/health/{host}`: single-host diagnostic with deterministic `recommendations`. 404 when the host
   is neither enrolled nor seen in data; a shadow host returns `enrolled: false`.
 - Metrics: `kavach_fleet_coverage_score` and `kavach_fleet_stale_agents` (15 minute cutoff).
+## Prevalence and blast radius
+
+Observation-only analytics over the in-memory event stores (last 100k process/network events, no external calls).
+
+- `GET /v1/prevalence/executables?min_hosts=&max_hosts=&limit=` (limit max 1000): executable plus normalised command
+  shape (uuids, hex, PIDs and numbers replaced by `<uuid>`, `<hex>`, `<n>`) with distinct host count, first/last
+  seen, uids and parent executables; rarest first.
+- `GET /v1/prevalence/rare?hours=24&fraction=` (max 720): executables seen in the window on exactly one host, or on
+  at most `fraction` of the fleet. `rarity` = 1 - (hosts-1)/fleet; `in_findings` marks executables that appear as
+  finding evidence (listed first).
+- `GET /v1/prevalence/first-seen?host=&hours=24`: executables and network destinations first seen on that host inside
+  the window (never before it). `host` is required (400).
+- `GET /v1/graph/blast-radius?host=&hours=24&depth=2` (depth max 3, max 500 nodes, `truncated` when capped): hosts
+  linked by shared destinations (<=10 hosts), shared rare executables (<=3 hosts fleet-wide) and shared finding
+  rules. Nodes carry `risk` from the host risk model; `likely_affected` is ranked by edge weight / depth + risk/100
+  with the reason edges listed. Output is deterministic.

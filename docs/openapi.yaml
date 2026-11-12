@@ -796,6 +796,40 @@ paths:
       summary: Fleet risk index and host counts by risk band
       security: [{bearerAuth: []}]
       responses: {'200': {description: OK}}
+  /v1/prevalence/executables:
+    get:
+      summary: Fleet prevalence of executables by normalised command shape (distinct hosts, first/last seen, uids, parents)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: min_hosts, in: query, schema: {type: integer, minimum: 1}}
+        - {name: max_hosts, in: query, schema: {type: integer, minimum: 0}}
+        - {name: limit, in: query, schema: {type: integer, maximum: 1000}}
+      responses: {'200': {description: OK}}
+  /v1/prevalence/rare:
+    get:
+      summary: Executables seen in the window on one host (or under a fleet fraction) with rarity score and findings flag
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: hours, in: query, schema: {type: integer, maximum: 720}}
+        - {name: fraction, in: query, schema: {type: number, minimum: 0, maximum: 1}}
+      responses: {'200': {description: OK}}
+  /v1/prevalence/first-seen:
+    get:
+      summary: Executables and network destinations never seen on a host before the window
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: host, in: query, required: true, schema: {type: string}}
+        - {name: hours, in: query, schema: {type: integer, maximum: 720}}
+      responses: {'200': {description: OK}, '400': {description: host required}}
+  /v1/graph/blast-radius:
+    get:
+      summary: Bounded host graph (depth max 3, 500 nodes) linked by shared destinations, rare executables and finding co-occurrence, with ranked likely-also-affected hosts
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: host, in: query, required: true, schema: {type: string}}
+        - {name: hours, in: query, schema: {type: integer, maximum: 720}}
+        - {name: depth, in: query, schema: {type: integer, minimum: 1, maximum: 3}}
+      responses: {'200': {description: OK}, '400': {description: host required}}
   /v1/trends:
     get:
       summary: Finding counts per bucket by severity, delta vs previous period, top rules
