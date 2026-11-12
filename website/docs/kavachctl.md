@@ -72,3 +72,16 @@ kavachctl get /v1/summary
 ```
 
 Aliases: `finance`/`fin`/`banking`; `sectors`/`railways`/`govt`. Run `kavachctl --help` for the full command map.
+
+## Observe, watch, diagnose
+
+```bash
+kavachctl watch --severity high        # live tail of /v1/stream, colored, auto-reconnect (backoff 1s..30s)
+kavachctl attack                       # ATT&CK table: tactic, covered, hits  (--json for raw)
+kavachctl compliance score             # grade table per framework          (--json for raw)
+kavachctl findings -o table            # --output table|json|yaml (default json); also detections
+kavachctl doctor                       # KAVACH_URL/TOKEN, /livez, /readyz, auth, TLS hint
+source <(kavachctl completion zsh)     # also: bash, fish
+```
+
+`watch --severity` is a minimum (`high` shows high and critical); `--max-events N` exits after N events. A rejected token (401/403) stops `watch` instead of retrying. `doctor` exits non-zero if any check fails.

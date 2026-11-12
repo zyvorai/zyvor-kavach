@@ -8,6 +8,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -15,9 +16,11 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -47,9 +50,9 @@ func run(args []string) error {
 		return nil
 
 	case "findings":
-		return getQuery("/v1/findings", pickFlags(args[1:], "severity", "rule", "host"))
+		return listCmd(os.Stdout, "/v1/findings", args[1:], "severity", "rule", "host")
 	case "detections":
-		return getQuery("/v1/detections", pickFlags(args[1:], "severity", "status", "host"))
+		return listCmd(os.Stdout, "/v1/detections", args[1:], "severity", "status", "host")
 	case "incidents":
 		return request("GET", "/v1/incidents", nil)
 	case "timeline":
@@ -126,11 +129,19 @@ func run(args []string) error {
 		return request("GET", "/v1/exposure", nil)
 	case "compliance":
 		if len(args) > 1 && args[1] == "score" {
-			return request("GET", "/v1/compliance/score", nil)
+			return complianceScoreCmd(os.Stdout, args[2:])
 		}
 		return request("GET", "/v1/compliance", nil)
 	case "attack", "mitre":
-		return request("GET", "/v1/attack/matrix", nil)
+		return attackCmd(os.Stdout, args[1:])
+	case "watch", "tail":
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+		defer stop()
+		return watchCmd(ctx, os.Stdout, args[1:])
+	case "doctor":
+		return doctorCmd(os.Stdout)
+	case "completion":
+		return completionCmd(os.Stdout, args[1:])
 	case "metrics":
 		return request("GET", "/metrics", nil)
 	case "zero-trust":
