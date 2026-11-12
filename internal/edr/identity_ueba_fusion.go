@@ -62,7 +62,7 @@ var (
 	idMu     sync.Mutex
 	idEvents = defaultIdentityEvents()
 	fusionMu sync.Mutex
-	playbooks = defaultPlaybooks()
+	playbooks = append(defaultPlaybooks(), builtinPlaybooks()...)
 	playRuns  []PlaybookRun
 )
 

@@ -88,6 +88,7 @@ func RegisterFalconPlatform(mux *http.ServeMux, token string, store *Store, regi
 	RegisterThreatGraph(mux, token, store)
 	RegisterAudit(mux, token)
 	RegisterReports(mux, token, store, registry)
+	RegisterReportTemplates(mux, token, store, registry)
 	RegisterConnectors(mux, token)
 	RegisterCloudMobile(mux, token)
 	RegisterCharlotteAssist(mux, token, store)
