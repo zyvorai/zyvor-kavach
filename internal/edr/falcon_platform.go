@@ -79,6 +79,7 @@ func RegisterFalconPlatform(mux *http.ServeMux, token string, store *Store, regi
 	RegisterOverWatch(mux, token, store)
 	RegisterIntel(mux, token)
 	RegisterIdentity(mux, token, store)
+	RegisterITDR(mux, token, store)
 	RegisterFusion(mux, token, store)
 	RegisterUEBA(mux, token, store)
 	RegisterCases(mux, token, store)

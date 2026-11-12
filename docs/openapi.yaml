@@ -420,6 +420,31 @@ paths:
       summary: Identity entities with risk
       security: [{bearerAuth: []}]
       responses: {'200': {description: Entities}}
+  /v1/identity/itdr/summary:
+    get:
+      summary: ITDR summary
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/identity/itdr/indicators:
+    get:
+      summary: ITDR indicators (credential dumping, kerberoasting, pass-the-hash, impossible travel, odd-hour login, privileged usage)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/identity/itdr/risk:
+    get:
+      summary: ITDR per-user risk scores
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/identity/itdr/privileged:
+    get:
+      summary: ITDR privileged accounts
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/identity/itdr/timeline:
+    get:
+      summary: ITDR user timeline (query user)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
   /v1/ueba:
     get:
       summary: UEBA entity scores
