@@ -169,10 +169,13 @@ func RunAgentWithOptions(ctx context.Context, scanner *Scanner, endpoint, token 
 	if interval < time.Second {
 		return errors.New("interval must be >=1s")
 	}
-	kernel, err := WatchExec(ctx)
-	if err != nil {
-		kernel = nil
-	} // kernel connector is optional; polling remains active
+	kernel, err := WatchEBPF(ctx)
+	if err != nil || kernel == nil {
+		kernel, err = WatchExec(ctx)
+		if err != nil {
+			kernel = nil
+		}
+	} // eBPF pin → proc connector → polling
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	heartbeat := time.NewTicker(30 * time.Second)
@@ -203,6 +206,15 @@ func RunAgentWithOptions(ctx context.Context, scanner *Scanner, endpoint, token 
 	_, _ = q.Flush(ctx, endpoint, token, client)
 	if count, err := q.Pending(); err == nil {
 		_ = SendHeartbeat(ctx, endpoint, token, scanner.Host, string(ProbeSensor()), count, client)
+	}
+	// Host inventories (persistence/firewall/browser/sbom) — observation only.
+	go RunHostCollectors(ctx, endpoint, token, scanner.Host, client)
+	// Default FIM roots when -watch-files unset: observe /etc metadata.
+	if fileRoot == "" {
+		if _, err := os.Stat("/etc"); err == nil {
+			files = NewFileScanner("/etc", scanner.Host)
+			_, _ = files.Scan(time.Now())
+		}
 	}
 	for {
 		select {

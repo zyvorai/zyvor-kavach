@@ -349,8 +349,30 @@ func RegisterConnectors(mux *http.ServeMux, token string) {
 		if !requireAuth(w, r, token) {
 			return
 		}
+		live := deriveConnectors()
+		// Include static registry entries that are not already represented.
+		for _, c := range connList {
+			live = append(live, map[string]any{
+				"name": c.Name, "type": c.Category, "status": c.Status, "note": c.Endpoint, "source": "registry",
+			})
+		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(connList)
+		_ = json.NewEncoder(w).Encode(live)
+	})
+	mux.HandleFunc("POST /v1/connectors", func(w http.ResponseWriter, r *http.Request) {
+		if _, ok := requireAdminOrSession(w, r, token); !ok {
+			return
+		}
+		r.Body = http.MaxBytesReader(w, r.Body, 8192)
+		defer r.Body.Close()
+		var body map[string]any
+		if json.NewDecoder(r.Body).Decode(&body) != nil {
+			http.Error(w, "invalid", 400)
+			return
+		}
+		Live.Append("connectors", body)
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(body)
 	})
 }
 
@@ -360,21 +382,14 @@ func RegisterCloudMobile(mux *http.ServeMux, token string) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"id": "cspm-1", "provider": "aws", "control": "public-s3", "status": "pass", "note": "seed"},
-			{"id": "cspm-2", "provider": "aws", "control": "root-mfa", "status": "fail", "note": "seed"},
-			{"id": "cspm-3", "provider": "k8s", "control": "privileged-pods", "status": "warn", "note": "seed"},
-		})
+		_ = json.NewEncoder(w).Encode(mergeLive("cloud", nil))
 	})
 	mux.HandleFunc("GET /v1/mobile/devices", func(w http.ResponseWriter, r *http.Request) {
 		if !requireAuth(w, r, token) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"id": "mob-1", "platform": "ios", "owner": "demo", "status": "enrolled", "note": "preview seed"},
-			{"id": "mob-2", "platform": "android", "owner": "demo", "status": "enrolled", "note": "preview seed"},
-		})
+		_ = json.NewEncoder(w).Encode(mergeLive("mobile", nil))
 	})
 }
 
@@ -439,11 +454,7 @@ func RegisterFirewall(mux *http.ServeMux, token string) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"id": "fw-1", "name": "allow-dns", "direction": "out", "proto": "udp", "port": 53, "action": "allow", "enabled": true},
-			{"id": "fw-2", "name": "block-smb-wan", "direction": "in", "proto": "tcp", "port": 445, "action": "block", "enabled": true},
-			{"id": "fw-3", "name": "allow-https", "direction": "out", "proto": "tcp", "port": 443, "action": "allow", "enabled": true},
-		})
+		_ = json.NewEncoder(w).Encode(mergeLive("firewall", nil))
 	})
 }
 

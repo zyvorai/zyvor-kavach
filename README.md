@@ -56,10 +56,13 @@ Honest about what ships today:
 | Charlotte-lite assist | Charlotte AI | Assistive triage (+ optional `KAVACH_LLM_URL`) |
 | **Kavach AI Platform (22+)** | **Beyond Charlotte / Complete** | Chat, NL hunt, narratives, clusters, attack-path, forecast, multi-agent SOC, what-if, Guardian, XDR fusion, autopilot |
 | **World catalog (35+)** | **S1 / Defender / Cortex / Elastic / Trend / Cisco…** | Storyline, AIR, KQL, Ranger, deception, CASB/email/DLP/CNAPP/ASRM, forensics, FIM, YARA/Sigma, BAS, ZT, MDR — APIs + console domain loader |
-| Cloud / Mobile / OT / Browser | Falcon Cloud / Mobile / IoT | Preview seeds |
+| Cloud / Mobile / OT / Browser | Falcon Cloud / Mobile / IoT | Live inventory ingest (`POST /v1/inventory`) + agent browser scan |
+| CASB / Email / DLP / DNS / MDR / ZT / Compliance | World vendors | Derived from network/findings/fleet + connector ingest |
+| FIM / Persistence / Firewall / SBOM | Host sensors | Agent collectors (default `/etc` FIM) |
 | XDR via Netra | Insight XDR network | Bridge / poller (`KAVACH_NETRA_POLLER_ENABLED`) |
-| SIEM export + connectors | Next-Gen SIEM | Webhook / syslog / NDJSON (`KAVACH_SIEM_SINK` / `FORMAT`) |
-| eBPF exec sensor | Sensor | Scaffold (`bpf/`) — proc poll + connector live |
+| SIEM export + connectors | Next-Gen SIEM | Live status from env + webhook/syslog/NDJSON |
+| eBPF exec sensor | Sensor | Pin watch → proc connector → poll (`bpf/` CO-RE object) |
+| RBAC | Enterprise consoles | Catalog + optional `KAVACH_RBAC=1` enforcement |
 | Agent mTLS / Envoy Gateway | Platform | Opt-in docs |
 | MCP server | AI agent tooling | `kavach-mcp` stdio (read + opt-in mutations) |
 

@@ -84,7 +84,9 @@ func (s *Store) loadEvents() error {
 			s.recentEvents = append(s.recentEvents, e)
 		}
 		if v.File != nil {
-			s.seen["f:"+fileID(*v.File)] = struct{}{}
+			fe := *v.File
+			s.seen["f:"+fileID(fe)] = struct{}{}
+			s.fileEvents = append(s.fileEvents, fe)
 		}
 		if v.Network != nil {
 			n := *v.Network
@@ -101,6 +103,9 @@ func (s *Store) trimRecent() {
 	}
 	if len(s.networkEvents) > s.max {
 		s.networkEvents = s.networkEvents[len(s.networkEvents)-s.max:]
+	}
+	if len(s.fileEvents) > s.max {
+		s.fileEvents = s.fileEvents[len(s.fileEvents)-s.max:]
 	}
 }
 
@@ -210,6 +215,10 @@ func (s *Store) IngestFile(e FileEvent, detector *FileDetections) ([]Finding, er
 		return nil, err
 	}
 	s.seen[key] = struct{}{}
+	s.fileEvents = append(s.fileEvents, e)
+	if len(s.fileEvents) > s.max {
+		s.fileEvents = s.fileEvents[len(s.fileEvents)-s.max:]
+	}
 	findings := detector.Observe(e)
 	findings = append(findings, RansomwareFindings(e.Host, []FileEvent{e}, e.Time)...)
 	for _, f := range findings {

@@ -242,6 +242,7 @@ type Store struct {
 	eventPath     string
 	recentEvents  []Event
 	networkEvents []NetworkEvent
+	fileEvents    []FileEvent
 	mu            sync.Mutex
 	path          string
 	findings      []Finding
@@ -314,6 +315,14 @@ func (s *Store) List() []Finding {
 	copy(out, s.findings)
 	return out
 }
+
+func (s *Store) ListFiles() []FileEvent {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make([]FileEvent, len(s.fileEvents))
+	copy(out, s.fileEvents)
+	return out
+}
 func API(token string, store *Store) http.Handler { return APIWithCredentials(token, store, nil) }
 
 func APIWithCredentials(token string, store *Store, registry *CredentialRegistry) http.Handler {
@@ -329,6 +338,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	DefaultSIEM = siem
 	siem.RegisterRoutes(mux, token, store)
 	RegisterAIRoutes(mux, token, store)
+	RegisterInventoryIngest(mux, token)
 	RegisterFalconPlatform(mux, token, store, registry)
 	mux.HandleFunc("GET /v1/sensor", func(w http.ResponseWriter, r *http.Request) {
 		got := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")

@@ -124,6 +124,12 @@ func registerMutateTools(srv *mcpserver.Server, c *client) error {
 		{name: "kavach_exclusion_create", method: "POST", path: "/v1/exclusions", description: "Create detection exclusion.", schema: objSchema(map[string]any{"pattern": strProp("Pattern"), "reason": strProp("Reason")}, "pattern"), bodyFields: true},
 		{name: "kavach_rule_create", method: "POST", path: "/v1/rules", description: "Create custom detection rule.", schema: objSchema(map[string]any{"name": strProp("Name"), "query": strProp("Query")}, "name", "query"), bodyFields: true},
 		{name: "kavach_deception_trigger", method: "POST", path: "/v1/deception/trigger", description: "Mark deception decoy as triggered.", schema: objSchema(map[string]any{"id": strProp("Decoy ID")}, "id"), bodyFields: true},
+		{name: "kavach_inventory_ingest", method: "POST", path: "/v1/inventory", description: "Ingest live domain inventory (casb|email|dlp|cnapp|fim|persistence|firewall|browser|sbom|cloud|mobile|ot|sandbox|…).", schema: objSchema(map[string]any{
+			"domain":  strProp("Inventory domain"),
+			"host":    strProp("Hostname"),
+			"replace": map[string]any{"type": "boolean", "description": "Replace host rows"},
+			"items":   map[string]any{"type": "array", "items": map[string]any{"type": "object"}},
+		}, "domain"), bodyFields: true},
 	}
 	for _, t := range tools {
 		if err := registerEndpointTool(srv, c, t); err != nil {

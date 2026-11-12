@@ -41,24 +41,24 @@ func WorldModules() []WorldModule {
 		{ID: "watchlists", Name: "Watchlists", Vendors: []string{"Splunk", "Sentinel", "Elastic"}, Status: "active", APIs: []string{"/v1/watchlists"}, Note: "Entity watchlists"},
 		{ID: "exclusions", Name: "Exclusions / Suppressions", Vendors: []string{"All major EDR"}, Status: "active", APIs: []string{"/v1/exclusions"}, Note: "Detection suppressions"},
 		{ID: "sensor-health", Name: "Sensor Coverage Gaps", Vendors: []string{"S1 Ranger gaps", "Falcon sensor health"}, Status: "active", APIs: []string{"/v1/sensor-health"}, Note: "Coverage / stale / missing agents"},
-		{ID: "sandbox", Name: "Sandbox Detonation", Vendors: []string{"CrowdStrike Falcon Sandbox", "Joe Sandbox", "Any.Run"}, Status: "active", APIs: []string{"/v1/sandbox"}, Note: "Detonation report stubs"},
+		{ID: "sandbox", Name: "Sandbox Detonation", Vendors: []string{"CrowdStrike Falcon Sandbox", "Joe Sandbox", "Any.Run"}, Status: "active", APIs: []string{"/v1/sandbox"}, Note: "External detonation reports via inventory ingest"},
 		{ID: "itsm", Name: "ITSM Ticketing", Vendors: []string{"ServiceNow", "Jira", "PagerDuty"}, Status: "active", APIs: []string{"/v1/itsm/tickets"}, Note: "Ticket ledger / connectors"},
 		{ID: "notify", Name: "Notification Channels", Vendors: []string{"Slack", "Teams", "PagerDuty", "Email"}, Status: "active", APIs: []string{"/v1/notify/channels"}, Note: "Alert channel registry"},
-		{ID: "rbac", Name: "RBAC Roles", Vendors: []string{"All enterprise platforms"}, Status: "active", APIs: []string{"/v1/rbac/roles"}, Note: "Role catalog (auth still token/session)"},
+		{ID: "rbac", Name: "RBAC Roles", Vendors: []string{"All enterprise platforms"}, Status: "active", APIs: []string{"/v1/rbac/roles"}, Note: "Catalog + optional enforcement via KAVACH_RBAC=1"},
 		{ID: "tenants", Name: "Multi-site / Tenants", Vendors: []string{"MSSP multi-tenant consoles"}, Status: "active", APIs: []string{"/v1/tenants"}, Note: "Logical site inventory"},
 		{ID: "retention", Name: "Data Retention", Vendors: []string{"Threat Graph retention", "Data Lake"}, Status: "active", APIs: []string{"/v1/retention"}, Note: "Retention policy"},
 		{ID: "bas", Name: "Breach & Attack Simulation", Vendors: []string{"SafeBreach", "AttackIQ", "Cymulate"}, Status: "active", APIs: []string{"/v1/bas"}, Note: "Purple-team simulation ledger"},
 		{ID: "zero-trust", Name: "Zero Trust Score", Vendors: []string{"Microsoft ZT", "Zscaler", "Cloudflare"}, Status: "active", APIs: []string{"/v1/zero-trust"}, Note: "ZT posture scorecard"},
 		{ID: "dns-security", Name: "DNS Security", Vendors: []string{"Cisco Umbrella", "Infoblox", "Netra DNS"}, Status: "active", APIs: []string{"/v1/dns/threats"}, Note: "Malicious DNS / DoH signals"},
-		{ID: "ot-iot", Name: "OT / IoT", Vendors: []string{"Nozomi", "Claroty", "Microsoft Defender for IoT"}, Status: "preview", APIs: []string{"/v1/ot/devices"}, Note: "OT/IoT asset inventory"},
+		{ID: "ot-iot", Name: "OT / IoT", Vendors: []string{"Nozomi", "Claroty", "Microsoft Defender for IoT"}, Status: "active", APIs: []string{"/v1/ot/devices"}, Note: "OT/IoT via POST /v1/inventory domain=ot"},
 		{ID: "sbom", Name: "Supply Chain / SBOM", Vendors: []string{"Snyk", "Anchore", "FOSSA"}, Status: "active", APIs: []string{"/v1/sbom"}, Note: "Component inventory + CVEs"},
 		{ID: "hyperauto", Name: "Hyperautomation", Vendors: []string{"S1 Hyperautomation", "Cortex XSOAR", "Splunk SOAR"}, Status: "active", APIs: []string{"/v1/hyperautomation/workflows"}, Note: "No-code workflow catalog (ledger)"},
 		{ID: "mdr", Name: "MDR / Vigilance Desk", Vendors: []string{"S1 Vigilance", "Falcon Complete", "MDE Experts"}, Status: "active", APIs: []string{"/v1/mdr/queue"}, Note: "Managed detection queue"},
-		{ID: "geoip", Name: "Geo enrichment", Vendors: []string{"MaxMind", "CrowdStrike", "Elastic"}, Status: "active", APIs: []string{"/v1/enrich/geo"}, Note: "IP → geo stub enrichment"},
+		{ID: "geoip", Name: "Geo enrichment", Vendors: []string{"MaxMind", "CrowdStrike", "Elastic"}, Status: "active", APIs: []string{"/v1/enrich/geo"}, Note: "Offline heuristic geo + private/docs ranges"},
 		{ID: "tls-inventory", Name: "TLS / Cert Inventory", Vendors: []string{"Censys", "Qualys SSL"}, Status: "active", APIs: []string{"/v1/tls/certs"}, Note: "Certificate inventory"},
 		{ID: "rollback", Name: "Rollback Advisor", Vendors: []string{"SentinelOne Rollback"}, Status: "active", APIs: []string{"/v1/rollback"}, Note: "Guidance only — never restores files"},
 		{ID: "custom-rules", Name: "Custom Detection Engine", Vendors: []string{"S1 STAR", "Elastic rules", "Splunk"}, Status: "active", APIs: []string{"/v1/rules"}, Note: "Custom detection rule store"},
-		{ID: "browser", Name: "Browser / Extension Risk", Vendors: []string{"Island", "Chrome Enterprise", "Talon"}, Status: "preview", APIs: []string{"/v1/browser/extensions"}, Note: "Browser extension inventory"},
+		{ID: "browser", Name: "Browser / Extension Risk", Vendors: []string{"Island", "Chrome Enterprise", "Talon"}, Status: "active", APIs: []string{"/v1/browser/extensions"}, Note: "Agent Chromium extension scan + inventory ingest"},
 		{ID: "mfa-fatigue", Name: "MFA Fatigue / ITDR+", Vendors: []string{"CrowdStrike Identity", "Microsoft ITDR"}, Status: "active", APIs: []string{"/v1/itdr/mfa"}, Note: "MFA push-bomb / token abuse signals"},
 		{ID: "world-catalog", Name: "Global Capability Catalog", Vendors: []string{"AMTSO XDR matrix", "IDC XDR 2025"}, Status: "active", APIs: []string{"/v1/world/modules"}, Note: "This catalog"},
 	}
@@ -293,12 +293,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"app": "Slack", "category": "collaboration", "risk": "medium", "users": 42, "sanctioned": true},
-			{"app": "Dropbox", "category": "storage", "risk": "high", "users": 8, "sanctioned": false},
-			{"app": "GitHub", "category": "dev", "risk": "low", "users": 30, "sanctioned": true},
-			{"app": "ChatGPT", "category": "genai", "risk": "high", "users": 12, "sanctioned": false},
-		})
+		_ = json.NewEncoder(w).Encode(mergeLive("casb", deriveCASB(store)))
 	})
 
 	mux.HandleFunc("GET /v1/email/threats", func(w http.ResponseWriter, r *http.Request) {
@@ -306,11 +301,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"id": "em-1", "type": "phishing", "subject": "Invoice overdue", "from": "billing@evil.example", "severity": "high"},
-			{"id": "em-2", "type": "bec", "subject": "Wire transfer", "from": "ceo@lookalike.example", "severity": "critical"},
-			{"id": "em-3", "type": "malware", "subject": "Resume.pdf.exe", "from": "hr@spam.example", "severity": "high"},
-		})
+		_ = json.NewEncoder(w).Encode(mergeLive("email", deriveEmail(store)))
 	})
 
 	mux.HandleFunc("GET /v1/dlp/events", func(w http.ResponseWriter, r *http.Request) {
@@ -318,10 +309,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"id": "dlp-1", "host": "demo-host", "channel": "usb", "label": "PII", "action": "observed", "severity": "medium"},
-			{"id": "dlp-2", "host": "demo-host", "channel": "cloud_upload", "label": "source_code", "action": "observed", "severity": "high"},
-		})
+		_ = json.NewEncoder(w).Encode(mergeLive("dlp", deriveDLP(store)))
 	})
 
 	mux.HandleFunc("GET /v1/cnapp/workloads", func(w http.ResponseWriter, r *http.Request) {
@@ -329,22 +317,14 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"id": "wl-1", "provider": "aws", "type": "ec2", "name": "api-prod", "risk": "high", "public": true},
-			{"id": "wl-2", "provider": "k8s", "type": "pod", "name": "kavach", "risk": "low", "public": false},
-			{"id": "wl-3", "provider": "gcp", "type": "gke", "name": "batch", "risk": "medium", "public": false},
-		})
+		_ = json.NewEncoder(w).Encode(mergeLive("cnapp-workloads", nil))
 	})
 	mux.HandleFunc("GET /v1/cnapp/misconfigs", func(w http.ResponseWriter, r *http.Request) {
 		if !requireAuth(w, r, token) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"id": "mc-1", "control": "s3-public", "severity": "critical", "resource": "logs-bucket"},
-			{"id": "mc-2", "control": "sg-0.0.0.0/0:22", "severity": "high", "resource": "sg-prod"},
-			{"id": "mc-3", "control": "k8s-privileged", "severity": "medium", "resource": "daemonset/agent"},
-		})
+		_ = json.NewEncoder(w).Encode(mergeLive("cnapp-misconfigs", nil))
 	})
 
 	mux.HandleFunc("GET /v1/exposure", func(w http.ResponseWriter, r *http.Request) {
@@ -372,12 +352,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"framework": "CIS Kubernetes", "pass": 18, "fail": 4, "score": 82},
-			{"framework": "NIST CSF", "pass": 40, "fail": 12, "score": 77},
-			{"framework": "SOC2 CC6", "pass": 22, "fail": 3, "score": 88},
-			{"framework": "ISO 27001", "pass": 55, "fail": 9, "score": 86},
-		})
+		_ = json.NewEncoder(w).Encode(mergeLive("compliance", deriveCompliance(store, registry)))
 	})
 
 	mux.HandleFunc("GET /v1/forensics", func(w http.ResponseWriter, r *http.Request) {
@@ -419,10 +394,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"path": "/etc/passwd", "host": "demo-host", "change": "hash_changed", "severity": "high"},
-			{"path": "/etc/ssh/sshd_config", "host": "demo-host", "change": "modified", "severity": "critical"},
-		})
+		_ = json.NewEncoder(w).Encode(mergeLive("fim", deriveFIM(store)))
 	})
 
 	mux.HandleFunc("GET /v1/persistence", func(w http.ResponseWriter, r *http.Request) {
@@ -430,11 +402,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"host": "demo-host", "type": "systemd", "name": "kavach-agent.service", "risk": "low"},
-			{"host": "demo-host", "type": "cron", "name": "*/5 * * * * curl evil", "risk": "critical"},
-			{"host": "demo-host", "type": "bashrc", "name": "alias sudo=", "risk": "high"},
-		})
+		_ = json.NewEncoder(w).Encode(mergeLive("persistence", nil))
 	})
 
 	registerJSONList(mux, token, "GET /v1/yara", func() any { worldMu.Lock(); defer worldMu.Unlock(); return yaraRules })
@@ -505,15 +473,8 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 		if !requireAuth(w, r, token) {
 			return
 		}
-		out := []map[string]any{}
-		if registry != nil {
-			for _, st := range registry.Status(time.Now(), 90*time.Second) {
-				out = append(out, map[string]any{"host": st.Host, "state": st.State, "sensor": st.Sensor, "coverage": st.State == "online"})
-			}
-		}
-		out = append(out, map[string]any{"host": "unknown-laptop", "state": "missing", "sensor": "", "coverage": false, "gap": true})
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(out)
+		_ = json.NewEncoder(w).Encode(deriveSensorHealth(store, registry))
 	})
 
 	mux.HandleFunc("GET /v1/sandbox", func(w http.ResponseWriter, r *http.Request) {
@@ -521,10 +482,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"id": "sbx-1", "sha256": "deadbeef…", "verdict": "malicious", "family": "trojan.generic", "score": 92},
-			{"id": "sbx-2", "sha256": "cafebabe…", "verdict": "suspicious", "family": "pua", "score": 61},
-		})
+		_ = json.NewEncoder(w).Encode(mergeLive("sandbox", nil))
 	})
 
 	mux.HandleFunc("GET /v1/itsm/tickets", func(w http.ResponseWriter, r *http.Request) {
@@ -565,12 +523,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"id": "ch-slack", "type": "slack", "status": "configured"},
-			{"id": "ch-teams", "type": "teams", "status": "optional"},
-			{"id": "ch-email", "type": "email", "status": "optional"},
-			{"id": "ch-pagerduty", "type": "pagerduty", "status": "optional"},
-		})
+		_ = json.NewEncoder(w).Encode(deriveNotify())
 	})
 
 	mux.HandleFunc("GET /v1/rbac/roles", func(w http.ResponseWriter, r *http.Request) {
@@ -578,12 +531,27 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"id": "role-admin", "name": "Administrator", "permissions": []string{"*"}},
-			{"id": "role-analyst", "name": "Analyst", "permissions": []string{"read", "triage", "hunt", "cases"}},
-			{"id": "role-viewer", "name": "Viewer", "permissions": []string{"read"}},
-			{"id": "role-mssp", "name": "MSSP Operator", "permissions": []string{"read", "triage", "tenants"}},
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"roles": RBACRoles(), "enforced": rbacEnabled(), "current_role": requestRole(r, token),
 		})
+	})
+	mux.HandleFunc("POST /v1/rbac/roles", func(w http.ResponseWriter, r *http.Request) {
+		if _, ok := requireAdminOrSession(w, r, token); !ok {
+			return
+		}
+		if !requireRole(w, r, token, "admin", "*") {
+			return
+		}
+		r.Body = http.MaxBytesReader(w, r.Body, 8192)
+		defer r.Body.Close()
+		var body map[string]any
+		if json.NewDecoder(r.Body).Decode(&body) != nil {
+			http.Error(w, "invalid", 400)
+			return
+		}
+		AppendRBACRole(body)
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(body)
 	})
 
 	mux.HandleFunc("GET /v1/tenants", func(w http.ResponseWriter, r *http.Request) {
@@ -591,11 +559,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"id": "site-default", "name": "Default", "hosts": len(store.List())},
-			{"id": "site-lab", "name": "Lab", "hosts": 0},
-			{"id": "site-prod", "name": "Production", "hosts": 0},
-		})
+		_ = json.NewEncoder(w).Encode(deriveTenants(store, registry))
 	})
 
 	mux.HandleFunc("GET /v1/retention", func(w http.ResponseWriter, r *http.Request) {
@@ -603,9 +567,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"findings_days": 90, "events_days": 30, "ai_chat_days": 14, "audit_days": 365,
-		})
+		_ = json.NewEncoder(w).Encode(deriveRetention(store))
 	})
 
 	mux.HandleFunc("GET /v1/bas", func(w http.ResponseWriter, r *http.Request) {
@@ -644,10 +606,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"score": 74, "level": "moderate",
-			"pillars": map[string]int{"identity": 70, "device": 80, "network": 65, "application": 72, "data": 68},
-		})
+		_ = json.NewEncoder(w).Encode(deriveZeroTrust(store, registry))
 	})
 
 	mux.HandleFunc("GET /v1/dns/threats", func(w http.ResponseWriter, r *http.Request) {
@@ -655,10 +614,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"query": "evil-c2.example", "type": "A", "verdict": "malicious", "host": "demo-host"},
-			{"query": "dns.google", "type": "DoH", "verdict": "doh_tunnel_suspect", "host": "demo-host"},
-		})
+		_ = json.NewEncoder(w).Encode(mergeLive("dns", deriveDNS(store)))
 	})
 
 	mux.HandleFunc("GET /v1/ot/devices", func(w http.ResponseWriter, r *http.Request) {
@@ -666,10 +622,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"id": "ot-1", "name": "plc-line-1", "protocol": "modbus", "risk": "medium"},
-			{"id": "ot-2", "name": "hmi-packaging", "protocol": "opcua", "risk": "low"},
-		})
+		_ = json.NewEncoder(w).Encode(mergeLive("ot", nil))
 	})
 
 	mux.HandleFunc("GET /v1/sbom", func(w http.ResponseWriter, r *http.Request) {
@@ -677,10 +630,8 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"component": "openssl", "version": "3.0.12", "cves": []string{"CVE-2024-XXXX"}, "severity": "high"},
-			{"component": "curl", "version": "8.5.0", "cves": []string{}, "severity": "low"},
-		})
+		out := mergeLive("sbom", deriveSBOM())
+		_ = json.NewEncoder(w).Encode(out)
 	})
 
 	registerJSONList(mux, token, "GET /v1/hyperautomation/workflows", func() any {
@@ -694,10 +645,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"id": "mdr-1", "title": "OverWatch seed: LOTL chain", "priority": "high", "status": "queued", "source": "overwatch"},
-			{"id": "mdr-2", "title": "Identity spray review", "priority": "medium", "status": "in_progress", "source": "identity"},
-		})
+		_ = json.NewEncoder(w).Encode(mergeLive("mdr", deriveMDR(store)))
 	})
 
 	mux.HandleFunc("GET /v1/enrich/geo", func(w http.ResponseWriter, r *http.Request) {
@@ -705,14 +653,8 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		ip := r.URL.Query().Get("ip")
-		if ip == "" {
-			ip = "203.0.113.66"
-		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"ip": ip, "country": "ZZ", "city": "Documentation Land", "asn": "AS64500", "risk": "medium",
-			"note": "Stub geo enrichment for demos",
-		})
+		_ = json.NewEncoder(w).Encode(deriveGeo(ip))
 	})
 
 	mux.HandleFunc("GET /v1/tls/certs", func(w http.ResponseWriter, r *http.Request) {
@@ -720,10 +662,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"host": "kavach.local", "not_after": "2027-01-01", "issuer": "self-signed", "risk": "medium"},
-			{"host": "api.example", "not_after": "2026-06-01", "issuer": "Let's Encrypt", "risk": "low"},
-		})
+		_ = json.NewEncoder(w).Encode(mergeLive("tls", nil))
 	})
 
 	mux.HandleFunc("GET /v1/rollback", func(w http.ResponseWriter, r *http.Request) {
@@ -732,11 +671,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 		}
 		id := r.URL.Query().Get("id")
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"finding_id": id,
-			"advice": []string{"Snapshot VSS/ZFS before changes", "Restore from known-good backup", "Do not rely on Kavach to rollback — observation only"},
-			"enforced": false,
-		})
+		_ = json.NewEncoder(w).Encode(deriveRollback(store, id))
 	})
 
 	mux.HandleFunc("GET /v1/browser/extensions", func(w http.ResponseWriter, r *http.Request) {
@@ -744,10 +679,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"name": "uBlock", "risk": "low", "host": "demo-host"},
-			{"name": "Unknown Wallet Helper", "risk": "high", "host": "demo-host"},
-		})
+		_ = json.NewEncoder(w).Encode(mergeLive("browser", nil))
 	})
 
 	mux.HandleFunc("GET /v1/itdr/mfa", func(w http.ResponseWriter, r *http.Request) {
@@ -755,13 +687,8 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]any{
-			{"user": "admin", "type": "mfa_fatigue", "pushes": 14, "severity": "high", "window_min": 10},
-			{"user": "svc-backup", "type": "token_replay_suspect", "severity": "critical"},
-		})
+		_ = json.NewEncoder(w).Encode(deriveITDR())
 	})
-
-	_ = store
 }
 
 func registerJSONList(mux *http.ServeMux, token, pattern string, list func() any) {
