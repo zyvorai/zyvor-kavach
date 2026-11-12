@@ -7,6 +7,7 @@ const sidebars: SidebarsConfig = {
     'deploy-remote',
     'agent-mtls',
     'envoy-gateway',
+    'mcp-integration',
   ],
 };
 

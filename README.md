@@ -75,12 +75,22 @@ export KAVACH_TOKEN='…'
 
 API surface: [docs/openapi.yaml](docs/openapi.yaml).
 
+### MCP server
+
+```bash
+go build -o bin/kavach-mcp ./cmd/kavach-mcp
+KAVACH_URL=https://127.0.0.1:30899 KAVACH_TOKEN="$KAVACH_TOKEN" KAVACH_MCP_TLS_INSECURE=true ./bin/kavach-mcp
+```
+
+See [docs/mcp-integration.md](docs/mcp-integration.md). Sister to `netra-mcp`.
+
 ## Docs
 
 - [Architecture](docs/architecture.md)
 - [Agent mTLS](docs/agent-mtls.md)
 - [Envoy Gateway](docs/envoy-gateway.md)
 - [Remote deploy](docs/deploy-remote.md)
+- [MCP integration](docs/mcp-integration.md)
 - [OpenAPI stub](docs/openapi.yaml)
 - Site: https://zyvorai.github.io/zyvor-kavach/
 

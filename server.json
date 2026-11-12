@@ -1,0 +1,17 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/server.json",
+  "name": "io.github.zyvorai/kavach",
+  "description": "Kavach MCP — observation-only EDR/XDR + AI platform tools for a running Zyvor Kavach controller (sister to netra-mcp).",
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registry_name": "npm",
+      "name": "unused",
+      "version": "0.0.0"
+    }
+  ],
+  "repository": {
+    "url": "https://github.com/zyvorai/zyvor-kavach",
+    "source": "github"
+  }
+}
