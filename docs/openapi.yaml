@@ -618,6 +618,18 @@ paths:
       summary: SOC summary report
       security: [{bearerAuth: []}]
       responses: {'200': {description: Summary}}
+  /v1/reports/templates:
+    get:
+      summary: List report templates
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Templates}}
+  /v1/reports/templates/{id}/render:
+    get:
+      summary: Render a report template to markdown
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Markdown}, '404': {description: Unknown template}}
   /v1/connectors:
     get:
       summary: Connector registry
