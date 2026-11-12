@@ -1332,6 +1332,38 @@ paths:
         content:
           application/json:
             schema: {type: object}
+  /v1/vulns/software:
+    get:
+      summary: Vulnerability management software
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/vulns/advisories:
+    get:
+      summary: Vulnerability management advisories
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/vulns/findings:
+    get:
+      summary: Vulnerability management findings
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/vulns/exposure:
+    get:
+      summary: Vulnerability management exposure
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/vulns/top:
+    get:
+      summary: Vulnerability management top
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/sbom/{host}:
+    get:
+      summary: CycloneDX-style SBOM for a host
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: host, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: OK}}
   /v1/world/modules:
     get:
       summary: v1 world modules
