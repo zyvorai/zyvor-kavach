@@ -1,0 +1,214 @@
+# SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+{{- if .Values.gateway.enabled }}
+{{- if not .Values.gateway.parentRefs }}
+{{- fail "gateway.enabled needs gateway.parentRefs (the Envoy Gateway / Gateway API Gateway to attach to)" }}
+{{- end }}
+{{- $bt := .Values.gateway.backendTLS | default dict }}
+{{- $needBackendTLS := and .Values.tls.enabled $bt.enabled }}
+{{- if and .Values.tls.enabled (not $bt.enabled) }}
+{{- fail "tls.enabled=true serves HTTPS from the pod; set gateway.backendTLS.enabled=true (with a CA) or tls.enabled=false behind a trusted gateway" }}
+{{- end }}
+{{- if and $needBackendTLS (not $bt.caCertificateRefs) (not $bt.wellKnownCACertificates) }}
+{{- fail "gateway.backendTLS needs gateway.backendTLS.caCertificateRefs or wellKnownCACertificates so Envoy can verify the pod certificate (use tls.existingSecret for a stable cert)" }}
+{{- end }}
+# Envoy (via Gateway API) in front of the Kavach API. Optional: Kavach's own
+# auth (admin token) is unchanged; the gateway adds TLS termination, routing
+# and edge policy. Agents keep talking to the Service directly.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: kavach
+  labels:
+    {{- include "kavach.labels" . | nindent 4 }}
+  {{- with .Values.gateway.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  parentRefs:
+    {{- toYaml .Values.gateway.parentRefs | nindent 4 }}
+  {{- with .Values.gateway.hostnames }}
+  hostnames:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: {{ .Values.gateway.path | quote }}
+    timeouts:
+      request: {{ .Values.gateway.requestTimeout | default "0s" | quote }}
+    backendRefs:
+    - name: kavach
+      port: {{ .Values.service.port }}
+{{- if $needBackendTLS }}
+---
+apiVersion: {{ default "gateway.networking.k8s.io/v1alpha3" $bt.apiVersion }}
+kind: BackendTLSPolicy
+metadata:
+  name: kavach
+  labels:
+    {{- include "kavach.labels" . | nindent 4 }}
+spec:
+  targetRefs:
+  - group: ""
+    kind: Service
+    name: kavach
+  validation:
+    hostname: {{ default (printf "kavach.%s.svc" .Release.Namespace) $bt.hostname | quote }}
+    {{- with $bt.caCertificateRefs }}
+    caCertificateRefs:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with $bt.wellKnownCACertificates }}
+    wellKnownCACertificates: {{ . | quote }}
+    {{- end }}
+{{- end }}
+{{- with .Values.gateway.backendTrafficPolicy }}
+{{- if .enabled }}
+---
+# Envoy Gateway extension (needs its CRDs). With backend TLS Envoy negotiates
+# HTTP/2 to the pod, which cannot carry a WebSocket upgrade; useClientProtocol
+# keeps the upstream hop on the client's HTTP version so streams upgrade.
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: BackendTrafficPolicy
+metadata:
+  name: kavach
+  labels:
+    {{- include "kavach.labels" $ | nindent 4 }}
+spec:
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: kavach
+  useClientProtocol: {{ if hasKey . "useClientProtocol" }}{{ .useClientProtocol }}{{ else }}true{{ end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if .Values.gatewayApi.enabled }}
+{{- $hostname := required "gatewayApi.hostname is required when gatewayApi.enabled=true" .Values.gatewayApi.hostname }}
+{{- $gwName := default .Release.Name .Values.gatewayApi.name }}
+{{- $ns := .Release.Namespace }}
+{{- $port := int (.Values.gatewayApi.servicePort | default .Values.service.port) }}
+{{- $tlsSecret := .Values.gatewayApi.tlsSecretName | default "kavach-gateway-tls" }}
+{{- if .Values.gatewayApi.certificate.create }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ $gwName }}-gateway-cert
+  namespace: {{ $ns }}
+  labels:
+    {{- include "kavach.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+spec:
+  secretName: {{ $tlsSecret }}
+  issuerRef:
+    name: {{ .Values.gatewayApi.certificate.issuerRef.name }}
+    kind: {{ .Values.gatewayApi.certificate.issuerRef.kind }}
+  dnsNames:
+    - {{ $hostname | quote }}
+{{- end }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ $gwName }}
+  namespace: {{ $ns }}
+  labels:
+    {{- include "kavach.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+spec:
+  gatewayClassName: {{ .Values.gatewayApi.gatewayClassName | default "cilium" }}
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Same
+    - name: https
+      protocol: HTTPS
+      port: 443
+      hostname: {{ $hostname | quote }}
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            group: ""
+            name: {{ $tlsSecret }}
+      allowedRoutes:
+        namespaces:
+          from: Same
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $gwName }}-https
+  namespace: {{ $ns }}
+  labels:
+    {{- include "kavach.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+spec:
+  parentRefs:
+    - name: {{ $gwName }}
+      sectionName: https
+  hostnames:
+    - {{ $hostname | quote }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: kavach
+          port: {{ $port }}
+{{- if .Values.gatewayApi.httpRedirect }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $gwName }}-http-redirect
+  namespace: {{ $ns }}
+  labels:
+    {{- include "kavach.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+spec:
+  parentRefs:
+    - name: {{ $gwName }}
+      sectionName: http
+  hostnames:
+    - {{ $hostname | quote }}
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
+{{- end }}
+{{- if .Values.gatewayApi.networkPolicy }}
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: kavach-gateway-ingress
+  namespace: {{ $ns }}
+  labels:
+    {{- include "kavach.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+spec:
+  endpointSelector:
+    matchLabels:
+      {{- include "kavach.selectorLabels" . | nindent 6 }}
+  ingress:
+    - fromEntities:
+        - cluster
+        - remote-node
+        - host
+        - world
+      toPorts:
+        - ports:
+            - port: {{ .Values.service.targetPort | default 8099 | quote }}
+              protocol: TCP
+{{- end }}
+{{- end }}

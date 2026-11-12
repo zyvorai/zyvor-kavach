@@ -1,0 +1,40 @@
+{{- $scheme := include "kavach.scheme" . -}}
+Kavach {{ .Chart.AppVersion | default .Chart.Version }}
+
+  TLS: {{ if .Values.tls.enabled }}ENABLED (default) — self-signed in-pod cert via gen-cert init{{ else }}DISABLED — set tls.enabled=true for HTTPS{{ end }}
+  Listen: {{ $scheme }}://kavach.{{ .Release.Namespace }}.svc:{{ .Values.service.port }}
+  (pod listens on :{{ .Values.service.targetPort | default 8099 }})
+
+{{- if eq .Values.service.type "NodePort" }}
+  NodePort: {{ $scheme }}://<node-ip>:{{ .Values.service.nodePort | default .Values.service.port }}
+{{- else if eq .Values.service.type "LoadBalancer" }}
+  External: wait for SERVICE-IP, then {{ $scheme }}://<EXTERNAL-IP>:{{ .Values.service.port }}
+{{- else }}
+  Port-forward:
+    kubectl -n {{ .Release.Namespace }} port-forward svc/kavach {{ .Values.service.port }}:{{ .Values.service.port }}
+    open {{ $scheme }}://127.0.0.1:{{ .Values.service.port }}
+{{- end }}
+
+  Auth: send Authorization: Bearer $KAVACH_TOKEN
+        (docs also accept the legacy env name ZYVOR_EDR_TOKEN for the same secret)
+
+{{- if .Values.agent.enabled }}
+  Agent DaemonSet: kavach-agent (enabled)
+{{- else }}
+  Agent DaemonSet: disabled (controller-only)
+{{- end }}
+
+{{- if .Values.tls.enabled }}
+  Tip: browsers will warn on the self-signed cert; curl -skf {{ $scheme }}://127.0.0.1:{{ .Values.service.port }}/v1/findings -H "Authorization: Bearer $KAVACH_TOKEN"
+  Opt out only with --set tls.enabled=false (trusted ingress/proxy termination).
+{{- end }}
+
+{{- if .Values.gateway.enabled }}
+  Gateway HTTPRoute: attached via gateway.parentRefs
+{{- end }}
+{{- if .Values.gatewayApi.enabled }}
+  Gateway API (Cilium/LE): https://{{ .Values.gatewayApi.hostname }}
+{{- end }}
+{{- if .Values.ingress.enabled }}
+  Ingress: enabled
+{{- end }}

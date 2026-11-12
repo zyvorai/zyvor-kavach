@@ -1,0 +1,101 @@
+# SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+{{- if .Values.agent.enabled }}
+{{- $mtls := include "kavach.mtlsMode" . }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kavach-agent
+  labels:
+    {{- include "kavach.labels" . | nindent 4 }}
+    app.kubernetes.io/component: agent
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kavach-agent
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kavach-agent
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: agent
+    spec:
+      automountServiceAccountToken: false
+      {{- if .Values.agent.hostPID }}
+      hostPID: true
+      {{- end }}
+      {{- with .Values.agent.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.agent.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.agent.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: agent
+        image: "{{ .Values.agentImage.repository }}:{{ .Values.agentImage.tag }}"
+        imagePullPolicy: {{ .Values.agentImage.pullPolicy }}
+        args:
+        - -mode
+        - agent
+        - -url
+        - {{ include "kavach.serverURL" . | quote }}
+        - -queue
+        - {{ .Values.agent.queuePath | quote }}
+        - -interval
+        - {{ .Values.agent.interval | quote }}
+        {{- if .Values.agent.watchFiles }}
+        - -watch-files
+        - {{ .Values.agent.watchFiles | quote }}
+        {{- end }}
+        {{- if ne $mtls "off" }}
+        - -ca
+        - /run/mtls/ca.crt
+        - -agent-cert
+        - /run/mtls/tls.crt
+        - -agent-key
+        - /run/mtls/tls.key
+        {{- end }}
+        env:
+        - name: KAVACH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "kavach.authSecretName" . }}
+              key: {{ .Values.auth.secretKey | default "token" | quote }}
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        {{- if and .Values.tls.enabled .Values.tls.agentInsecureSkipVerify }}
+        - {name: KAVACH_TLS_INSECURE, value: "true"}
+        {{- end }}
+        volumeMounts:
+        - name: outbox
+          mountPath: {{ .Values.agent.queuePath | quote }}
+        {{- if ne $mtls "off" }}
+        - name: agent-mtls
+          mountPath: /run/mtls
+          readOnly: true
+        {{- end }}
+        resources: {{- toYaml .Values.agent.resources | nindent 10 }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities: {drop: ["ALL"]}
+      volumes:
+      - {name: outbox, emptyDir: {}}
+      {{- if ne $mtls "off" }}
+      - name: agent-mtls
+        secret:
+          secretName: {{ .Values.mtls.secretName | quote }}
+          items:
+          - {key: ca.crt, path: ca.crt}
+          - {key: tls.crt, path: tls.crt}
+          - {key: tls.key, path: tls.key}
+      {{- end }}
+{{- end }}

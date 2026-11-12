@@ -1,0 +1,18 @@
+[Unit]
+Description=Zyvor EDR prototype observation agent
+After=network-online.target
+Wants=network-online.target
+[Service]
+Type=simple
+User=root
+EnvironmentFile=/etc/zyvor-edr/agent.env
+ExecStart=/usr/local/bin/zyvor-edr -mode agent -url https://edr.internal.example:8099 -queue /var/lib/zyvor-edr/outbox -ca /etc/zyvor-edr/ca.pem -watch-files /srv/edr-canary
+Restart=on-failure
+RestartSec=10
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/zyvor-edr
+# Carefully review any other sandboxing: /proc must remain visible.
+[Install]
+WantedBy=multi-user.target

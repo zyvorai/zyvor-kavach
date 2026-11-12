@@ -1,0 +1,180 @@
+# SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+{{- $mtls := include "kavach.mtlsMode" . }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kavach
+  labels:
+    {{- include "kavach.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  {{- if .Values.persistence.enabled }}
+  strategy:
+    type: Recreate
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "kavach.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "kavach.selectorLabels" . | nindent 8 }}
+    spec:
+      terminationGracePeriodSeconds: 20
+      securityContext:
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile: {type: RuntimeDefault}
+      {{- if .Values.tls.enabled }}
+      initContainers:
+      - name: gen-cert
+        image: {{ .Values.tls.opensslImage | quote }}
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          {{- if .Values.tls.existingSecret }}
+          cp /tls-secret/tls.crt /tls-secret/tls.key /certs/
+          {{- else }}
+          openssl req -x509 -nodes -days 3650 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 \
+            -keyout /certs/tls.key -out /certs/tls.crt \
+            -subj "/CN=kavach/O=Zyvor AI Labs" \
+            -addext "subjectAltName=DNS:kavach,DNS:kavach.{{ .Release.Namespace }}.svc,DNS:localhost,IP:127.0.0.1"
+          {{- end }}
+          chown 65532:65532 /certs/tls.key /certs/tls.crt
+          chmod 600 /certs/tls.key
+        securityContext: {runAsUser: 0, runAsNonRoot: false}
+        volumeMounts:
+        - {name: tls-certs, mountPath: /certs}
+        {{- if .Values.tls.existingSecret }}
+        - {name: tls-secret, mountPath: /tls-secret, readOnly: true}
+        {{- end }}
+      {{- end }}
+      containers:
+      - name: kavach
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        args:
+        - -mode
+        - server
+        - -listen
+        - 0.0.0.0:{{ .Values.service.targetPort | default 8099 }}
+        - -state
+        - {{ printf "%s/findings.jsonl" (.Values.persistence.mountPath | default "/app/data") | quote }}
+        - -credentials
+        - {{ printf "%s/agents.json" (.Values.persistence.mountPath | default "/app/data") | quote }}
+        {{- if .Values.tls.enabled }}
+        - -tls-cert
+        - /run/tls/tls.crt
+        - -tls-key
+        - /run/tls/tls.key
+        {{- end }}
+        {{- if ne $mtls "off" }}
+        - -client-ca
+        - /run/mtls/ca.crt
+        {{- end }}
+        ports:
+        - name: {{ if .Values.tls.enabled }}https{{ else }}http{{ end }}
+          containerPort: {{ .Values.service.targetPort | default 8099 }}
+        env:
+        - name: KAVACH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "kavach.authSecretName" . }}
+              key: {{ .Values.auth.secretKey | default "token" | quote }}
+        {{- if .Values.netra.poller.enabled }}
+        - name: KAVACH_NETRA_POLLER_ENABLED
+          value: "true"
+        - name: KAVACH_NETRA_POLLER_URL
+          value: {{ required "netra.poller.url is required when netra.poller.enabled=true" .Values.netra.poller.url | quote }}
+        {{- if .Values.netra.poller.apiKey }}
+        - name: KAVACH_NETRA_POLLER_API_KEY
+          value: {{ .Values.netra.poller.apiKey | quote }}
+        {{- end }}
+        - name: KAVACH_NETRA_POLLER_INSECURE_SKIP_VERIFY
+          value: {{ .Values.netra.poller.insecureSkipVerify | quote }}
+        {{- end }}
+        {{- if .Values.siem.enabled }}
+        - name: KAVACH_SIEM_ENABLED
+          value: "true"
+        - name: KAVACH_SIEM_SINK
+          value: {{ .Values.siem.sink | quote }}
+        - name: KAVACH_SIEM_FORMAT
+          value: {{ .Values.siem.format | quote }}
+        {{- if .Values.siem.existingSecret }}
+        - name: KAVACH_SIEM_WEBHOOK_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.siem.existingSecret | quote }}
+              key: webhook-url
+              optional: true
+        - name: KAVACH_SIEM_HEADERS
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.siem.existingSecret | quote }}
+              key: headers
+              optional: true
+        {{- else if .Values.siem.webhookURL }}
+        - name: KAVACH_SIEM_WEBHOOK_URL
+          value: {{ .Values.siem.webhookURL | quote }}
+        {{- end }}
+        {{- end }}
+        resources: {{- toYaml .Values.resources | nindent 10 }}
+        volumeMounts:
+        {{- if .Values.tls.enabled }}
+        - {name: tls-certs, mountPath: /run/tls, readOnly: true}
+        {{- end }}
+        {{- if ne $mtls "off" }}
+        - {name: agent-mtls-ca, mountPath: /run/mtls, readOnly: true}
+        {{- end }}
+        {{- if .Values.persistence.enabled }}
+        - name: state
+          mountPath: {{ .Values.persistence.mountPath | default "/app/data" | quote }}
+        {{- end }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          capabilities: {drop: ["ALL"]}
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: {{ if .Values.tls.enabled }}https{{ else }}http{{ end }}
+            {{- if .Values.tls.enabled }}
+            scheme: HTTPS
+            {{- end }}
+          initialDelaySeconds: 2
+          periodSeconds: 3
+          timeoutSeconds: 5
+          failureThreshold: 2
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: {{ if .Values.tls.enabled }}https{{ else }}http{{ end }}
+            {{- if .Values.tls.enabled }}
+            scheme: HTTPS
+            {{- end }}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+      {{- if or .Values.tls.enabled .Values.persistence.enabled (ne $mtls "off") }}
+      volumes:
+      {{- if .Values.tls.enabled }}
+      - {name: tls-certs, emptyDir: {}}
+      {{- if .Values.tls.existingSecret }}
+      - {name: tls-secret, secret: {secretName: {{ .Values.tls.existingSecret | quote }}}}
+      {{- end }}
+      {{- end }}
+      {{- if ne $mtls "off" }}
+      - name: agent-mtls-ca
+        secret:
+          secretName: {{ .Values.mtls.secretName | quote }}
+          items: [{key: ca.crt, path: ca.crt}]
+      {{- end }}
+      {{- if .Values.persistence.enabled }}
+      - name: state
+        persistentVolumeClaim:
+          claimName: {{ default "kavach-state" .Values.persistence.existingClaim }}
+      {{- end }}
+      {{- end }}

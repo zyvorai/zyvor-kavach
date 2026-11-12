@@ -1,0 +1,48 @@
+# Architecture
+
+Kavach is Zyvor's unified endpoint security controller: host process and
+file-activity observation, Netra network-event correlation, and an investigation
+API/console. It is observation-first — no automatic containment.
+
+## Components
+
+```text
+  Browser / curl / SIEM
+           |
+           v
+  +---------------------+
+  |   kavach (server)   |  API + console + findings store
+  |   :8099 / :30899    |  enroll, heartbeats, incidents
+  +----------+----------+
+             |
+    token / optional mTLS
+             |
+  +----------v----------+     +------------------+
+  |  kavach (agent)     |     | netra-bridge /   |
+  |  /proc + optional   |     | Netra poller     |
+  |  eBPF exec scaffold |     | (network XDR)    |
+  +---------------------+     +------------------+
+```
+
+| Piece | Role |
+|---|---|
+| `cmd/kavach` | Server or agent (`-mode`) |
+| `cmd/netra-bridge` | Normalized Netra JSONL → `/v1/network-events` |
+| `internal/edr` | Store, rules, enrollment, correlation |
+| `bpf/` | Optional `sched_process_exec` object scaffold |
+| Helm `helm/kavach` | Controller Deployment + agent DaemonSet |
+
+## Data path
+
+1. Agent discovers processes (proc connector with `/proc` poll fallback; optional eBPF).
+2. Findings and events land in bounded JSONL / credential registry on the controller.
+3. Netra-shaped network events correlate by host + PID (+ optional process start).
+4. Opt-in file metadata watch raises investigative mass-activity signals.
+5. Fleet heartbeats drive online/offline status for enrolled hosts.
+
+## Boundaries
+
+- Default listen is loopback HTTP; cluster installs use in-pod HTTPS (NodePort 30899).
+- Tokens are required; mTLS and Gateway API are opt-in.
+- AI scoring, when enabled, ranks findings — it does not act.
+- See [agent-mtls.md](agent-mtls.md), [envoy-gateway.md](envoy-gateway.md), [deploy-remote.md](deploy-remote.md).

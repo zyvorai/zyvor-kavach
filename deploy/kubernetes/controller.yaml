@@ -1,0 +1,60 @@
+# LAB ONLY: replace credentials, certs, disk, and policies for any real deployment.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zyvor-edr-controller
+  namespace: zyvor-edr
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: {app: zyvor-edr-controller}
+  template:
+    metadata:
+      labels: {app: zyvor-edr-controller}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        fsGroup: 100
+      containers:
+      - name: controller
+        image: ghcr.io/zyvorai/zyvor-edr:dev # publish an image before deploying
+        imagePullPolicy: IfNotPresent
+        args: ["-mode","server","-listen","0.0.0.0:8099","-state","/app/data/findings.jsonl","-credentials","/app/data/agents.json","-tls-cert","/run/tls/tls.crt","-tls-key","/run/tls/tls.key"]
+        ports: [{containerPort: 8099, name: https}]
+        env:
+        - name: ZYVOR_EDR_TOKEN
+          valueFrom:
+            secretKeyRef: {name: zyvor-edr-admin, key: token}
+        volumeMounts:
+        - {name: tls, mountPath: /run/tls, readOnly: true}
+        - {name: state, mountPath: /app/data}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {drop: ["ALL"]}
+          readOnlyRootFilesystem: true
+        resources:
+          requests: {cpu: 100m, memory: 64Mi}
+          limits: {cpu: "1", memory: 512Mi}
+      volumes:
+      - name: tls
+        secret: {secretName: zyvor-edr-tls}
+      - name: state
+        persistentVolumeClaim: {claimName: zyvor-edr-state}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: zyvor-edr-controller, namespace: zyvor-edr}
+spec:
+  selector: {app: zyvor-edr-controller}
+  ports: [{name: https, port: 8099, targetPort: https}]
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: {name: zyvor-edr-state, namespace: zyvor-edr}
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests: {storage: 2Gi}

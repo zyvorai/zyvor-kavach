@@ -1,0 +1,160 @@
+# SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+#
+# Admin API token is injected as KAVACH_TOKEN. Docs also accept the legacy
+# name ZYVOR_EDR_TOKEN for the same secret value outside this chart.
+
+image:
+  repository: ghcr.io/zyvorai/kavach
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+agentImage:
+  repository: ghcr.io/zyvorai/kavach-agent
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+# Admin bearer token (min 16 chars). Prefer existingSecret in real installs.
+auth:
+  existingSecret: ""
+  # Key in the Secret that holds the admin token.
+  secretKey: token
+  token: ""
+
+service:
+  type: NodePort
+  # Service port exposed in-cluster / via NodePort.
+  port: 30899
+  nodePort: 30899
+  # Container listen port (controller -listen).
+  targetPort: 8099
+
+tls:
+  # HTTPS is the default. Init container mints a self-signed P-256 cert into
+  # an emptyDir; probes and the Service use scheme/port name https.
+  # Set enabled=false only when TLS is terminated by a trusted proxy/ingress.
+  enabled: true
+  opensslImage: alpine/openssl:3.3.2
+  # kubernetes.io/tls Secret to serve instead of a cert minted per pod start.
+  existingSecret: ""
+  # Bypass verify for the chart-generated self-signed cert (agent → controller).
+  agentInsecureSkipVerify: true
+
+# Mutual TLS between agents and the controller.
+#   off       no client certificate requested
+#   optional  mount client CA; controller may verify when presented
+#   required  mount client CA; controller requires verified client certs
+# Needs tls.enabled. secretName must hold ca.crt (and, for agents, tls.crt/tls.key).
+mtls:
+  mode: "off"
+  secretName: ""
+
+# Envoy / Gateway API HTTPRoute in front of the API (attach to an existing Gateway).
+# Off by default. See Netra docs/envoy-gateway.md for the same shape.
+gateway:
+  enabled: false
+  # Gateway to attach to, e.g. [{name: eg, namespace: envoy-gateway-system}].
+  parentRefs: []
+  hostnames: []
+  path: /
+  annotations: {}
+  # "0s" keeps long-lived streams from being cut by Envoy.
+  requestTimeout: "0s"
+  # Kavach's Service is HTTPS by default, so Envoy must verify the pod cert.
+  # Point caCertificateRefs at a ConfigMap holding the CA of tls.existingSecret.
+  backendTLS:
+    enabled: true
+    apiVersion: gateway.networking.k8s.io/v1alpha3
+    hostname: ""
+    caCertificateRefs: []
+    # e.g. [{group: "", kind: ConfigMap, name: kavach-ca}]
+    wellKnownCACertificates: ""
+  # Envoy Gateway only. Needed for WebSocket/streams when backendTLS is on.
+  backendTrafficPolicy:
+    enabled: false
+    useClientProtocol: true
+
+# PacketWolf-style: create a Cilium Gateway + optional cert-manager Certificate.
+# Independent of gateway.* (HTTPRoute to an existing Gateway). Off by default.
+gatewayApi:
+  enabled: false
+  gatewayClassName: cilium
+  # Gateway object name; empty = release name
+  name: ""
+  # Required when enabled (e.g. kavach.example.com)
+  hostname: ""
+  tlsSecretName: kavach-gateway-tls
+  # HTTP backend Service port (kavach Service)
+  servicePort: 30899
+  httpRedirect: true
+  certificate:
+    create: true
+    issuerRef:
+      name: letsencrypt-kavach
+      kind: ClusterIssuer
+  # Extra CiliumNetworkPolicy so Gateway Envoy can reach the Service
+  networkPolicy: true
+
+# Classic Ingress (optional). Off by default; prefer gateway / gatewayApi.
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: kavach.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  # e.g. [{secretName: kavach-tls, hosts: [kavach.local]}]
+
+persistence:
+  enabled: true
+  existingClaim: ""
+  storageClass: ""
+  accessModes: [ReadWriteOnce]
+  size: 2Gi
+  # Mount path for findings.jsonl + agents.json
+  mountPath: /app/data
+
+# Optional Netra poller / bridge settings (controller env placeholders).
+netra:
+  poller:
+    enabled: false
+    url: ""
+    apiKey: ""
+    insecureSkipVerify: false
+
+# SIEM export placeholders (webhook / syslog / etc.). Off until wired in-app.
+siem:
+  enabled: false
+  webhookURL: ""
+  # Existing Secret keys: webhook-url, headers ("k=v,k2=v2")
+  existingSecret: ""
+  format: json
+  # syslog | webhook | none
+  sink: webhook
+
+resources:
+  requests: {cpu: 100m, memory: 64Mi}
+  limits: {cpu: "1", memory: 512Mi}
+
+agent:
+  # Privileged-ish node DaemonSet — on by default: one pod per node.
+  # Set enabled=false for controller-only installs.
+  enabled: true
+  # Override KAVACH_SERVER (default: in-cluster Service URL).
+  server: ""
+  nodeSelector: {}
+  affinity: {}
+  tolerations:
+    - operator: Exists
+  # hostPID so the agent can observe host /proc.
+  hostPID: true
+  watchFiles: ""
+  interval: 3s
+  queuePath: /var/lib/kavach/outbox
+  resources:
+    requests: {cpu: 50m, memory: 64Mi}
+    limits: {cpu: 500m, memory: 256Mi}

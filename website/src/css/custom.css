@@ -1,0 +1,239 @@
+/**
+ * Apple-blue palette — shared across the Zyvor docs-site family.
+ * Tokens match docs/design/APPLE-UX-CONTRACT.md.
+ */
+
+:root {
+  --ifm-color-primary: #0071e3;
+  --ifm-color-primary-dark: #0064cc;
+  --ifm-color-primary-darker: #005bbf;
+  --ifm-color-primary-darkest: #004a99;
+  --ifm-color-primary-light: #1a7fe6;
+  --ifm-color-primary-lighter: #338ce9;
+  --ifm-color-primary-lightest: #66a8ef;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+
+  --ifm-font-family-base: -apple-system, BlinkMacSystemFont, 'SF Pro Display',
+    'SF Pro Text', 'Segoe UI', Roboto, system-ui, sans-serif;
+  --ifm-heading-font-weight: 600;
+  --ifm-line-height-base: 1.65;
+
+  --ifm-background-color: #ffffff;
+  --ifm-background-surface-color: #ffffff;
+  --ifm-font-color-base: #1d1d1f;
+  --ifm-font-color-secondary: #6e6e73;
+  --ifm-link-color: #0066cc;
+  --ifm-link-hover-color: #0071e3;
+  --ifm-toc-border-color: rgba(0, 0, 0, 0.1);
+  --ifm-color-emphasis-300: rgba(0, 0, 0, 0.1);
+  --ifm-footer-background-color: #1d1d1f;
+
+  --zv-section-space: clamp(4rem, 9vw, 9rem);
+  --zv-hero-space: clamp(5rem, 12vw, 11rem);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #0a84ff;
+  --ifm-color-primary-dark: #0074e6;
+  --ifm-color-primary-darker: #0068cc;
+  --ifm-color-primary-darkest: #0055a8;
+  --ifm-color-primary-light: #3399ff;
+  --ifm-color-primary-lighter: #52a6ff;
+  --ifm-color-primary-lightest: #85c0ff;
+  --ifm-background-color: #000000;
+  --ifm-background-surface-color: #1d1d1f;
+  --ifm-font-color-base: #f5f5f7;
+  --ifm-font-color-secondary: #a1a1a6;
+  --ifm-link-color: #2997ff;
+  --ifm-link-hover-color: #0a84ff;
+  --ifm-toc-border-color: rgba(255, 255, 255, 0.12);
+  --ifm-color-emphasis-300: rgba(255, 255, 255, 0.12);
+  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.1);
+}
+
+.hero--primary {
+  --ifm-hero-text-color: #f5f5f7;
+  background: #000;
+}
+
+.hero--primary .button--secondary {
+  color: #000;
+  background: #f5f5f7;
+  border-color: #f5f5f7;
+}
+
+.hero--primary .button--secondary:hover {
+  background: #ffffff;
+  border-color: #ffffff;
+}
+
+.hero--primary .button--outline.button--secondary {
+  color: #f5f5f7;
+  background: transparent;
+  border-color: rgba(245, 245, 247, 0.4);
+}
+
+.hero--primary .button--outline.button--secondary:hover {
+  border-color: #f5f5f7;
+}
+
+.navbar {
+  height: 4.5rem;
+  box-shadow: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: saturate(180%) blur(12px);
+  background: rgba(0, 0, 0, 0.82);
+}
+
+.navbar__brand,
+.navbar__link,
+.navbar__title {
+  color: #f5f5f7;
+}
+
+.navbar__link:hover {
+  color: #ffffff;
+}
+
+.navbar__brand {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.navbar [class*='toggle'] svg {
+  color: #f5f5f7;
+}
+
+.hero__title {
+  font-size: clamp(2.75rem, 6.5vw, 5.5rem);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+}
+
+.hero__subtitle {
+  font-size: clamp(1.05rem, 1.6vw, 1.375rem);
+  font-weight: 400;
+  line-height: 1.5;
+  color: #a1a1a6;
+  max-width: 42rem;
+}
+
+article .markdown h1 {
+  font-size: 2.5rem;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.5rem;
+}
+
+article .markdown h2 {
+  font-size: 1.75rem;
+  letter-spacing: -0.015em;
+  margin-top: 3rem;
+}
+
+article .markdown h3 {
+  font-size: 1.3rem;
+  letter-spacing: -0.01em;
+  margin-top: 2.25rem;
+}
+
+article .markdown p,
+article .markdown li {
+  font-size: 1.0625rem;
+}
+
+.theme-doc-sidebar-container {
+  border-right: 1px solid var(--ifm-color-emphasis-200) !important;
+}
+
+.menu__link {
+  font-size: 0.9rem;
+  border-radius: 8px;
+}
+
+.menu__link--active:not(.menu__list-item-collapsible) {
+  font-weight: 600;
+}
+
+.theme-doc-markdown {
+  max-width: 46rem;
+}
+
+.kavach-home {
+  background: #000;
+  color: #f5f5f7;
+}
+
+.kavach-home__hero {
+  padding: var(--zv-hero-space) 1.5rem 4rem;
+  max-width: 56rem;
+  margin: 0 auto;
+}
+
+.kavach-home__eyebrow {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #a1a1a6;
+  margin: 0 0 1rem;
+}
+
+.kavach-home__title {
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  font-weight: 650;
+  letter-spacing: -0.04em;
+  line-height: 1.02;
+  margin: 0;
+}
+
+.kavach-home__accent {
+  color: #2997ff;
+}
+
+.kavach-home__lede {
+  margin: 1.25rem 0 0;
+  font-size: 1.25rem;
+  line-height: 1.5;
+  color: #a1a1a6;
+  max-width: 36rem;
+}
+
+.kavach-home__cta {
+  margin-top: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.kavach-home__features {
+  padding: 0 1.5rem var(--zv-section-space);
+  max-width: 56rem;
+  margin: 0 auto;
+}
+
+.kavach-home__features h2 {
+  font-size: 1.75rem;
+  letter-spacing: -0.02em;
+  margin: 0 0 1.5rem;
+}
+
+.kavach-home__features ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kavach-home__features li {
+  padding: 0.85rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  color: #a1a1a6;
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+
+.kavach-home__features li strong {
+  color: #f5f5f7;
+  font-weight: 600;
+}
