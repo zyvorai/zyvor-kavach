@@ -8,6 +8,8 @@ All endpoints are read-only. Kavach observes; it never contains.
 | `GET /metrics` | bearer/session | Prometheus: findings by severity, agents online, request counts and latency |
 | `GET /v1/attack/matrix` | bearer/session | MITRE ATT&CK tactics → techniques, rule coverage, observed hits |
 | `GET /v1/compliance/score` | bearer/session | Overall grade + per-framework score (CIS, NIST CSF, SOC2, ISO 27001) |
+| `GET /v1/export/findings` | bearer/session | Download findings, `format=csv`, `json` or `ndjson`; filters `severity`, `host`, `rule`, `since` (RFC3339); CSV neutralises formula injection; capped at 50k rows |
+| `GET /v1/export/report` | bearer/session | Self-contained executive posture report, `format=html` or `json` (severity counts, top hosts, ATT&CK, compliance) |
 | `GET /v1/stream` | bearer/session | Server-Sent Events, `event: finding` with a detection payload |
 
 ```bash
