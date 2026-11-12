@@ -122,3 +122,27 @@ Read-only analytics for SOC management (all require the bearer token or a sessio
   A gap over 15 minutes starts a new burst; its first step carries `gap_seconds`. `host` is required (400).
 - `GET /v1/soc/shift-report?hours=12` (max 168): counts of new/open/closed, top 5 risk hosts, unresolved
   criticals and deterministic template questions for the next shift (no LLM).
+
+## Data governance (DPDP / GDPR-minded)
+
+A hygiene and triage aid, not a certified compliance control. Kavach stays observation-only.
+
+- `GET /v1/governance/inventory`: per data class (findings, process/network/file events, notes, journal,
+  saved searches, alert rules, credentials registry): file name relative to the store, record count (read
+  from disk, not the capped in-memory window), oldest/newest timestamps and approximate bytes.
+- `GET|POST /v1/governance/retention`: per-class max age in days (`findings`, `process_events`,
+  `network_events`, `file_events`; min 1, default unlimited), persisted as `<findings>.retention.json`.
+  Notes, saved searches, alert rules, the hash-chained journal and credentials are never purged.
+- `POST /v1/governance/retention/preview` is a dry run. `POST /v1/governance/retention/apply` needs the admin
+  token (not a session) and body `{"confirm":"purge"}`; it rewrites the jsonl files atomically under the store
+  mutex and appends an audit line to `<findings>.governance.audit.jsonl` (separate from the journal).
+  Limits: copies in backups, SIEM exports or other systems are not touched; replay of purged event ids stays
+  deduplicated in memory until restart.
+- Redaction: `GET /v1/governance/redaction` lists RE2 rules (emails, IPv4/IPv6, AWS key ids, bearer tokens,
+  `password=`/`--password`/`token=` values, 32+ char hex). `POST` `{"enabled":true}` persists a toggle that
+  redacts `GET /v1/export/findings` output (description, command, destination, parent exe, tags).
+  `POST /v1/governance/redact/preview` tests sample text. Pattern based: it will miss free-form names, and the
+  hex rule also hides file hashes.
+- `GET /v1/governance/subject?q=` (3-128 chars): counts and up to 200 ids of findings and notes mentioning
+  the string (case-insensitive substring). Process/network/file ledgers are not searched; no record bodies
+  are returned.

@@ -71,6 +71,7 @@ func exportFindings(w http.ResponseWriter, r *http.Request, store *Store) {
 		http.Error(w, err.Error(), 400)
 		return
 	}
+	fs = govMaybeRedact(store, fs)
 	ct := map[string]string{"csv": "text/csv; charset=utf-8", "json": "application/json", "ndjson": "application/x-ndjson"}[format]
 	w.Header().Set("Content-Type", ct)
 	w.Header().Set("Content-Disposition", `attachment; filename="kavach-findings.`+format+`"`)

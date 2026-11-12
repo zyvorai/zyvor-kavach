@@ -738,6 +738,51 @@ paths:
       summary: Open high/critical incidents against the 6-hour CERT-In window (informational)
       security: [{bearerAuth: []}]
       responses: {'200': {description: OK}}
+  /v1/governance/inventory:
+    get:
+      summary: Data inventory by class (location, record counts read from disk, oldest/newest, approximate bytes)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Inventory}}
+  /v1/governance/retention:
+    get:
+      summary: Per-class max-age policy in days (default unlimited)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Policy}}
+    post:
+      summary: 'Set policy {"days":{"findings":30}}; min 1, null = unlimited; classes findings, process_events, network_events, file_events (admin or session)'
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Saved}, '400': {description: Invalid}}
+  /v1/governance/retention/preview:
+    post:
+      summary: Dry-run purge counts using the saved policy (or an optional body override)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Would-purge counts}}
+  /v1/governance/retention/apply:
+    post:
+      summary: 'Purge per policy; admin token only, body {"confirm":"purge"} required; audit line written'
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Purged counts}, '400': {description: Missing confirm}, '403': {description: Not admin}}
+  /v1/governance/redaction:
+    get:
+      summary: Redaction rule list and export toggle
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Rules}}
+    post:
+      summary: 'Toggle redaction of /v1/export/findings {"enabled":true} (admin or session)'
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Saved}}
+  /v1/governance/redact/preview:
+    post:
+      summary: 'Redact sample text {"text":"..."} (max 16KB) and report matches per rule'
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Redacted text}}
+  /v1/governance/subject:
+    get:
+      summary: DSAR triage; counts and ids (max 200) of findings/notes mentioning q (3-128 chars)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: q, in: query, required: true, schema: {type: string}}
+      responses: {'200': {description: Counts and ids}}
   /v1/export/findings:
     get:
       summary: Download findings (csv, json, ndjson); filters severity, host, rule, since (RFC3339); max 50000 rows
