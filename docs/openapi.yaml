@@ -758,6 +758,48 @@ paths:
       summary: Last 100 notification delivery results
       security: [{bearerAuth: []}]
       responses: {'200': {description: OK}}
+  /v1/intel/feeds:
+    get:
+      summary: List threat-intel feeds
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: Add a threat-intel feed (https only, private addresses rejected, redirects not followed)
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, url, format]
+              properties:
+                name: {type: string, maxLength: 64}
+                url: {type: string}
+                format: {type: string, enum: [csv, plain, stix-lite-json]}
+                interval: {type: integer, minimum: 15, default: 60, description: minutes}
+                tlp: {type: string, enum: [clear, white, green, amber, amber+strict, red]}
+                ttl_days: {type: integer, default: 30}
+                enabled: {type: boolean, default: true}
+      responses: {'201': {description: Created}, '400': {description: Invalid feed}, '409': {description: Name exists}}
+    delete:
+      summary: Delete a feed by ?id= and remove only its indicators
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: query, required: true, schema: {type: string}}
+      responses: {'204': {description: Deleted}, '404': {description: Not found}}
+  /v1/intel/feeds/status:
+    get:
+      summary: Per-feed last fetch time, status, added/expired/active counts and errors
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/intel/feeds/refresh:
+    post:
+      summary: Fetch one feed now (?id=)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: query, required: true, schema: {type: string}}
+      responses: {'200': {description: Feed status}, '404': {description: Not found}, '409': {description: Feed disabled}}
   /v1/saved-searches:
     get:
       summary: List saved searches

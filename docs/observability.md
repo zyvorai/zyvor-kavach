@@ -47,6 +47,14 @@ Observation-only notifications: Kavach reports matching findings; it never block
 
 - `GET/POST/DELETE /v1/alerts/rules` manage rules (`min_severity`, optional `rule_contains` / `host_contains`
   substrings, `type` of `webhook` or `slack`, and `url`). Rules persist in `<findings file>.alerts.json`.
+- Threat-intel feeds: `GET/POST/DELETE /v1/intel/feeds` (name, https `url`, `format` of `csv`, `plain` or
+  `stix-lite-json`, `interval` minutes (min 15), `tlp`, `ttl_days` (default 30), `enabled`) persist in
+  `<findings file>.intel.json`. A background fetcher polls each feed (15s timeout, 1 MiB cap, ETag
+  support, redirects not followed, same SSRF guards as alert URLs), normalises ip/domain/sha256/url
+  indicators and adds them to the IOC store tagged `source=feed:<name>`, always `detect_only`. Analyst-created
+  IOCs are never overwritten; indicators expire after the feed TTL; deleting a feed removes only its
+  indicators. `GET /v1/intel/feeds/status` reports last fetch, status, added/expired/active counts and errors;
+  `POST /v1/intel/feeds/refresh?id=` fetches one feed now.
 - Analyst workspace, persisted in `<findings file>.workspace.json`: `GET/POST/DELETE /v1/saved-searches`
   (name, scope `detections|findings|hosts`, query; max 100), `GET/POST/DELETE /v1/notes` (`?finding_id=`
   to list, `?id=` to delete; text max 2000 chars, max 200 per finding, author is `admin` or `session`),
