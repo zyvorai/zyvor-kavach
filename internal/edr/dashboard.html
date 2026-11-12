@@ -1235,6 +1235,10 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 /* === end compliance evidence page === */
 /* === ops-intel pages === */
 .px-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.vm-feed .hint { margin:0 0 14px; color:var(--text-secondary); font-size:14px; }
+.vm-feed table { margin-bottom:14px; }
+.vm-feed .work-msg { margin:0 0 8px; }
+.vm-feed .px-actions { margin:0 0 4px; }
 .px-score { font-size:34px; font-weight:600; font-variant-numeric:tabular-nums; margin:0; }
 .px-pre { margin:0; padding:12px; border:1px solid var(--border); border-radius:var(--radius-md); background:var(--fill-tertiary); font-size:13px; white-space:pre-wrap; overflow-wrap:anywhere; }
 .px-confirm { display:inline-flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:13px; }
@@ -2790,7 +2794,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
         <div class="field"><label for="vm-host">Host filter</label><input class="input-field" id="vm-host" type="text" autocomplete="off" placeholder="hostname"></div>
         <div class="field px-actions"><button type="button" id="vm-apply" class="secondary">Apply</button><button type="button" id="vm-sbom">Download SBOM</button></div>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap vm-feed">
         <h3 style="margin:0 0 12px;font-size:17px">Advisory feeds</h3>
         <p class="hint" id="vm-feed-note"></p>
         <table><thead><tr><th>Source</th><th>Enabled feeds</th><th>Last refresh</th><th>KEV entries</th><th>OSV packages cached</th><th>OSV advisories cached</th></tr></thead><tbody id="vm-feed-rows"></tbody></table>
