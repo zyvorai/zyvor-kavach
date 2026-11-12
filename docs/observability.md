@@ -35,3 +35,18 @@ scrape_configs:
 Every response carries `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy` and a CSP.
 `POST /v1/session` is limited to a burst of 10 then 1 per 2 s per IP. Other POST/DELETE requests are
 limited per IP by `KAVACH_RATE_LIMIT` (requests/sec, default `100`; `0` disables). Exceeding returns `429`.
+
+## Alert rules and notifications
+
+Observation-only notifications: Kavach reports matching findings; it never blocks or kills anything.
+
+- `GET/POST/DELETE /v1/alerts/rules` manage rules (`min_severity`, optional `rule_contains` / `host_contains`
+  substrings, `type` of `webhook` or `slack`, and `url`). Rules persist in `<findings file>.alerts.json`.
+- `GET /v1/alerts/deliveries` returns the last 100 delivery results (newest first).
+- A dispatcher polls the store each second, notifies once per (rule, finding), and retries failures 4 times
+  with exponential backoff. Findings that already exist at startup are not re-notified.
+- Webhook bodies are signed: header `X-Kavach-Signature: sha256=<hex HMAC-SHA256 of body>` using
+  `KAVACH_WEBHOOK_SECRET`. Slack rules post `{"text": ...}`. The API token is never included.
+- SSRF controls: https only (http for localhost/127.0.0.1), private/loopback/link-local destinations are rejected at
+  creation and again at connect time, redirects are not followed. Set `KAVACH_ALERT_ALLOW_PRIVATE=1` to allow
+  internal receivers.
