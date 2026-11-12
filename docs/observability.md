@@ -122,3 +122,16 @@ Read-only analytics for SOC management (all require the bearer token or a sessio
   A gap over 15 minutes starts a new burst; its first step carries `gap_seconds`. `host` is required (400).
 - `GET /v1/soc/shift-report?hours=12` (max 168): counts of new/open/closed, top 5 risk hosts, unresolved
   criticals and deterministic template questions for the next shift (no LLM).
+
+## Canary / honeytoken tripwires
+
+Observation only: a trip raises a finding; nothing is blocked or contained.
+
+- `GET/POST /v1/deception/canaries`, `DELETE /v1/deception/canaries/{id}` manage canaries
+  (`kind`: `credential` fake AWS-key/password text marked non-functional, `document-beacon` unique `/c/{id}` path, `dns-name` unique label;
+  plus `name`, `placement`, `owner`). Ids are 128-bit crypto/rand hex. Stored in `<findings file>.deception.json`.
+- `GET|POST /c/{id}` is public (no auth) and returns an identical `200 ok` for known, unknown and malformed ids. Known ids record a trip
+  (source IP from the TCP peer, user-agent truncated). Per-IP and global rate limits apply; limited requests still get the same `200`.
+- `POST /v1/deception/trip` (admin) lets agents report `{canary_id?, host, path}` for a touched planted file or credential.
+- `GET /v1/deception/trips` lists recent trips. One finding `deception-canary-tripped` (high; tags `deception`, `canary`; ATT&CK T1552)
+  is created per canary per 10 minutes; further trips are counted and recorded (capped).

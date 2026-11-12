@@ -970,6 +970,42 @@ paths:
       summary: v1 deception
       security: [{bearerAuth: []}]
       responses: {'200': {description: OK}}
+  /v1/deception/canaries:
+    get:
+      summary: List canary tripwires
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: Create canary (kind credential, document-beacon or dns-name)
+      security: [{bearerAuth: []}]
+      responses: {'201': {description: Created}}
+  /v1/deception/canaries/{id}:
+    delete:
+      summary: Delete canary
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}]
+      responses: {'200': {description: OK}, '404': {description: Not found}}
+  /v1/deception/trip:
+    post:
+      summary: Agent-reported canary touch (host, path, optional canary_id)
+      security: [{bearerAuth: []}]
+      responses: {'202': {description: Recorded}}
+  /v1/deception/trips:
+    get:
+      summary: Recent canary trips
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /c/{id}:
+    get:
+      summary: Public canary tripwire (identical 200 for any id)
+      security: []
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: Public canary tripwire (identical 200 for any id)
+      security: []
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}]
+      responses: {'200': {description: OK}}
   /v1/deception/trigger:
     post:
       summary: v1 deception trigger
