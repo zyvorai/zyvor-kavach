@@ -80,60 +80,8 @@ func AppendAudit(_token, action, detail string) {
 }
 
 func RegisterCases(mux *http.ServeMux, token string, store *Store) {
-	mux.HandleFunc("GET /v1/cases", func(w http.ResponseWriter, r *http.Request) {
-		if !requireAuth(w, r, token) {
-			return
-		}
-		caseMu.Lock()
-		out := append([]Case{}, cases...)
-		caseMu.Unlock()
-		if len(out) == 0 && store != nil {
-			for _, f := range store.List() {
-				if f.Severity != "high" && f.Severity != "critical" {
-					continue
-				}
-				now := time.Now().UTC()
-				out = append(out, Case{
-					ID: "case-der-" + shortID(f.ID), Title: f.Rule + " on " + f.Host,
-					Severity: f.Severity, Status: "open", FindingIDs: []string{f.ID},
-					CreatedAt: now, UpdatedAt: now, Notes: "Auto-opened from finding (ledger)",
-				})
-			}
-		}
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(out)
-	})
-	mux.HandleFunc("POST /v1/cases", func(w http.ResponseWriter, r *http.Request) {
-		if _, ok := requireAdminOrSession(w, r, token); !ok {
-			return
-		}
-		r.Body = http.MaxBytesReader(w, r.Body, 16384)
-		defer r.Body.Close()
-		var c Case
-		if json.NewDecoder(r.Body).Decode(&c) != nil || c.Title == "" {
-			http.Error(w, "invalid", 400)
-			return
-		}
-		now := time.Now().UTC()
-		if c.ID == "" {
-			c.ID = "case-" + now.Format("20060102150405")
-		}
-		if c.Status == "" {
-			c.Status = "open"
-		}
-		if c.Severity == "" {
-			c.Severity = "medium"
-		}
-		c.CreatedAt = now
-		c.UpdatedAt = now
-		caseMu.Lock()
-		cases = append(cases, c)
-		caseMu.Unlock()
-		AppendAudit(token, "case.create", c.Title)
-		_ = store
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(c)
-	})
+	// GET/POST /v1/cases are served by RegisterCaseManagement (cases.go).
+	_ = store
 	mux.HandleFunc("POST /v1/cases/update", func(w http.ResponseWriter, r *http.Request) {
 		if _, ok := requireAdminOrSession(w, r, token); !ok {
 			return

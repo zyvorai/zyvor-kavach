@@ -451,15 +451,47 @@ paths:
         content:
           application/json:
             schema: {type: object}
+  /v1/incidents/correlated:
+    get:
+      summary: Auto-correlated incidents (same host or shared technique within a window)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: window, in: query, schema: {type: string, example: 1h}}
+      responses: {'200': {description: Incident array}}
   /v1/cases:
     get:
-      summary: Case management
+      summary: List cases (filters status, assignee) with SLA clocks
       security: [{bearerAuth: []}]
       responses: {'200': {description: Cases}}
     post:
-      summary: Create case
+      summary: Create case (optionally seeded from incident_id)
       security: [{bearerAuth: []}]
-      responses: {'200': {description: Created}}
+      responses: {'201': {description: Created}}
+  /v1/cases/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: string}}
+    get:
+      summary: Case detail with timeline and comments
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Case}, '404': {description: Not found}}
+    patch:
+      summary: Update status/severity/assignee/tags, link findings, close with resolution
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Updated}, '400': {description: Invalid}}
+  /v1/cases/{id}/comments:
+    post:
+      summary: Add analyst comment
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses: {'201': {description: Created}}
+  /v1/cases/{id}/export:
+    get:
+      summary: Markdown case report
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: text/markdown}}
   /v1/hunt/query:
     post:
       summary: FQL-lite threat hunt
