@@ -1332,6 +1332,53 @@ paths:
       security: [{bearerAuth: []}]
       parameters: [{name: hours, in: query, schema: {type: integer, default: 12}}]
       responses: {'200': {description: OK}}
+  /v1/tuning/suggestions:
+    get:
+      summary: Advisory rule-tuning suggestions with evidence, impact percent, risk and a proposed exclusion (never critical rules)
+      security: [{bearerAuth: []}]
+      parameters: [{name: days, in: query, schema: {type: integer, default: 14}}]
+      responses: {'200': {description: OK}}
+  /v1/tuning/apply:
+    post:
+      summary: Human-applied tuning exclusion (admin); body rule, pattern, reason; records who/when
+      security: [{bearerAuth: []}]
+      responses: {'201': {description: Created}, '400': {description: broad or invalid pattern}, '422': {description: would suppress critical findings}}
+  /v1/tuning/history:
+    get:
+      summary: Applied and reverted tuning exclusions
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/tuning/revert:
+    post:
+      summary: Revert a tuning exclusion (admin)
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: query, required: true, schema: {type: string}}]
+      responses: {'200': {description: OK}, '404': {description: not found}, '409': {description: already reverted}}
+  /v1/digests:
+    get:
+      summary: List scheduled digests (destination URL redacted to host)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: Create a digest (name, schedule daily|weekly, hour_utc, content shift-report|soc-metrics|top-risks, type webhook|slack, url); URL validated like alert rules
+      security: [{bearerAuth: []}]
+      responses: {'201': {description: Created}, '400': {description: invalid or disallowed destination}}
+    delete:
+      summary: Delete a digest
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: query, required: true, schema: {type: string}}]
+      responses: {'204': {description: Deleted}, '404': {description: not found}}
+  /v1/digests/send-now:
+    post:
+      summary: Send a digest immediately (admin); aggregates and ids only, HMAC-signed for webhooks
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: query, required: true, schema: {type: string}}]
+      responses: {'200': {description: Delivery result}, '404': {description: not found}}
+  /v1/digests/deliveries:
+    get:
+      summary: Recent digest delivery results
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
 components:
   securitySchemes:
     bearerAuth:

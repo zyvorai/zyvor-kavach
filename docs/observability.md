@@ -170,3 +170,28 @@ Observation-only analytics over the in-memory event stores (last 100k process/ne
   linked by shared destinations (<=10 hosts), shared rare executables (<=3 hosts fleet-wide) and shared finding
   rules. Nodes carry `risk` from the host risk model; `likely_affected` is ranked by edge weight / depth + risk/100
   with the reason edges listed. Output is deterministic.
+### Rule-tuning advisor and scheduled digests
+
+Observation only: suggestions never change anything by themselves, and digests are notifications.
+
+- `GET /v1/tuning/suggestions?days=14` (max 90): rules that are noisy (10+ hits) or mostly false positive
+  (3+ analyst false-positive verdicts at 50%+). Each carries top hosts, executables and command prefixes
+  (program name only, no arguments) with their share of the volume, `would_remove_hits` and
+  `would_remove_percent` of the proposed exclusion, `collateral_hits` on other rules, a `risk`
+  (`low|medium|high|blocked`) with notes, and a ready-to-review `proposed_exclusion` body. Critical severity
+  rules are never proposed for suppression (`risk: blocked`, `action: review_rule`). Proposals are always
+  scoped `"<rule> <host>"` with no wildcards.
+- `POST /v1/tuning/apply` (admin or session) body `{rule, pattern, reason}`: re-validates (specific pattern,
+  never a critical rule or a pattern that matches critical findings) and creates the exclusion in the existing
+  exclusions list, recording who and when. `GET /v1/tuning/history` lists records;
+  `POST /v1/tuning/revert?id=` removes the exclusion. State is persisted in `<findings>.tuning.json`; active
+  tuning exclusions are re-applied at startup.
+- `GET/POST/DELETE /v1/digests`: `{name, schedule: daily|weekly, hour_utc, content: shift-report|soc-metrics|top-risks,
+  type: webhook|slack, url}`. Weekly digests fire on Mondays. The URL uses the same validation and guarded dialer
+  as alert rules (https, no private ranges unless `KAVACH_ALERT_ALLOW_PRIVATE=1`) and is redacted to its host in
+  listings. Webhooks are signed with `X-Kavach-Signature: sha256=<hmac>` using `KAVACH_WEBHOOK_SECRET`.
+- A scheduler (checks every minute) fires each digest at most once per period (day or ISO week) once the UTC
+  hour has passed; the period is persisted before sending so restarts never double-send (at-most-once; a crash
+  mid-send loses that period rather than repeating it). `POST /v1/digests/send-now?id=` (admin) sends immediately;
+  `GET /v1/digests/deliveries` shows recent results. Payloads contain only counts, ids, host and rule names, never
+  evidence, command lines or tokens.
