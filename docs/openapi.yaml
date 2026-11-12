@@ -517,6 +517,46 @@ paths:
       parameters:
         - {name: id, in: path, required: true, schema: {type: string}}
       responses: {'200': {description: text/markdown}}
+      responses: {'200': {description: Created}}
+  /v1/hunts/packs:
+    get:
+      summary: Built-in ATT&CK-mapped hunt packs
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Packs}}
+  /v1/hunts/packs/{id}/run:
+    post:
+      summary: Run one hunt pack
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}]
+      responses: {'200': {description: Result counts}}
+  /v1/hunts/run-all:
+    post:
+      summary: Run all hunt packs
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Results}}
+  /v1/hunts/schedules:
+    get:
+      summary: List scheduled hunts
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Schedules}}
+    post:
+      summary: Create scheduled hunt
+      security: [{bearerAuth: []}]
+      responses: {'201': {description: Created}}
+    delete:
+      summary: Delete scheduled hunt (query id)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Deleted}}
+  /v1/hunts/history:
+    get:
+      summary: Hunt hit history
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: History}}
+  /v1/devices/removable:
+    get:
+      summary: USB/removable media and new-device observation summary
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Summary}}
   /v1/hunt/query:
     post:
       summary: FQL-lite threat hunt
