@@ -38,7 +38,7 @@ const config: Config = {
         applicationCategory: 'SecurityApplication',
         operatingSystem: 'Linux, Kubernetes',
         description:
-          'Zyvor Kavach — unified endpoint, cloud and AI security. Observation-first EDR with Netra XDR correlation.',
+          'Kavach. Observation-first security. Detect and report. Never contain.',
         url: 'https://zyvorai.github.io/zyvor-kavach/',
         codeRepository: 'https://github.com/zyvorai/zyvor-kavach',
       }),
@@ -66,8 +66,8 @@ const config: Config = {
   themeConfig: {
     image: 'kavach-hero-dark.jpg',
     colorMode: {
-      defaultMode: 'dark',
-      respectPrefersColorScheme: false,
+      defaultMode: 'light',
+      respectPrefersColorScheme: true,
     },
     navbar: {
       title: 'Kavach',
@@ -85,11 +85,6 @@ const config: Config = {
         {
           href: 'https://github.com/zyvorai/zyvor-kavach',
           label: 'GitHub',
-          position: 'right',
-        },
-        {
-          href: 'https://zyvor.dev',
-          label: 'Enterprise',
           position: 'right',
         },
       ],

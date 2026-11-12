@@ -3,9 +3,13 @@ sidebar_position: 1
 title: Intro
 ---
 
-# Kavach
+# Kavach.
 
-**Security without compromise.** Zyvor Kavach is observation-first endpoint, cloud, and AI security — the sister console to Netra. Detect and report. Never contain, kill, or isolate.
+**Security without compromise.**
+
+Observation-first endpoint, cloud, and AI security — the sister console to Netra. Detect and report. Never contain, kill, or isolate.
+
+Start with the [product story](/), then the [tutorial](./tutorial.md) for a first-hour path from install to hunt.
 
 ## Quickstart
 
@@ -30,8 +34,8 @@ Console: http://127.0.0.1:8099/ — sign in **`admin` / `Admin@321`**.
 | [Console](./console.md) | Login and UX |
 | [kavachctl](./kavachctl.md) | Operator CLI |
 | [eBPF](./ebpf.md) | Observe-only sensors |
-| [Finance](./finance.md) | Banks / markets / UPI |
-| [Sectors](./sectors.md) | Railways, airports, defence, govt |
+| [Finance](./finance.md) | Banks / markets / insurance |
+| [Sectors](./sectors.md) | Rail, fleets, industry, space |
 | [Remote deploy](./deploy-remote.md) | Helm / k3s |
 | [Envoy Gateway](./envoy-gateway.md) | Gateway API |
 | [Agent mTLS](./agent-mtls.md) | Client certificates |

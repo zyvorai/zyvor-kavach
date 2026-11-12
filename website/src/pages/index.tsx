@@ -1,66 +1,80 @@
 import type {ReactNode} from 'react';
 import Link from '@docusaurus/Link';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 
 export default function Home(): ReactNode {
   const {siteConfig} = useDocusaurusContext();
+  const heroSrc = useBaseUrl('/kavach-hero-dark.jpg');
+
   return (
     <Layout
       title={`${siteConfig.title} — Security without compromise`}
-      description="Zyvor Kavach — unified endpoint, cloud and AI security. Observation-first EDR with Netra XDR correlation for Linux and Kubernetes.">
+      description="Kavach. Observation-first security. Detect and report. Never contain.">
       <main className="kavach-home">
-        <section className="kavach-home__hero">
-          <p className="kavach-home__eyebrow">by Zyvor</p>
-          <h1 className="kavach-home__title">
-            Kavach.
-            <br />
-            <span className="kavach-home__accent">Security without compromise.</span>
-          </h1>
-          <p className="kavach-home__lede">
-            Unified endpoint, cloud and AI security — observation-first EDR with
-            Netra XDR correlation, ransomware signals, SIEM export, and opt-in
-            mTLS / Gateway API.
-          </p>
-          <div className="kavach-home__cta">
-            <Link className="button button--secondary button--lg" to="/docs/intro">
-              Get started
-            </Link>
-            <Link
-              className="button button--outline button--secondary button--lg"
-              href="https://github.com/zyvorai/zyvor-kavach">
-              GitHub
-            </Link>
+        <section className="kavach-home__hero" aria-label="Kavach">
+          <div className="kavach-home__hero-copy">
+            <p className="kavach-home__brand">Kavach.</p>
+            <h1 className="kavach-home__headline">Security without compromise.</h1>
+            <p className="kavach-home__lede">
+              Observation-first endpoint, cloud, and AI security. Detect and
+              report — never contain.
+            </p>
+            <div className="kavach-home__cta">
+              <Link className="kavach-home__btn kavach-home__btn--primary" to="/docs/intro">
+                Get started
+              </Link>
+              <Link
+                className="kavach-home__btn kavach-home__btn--ghost"
+                href="https://github.com/zyvorai/zyvor-kavach">
+                GitHub
+              </Link>
+            </div>
+          </div>
+          <div className="kavach-home__visual" aria-hidden="true">
+            <img
+              className="kavach-home__visual-img"
+              src={heroSrc}
+              alt=""
+              width={2400}
+              height={1260}
+              decoding="async"
+              fetchPriority="high"
+            />
           </div>
         </section>
-        <section className="kavach-home__features">
-          <h2>What ships today</h2>
-          <ul>
-            <li>
-              <strong>EDR observation</strong> — process and file-activity
-              signals, fleet heartbeats. No automatic containment.
-            </li>
-            <li>
-              <strong>XDR with Netra</strong> — normalized network-event
-              correlation by host and PID.
-            </li>
-            <li>
-              <strong>Ransomware signals</strong> — mass file-activity is an
-              investigative hint, not prevention.
-            </li>
-            <li>
-              <strong>eBPF scaffold</strong> — optional exec sensor path under{' '}
-              <code>bpf/</code>.
-            </li>
-            <li>
-              <strong>SIEM export &amp; AI assistive scoring</strong> — findings
-              API / JSONL; ranking assists analysts, does not act.
-            </li>
-            <li>
-              <strong>mTLS &amp; Gateway API</strong> — both opt-in; NodePort
-              :30899 for lab access.
-            </li>
-          </ul>
+
+        <section className="kavach-home__chapter kavach-home__chapter--rule">
+          <p className="kavach-home__rule">Detect and report. Never contain.</p>
+        </section>
+
+        <section className="kavach-home__chapter">
+          <h2 className="kavach-home__chapter-title">Investigate with clarity.</h2>
+          <p className="kavach-home__chapter-lede">
+            An Apple-quiet console for findings, fleet, hunt, and AI assist —
+            built for analysts who need signal, not noise.
+          </p>
+        </section>
+
+        <section className="kavach-home__chapter">
+          <h2 className="kavach-home__chapter-title">See what matters.</h2>
+          <p className="kavach-home__chapter-lede">
+            Finance, public fleets, industry, space, and eBPF — observe only.
+            Never freezes money, immobilizes vehicles, or commands spacecraft.
+          </p>
+        </section>
+
+        <section className="kavach-home__chapter kavach-home__chapter--start">
+          <h2 className="kavach-home__chapter-title">Start here.</h2>
+          <p className="kavach-home__chapter-lede">
+            Tutorial, architecture, and operator guides — ready when you are.
+          </p>
+          <div className="kavach-home__cta">
+            <Link className="kavach-home__btn kavach-home__btn--primary" to="/docs/intro">
+              Open the docs
+            </Link>
+          </div>
         </section>
       </main>
     </Layout>
