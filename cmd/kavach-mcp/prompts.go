@@ -48,6 +48,24 @@ func registerPrompts(srv *mcpserver.Server) error {
 			}},
 		},
 		{
+			Name:        "kavach_shift_handoff",
+			Description: "SOC shift handoff summary.",
+			Arguments:   []mcpserver.PromptArg{{Name: "hours", Description: "Shift length in hours (default 12)", Required: false}},
+			Messages: []mcpserver.PromptMessage{{
+				Role: "user",
+				Text: "Use kavach_shift_report hours={{hours}} and kavach_soc_metrics, then kavach_host_storyline for the top risk hosts, to write a shift handoff: open work, unresolved criticals, riskiest hosts, questions for the next shift. Observation-only — never claim containment was enforced.",
+			}},
+		},
+		{
+			Name:        "kavach_compliance_gap_review",
+			Description: "Review compliance control gaps for a framework.",
+			Arguments:   []mcpserver.PromptArg{{Name: "framework", Description: "cis-v8|nist-csf-2|soc2|iso27001|rbi|cert-in|dpdp", Required: true}},
+			Messages: []mcpserver.PromptMessage{{
+				Role: "user",
+				Text: "Use kavach_compliance_controls framework={{framework}} and kavach_compliance_evidence framework={{framework}} format=json to list controls lacking observable evidence and suggest how to close each gap. Results are observation evidence, not certification; for cert-in also check kavach_cert_in_clock (Kavach files no reports).",
+			}},
+		},
+		{
 			Name:        "kavach_xdr",
 			Description: "Cross-domain Netra×Kavach investigation.",
 			Messages: []mcpserver.PromptMessage{{
