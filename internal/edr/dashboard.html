@@ -1233,6 +1233,13 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 .ev-clock.is-overdue, tr.ev-overdue td { color:var(--danger); }
 .ev-link { display:inline-flex; align-items:center; min-height:var(--hit-min); }
 /* === end compliance evidence page === */
+/* === ops-intel pages === */
+.px-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.px-score { font-size:34px; font-weight:600; font-variant-numeric:tabular-nums; margin:0; }
+.px-pre { margin:0; padding:12px; border:1px solid var(--border); border-radius:var(--radius-md); background:var(--fill-tertiary); font-size:13px; white-space:pre-wrap; overflow-wrap:anywhere; }
+.px-confirm { display:inline-flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:13px; }
+.px-detail { margin-top:12px; }
+/* === end ops-intel pages === */
 </style>
 </head>
 <body>
@@ -1306,6 +1313,11 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
             <button type="button" data-page="lab" role="menuitem">Detection lab</button>
             <button type="button" data-page="feeds" role="menuitem">Intel feeds</button>
             <button type="button" data-page="evidence" role="menuitem">Evidence</button>
+            <button type="button" data-page="fleethealth" role="menuitem">Fleet health</button>
+            <button type="button" data-page="prevalence" role="menuitem">Prevalence</button>
+            <button type="button" data-page="canaries" role="menuitem">Canaries</button>
+            <button type="button" data-page="governance" role="menuitem">Governance</button>
+            <button type="button" data-page="tuning" role="menuitem">Tuning</button>
           </div>
         </div>
       </div>
@@ -2563,6 +2575,178 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     </section>
     <!-- === end compliance evidence page === -->
 
+    <!-- === ops-intel pages === -->
+    <section id="page-fleethealth" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Fleet</p>
+        <h1>Fleet health. Observe only.</h1>
+        <p class="lede">Agent heartbeats, sensor coverage, stale agents and shadow hosts.</p>
+      </header>
+      <div class="work-panel">
+        <div class="work-grid">
+          <div class="field"><label for="fh-score">Health score</label><p class="px-score" id="fh-score">-</p></div>
+          <div class="field"><label for="fh-stale-min">Stale after (minutes)</label><input class="input-field" id="fh-stale-min" type="number" min="1" max="10080" value="60"></div>
+          <div class="field"><label for="fh-host">Host detail</label><input class="input-field" id="fh-host" type="text" placeholder="hostname" autocomplete="off"></div>
+          <div class="field px-actions"><button type="button" id="fh-refresh" class="secondary">Refresh</button><button type="button" id="fh-detail-btn" class="secondary">Show host</button></div>
+        </div>
+        <p class="work-msg" id="fh-msg" role="status"></p>
+        <pre class="px-pre px-detail" id="fh-detail" hidden></pre>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Score factors</h3>
+        <table><thead><tr><th>Factor</th><th>Weight</th><th>Ratio</th><th>Points</th><th>Description</th></tr></thead><tbody id="fh-factor-rows"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Agents</h3>
+        <table><thead><tr><th>Host</th><th>State</th><th>Sensor</th><th>Heartbeat age</th><th>Queued</th><th>Findings</th><th>Flags</th></tr></thead><tbody id="fh-agent-rows"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Coverage gaps</h3>
+        <table><thead><tr><th>Gap</th><th>Host</th></tr></thead><tbody id="fh-gap-rows"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Stale and never-seen agents</h3>
+        <table><thead><tr><th>Kind</th><th>Agent</th></tr></thead><tbody id="fh-stale-rows"></tbody></table>
+      </div>
+    </section>
+
+    <section id="page-prevalence" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Hunt</p>
+        <h1>Prevalence and blast radius.</h1>
+        <p class="lede">How common each executable is across the fleet, what is new on a host, and what a host can reach.</p>
+      </header>
+      <div class="work-panel">
+        <div class="work-grid">
+          <div class="field"><label for="pv-host">Host</label><input class="input-field" id="pv-host" type="text" placeholder="hostname" autocomplete="off"></div>
+          <div class="field"><label for="pv-hours">Hours</label><input class="input-field" id="pv-hours" type="number" min="1" value="24"></div>
+          <div class="field"><label for="pv-depth">Blast depth</label><input class="input-field" id="pv-depth" type="number" min="1" max="5" value="2"></div>
+          <div class="field px-actions"><button type="button" id="pv-refresh" class="secondary">Refresh</button><button type="button" id="pv-first-btn" class="secondary">First seen</button><button type="button" id="pv-blast-btn">Blast radius</button></div>
+        </div>
+        <p class="work-msg" id="pv-msg" role="status"></p>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Rare executables</h3>
+        <table><thead><tr><th>Executable</th><th>Hosts</th><th>Rarity</th><th>In findings</th><th>First seen</th><th>Last seen</th></tr></thead><tbody id="pv-rare-rows"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Executables by prevalence</h3>
+        <table><thead><tr><th>Executable</th><th>Command shape</th><th>Hosts</th><th>Events</th><th>Last seen</th></tr></thead><tbody id="pv-exe-rows"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">First seen on host</h3>
+        <table><thead><tr><th>Kind</th><th>Value</th><th>Count</th><th>First seen</th></tr></thead><tbody id="pv-first-rows"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Blast radius</h3>
+        <p class="hint" id="pv-blast-note">Enter a host and choose Blast radius.</p>
+        <table><thead><tr><th>Likely affected</th><th>Detail</th></tr></thead><tbody id="pv-blast-rows"></tbody></table>
+      </div>
+    </section>
+
+    <section id="page-canaries" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Deception</p>
+        <h1>Canaries. Observe only.</h1>
+        <p class="lede">Plant tripwires and see who touches them. Canary values are non-functional.</p>
+      </header>
+      <div class="work-panel">
+        <div class="work-grid">
+          <div class="field"><label for="cn-kind">Kind</label><select class="select-field" id="cn-kind"><option value="credential">Credential</option><option value="document-beacon">Document beacon</option><option value="dns-name">DNS name</option></select></div>
+          <div class="field"><label for="cn-name">Name</label><input class="input-field" id="cn-name" type="text" maxlength="100" autocomplete="off"></div>
+          <div class="field"><label for="cn-placement">Placement</label><input class="input-field" id="cn-placement" type="text" maxlength="300" autocomplete="off"></div>
+          <div class="field"><label for="cn-owner">Owner</label><input class="input-field" id="cn-owner" type="text" maxlength="100" autocomplete="off"></div>
+          <div class="field px-actions"><button type="button" id="cn-create">Create canary</button></div>
+        </div>
+        <p class="work-msg" id="cn-msg" role="status"></p>
+        <pre class="px-pre" id="cn-value" hidden></pre>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Canaries</h3>
+        <table><thead><tr><th>Name</th><th>Kind</th><th>Placement</th><th>Trips</th><th>Created</th><th>Actions</th></tr></thead><tbody id="cn-rows"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Recent trips</h3>
+        <table><thead><tr><th>Time</th><th>Canary</th><th>Via</th><th>Source</th><th>Host</th><th>Finding</th></tr></thead><tbody id="cn-trip-rows"></tbody></table>
+      </div>
+    </section>
+
+    <section id="page-governance" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Governance</p>
+        <h1>Data governance.</h1>
+        <p class="lede">Inventory, retention, redaction and subject lookup. Purging deletes data and needs confirmation.</p>
+      </header>
+      <p class="work-msg" id="gv-msg" role="status"></p>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Inventory</h3>
+        <table><thead><tr><th>Class</th><th>Records</th><th>Approx. bytes</th><th>Retention days</th></tr></thead><tbody id="gv-inv-rows"></tbody></table>
+      </div>
+      <div class="work-panel"><h3>Retention</h3>
+        <p class="hint">Days per class. Empty or 0 keeps data unlimited.</p>
+        <div class="work-grid" id="gv-ret-fields"></div>
+        <div class="px-actions"><button type="button" id="gv-ret-save" class="secondary">Save policy</button><button type="button" id="gv-ret-preview" class="secondary">Preview purge</button><span id="gv-apply-slot"></span></div>
+        <p class="work-msg" id="gv-ret-msg" role="status"></p>
+        <pre class="px-pre" id="gv-ret-out" hidden></pre>
+      </div>
+      <div class="work-panel"><h3>Redaction</h3>
+        <p class="hint" id="gv-red-note">Loading.</p>
+        <div class="px-actions"><button type="button" id="gv-red-toggle" class="secondary">Toggle redaction</button></div>
+        <div class="work-grid">
+          <div class="field"><label for="gv-red-text">Preview text</label><textarea class="input-field" id="gv-red-text" rows="3"></textarea></div>
+          <div class="field px-actions"><button type="button" id="gv-red-preview" class="secondary">Preview redaction</button></div>
+        </div>
+        <pre class="px-pre" id="gv-red-out" hidden></pre>
+        <p class="work-msg" id="gv-red-msg" role="status"></p>
+      </div>
+      <div class="work-panel"><h3>Data subject lookup</h3>
+        <div class="work-grid">
+          <div class="field"><label for="gv-sub-q">Identifier</label><input class="input-field" id="gv-sub-q" type="text" autocomplete="off"></div>
+          <div class="field px-actions"><button type="button" id="gv-sub-go" class="secondary">Search</button></div>
+        </div>
+        <p class="work-msg" id="gv-sub-msg" role="status"></p>
+        <pre class="px-pre" id="gv-sub-out" hidden></pre>
+      </div>
+    </section>
+
+    <section id="page-tuning" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Tuning</p>
+        <h1>Tuning and digests.</h1>
+        <p class="lede">Advisory noise reduction and scheduled digests. Critical findings are never suppressed.</p>
+      </header>
+      <p class="work-msg" id="tn-msg" role="status"></p>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Suggestions</h3>
+        <table><thead><tr><th>Rule</th><th>Severity</th><th>Hits</th><th>False positive rate</th><th>Risk</th><th>Action</th></tr></thead><tbody id="tn-sug-rows"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Applied tuning</h3>
+        <table><thead><tr><th>Rule</th><th>Pattern</th><th>Status</th><th>Applied</th><th>Action</th></tr></thead><tbody id="tn-hist-rows"></tbody></table>
+      </div>
+      <div class="work-panel"><h3>New digest</h3>
+        <div class="work-grid">
+          <div class="field"><label for="dg-name">Name</label><input class="input-field" id="dg-name" type="text" maxlength="80" autocomplete="off"></div>
+          <div class="field"><label for="dg-schedule">Schedule</label><select class="select-field" id="dg-schedule"><option value="daily">Daily</option><option value="weekly">Weekly (Mondays)</option></select></div>
+          <div class="field"><label for="dg-hour">Hour (UTC)</label><input class="input-field" id="dg-hour" type="number" min="0" max="23" value="9"></div>
+          <div class="field"><label for="dg-content">Content</label><select class="select-field" id="dg-content"><option value="shift-report">Shift report</option><option value="soc-metrics">SOC metrics</option><option value="top-risks">Top risks</option></select></div>
+          <div class="field"><label for="dg-type">Destination</label><select class="select-field" id="dg-type"><option value="slack">Slack</option><option value="webhook">Webhook</option></select></div>
+          <div class="field"><label for="dg-url">URL</label><input class="input-field" id="dg-url" type="url" autocomplete="off"></div>
+          <div class="field px-actions"><button type="button" id="dg-create">Create digest</button></div>
+        </div>
+        <p class="work-msg" id="dg-msg" role="status"></p>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Digests</h3>
+        <table><thead><tr><th>Name</th><th>Schedule</th><th>Content</th><th>Destination</th><th>Last run</th><th>Actions</th></tr></thead><tbody id="dg-rows"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Deliveries</h3>
+        <table><thead><tr><th>Time</th><th>Digest</th><th>Trigger</th><th>Destination</th><th>Status</th><th>Attempts</th><th>Error</th></tr></thead><tbody id="dg-del-rows"></tbody></table>
+      </div>
+    </section>
+    <!-- === end ops-intel pages === -->
+
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
@@ -2633,8 +2817,8 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -2757,7 +2941,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -2795,6 +2979,11 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     if (current === 'lab' && typeof loadLab === 'function') loadLab();
     if (current === 'feeds' && typeof loadFeeds === 'function') loadFeeds();
     if (current === 'evidence' && typeof loadEvidence === 'function') loadEvidence();
+    if (current === 'fleethealth' && typeof loadFleetHealth === 'function') loadFleetHealth();
+    if (current === 'prevalence' && typeof loadPrevalence === 'function') loadPrevalence();
+    if (current === 'canaries' && typeof loadCanaries === 'function') loadCanaries();
+    if (current === 'governance' && typeof loadGovernance === 'function') loadGovernance();
+    if (current === 'tuning' && typeof loadTuning === 'function') loadTuning();
   }
 
   function fmtTime(v) {
@@ -4846,7 +5035,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
   });
 
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
@@ -5219,6 +5408,255 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     try { const clk = await pgApi('/v1/compliance/cert-in-clock'); evClock = (clk && clk.incidents) || []; renderEvClock(); } catch (_) {}
   }, 60000);
   /* === end compliance evidence page === */
+
+  /* === ops-intel pages === */
+  function pxFill(tbodyId, cols, list, title, sentence, rowFn) {
+    const tbody = $(tbodyId);
+    if (!list || !list.length) { listEmpty(tbody, cols, title, sentence, '', null); return; }
+    tbody.replaceChildren();
+    list.forEach((x) => rowFn(tbody, x));
+  }
+  function pxFail(tbodyId, cols, what, e) { listEmpty($(tbodyId), cols, 'Could not load ' + what, e.message, '', null); }
+  function pxTime(v) { return v && !String(v).startsWith('0001') ? fmtTime(v) : '-'; }
+  function pxAge(sec) {
+    if (sec === undefined || sec === null) return '-';
+    if (sec < 90) return sec + 's';
+    if (sec < 5400) return Math.round(sec / 60) + 'm';
+    return Math.round(sec / 3600) + 'h';
+  }
+  // Inline confirm step: swaps a button for Confirm / Cancel.
+  function pxConfirm(label, prompt, confirmLabel, fn) {
+    const wrap = el('span', '', 'px-confirm');
+    const ask = pgBtn(label, 'secondary', () => {
+      wrap.replaceChildren(el('span', prompt),
+        pgBtn(confirmLabel, 'danger', async () => { wrap.replaceChildren(ask); await fn(); }),
+        pgBtn('Cancel', 'secondary', () => wrap.replaceChildren(ask)));
+    });
+    wrap.appendChild(ask);
+    return wrap;
+  }
+  function pxShow(id, text) { const n = $(id); n.textContent = text; n.hidden = !text; }
+
+  /* fleet health */
+  async function fhShowHost() {
+    const host = $('fh-host').value.trim();
+    const box = $('fh-detail');
+    if (!host) { box.hidden = true; return; }
+    try {
+      const r = await pgApi('/v1/fleet/health/' + encodeURIComponent(host));
+      const a = r.agent || {};
+      const lines = [host + ' - ' + (r.enrolled ? 'enrolled' : 'not enrolled'), 'State: ' + (a.state || '-') + ', sensor: ' + (a.sensor_kind || '-') + ', findings: ' + (a.findings || 0), 'Heartbeat age: ' + pxAge(a.heartbeat_age_seconds) + ', last event age: ' + pxAge(a.event_age_seconds)];
+      (r.recommendations || []).forEach((x) => lines.push('Recommendation: ' + (typeof x === 'string' ? x : JSON.stringify(x))));
+      box.textContent = lines.join('\n'); box.className = 'px-pre px-detail'; box.hidden = false;
+    } catch (e) { box.textContent = 'Could not load host: ' + e.message; box.className = 'px-pre px-detail'; box.hidden = false; }
+  }
+  async function loadFleetHealth() {
+    setMsg('fh-msg', '', false);
+    const mins = Math.max(1, Math.min(10080, parseInt($('fh-stale-min').value, 10) || 60));
+    const [h, g, st] = await Promise.allSettled([pgApi('/v1/fleet/health'), pgApi('/v1/fleet/coverage-gaps'), pgApi('/v1/fleet/stale?minutes=' + mins)]);
+    if (h.status === 'fulfilled' && h.value) {
+      const r = h.value;
+      $('fh-score').textContent = String(r.score ?? '-');
+      pxFill('fh-factor-rows', 5, r.factors, 'No factors', 'No score factors reported.', (tb, f) => tableRow(tb, [f.name, f.weight, Math.round((f.ratio || 0) * 100) + '%', f.points, f.description]));
+      pxFill('fh-agent-rows', 7, r.agents, 'No agents', 'No agents are enrolled yet.', (tb, a) => tableRow(tb, [a.host, el('span', a.state, 'tag ' + a.state), a.sensor_kind, pxAge(a.heartbeat_age_seconds), a.queued, a.findings, (a.flags || []).join(', ') || '-']));
+    } else {
+      $('fh-score').textContent = '-';
+      const e = h.reason || new Error('empty');
+      pxFail('fh-factor-rows', 5, 'fleet health', e); pxFail('fh-agent-rows', 7, 'agents', e);
+      setMsg('fh-msg', 'Could not load fleet health: ' + e.message, true);
+    }
+    if (g.status === 'fulfilled' && g.value) {
+      const r = g.value, rows = [];
+      (r.shadow_hosts || []).forEach((x) => rows.push(['Shadow host (no agent)', x]));
+      (r.agents_without_data || []).forEach((x) => rows.push(['Agent never reported events', x]));
+      (r.agents_on_polling_sensor || []).forEach((x) => rows.push(['Polling sensor, no eBPF', x]));
+      pxFill('fh-gap-rows', 2, rows, 'No coverage gaps', 'Every enrolled host reports data.', (tb, c) => tableRow(tb, c));
+    } else pxFail('fh-gap-rows', 2, 'coverage gaps', g.reason);
+    if (st.status === 'fulfilled' && st.value) {
+      const rows = [];
+      (st.value.stale || []).forEach((x) => rows.push(['Stale', typeof x === 'string' ? x : (x.host || x.id || JSON.stringify(x))]));
+      (st.value.never_seen || []).forEach((x) => rows.push(['Never seen', typeof x === 'string' ? x : (x.host || x.id || JSON.stringify(x))]));
+      pxFill('fh-stale-rows', 2, rows, 'No stale agents', 'All agents checked in within ' + mins + ' minutes.', (tb, c) => tableRow(tb, c));
+    } else pxFail('fh-stale-rows', 2, 'stale agents', st.reason);
+  }
+  $('fh-refresh').addEventListener('click', loadFleetHealth);
+  $('fh-detail-btn').addEventListener('click', fhShowHost);
+
+  /* prevalence */
+  async function pvFirstSeen() {
+    const host = $('pv-host').value.trim(), hours = parseInt($('pv-hours').value, 10) || 24;
+    if (!host) { listEmpty($('pv-first-rows'), 4, 'Enter a host', 'First-seen needs a hostname.', '', null); return; }
+    try {
+      const r = await pgApi('/v1/prevalence/first-seen?host=' + encodeURIComponent(host) + '&hours=' + hours);
+      const rows = [];
+      (r.new_executables || []).forEach((x) => rows.push(['Executable', x]));
+      (r.new_destinations || []).forEach((x) => rows.push(['Destination', x]));
+      pxFill('pv-first-rows', 4, rows, 'Nothing new', 'No new executables or destinations on ' + host + ' in ' + hours + 'h.', (tb, x) => tableRow(tb, [x[0], x[1].value, x[1].count, pxTime(x[1].first_seen)]));
+    } catch (e) { pxFail('pv-first-rows', 4, 'first-seen', e); }
+  }
+  async function pvBlast() {
+    const host = $('pv-host').value.trim(), hours = parseInt($('pv-hours').value, 10) || 24, depth = parseInt($('pv-depth').value, 10) || 2;
+    if (!host) { listEmpty($('pv-blast-rows'), 2, 'Enter a host', 'Blast radius needs a hostname.', '', null); return; }
+    try {
+      const r = await pgApi('/v1/graph/blast-radius?host=' + encodeURIComponent(host) + '&hours=' + hours + '&depth=' + depth);
+      $('pv-blast-note').textContent = (r.nodes || []).length + ' nodes, ' + (r.edges || []).length + ' edges' + (r.truncated ? ' (truncated)' : '') + '.';
+      pxFill('pv-blast-rows', 2, r.likely_affected, 'No likely-affected hosts', 'No other hosts share observed paths with ' + host + '.', (tb, x) => {
+        if (typeof x === 'string') tableRow(tb, [x, '']);
+        else tableRow(tb, [x.host || x.id || x.name || '-', Object.keys(x).filter((k) => k !== 'host' && k !== 'id').map((k) => k + ': ' + (typeof x[k] === 'object' ? JSON.stringify(x[k]) : x[k])).join(', ')]);
+      });
+    } catch (e) { pxFail('pv-blast-rows', 2, 'blast radius', e); }
+  }
+  async function loadPrevalence() {
+    setMsg('pv-msg', '', false);
+    const hours = parseInt($('pv-hours').value, 10) || 24;
+    const [rare, exe] = await Promise.allSettled([pgApi('/v1/prevalence/rare?hours=' + hours), pgApi('/v1/prevalence/executables?limit=50')]);
+    if (rare.status === 'fulfilled' && rare.value) pxFill('pv-rare-rows', 6, rare.value.rare, 'No rare executables', 'Nothing unusual in the last ' + hours + 'h.', (tb, x) => tableRow(tb, [x.executable, x.host_count, (x.rarity || 0).toFixed(2), x.in_findings ? 'yes' : 'no', pxTime(x.first_seen), pxTime(x.last_seen)]));
+    else pxFail('pv-rare-rows', 6, 'rare executables', rare.reason);
+    if (exe.status === 'fulfilled' && exe.value) pxFill('pv-exe-rows', 5, exe.value.executables, 'No executables', 'No process events have been observed yet.', (tb, x) => tableRow(tb, [x.executable, x.command_shape, x.hosts, x.events, pxTime(x.last_seen)]));
+    else pxFail('pv-exe-rows', 5, 'executables', exe.reason);
+  }
+  $('pv-refresh').addEventListener('click', loadPrevalence);
+  $('pv-first-btn').addEventListener('click', pvFirstSeen);
+  $('pv-blast-btn').addEventListener('click', pvBlast);
+
+  /* canaries */
+  async function cnDelete(id) {
+    try { await pgApi('/v1/deception/canaries/' + encodeURIComponent(id), { method: 'DELETE' }); setMsg('cn-msg', 'Canary deleted.', false); loadCanaries(); }
+    catch (e) { setMsg('cn-msg', 'Could not delete: ' + e.message, true); }
+  }
+  async function loadCanaries() {
+    const [c, t] = await Promise.allSettled([pgApi('/v1/deception/canaries'), pgApi('/v1/deception/trips')]);
+    const names = {};
+    if (c.status === 'fulfilled' && c.value) {
+      (c.value.canaries || []).forEach((x) => { names[x.id] = x.name; });
+      pxFill('cn-rows', 6, c.value.canaries, 'No canaries', 'Create one above to start watching for tripwire hits.', (tb, x) => {
+        const place = x.placement || x.path || (x.dns_label ? x.dns_label : '') || '-';
+        tableRow(tb, [x.name, x.kind, place, el('span', x.trips || 0, 'tag ' + (x.trips ? 'high' : 'low')), pxTime(x.created), pxConfirm('Delete', 'Delete ' + x.name + '?', 'Delete', () => cnDelete(x.id))]);
+      });
+    } else pxFail('cn-rows', 6, 'canaries', c.reason);
+    if (t.status === 'fulfilled' && t.value) pxFill('cn-trip-rows', 6, t.value.trips, 'No trips', 'No canary has been touched.', (tb, x) => tableRow(tb, [pxTime(x.time), names[x.canary_id] || x.canary_id || '-', x.via, x.source_ip || '-', x.host || '-', x.finding_created ? 'yes' : 'no']));
+    else pxFail('cn-trip-rows', 6, 'trips', t.reason);
+  }
+  async function cnCreate() {
+    const body = { kind: $('cn-kind').value, name: $('cn-name').value.trim(), placement: $('cn-placement').value.trim(), owner: $('cn-owner').value.trim() };
+    if (!body.name) { setMsg('cn-msg', 'Name is required.', true); return; }
+    try {
+      const r = await pgApi('/v1/deception/canaries', pgJSON(body));
+      setMsg('cn-msg', 'Canary created.', false);
+      pxShow('cn-value', r.value || r.path || r.dns_label || '');
+      $('cn-name').value = '';
+      loadCanaries();
+    } catch (e) { setMsg('cn-msg', 'Could not create canary: ' + e.message, true); }
+  }
+  $('cn-create').addEventListener('click', cnCreate);
+
+  /* governance */
+  let gvClasses = [];
+  function gvPolicy() {
+    const days = {};
+    gvClasses.forEach((c) => { const v = parseInt($('gv-ret-' + c).value, 10); if (v > 0) days[c] = v; });
+    return { days };
+  }
+  async function gvRetention(kind) {
+    try {
+      if (kind === 'save') { await pgApi('/v1/governance/retention', pgJSON(gvPolicy())); setMsg('gv-ret-msg', 'Policy saved.', false); loadGovernance(); return; }
+      if (kind === 'preview') { const r = await pgApi('/v1/governance/retention/preview', pgJSON(gvPolicy())); pxShow('gv-ret-out', 'Would purge:\n' + JSON.stringify(r.would_purge, null, 2)); setMsg('gv-ret-msg', 'Preview only. Nothing was deleted.', false); return; }
+      const r = await pgApi('/v1/governance/retention/apply', pgJSON({ confirm: 'purge' }));
+      pxShow('gv-ret-out', 'Purged:\n' + JSON.stringify(r.purged, null, 2)); setMsg('gv-ret-msg', 'Purge applied.', false); loadGovernance();
+    } catch (e) { setMsg('gv-ret-msg', 'Failed: ' + e.message, true); }
+  }
+  async function loadGovernance() {
+    setMsg('gv-msg', '', false);
+    const [inv, ret, red] = await Promise.allSettled([pgApi('/v1/governance/inventory'), pgApi('/v1/governance/retention'), pgApi('/v1/governance/redaction')]);
+    const days = ret.status === 'fulfilled' && ret.value ? (ret.value.days || {}) : {};
+    if (inv.status === 'fulfilled' && inv.value) {
+      const rows = Array.isArray(inv.value.classes) ? inv.value.classes : Object.keys(inv.value.classes || {}).map((k) => ({ name: k, ...inv.value.classes[k] }));
+      pxFill('gv-inv-rows', 4, rows, 'No data classes', 'The inventory is empty.', (tb, x) => {
+        const n = x.name || x.class || x.id || '-';
+        tableRow(tb, [n, x.records ?? x.count ?? '-', x.bytes ?? x.approx_bytes ?? '-', days[n] || 'unlimited']);
+      });
+    } else { pxFail('gv-inv-rows', 4, 'inventory', inv.reason); }
+    if (ret.status === 'fulfilled' && ret.value) {
+      gvClasses = ret.value.classes || [];
+      const box = $('gv-ret-fields'); box.replaceChildren();
+      gvClasses.forEach((c) => {
+        const f = el('div', '', 'field'), l = el('label', c + ' (days)'), i = document.createElement('input');
+        i.className = 'input-field'; i.type = 'number'; i.min = '0'; i.id = 'gv-ret-' + c; l.htmlFor = i.id; i.value = days[c] || '';
+        f.appendChild(l); f.appendChild(i); box.appendChild(f);
+      });
+    } else setMsg('gv-ret-msg', 'Could not load retention: ' + ret.reason.message, true);
+    if (red.status === 'fulfilled' && red.value) {
+      const on = !!red.value.enabled;
+      $('gv-red-toggle').dataset.enabled = on ? '1' : '0';
+      $('gv-red-note').textContent = 'Redaction is ' + (on ? 'on' : 'off') + ' for ' + red.value.applies_to + '. Rules: ' + (red.value.rules || []).map((r) => r.id).join(', ') + '.';
+    } else $('gv-red-note').textContent = 'Could not load redaction: ' + red.reason.message;
+  }
+  $('gv-ret-save').addEventListener('click', () => gvRetention('save'));
+  $('gv-ret-preview').addEventListener('click', () => gvRetention('preview'));
+  (function () {
+    const slot = $('gv-apply-slot'); slot.replaceChildren();
+    slot.appendChild(pxConfirm('Apply purge', 'Permanently delete data older than the saved policy?', 'Purge now', () => gvRetention('apply')));
+  })();
+  $('gv-red-toggle').addEventListener('click', async () => {
+    try { const r = await pgApi('/v1/governance/redaction', pgJSON({ enabled: $('gv-red-toggle').dataset.enabled !== '1' })); setMsg('gv-red-msg', 'Redaction ' + (r.enabled ? 'enabled' : 'disabled') + '.', false); loadGovernance(); }
+    catch (e) { setMsg('gv-red-msg', 'Failed: ' + e.message, true); }
+  });
+  $('gv-red-preview').addEventListener('click', async () => {
+    try { const r = await pgApi('/v1/governance/redact/preview', pgJSON({ text: $('gv-red-text').value })); pxShow('gv-red-out', r.redacted + '\n\nRules hit: ' + ((r.rules_hit || []).join(', ') || 'none')); setMsg('gv-red-msg', '', false); }
+    catch (e) { setMsg('gv-red-msg', 'Failed: ' + e.message, true); }
+  });
+  $('gv-sub-go').addEventListener('click', async () => {
+    const q = $('gv-sub-q').value.trim();
+    if (!q) { setMsg('gv-sub-msg', 'Enter an identifier.', true); return; }
+    try { const r = await pgApi('/v1/governance/subject?q=' + encodeURIComponent(q)); pxShow('gv-sub-out', JSON.stringify(r, null, 2)); setMsg('gv-sub-msg', '', false); }
+    catch (e) { pxShow('gv-sub-out', ''); setMsg('gv-sub-msg', 'Lookup failed: ' + e.message, true); }
+  });
+
+  /* tuning and digests */
+  async function tnApply(sug) {
+    try { await pgApi('/v1/tuning/apply', pgJSON(sug.proposed_exclusion)); setMsg('tn-msg', 'Exclusion applied for ' + sug.rule + '.', false); loadTuning(); }
+    catch (e) { setMsg('tn-msg', 'Could not apply: ' + e.message, true); }
+  }
+  async function tnRevert(id) {
+    try { await pgApi('/v1/tuning/revert?id=' + encodeURIComponent(id), { method: 'POST' }); setMsg('tn-msg', 'Tuning reverted.', false); loadTuning(); }
+    catch (e) { setMsg('tn-msg', 'Could not revert: ' + e.message, true); }
+  }
+  async function dgAct(kind, id) {
+    try {
+      if (kind === 'delete') await pgApi('/v1/digests?id=' + encodeURIComponent(id), { method: 'DELETE' });
+      else { const r = await pgApi('/v1/digests/send-now?id=' + encodeURIComponent(id), { method: 'POST' }); setMsg('dg-msg', 'Send result: ' + ((r && r.status) || 'sent'), !!(r && r.error)); }
+      if (kind === 'delete') setMsg('dg-msg', 'Digest deleted.', false);
+      loadTuning();
+    } catch (e) { setMsg('dg-msg', 'Failed: ' + e.message, true); }
+  }
+  async function loadTuning() {
+    setMsg('tn-msg', '', false);
+    const [s, h, d, dl] = await Promise.allSettled([pgApi('/v1/tuning/suggestions'), pgApi('/v1/tuning/history'), pgApi('/v1/digests'), pgApi('/v1/digests/deliveries')]);
+    if (s.status === 'fulfilled' && s.value) pxFill('tn-sug-rows', 6, s.value.suggestions, 'No suggestions', 'No noisy rules over the last ' + s.value.days + ' days.', (tb, x) => {
+      const act = x.proposed_exclusion ? pxConfirm('Apply', 'Suppress ' + x.proposed_exclusion.pattern + '?', 'Apply exclusion', () => tnApply(x)) : el('span', 'Review rule', 'hint');
+      tableRow(tb, [x.rule, el('span', x.severity, 'tag ' + x.severity), x.hits, Math.round((x.false_positive_rate || 0) * 100) + '%', el('span', x.risk, 'tag'), act]);
+    });
+    else pxFail('tn-sug-rows', 6, 'suggestions', s.reason);
+    if (h.status === 'fulfilled' && h.value) pxFill('tn-hist-rows', 5, h.value.history, 'No tuning applied', 'Applied exclusions appear here and can be reverted.', (tb, x) =>
+      tableRow(tb, [x.rule, x.pattern, el('span', x.status, 'tag ' + (x.status === 'active' ? 'open' : 'resolved')), pxTime(x.applied_at), x.status === 'active' ? pxConfirm('Revert', 'Revert this exclusion?', 'Revert', () => tnRevert(x.id)) : '-']));
+    else pxFail('tn-hist-rows', 5, 'history', h.reason);
+    if (d.status === 'fulfilled' && d.value) pxFill('dg-rows', 6, d.value.digests, 'No digests', 'Create a digest above to schedule a report.', (tb, x) => {
+      const acts = el('span', '', 'px-actions');
+      acts.appendChild(pgBtn('Send now', 'secondary', () => dgAct('send', x.id)));
+      acts.appendChild(pxConfirm('Delete', 'Delete ' + x.name + '?', 'Delete', () => dgAct('delete', x.id)));
+      tableRow(tb, [x.name, x.schedule + ' ' + String(x.hour_utc).padStart(2, '0') + ':00 UTC', x.content, x.type + (x.url ? ' ' + pgMask(x.url) : ''), pxTime(x.last_run), acts]);
+    });
+    else pxFail('dg-rows', 6, 'digests', d.reason);
+    if (dl.status === 'fulfilled' && dl.value) pxFill('dg-del-rows', 7, dl.value.deliveries, 'No deliveries', 'No digest has been sent yet.', (tb, x) => tableRow(tb, [pxTime(x.time), x.digest_id, x.trigger, x.destination_host || x.type, el('span', x.status, 'tag ' + (x.status === 'delivered' ? 'delivered' : 'failed')), x.attempts, x.error || '-']));
+    else pxFail('dg-del-rows', 7, 'deliveries', dl.reason);
+  }
+  $('dg-create').addEventListener('click', async () => {
+    const body = { name: $('dg-name').value.trim(), schedule: $('dg-schedule').value, hour_utc: parseInt($('dg-hour').value, 10) || 0, content: $('dg-content').value, type: $('dg-type').value, url: $('dg-url').value.trim() };
+    if (!body.name || !body.url) { setMsg('dg-msg', 'Name and URL are required.', true); return; }
+    try { await pgApi('/v1/digests', pgJSON(body)); setMsg('dg-msg', 'Digest created.', false); $('dg-name').value = ''; $('dg-url').value = ''; loadTuning(); }
+    catch (e) { setMsg('dg-msg', 'Could not create digest: ' + e.message, true); }
+  });
+  /* === end ops-intel pages === */
 
   const appVisible = () => !$('app').hidden;
   let lastFocus = null;
