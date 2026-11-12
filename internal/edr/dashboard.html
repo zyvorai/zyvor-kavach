@@ -1169,6 +1169,38 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 .state-error h3 { margin: 0 0 6px; font-size: var(--fs-h3, 17px); color: var(--text-primary); }
 @media (max-width: 640px) { .overlay { padding-top: 6vh; } }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+/* === soc-ops page === */
+.soc-split { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr)); gap:16px; margin:0 0 16px; }
+.soc-split .table-wrap { margin:0; }
+.soc-sub { margin:0 0 8px; font-size:var(--fs-h3); font-weight:600; }
+.soc-controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:0 0 12px; }
+.soc-controls .select-field { width:auto; min-width:min(100%,220px); }
+.story-burst { margin:0 0 14px; padding:0; list-style:none; border-left:2px solid var(--hairline-1); }
+.story-burst > li { position:relative; padding:6px 0 6px 14px; display:flex; flex-wrap:wrap; gap:6px 10px; align-items:baseline; }
+.story-burst > li::before { content:""; position:absolute; left:-5px; top:14px; width:8px; height:8px; border-radius:50%; background:var(--text-secondary); }
+.story-burst time, .story-meta { color:var(--text-secondary); font-size:12px; }
+.story-sum { flex:1 1 220px; min-width:0; overflow-wrap:anywhere; }
+.story-head { margin:12px 0 4px; font-weight:600; font-size:13px; color:var(--text-secondary); }
+.shift-card dl { display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px; margin:0 0 14px; }
+.shift-card dt { color:var(--text-secondary); font-size:12px; }
+.shift-card dd { margin:0; font-size:22px; font-weight:600; }
+.shift-card ul { margin:0 0 12px; padding-left:20px; }
+.shift-card li { margin:3px 0; overflow-wrap:anywhere; }
+/* === posture page === */
+.pv-detail td { background:var(--fill-tertiary); }
+.pv-break { width:100%; font-size:13px; }
+.pv-break th, .pv-break td { padding:4px 8px; text-align:left; }
+.drift-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); gap:12px; }
+.drift-grid ul { margin:0; padding:0; list-style:none; }
+.drift-grid li { margin:0 0 8px; padding:8px 10px; border:1px solid var(--hairline-1); border-radius:var(--radius-xl); overflow-wrap:anywhere; font-size:13px; }
+.confirm-inline { display:inline-flex; flex-wrap:wrap; gap:6px; align-items:center; }
+/* === soc print === */
+@media print {
+  body.print-shift .nav, body.print-shift footer, body.print-shift .shift-noprint { display:none !important; }
+  body.print-shift main > section:not(#page-soc) { display:none !important; }
+  body.print-shift #page-soc > *:not(#shift-card) { display:none !important; }
+  body.print-shift #shift-card { box-shadow:none; border:0; }
+}
 </style>
 </head>
 <body>
@@ -1233,6 +1265,8 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
             <button type="button" data-page="ebpf" role="menuitem">eBPF</button>
             <button type="button" data-page="alerts" role="menuitem">Alerts</button>
             <button type="button" data-page="risk" role="menuitem">Risk</button>
+            <button type="button" data-page="soc" role="menuitem">SOC</button>
+            <button type="button" data-page="posture" role="menuitem">Posture</button>
             <button type="button" data-page="finance" role="menuitem">Finance</button>
             <button type="button" data-page="sectors" role="menuitem">Sectors</button>
             <button type="button" data-page="modules" role="menuitem">Modules</button>
@@ -2260,6 +2294,124 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
         </article>
       </div>
     </section>
+    <!-- === soc-ops page === -->
+    <section id="page-soc" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Operations</p>
+        <h1>SOC. Observe only.</h1>
+        <p class="lede">Response metrics, backlog, noisy rules, host storylines and the shift handoff. Read-only analytics; nothing is contained or changed.</p>
+      </header>
+      <div class="work-actions">
+        <div class="risk-toggle" role="group" aria-label="Metrics window"><button type="button" class="secondary" data-soc-days="7" aria-pressed="false">7 days</button><button type="button" class="secondary" data-soc-days="30" aria-pressed="true">30 days</button><button type="button" class="secondary" data-soc-days="90" aria-pressed="false">90 days</button></div>
+      </div>
+      <div class="apple-metric-band" aria-label="SOC metrics">
+        <div><span>MTTA</span><b id="soc-mtta">&mdash;</b></div>
+        <div><span>MTTR</span><b id="soc-mttr">&mdash;</b></div>
+        <div><span>Open backlog</span><b id="soc-backlog">&mdash;</b></div>
+        <div><span>SLA breaches</span><b id="soc-breach">&mdash;</b></div>
+      </div>
+      <p class="work-msg" id="soc-msg" role="status"></p>
+      <div class="table-wrap">
+        <h3 class="soc-sub">Open backlog by severity and age</h3>
+        <table>
+          <thead><tr><th>Severity</th><th>&lt; 1h</th><th>1h&ndash;24h</th><th>1d&ndash;7d</th><th>&gt; 7d</th><th>SLA breaches (ack / resolve)</th></tr></thead>
+          <tbody id="soc-backlog-rows"></tbody>
+        </table>
+      </div>
+      <div class="soc-split" style="margin-top:16px">
+        <div class="table-wrap">
+          <h3 class="soc-sub">Noisiest rules</h3>
+          <table><thead><tr><th>Rule</th><th>Findings</th></tr></thead><tbody id="soc-noisy-rows"></tbody></table>
+        </div>
+        <div class="table-wrap">
+          <h3 class="soc-sub">False-positive rate</h3>
+          <table><thead><tr><th>Rule</th><th>FP</th><th>Total</th><th>Rate</th></tr></thead><tbody id="soc-fp-rows"></tbody></table>
+        </div>
+      </div>
+      <div class="work-panel" id="story-panel">
+        <h3>Host storyline</h3>
+        <p class="hint">Ordered activity for one host, grouped into bursts and tagged by ATT&amp;CK tactic.</p>
+        <div class="soc-controls">
+          <label for="story-host" class="hint" style="margin:0">Host</label>
+          <select class="select-field" id="story-host"></select>
+          <label for="story-hours" class="hint" style="margin:0">Window</label>
+          <select class="select-field" id="story-hours">
+            <option value="24" selected>24 hours</option><option value="72">3 days</option><option value="168">7 days</option><option value="720">30 days</option>
+          </select>
+        </div>
+        <p class="work-msg" id="story-msg" role="status"></p>
+        <div id="story-body"></div>
+      </div>
+      <div class="work-panel shift-card" id="shift-card">
+        <h3>Shift report</h3>
+        <p class="hint" id="shift-sub">Handoff summary for the last 12 hours.</p>
+        <div class="work-actions shift-noprint">
+          <select class="select-field" id="shift-hours" aria-label="Shift length" style="width:auto">
+            <option value="8">8 hours</option><option value="12" selected>12 hours</option><option value="24">24 hours</option><option value="72">3 days</option>
+          </select>
+          <button type="button" class="secondary" id="shift-print">Print report</button>
+        </div>
+        <p class="work-msg" id="shift-msg" role="status"></p>
+        <div id="shift-body"></div>
+      </div>
+    </section>
+
+    <!-- === posture page === -->
+    <section id="page-posture" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Posture</p>
+        <h1>Exposure. Observe only.</h1>
+        <p class="lede">Vulnerability priority, asset criticality and configuration drift. Read-only; nothing is patched or changed on hosts.</p>
+      </header>
+      <div class="apple-metric-band" aria-label="Posture summary">
+        <div><span>Assets registered</span><b id="ps-assets">&mdash;</b></div>
+        <div><span>Vulnerabilities</span><b id="ps-vulns">&mdash;</b></div>
+        <div><span>Score 70+</span><b id="ps-high">&mdash;</b></div>
+        <div><span>Baselined hosts</span><b id="ps-base">&mdash;</b></div>
+        <div><span>Hosts drifting</span><b id="ps-drift">&mdash;</b></div>
+      </div>
+      <p class="work-msg" id="posture-msg" role="status"></p>
+      <div class="table-wrap">
+        <h3 class="soc-sub">Vulnerability priority</h3>
+        <p class="hint" id="pv-model"></p>
+        <table>
+          <thead><tr><th>#</th><th>CVE</th><th>Host</th><th>Product</th><th>Severity</th><th>Score</th><th>Breakdown</th></tr></thead>
+          <tbody id="pv-rows"></tbody>
+        </table>
+      </div>
+      <div class="work-panel" id="asset-panel" style="margin-top:16px">
+        <h3>Asset criticality</h3>
+        <p class="hint">Rate how important a host is (1 low, 5 crown jewel). Higher criticality raises vulnerability priority.</p>
+        <form id="asset-form" novalidate>
+          <div class="work-grid">
+            <div class="field"><label for="asset-host">Host</label><input class="input-field" id="asset-host" type="text" maxlength="128" autocomplete="off" list="asset-host-list"><datalist id="asset-host-list"></datalist></div>
+            <div class="field"><label for="asset-crit">Criticality</label>
+              <select class="select-field" id="asset-crit"><option value="1">1 low</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5 crown jewel</option></select></div>
+            <div class="field"><label for="asset-owner">Owner</label><input class="input-field" id="asset-owner" type="text" maxlength="64" placeholder="Optional" autocomplete="off"></div>
+            <div class="field"><label for="asset-tags">Tags</label><input class="input-field" id="asset-tags" type="text" maxlength="200" placeholder="Comma separated, optional" autocomplete="off"></div>
+          </div>
+          <div class="work-actions"><button type="submit" class="primary" id="asset-add">Save asset</button></div>
+          <p class="work-msg" id="asset-msg" role="status"></p>
+        </form>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Host</th><th>Criticality</th><th>Owner</th><th>Tags</th><th>Updated</th><th></th></tr></thead>
+            <tbody id="asset-rows"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="work-panel" id="drift-panel">
+        <h3>Configuration drift</h3>
+        <p class="hint">Compare a host against its saved baseline.</p>
+        <div class="soc-controls">
+          <label for="drift-host" class="hint" style="margin:0">Host</label>
+          <select class="select-field" id="drift-host"></select>
+          <button type="button" class="secondary" id="drift-baseline">Take baseline</button>
+        </div>
+        <p class="work-msg" id="drift-msg" role="status"></p>
+        <div id="drift-body"></div>
+      </div>
+    </section>
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
@@ -2330,8 +2482,8 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'finance', 'sectors', 'modules', 'integrations'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -2454,7 +2606,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'finance', 'sectors']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -2487,6 +2639,8 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     if (current === 'alerts' && typeof loadAlerts === 'function') loadAlerts();
     if (current === 'detections' && typeof loadSaved === 'function') loadSaved();
     if (current === 'risk' && typeof loadRisk === 'function') loadRisk();
+    if (current === 'soc' && typeof loadSoc === 'function') loadSoc();
+    if (current === 'posture' && typeof loadPosture === 'function') loadPosture();
   }
 
   function fmtTime(v) {
@@ -4235,8 +4389,310 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     } catch (e) { setMsg('ss-msg', e.message, true); }
   });
 
+  // === soc-ops page ===
+  let socDays = 30;
+  function socHosts() {
+    const set = new Set();
+    for (const f of (cache.findings || [])) if (f && f.host) set.add(String(f.host));
+    return Array.from(set).sort();
+  }
+  async function fillHostSelect(sel, extra) {
+    let hosts = socHosts();
+    if (!hosts.length) {
+      try { const r = await wsFetch('/v1/risk/hosts'); hosts = ((r && r.hosts) || []).map((h) => String(h.host)); } catch (_) {}
+    }
+    for (const h of (extra || [])) if (h && !hosts.includes(h)) hosts.push(h);
+    const prev = sel.value;
+    sel.replaceChildren();
+    if (!hosts.length) { const o = el('option', 'No hosts observed yet'); o.value = ''; sel.appendChild(o); return ''; }
+    for (const h of hosts) { const o = el('option', h); o.value = h; sel.appendChild(o); }
+    if (prev && hosts.includes(prev)) sel.value = prev;
+    return sel.value;
+  }
+  function fmtMin(v) {
+    if (v === null || v === undefined) return '—';
+    const n = Number(v);
+    if (!Number.isFinite(n)) return '—';
+    return n >= 120 ? (n / 60).toFixed(1) + ' h' : n.toFixed(1) + ' min';
+  }
+  function renderSoc(m) {
+    $('soc-mtta').textContent = fmtMin(m.mtta_minutes);
+    $('soc-mttr').textContent = fmtMin(m.mttr_minutes);
+    $('soc-backlog').textContent = String(m.open_backlog || 0);
+    const br = m.sla_breaches || {};
+    let nb = 0;
+    for (const k of Object.keys(br)) nb += (br[k].ack || 0) + (br[k].resolve || 0);
+    $('soc-breach').textContent = String(nb);
+    const bl = m.backlog_by_severity || {};
+    const sevs = ['critical', 'high', 'medium', 'low'];
+    Object.keys(bl).forEach((s) => { if (!sevs.includes(s)) sevs.push(s); });
+    const tb = $('soc-backlog-rows');
+    if (!m.open_backlog) listEmpty(tb, 6, 'No open backlog', 'Open findings appear here by severity and age.', '', null);
+    else {
+      tb.replaceChildren();
+      for (const s of sevs) {
+        const b = bl[s] || {}, x = br[s] || {};
+        tableRow(tb, [el('span', s, 'tag ' + s), b.lt_1h || 0, b['1h_24h'] || 0, b['1d_7d'] || 0, b.gt_7d || 0, (x.ack || 0) + ' / ' + (x.resolve || 0)]);
+      }
+    }
+    const noisy = m.top_noisy_rules || [];
+    const nt = $('soc-noisy-rows');
+    if (!noisy.length) listEmpty(nt, 2, 'No findings', 'Rules appear here once findings are observed.', '', null);
+    else { nt.replaceChildren(); for (const r of noisy) tableRow(nt, [r.rule, r.total]); }
+    const fp = (m.false_positive_rules || []).slice(0, 10);
+    const ft = $('soc-fp-rows');
+    if (!fp.length) listEmpty(ft, 4, 'No findings', 'False-positive rates appear once findings are triaged.', '', null);
+    else { ft.replaceChildren(); for (const r of fp) tableRow(ft, [r.rule, r.false_positives, r.total, r.false_positive_rate + '%']); }
+  }
+  async function loadSocMetrics() {
+    setMsg('soc-msg', '', false);
+    try { renderSoc(await wsFetch('/v1/soc/metrics?days=' + socDays)); }
+    catch (e) { setMsg('soc-msg', 'Could not load SOC metrics: ' + e.message, true); }
+  }
+  function renderStory(s) {
+    const body = $('story-body');
+    body.replaceChildren();
+    const steps = (s && s.steps) || [];
+    if (!steps.length) { body.appendChild(el('p', 'No activity for this host in the selected window.', 'hint')); return; }
+    if ((s.tactics || []).length) body.appendChild(el('p', 'Tactics observed: ' + s.tactics.join(' → '), 'hint'));
+    const bursts = new Map();
+    for (const st of steps) { if (!bursts.has(st.burst)) bursts.set(st.burst, []); bursts.get(st.burst).push(st); }
+    for (const [id, list] of bursts) {
+      const meta = (s.bursts || []).find((b) => b.id === id);
+      body.appendChild(el('p', 'Burst ' + id + ' · ' + list.length + ' step(s)' + (meta ? ' · ' + fmtTime(meta.start) : ''), 'story-head'));
+      const ul = el('ul', '', 'story-burst');
+      for (const st of list) {
+        const li = document.createElement('li');
+        const t = document.createElement('time');
+        t.textContent = fmtTime(st.time);
+        if (st.time) t.setAttribute('datetime', st.time);
+        li.appendChild(t);
+        li.appendChild(el('span', st.tactic + (st.phase ? ' (phase ' + st.phase + ')' : ''), 'tag'));
+        if (st.technique_id) li.appendChild(el('span', st.technique_id, 'tag'));
+        if (st.severity) li.appendChild(el('span', st.severity, 'tag ' + st.severity));
+        li.appendChild(el('span', st.kind + (st.rule ? ' · ' + st.rule : ''), 'story-meta'));
+        li.appendChild(el('span', st.summary, 'story-sum'));
+        ul.appendChild(li);
+      }
+      body.appendChild(ul);
+    }
+  }
+  async function loadStory() {
+    const host = $('story-host').value;
+    setMsg('story-msg', '', false);
+    if (!host) { $('story-body').replaceChildren(el('p', 'Pick a host once findings are observed.', 'hint')); return; }
+    try { renderStory(await wsFetch('/v1/storyline/host?host=' + encodeURIComponent(host) + '&hours=' + encodeURIComponent($('story-hours').value))); }
+    catch (e) { setMsg('story-msg', 'Could not load storyline: ' + e.message, true); }
+  }
+  function shiftList(title, items, empty) {
+    const box = document.createElement('div');
+    box.appendChild(el('p', title, 'story-head'));
+    if (!items.length) { box.appendChild(el('p', empty, 'hint')); return box; }
+    const ul = document.createElement('ul');
+    for (const t of items) ul.appendChild(el('li', t));
+    box.appendChild(ul);
+    return box;
+  }
+  function renderShift(r) {
+    const body = $('shift-body');
+    body.replaceChildren();
+    $('shift-sub').textContent = 'Handoff summary for the last ' + (r.hours || '') + ' hours' + (r.generated_at ? ', generated ' + fmtTime(r.generated_at) : '') + '.';
+    const c = r.counts || {};
+    const dl = document.createElement('dl');
+    for (const k of ['new', 'open', 'closed']) {
+      const d = document.createElement('div');
+      d.appendChild(el('dt', k === 'new' ? 'New findings' : k === 'open' ? 'Open' : 'Closed'));
+      d.appendChild(el('dd', c[k] || 0));
+      dl.appendChild(d);
+    }
+    body.appendChild(dl);
+    body.appendChild(shiftList('Highest-risk hosts', (r.highest_risk_hosts || []).map((h) => h.host + ' · risk ' + h.risk + (h.band ? ' (' + h.band + ')' : '')), 'No scored hosts.'));
+    body.appendChild(shiftList('Unresolved criticals', (r.unresolved_criticals || []).map((x) => x.host + ' · ' + x.rule + ' · ' + x.state + ' · ' + fmtTime(x.time)), 'No unresolved critical findings.'));
+    body.appendChild(shiftList('Recommended questions', r.recommended_questions || [], 'None.'));
+  }
+  async function loadShift() {
+    setMsg('shift-msg', '', false);
+    try { renderShift(await wsFetch('/v1/soc/shift-report?hours=' + encodeURIComponent($('shift-hours').value))); }
+    catch (e) { setMsg('shift-msg', 'Could not load shift report: ' + e.message, true); }
+  }
+  async function loadSoc() {
+    loadSocMetrics();
+    loadShift();
+    await fillHostSelect($('story-host'));
+    loadStory();
+  }
+  document.querySelectorAll('[data-soc-days]').forEach((b) => b.addEventListener('click', () => {
+    socDays = Number(b.getAttribute('data-soc-days'));
+    document.querySelectorAll('[data-soc-days]').forEach((o) => o.setAttribute('aria-pressed', o === b ? 'true' : 'false'));
+    loadSocMetrics();
+  }));
+  $('story-host').addEventListener('change', loadStory);
+  $('story-hours').addEventListener('change', loadStory);
+  $('shift-hours').addEventListener('change', loadShift);
+  $('shift-print').addEventListener('click', () => {
+    document.body.classList.add('print-shift');
+    const done = () => { document.body.classList.remove('print-shift'); window.removeEventListener('afterprint', done); };
+    window.addEventListener('afterprint', done);
+    window.print();
+  });
+
+  // === posture page ===
+  let postureConfirm = '';
+  const pvOpen = new Set();
+  let pvItems = [];
+  function renderPosture(s) {
+    const a = (s && s.assets) || {}, v = (s && s.vulnerabilities) || {}, d = (s && s.drift) || {};
+    $('ps-assets').textContent = String(a.registered || 0);
+    $('ps-vulns').textContent = String(v.total || 0);
+    $('ps-high').textContent = String(v.score_70_plus || 0);
+    $('ps-base').textContent = String(d.baselined_hosts || 0);
+    $('ps-drift').textContent = String((d.hosts_with_drift || []).length);
+  }
+  function renderVulns() {
+    const tb = $('pv-rows');
+    if (!pvItems.length) { listEmpty(tb, 7, 'No vulnerabilities', 'Prioritised vulnerabilities appear here once they are observed.', '', null); return; }
+    tb.replaceChildren();
+    for (const v of pvItems) {
+      const open = pvOpen.has(v.id);
+      const btn = el('button', open ? 'Hide' : 'Score', 'secondary');
+      btn.type = 'button';
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btn.setAttribute('aria-label', (open ? 'Hide' : 'Show') + ' score breakdown for ' + (v.cve || v.id));
+      btn.addEventListener('click', () => { if (pvOpen.has(v.id)) pvOpen.delete(v.id); else pvOpen.add(v.id); renderVulns(); });
+      tableRow(tb, [v.rank, v.cve || v.id, v.host, v.product || '—', el('span', v.severity, 'tag ' + String(v.severity).toLowerCase()), Number(v.score).toFixed(1), btn]);
+      if (open) {
+        const tr = document.createElement('tr');
+        tr.className = 'pv-detail';
+        const td = document.createElement('td');
+        td.colSpan = 7;
+        if (v.description) td.appendChild(el('p', v.description, 'hint'));
+        const t = document.createElement('table');
+        t.className = 'pv-break';
+        const th = document.createElement('thead');
+        const hr = document.createElement('tr');
+        for (const h of ['Factor', 'Points', 'Detail']) hr.appendChild(el('th', h));
+        th.appendChild(hr);
+        t.appendChild(th);
+        const bd = document.createElement('tbody');
+        for (const c of (v.breakdown || [])) tableRow(bd, [c.factor, c.points + ' / ' + c.max, c.detail || '—']);
+        t.appendChild(bd);
+        td.appendChild(t);
+        tr.appendChild(td);
+        tb.appendChild(tr);
+      }
+    }
+  }
+  let postureAssets = [];
+  function renderAssets() {
+    const tb = $('asset-rows');
+    const dl = $('asset-host-list');
+    dl.replaceChildren();
+    for (const h of socHosts()) { const o = document.createElement('option'); o.value = h; dl.appendChild(o); }
+    if (!postureAssets.length) { listEmpty(tb, 6, 'No assets rated', 'Add a host above to weight its vulnerabilities by criticality.', '', null); return; }
+    tb.replaceChildren();
+    for (const a of postureAssets) {
+      const act = document.createElement('div');
+      act.className = 'confirm-inline';
+      if (postureConfirm === a.host) {
+        const yes = el('button', 'Delete', 'danger');
+        yes.type = 'button';
+        yes.addEventListener('click', async () => {
+          yes.disabled = true;
+          try { await wsFetch('/v1/posture/assets?host=' + encodeURIComponent(a.host), { method: 'DELETE' }); postureConfirm = ''; setMsg('asset-msg', 'Asset removed.', false); }
+          catch (e) { setMsg('asset-msg', 'Delete failed: ' + e.message, true); }
+          loadPosture();
+        });
+        const no = el('button', 'Cancel', 'secondary');
+        no.type = 'button';
+        no.addEventListener('click', () => { postureConfirm = ''; renderAssets(); });
+        act.append(el('span', 'Delete this asset?'), yes, no);
+      } else {
+        const del = el('button', 'Delete', 'secondary');
+        del.type = 'button';
+        del.setAttribute('aria-label', 'Delete asset ' + a.host);
+        del.addEventListener('click', () => { postureConfirm = a.host; renderAssets(); });
+        act.appendChild(del);
+      }
+      tableRow(tb, [a.host, a.criticality + ' / 5', a.owner || '—', (a.tags || []).join(', ') || '—', fmtTime(a.updated), act]);
+    }
+  }
+  function driftList(title, items) {
+    const box = document.createElement('div');
+    box.appendChild(el('p', title + ' (' + items.length + ')', 'story-head'));
+    if (!items.length) { box.appendChild(el('p', 'None.', 'hint')); return box; }
+    const ul = document.createElement('ul');
+    for (const it of items) {
+      const li = document.createElement('li');
+      li.appendChild(el('span', it.severity_hint || 'low', 'tag ' + (it.severity_hint || 'low')));
+      li.appendChild(el('span', ' ' + it.domain + ' · ' + it.key));
+      const ch = it.before && it.after ? it.before + ' → ' + it.after : (it.after || it.before || '');
+      if (ch) li.appendChild(el('div', ch, 'story-meta'));
+      if (it.reason) li.appendChild(el('div', it.reason, 'story-meta'));
+      ul.appendChild(li);
+    }
+    box.appendChild(ul);
+    return box;
+  }
+  function renderDrift(d) {
+    const body = $('drift-body');
+    body.replaceChildren();
+    if (!d || !d.has_baseline) { body.appendChild(el('p', 'No baseline yet for this host. Use Take baseline to record its current state.', 'hint')); return; }
+    body.appendChild(el('p', 'Baseline taken ' + fmtTime(d.baseline_at) + ' · ' + d.total + ' difference(s)' + (d.highest_severity ? ' · highest ' + d.highest_severity : ''), 'hint'));
+    const g = document.createElement('div');
+    g.className = 'drift-grid';
+    g.append(driftList('Added', d.added || []), driftList('Removed', d.removed || []), driftList('Changed', d.changed || []));
+    body.appendChild(g);
+  }
+  async function loadDrift() {
+    const host = $('drift-host').value;
+    setMsg('drift-msg', '', false);
+    $('drift-baseline').disabled = !host;
+    if (!host) { $('drift-body').replaceChildren(el('p', 'Pick a host once findings are observed.', 'hint')); return; }
+    try { renderDrift(await wsFetch('/v1/posture/drift?host=' + encodeURIComponent(host))); }
+    catch (e) { setMsg('drift-msg', 'Could not load drift: ' + e.message, true); }
+  }
+  async function loadPosture() {
+    setMsg('posture-msg', '', false);
+    try {
+      const [sum, vp, assets] = await Promise.all([wsFetch('/v1/posture/summary'), wsFetch('/v1/posture/vuln-priority'), wsFetch('/v1/posture/assets')]);
+      renderPosture(sum);
+      $('pv-model').textContent = (vp && vp.model) ? 'Model: ' + vp.model : '';
+      pvItems = (vp && vp.items) || [];
+      renderVulns();
+      postureAssets = Array.isArray(assets) ? assets : [];
+      renderAssets();
+    } catch (e) { setMsg('posture-msg', 'Could not load posture: ' + e.message, true); }
+    await fillHostSelect($('drift-host'), postureAssets.map((a) => a.host));
+    loadDrift();
+  }
+  $('drift-host').addEventListener('change', loadDrift);
+  $('drift-baseline').addEventListener('click', async () => {
+    const host = $('drift-host').value;
+    if (!host) return;
+    const btn = $('drift-baseline');
+    btn.disabled = true;
+    try { await wsFetch('/v1/posture/baseline?host=' + encodeURIComponent(host), { method: 'POST' }); setMsg('drift-msg', 'Baseline saved for ' + host + '.', false); loadPosture(); }
+    catch (e) { setMsg('drift-msg', 'Baseline failed: ' + e.message, true); }
+    btn.disabled = false;
+  });
+  $('asset-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const host = $('asset-host').value.trim();
+    if (!host) { setMsg('asset-msg', 'Host is required.', true); $('asset-host').focus(); return; }
+    const tags = $('asset-tags').value.split(',').map((t) => t.trim()).filter(Boolean);
+    const btn = $('asset-add');
+    btn.disabled = true;
+    try {
+      await wsFetch('/v1/posture/assets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ host, criticality: Number($('asset-crit').value), owner: $('asset-owner').value.trim(), tags }) });
+      $('asset-host').value = ''; $('asset-owner').value = ''; $('asset-tags').value = '';
+      setMsg('asset-msg', 'Asset saved.', false);
+      loadPosture();
+    } catch (err) { setMsg('asset-msg', err.message, true); }
+    btn.disabled = false;
+  });
+
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', m: 'modules', l: 'timeline' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline' };
   const appVisible = () => !$('app').hidden;
   let lastFocus = null;
   function overlayOpen(id) { lastFocus = document.activeElement; $(id).hidden = false; }
