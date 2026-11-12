@@ -1063,6 +1063,26 @@ paths:
       summary: zyvor-mark.svg
       security: [{bearerAuth: []}]
       responses: {'200': {description: OK}}
+  /v1/soc/metrics:
+    get:
+      summary: SOC MTTA/MTTR, backlog by severity and age, false-positive rate by rule, noisy rules, SLA breaches (days)
+      security: [{bearerAuth: []}]
+      parameters: [{name: days, in: query, schema: {type: integer, default: 30}}]
+      responses: {'200': {description: OK}}
+  /v1/storyline/host:
+    get:
+      summary: Kill-chain timeline for one host with ATT&CK tactic, phase and burst splitting (gap over 15 min)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: host, in: query, required: true, schema: {type: string}}
+        - {name: hours, in: query, schema: {type: integer, default: 24}}
+      responses: {'200': {description: OK}, '400': {description: host required}}
+  /v1/soc/shift-report:
+    get:
+      summary: Shift handoff JSON with counts, risk hosts, unresolved criticals and recommended questions
+      security: [{bearerAuth: []}]
+      parameters: [{name: hours, in: query, schema: {type: integer, default: 12}}]
+      responses: {'200': {description: OK}}
 components:
   securitySchemes:
     bearerAuth:

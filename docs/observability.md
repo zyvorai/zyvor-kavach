@@ -62,3 +62,22 @@ Observation-only notifications: Kavach reports matching findings; it never block
 - SSRF controls: https only (http for localhost/127.0.0.1), private/loopback/link-local destinations are rejected at
   creation and again at connect time, redirects are not followed. Set `KAVACH_ALERT_ALLOW_PRIVATE=1` to allow
   internal receivers.
+
+## SOC operations analytics
+
+Read-only analytics for SOC management (all require the bearer token or a session):
+
+- `GET /v1/soc/metrics?days=30` (max 365): MTTA (first status change away from new/open), MTTR (first change to
+  `closed|true_positive|false_positive|resolved`), open backlog by severity and age bucket
+  (`lt_1h|1h_24h|1d_7d|gt_7d`), false-positive rate per rule, top noisy rules and SLA breach counts per severity.
+  MTTA/MTTR are `null` when nothing qualifies. Timestamps come from the incident ledger (`<findings>.incidents`)
+  plus an append-only transition log (`<findings>.transitions`) written by detection triage.
+- SLA targets: `KAVACH_SLA_ACK_MIN` (minutes) and `KAVACH_SLA_RESOLVE_HOURS`. Each is one number for all
+  severities or pairs such as `critical=15,high=60`. Defaults: ack 15/60/240/1440 min and resolve 4/24/72/168 h
+  for critical/high/medium/low. The effective targets are echoed in `sla_targets`.
+- `GET /v1/storyline/host?host=&hours=24` (max 720): findings, process, network and file events for one host
+  merged by time. Each step has `tactic`, `phase` (ATT&CK tactic order, 1-14), `tactic_source`
+  (`rule`, `pid-correlation` with a finding for the same PID, or `default` per event kind) and `burst`.
+  A gap over 15 minutes starts a new burst; its first step carries `gap_seconds`. `host` is required (400).
+- `GET /v1/soc/shift-report?hours=12` (max 168): counts of new/open/closed, top 5 risk hosts, unresolved
+  criticals and deterministic template questions for the next shift (no LLM).
