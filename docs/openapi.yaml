@@ -679,6 +679,40 @@ paths:
       summary: MITRE ATT&CK coverage matrix and observed hits (observe-only)
       security: [{bearerAuth: []}]
       responses: {'200': {description: OK}}
+  /v1/lab/rules:
+    get:
+      summary: List detection-lab rules (sandbox only; never promoted to live detection)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK, mode sandbox}}
+    post:
+      summary: Create or update (upsert by id) a lab rule; validated, max 200 rules, mode always sandbox
+      security: [{bearerAuth: []}]
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object, description: "id, name, technique (T1059[.004]), enabled, condition {field,op,value|values | all|any|not}, threshold {count, within_seconds, group_by}"}
+      responses: {'200': {description: Saved}, '400': {description: Validation error naming the field}, '409': {description: Rule cap reached}}
+    delete:
+      summary: Delete a lab rule
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: query, required: true, schema: {type: string}}
+      responses: {'200': {description: Deleted}, '404': {description: Not found}}
+  /v1/lab/rules/validate:
+    post:
+      summary: Validate a lab rule (operators equals|contains|startswith|endswith|regex(RE2, max 256 chars)|in)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Valid}, '400': {description: Invalid, error names the bad field}}
+  /v1/lab/rules/test:
+    post:
+      summary: Run a rule (inline `rule` or `rule_id`) against up to 1000 sample `events`; returns per-event match and condition trace
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}, '400': {description: Bad rule or events}, '413': {description: Body too large}}
+  /v1/lab/rules/backtest:
+    post:
+      summary: Replay a rule over stored events and findings (cap 50000); hit count, sample (max 20), top hosts, hits per day, noise per host per day
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}, '400': {description: Bad rule}, '404': {description: Unknown rule_id}}
   /v1/compliance/score:
     get:
       summary: Overall compliance grade across CIS/NIST/SOC2/ISO

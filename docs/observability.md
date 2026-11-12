@@ -62,3 +62,24 @@ Observation-only notifications: Kavach reports matching findings; it never block
 - SSRF controls: https only (http for localhost/127.0.0.1), private/loopback/link-local destinations are rejected at
   creation and again at connect time, redirects are not followed. Set `KAVACH_ALERT_ALLOW_PRIVATE=1` to allow
   internal receivers.
+
+## Detection-as-code lab (sandbox)
+
+A sandbox for authoring detections. Lab rules are **never** promoted into live detection or the
+ATT&CK `ruleMITRE` mapping; every response carries `mode: sandbox`. Observation-only.
+
+- Rule JSON: `id`, `name`, `technique` (e.g. `T1059.004`), `enabled`, `condition`, optional
+  `threshold {count, within_seconds, group_by}`. A condition is a leaf `{field, op, value}` (or `values`
+  for `in`; `case_sensitive` optional, default off) or a boolean node `all`, `any` or `not`.
+  Fields: `executable command parent_exe host uid path destination kind rule severity operation`.
+  Operators: `equals contains startswith endswith regex in`. Regex is Go RE2 (no backtracking), max 256 chars.
+  A field absent on an event never matches (so `not` of it does). Validation errors name the field
+  (e.g. `condition.all[1].field: unknown field "x"`).
+- `POST /v1/lab/rules/validate` checks a rule. `POST /v1/lab/rules/test` takes `{rule | rule_id, events}`
+  (max 1000 samples) and returns per-event match plus a per-condition trace and threshold hits.
+  `POST /v1/lab/rules/backtest` replays a rule over stored process, file and network events plus findings
+  (cap 50,000) and returns `hit_count`, `hit_sample` (max 20), `top_hosts`, `hits_per_day` and
+  `noise_per_host_per_day` (hits / hosts observed / days spanned).
+- `GET/POST/DELETE /v1/lab/rules` persist rules to `<findings file>.labrules.json` (max 200; POST upserts
+  by id). Reads need auth; writes, validate, test and backtest need the admin token or a session.
+  Body cap 256 KB (4 MB for test), nesting depth 6, 50 nodes per rule.
