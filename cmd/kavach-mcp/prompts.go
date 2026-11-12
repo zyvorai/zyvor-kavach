@@ -39,6 +39,15 @@ func registerPrompts(srv *mcpserver.Server) error {
 			}},
 		},
 		{
+			Name:        "kavach_host_risk_briefing",
+			Description: "Host risk briefing: riskiest hosts, fleet index and trend.",
+			Arguments:   []mcpserver.PromptArg{{Name: "days", Description: "Trend window: 7, 14 or 30", Required: false}},
+			Messages: []mcpserver.PromptMessage{{
+				Role: "user",
+				Text: "Use kavach_risk_summary, kavach_risk_hosts and kavach_trends days={{days}} to brief on the riskiest hosts and direction of change. Observation-only — never claim containment was enforced.",
+			}},
+		},
+		{
 			Name:        "kavach_xdr",
 			Description: "Cross-domain Netra×Kavach investigation.",
 			Messages: []mcpserver.PromptMessage{{
