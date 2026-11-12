@@ -39,7 +39,9 @@ func (d *DomainInventory) Append(domain string, row map[string]any) map[string]a
 	if row["observed_at"] == nil {
 		row["observed_at"] = time.Now().UTC()
 	}
-	row["source"] = firstNonEmpty(fmt.Sprint(row["source"]), "ingest")
+	if src, _ := row["source"].(string); strings.TrimSpace(src) == "" {
+		row["source"] = "ingest"
+	}
 	d.rows[domain] = append(d.rows[domain], row)
 	if len(d.rows[domain]) > 2000 {
 		d.rows[domain] = d.rows[domain][len(d.rows[domain])-2000:]
@@ -64,7 +66,9 @@ func (d *DomainInventory) ReplaceHost(domain, host string, rows []map[string]any
 			r["id"] = domain + "-" + time.Now().UTC().Format("150405.000")
 		}
 		r["observed_at"] = time.Now().UTC()
-		r["source"] = firstNonEmpty(fmt.Sprint(r["source"]), "agent")
+		if src, _ := r["source"].(string); strings.TrimSpace(src) == "" {
+			r["source"] = "agent"
+		}
 		kept = append(kept, r)
 	}
 	d.rows[domain] = kept
