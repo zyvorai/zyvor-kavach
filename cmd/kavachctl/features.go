@@ -528,7 +528,7 @@ func topLevelCommands() []string {
 		"ueba", "watchlists", "ioc", "ioa", "exclusions", "rules", "overwatch", "dns", "modules", "world",
 		"discover", "spotlight", "exposure", "compliance", "attack", "metrics", "zero-trust", "sbom", "fim",
 		"persistence", "firewall", "browser", "casb", "cnapp", "ot", "ai", "audit", "report", "siem", "fusion",
-		"connectors", "cloud", "mobile", "risk", "trends", "export", "notes", "saved-searches", "alerts", "journal", "get", "watch", "doctor", "completion", "help",
+		"connectors", "cloud", "mobile", "risk", "trends", "export", "notes", "saved-searches", "alerts", "journal", "get", "watch", "doctor", "completion", "lab", "soc", "posture", "help",
 	}
 }
 
@@ -544,7 +544,7 @@ func completionCmd(out io.Writer, args []string) error {
   if [ "$COMP_CWORD" -eq 1 ]; then
     COMPREPLY=( $(compgen -W "%s" -- "$cur") )
   else
-    COMPREPLY=( $(compgen -W "--json --output --severity --host --rule --status --help --days --bucket --format --out --force --since --finding --min-severity --type --url --rule-contains --host-contains" -- "$cur") )
+    COMPREPLY=( $(compgen -W "--json --output --severity --host --rule --status --help --days --bucket --format --out --force --since --finding --min-severity --type --url --rule-contains --host-contains --framework --hours --explain --limit --events --id --name --interval --ttl-days --tlp --criticality --owner --tags" -- "$cur") )
   fi
 }
 complete -F _kavachctl kavachctl
@@ -557,7 +557,7 @@ _kavachctl() {
   if (( CURRENT == 2 )); then
     _describe 'command' cmds
   else
-    _arguments '--json[raw JSON]' '--output[table|json|yaml]:format:(table json yaml)' '--severity[severity filter]:sev:(low medium high critical)' '--host[host]' '--rule[rule]' '--status[status]' '--days[trend window]:days:(7 14 30)' '--bucket[bucket]:bucket:(hour day)' '--format[export format]:fmt:(csv json ndjson html)' '--out[output file]:file:_files' '--force[overwrite]' '--since[RFC3339]' '--finding[finding id]' '--min-severity[alert min severity]:sev:(low medium high critical)' '--type[alert type]:type:(webhook slack)' '--url[destination]' '--rule-contains[substring]' '--host-contains[substring]'
+    _arguments '--json[raw JSON]' '--output[table|json|yaml]:format:(table json yaml)' '--severity[severity filter]:sev:(low medium high critical)' '--host[host]' '--rule[rule]' '--status[status]' '--days[trend window]:days:(7 14 30)' '--bucket[bucket]:bucket:(hour day)' '--format[export format]:fmt:(csv json ndjson html)' '--out[output file]:file:_files' '--force[overwrite]' '--since[RFC3339]' '--finding[finding id]' '--min-severity[alert min severity]:sev:(low medium high critical)' '--type[alert type]:type:(webhook slack)' '--url[destination]' '--rule-contains[substring]' '--host-contains[substring]' '--framework[framework]:fw:(cis nist soc2 iso27001)' '--hours[window hours]' '--explain[score breakdown]' '--limit[row limit]' '--events[events file]:file:_files' '--id[id]' '--name[name]' '--interval[minutes]' '--ttl-days[days]' '--tlp[tlp]:tlp:(clear green amber red)' '--criticality[1-5]:n:(1 2 3 4 5)' '--owner[owner]' '--tags[tags]'
   fi
 }
 compdef _kavachctl kavachctl
@@ -575,6 +575,12 @@ compdef _kavachctl kavachctl
 		fmt.Fprintln(out, "complete -c kavachctl -l force")
 		fmt.Fprintln(out, "complete -c kavachctl -l min-severity -x -a 'low medium high critical'")
 		fmt.Fprintln(out, "complete -c kavachctl -l type -x -a 'webhook slack'")
+		fmt.Fprintln(out, "complete -c kavachctl -l framework -x")
+		fmt.Fprintln(out, "complete -c kavachctl -l hours -x")
+		fmt.Fprintln(out, "complete -c kavachctl -l explain -d 'score breakdown'")
+		fmt.Fprintln(out, "complete -c kavachctl -l events -r")
+		fmt.Fprintln(out, "complete -c kavachctl -l tlp -x -a 'clear green amber red'")
+		fmt.Fprintln(out, "complete -c kavachctl -l criticality -x -a '1 2 3 4 5'")
 	default:
 		return fmt.Errorf("unknown shell %q (bash|zsh|fish)", args[0])
 	}

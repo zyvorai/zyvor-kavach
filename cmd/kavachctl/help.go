@@ -74,6 +74,12 @@ func printHelp(w io.Writer) {
 
 	section("Intel / Identity")
 	row("intel actors|indicators", "Threat intel")
+	row("intel feeds list|status|add|rm|refresh", "Intel feeds (add: --name --url --format --interval --ttl-days --tlp)")
+	row("lab rules list|add FILE|rm ID", "Detection lab sandbox rules (FILE or - for stdin)")
+	row("lab validate FILE | test FILE --events FILE | backtest --rule FILE|--id ID", "Validate / test / backtest a rule (sandbox only)")
+	row("soc metrics [--days N] | shift-report [--hours N] [--out F] | storyline HOST", "SOC metrics, shift handoff, host storyline")
+	row("posture summary|vulns [--limit --explain]|assets list|add|rm|drift HOST|baseline [HOST]", "Posture priority, assets, drift")
+	row("compliance controls|evidence --framework F [--format --out --force] | cert-in-clock", "Control results, evidence pack, CERT-In clock")
 	row("identity events|entities", "Identity threats")
 	row("ueba", "UEBA scores")
 	row("watchlists", "Entity watchlists")
