@@ -44,7 +44,7 @@ type HuntSchedule struct {
 	LastRun     time.Time `json:"last_run"`
 }
 
-var huntPacks = []HuntPack{
+var baseHuntPacks = []HuntPack{
 	{"mimikatz-lsass", "Credential dumping tools", "T1003", "credential-access", []string{"mimikatz", "procdump", "lsass", "sekurlsa"}},
 	{"shadow-file", "Shadow/passwd access", "T1003.008", "credential-access", []string{"/etc/shadow", "/etc/passwd"}},
 	{"ssh-key-theft", "SSH private key access", "T1552.004", "credential-access", []string{"id_rsa", ".ssh/"}},
