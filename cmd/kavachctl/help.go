@@ -100,6 +100,13 @@ func printHelp(w io.Writer) {
 	row("device-control|yara|sigma|prevention", "Control surfaces")
 	row("mdr|bas|itsm|notify|rbac|retention", "Ops ledgers")
 
+	section("Identity / vulns / cases / hunts")
+	row("identity summary|indicators|risk|privileged|timeline USER", "ITDR")
+	row("vulns software|advisories|findings|exposure|top; sbom HOST", "Vulnerability management")
+	row("incidents correlated; case list|show|create|update|comment|close|export", "Incidents and cases")
+	row("hunt packs|run|run-all|schedules|schedule-add|schedule-rm|history|devices", "Hunt packs")
+	row("ransomware risk|host H; containers risk; lateral", "Ransomware / lateral")
+
 	section("Fleet health / governance / tuning")
 	row("fleet health|gaps|stale|host HOST", "Sensor health and coverage gaps")
 	row("prevalence executables|rare|first-seen", "Executable prevalence")
