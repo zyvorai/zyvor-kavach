@@ -265,6 +265,15 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   transform: scaleX(0);
   transition: transform 0.25s var(--ease-apple);
 }
+.navlinks {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  max-width: min(72vw, 860px);
+}
+.navlinks::-webkit-scrollbar { display: none; }
+.navlinks button { flex: 0 0 auto; font-size: 12px; padding: 6px 8px; }
 .navlinks button:hover { background: transparent; opacity: 1; color: var(--nav-link-active); }
 .navlinks button.active { background: transparent; color: var(--nav-link-active); opacity: 1; font-weight: 500; }
 .navlinks button.active::after { transform: scaleX(1); }
@@ -929,9 +938,18 @@ footer {
       <div class="navlinks" role="tablist" aria-label="Sections">
         <button type="button" data-page="overview" class="active" role="tab" aria-selected="true">Overview</button>
         <button type="button" data-page="detect" role="tab" aria-selected="false">Detect</button>
+        <button type="button" data-page="detections" role="tab" aria-selected="false">Detections</button>
+        <button type="button" data-page="hunt" role="tab" aria-selected="false">Hunt</button>
         <button type="button" data-page="timeline" role="tab" aria-selected="false">Timeline</button>
         <button type="button" data-page="incidents" role="tab" aria-selected="false">Incidents</button>
+        <button type="button" data-page="hosts" role="tab" aria-selected="false">Hosts</button>
         <button type="button" data-page="fleet" role="tab" aria-selected="false">Fleet</button>
+        <button type="button" data-page="intel" role="tab" aria-selected="false">Intel</button>
+        <button type="button" data-page="identity" role="tab" aria-selected="false">Identity</button>
+        <button type="button" data-page="spotlight" role="tab" aria-selected="false">Spotlight</button>
+        <button type="button" data-page="overwatch" role="tab" aria-selected="false">OverWatch</button>
+        <button type="button" data-page="response" role="tab" aria-selected="false">Response</button>
+        <button type="button" data-page="modules" role="tab" aria-selected="false">Modules</button>
         <button type="button" data-page="integrations" role="tab" aria-selected="false">Integrations</button>
       </div>
       <div class="nav-actions">
@@ -966,6 +984,8 @@ footer {
         <div><span>Findings</span><b id="m-findings" data-count="0">—</b></div>
         <div><span>Fleet online</span><b id="m-online" data-count="0">—</b></div>
         <div><span>High severity</span><b id="m-high" data-count="0">—</b></div>
+        <div><span>OverWatch</span><b id="m-ow" data-count="0">—</b></div>
+        <div><span>Critical CVEs</span><b id="m-cve" data-count="0">—</b></div>
       </div>
       <div class="apple-story-stack apple-story-stack--after-metrics">
         <article class="chapter">
@@ -1112,6 +1132,222 @@ footer {
       </div>
     </section>
 
+    <section id="page-detections" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Insight</p>
+        <h1>Detections</h1>
+        <p class="lede">Falcon-style detections with MITRE ATT&amp;CK mapping and triage.</p>
+      </header>
+      <div class="toolbar-pill">
+        <input class="input-field" id="detections-filter" type="search" placeholder="Filter detections" aria-label="Filter detections" autocomplete="off">
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Severity</th><th>Status</th><th>Rule</th><th>MITRE</th><th>Host</th><th>Score</th><th>Time</th></tr></thead>
+          <tbody id="detections-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="page-hunt" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Hunt</p>
+        <h1>Threat hunting</h1>
+        <p class="lede">FQL-lite queries across findings, processes, and network events.</p>
+      </header>
+      <div class="work-panel">
+        <h3>Query</h3>
+        <p class="hint">Example: <span class="mono">host:demo severity:high</span> or <span class="mono">exe:bash cmdline:curl</span></p>
+        <div class="work-grid">
+          <div class="field field--wide">
+            <label for="hunt-query">Query</label>
+            <input class="input-field" id="hunt-query" type="text" placeholder="host: demo rule: ransomware" autocomplete="off">
+          </div>
+        </div>
+        <div class="work-actions">
+          <button type="button" class="primary" id="hunt-run">Run hunt</button>
+        </div>
+        <p class="work-msg" id="hunt-msg" role="status"></p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Type</th><th>Host</th><th>Detail</th><th>Time</th></tr></thead>
+          <tbody id="hunt-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="page-hosts" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Host management</p>
+        <h1>Endpoints</h1>
+        <p class="lede">Host inventory and containment requests (ledger only — never enforced).</p>
+      </header>
+      <div class="work-panel">
+        <h3>Containment request</h3>
+        <p class="hint">Records an analyst request. Kavach never isolates the host.</p>
+        <div class="work-grid">
+          <div class="field">
+            <label for="contain-host">Host</label>
+            <input class="input-field" id="contain-host" type="text" placeholder="hostname" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="contain-action">Action</label>
+            <select class="select-field" id="contain-action">
+              <option value="contain_request">contain_request</option>
+              <option value="lift_request">lift_request</option>
+            </select>
+          </div>
+          <div class="field field--wide">
+            <label for="contain-note">Note</label>
+            <input class="input-field" id="contain-note" type="text" placeholder="Optional" autocomplete="off">
+          </div>
+        </div>
+        <div class="work-actions">
+          <button type="button" class="primary" id="contain-btn">Record request</button>
+        </div>
+        <p class="work-msg" id="contain-msg" role="status"></p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Host</th><th>Online</th><th>Findings</th><th>Containment requested</th><th>Last activity</th></tr></thead>
+          <tbody id="hosts-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="page-intel" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Adversary intel</p>
+        <h1>Threat intelligence</h1>
+        <p class="lede">Actor profiles, IOC intel, and custom IOC management.</p>
+      </header>
+      <p class="table-caption">Actors</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Motivation</th><th>TTPs</th><th>Description</th></tr></thead>
+          <tbody id="actors-rows"></tbody>
+        </table>
+      </div>
+      <p class="table-caption table-caption--spaced">IOCs</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Type</th><th>Value</th><th>Severity</th><th>Action</th><th>Source</th></tr></thead>
+          <tbody id="ioc-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="page-identity" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Identity</p>
+        <h1>Identity protection</h1>
+        <p class="lede">Identity anomalies, entity risk, and UEBA scores.</p>
+      </header>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Severity</th><th>User</th><th>Host</th><th>Rule</th><th>Detail</th><th>Time</th></tr></thead>
+          <tbody id="identity-rows"></tbody>
+        </table>
+      </div>
+      <p class="table-caption table-caption--spaced">Entities</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>User</th><th>Risk</th><th>Privileged</th><th>Signals</th></tr></thead>
+          <tbody id="identity-entity-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="page-spotlight" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Spotlight</p>
+        <h1>Vulnerabilities</h1>
+        <p class="lede">CVE posture with ExPRT-style prioritization seeds.</p>
+      </header>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Severity</th><th>CVE</th><th>Host</th><th>Product</th><th>ExPRT</th><th>Exploited</th></tr></thead>
+          <tbody id="spotlight-rows"></tbody>
+        </table>
+      </div>
+      <p class="table-caption table-caption--spaced">Discover assets</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Hostname</th><th>Platform</th><th>Sensor</th><th>Online</th><th>Tags</th></tr></thead>
+          <tbody id="discover-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="page-overwatch" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">OverWatch</p>
+        <h1>Managed hunting</h1>
+        <p class="lede">Proactive threat hunting alerts from the OverWatch feed.</p>
+      </header>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Severity</th><th>Title</th><th>Host</th><th>Actor</th><th>Technique</th><th>Status</th></tr></thead>
+          <tbody id="overwatch-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="page-response" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Response</p>
+        <h1>RTR &amp; Fusion</h1>
+        <p class="lede">Read-only Real Time Response diagnostics and SOAR playbook ledger.</p>
+      </header>
+      <div class="work-panel">
+        <h3>RTR session</h3>
+        <p class="hint">Allowed commands: ps, netstat, findings, sensor, help — store-backed only.</p>
+        <div class="work-grid">
+          <div class="field">
+            <label for="rtr-host">Host</label>
+            <input class="input-field" id="rtr-host" type="text" placeholder="hostname" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="rtr-cmd">Command</label>
+            <select class="select-field" id="rtr-cmd">
+              <option value="findings">findings</option>
+              <option value="ps">ps</option>
+              <option value="netstat">netstat</option>
+              <option value="sensor">sensor</option>
+              <option value="help">help</option>
+            </select>
+          </div>
+        </div>
+        <div class="work-actions">
+          <button type="button" class="primary" id="rtr-run">Open &amp; execute</button>
+        </div>
+        <pre class="token-box" id="rtr-out" style="white-space:pre-wrap;max-height:240px;overflow:auto" hidden></pre>
+        <p class="work-msg" id="rtr-msg" role="status"></p>
+      </div>
+      <p class="table-caption">Fusion playbooks</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Trigger</th><th>Actions</th><th>Enabled</th></tr></thead>
+          <tbody id="fusion-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="page-modules" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Platform</p>
+        <h1>Falcon modules</h1>
+        <p class="lede">CrowdStrike Falcon capability map — observation-only where response would enforce.</p>
+      </header>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Module</th><th>CrowdStrike</th><th>Status</th><th>Note</th></tr></thead>
+          <tbody id="modules-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
     <section id="page-integrations" class="page" hidden>
       <header class="page-hero">
         <p class="apple-eyebrow">Integrations</p>
@@ -1201,10 +1437,10 @@ footer {
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'timeline', 'incidents', 'fleet', 'integrations'];
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'modules', 'integrations'];
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
-  let cache = { findings: [], incidents: [], fleet: [], process: [], network: [] };
+  let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
   let scoresById = {};
   let scoresAvailable = false;
   let selectedFindingId = '';
@@ -1668,6 +1904,184 @@ footer {
     }
   }
 
+  function renderDetections(items) {
+    cache.detections = Array.isArray(items) ? items : [];
+    const q = ($('detections-filter').value || '').trim();
+    const tbody = $('detections-rows');
+    tbody.innerHTML = '';
+    const rows = cache.detections.filter((d) => matchFilter([d.rule, d.host, d.technique_id, d.status, d.severity].join(' '), q));
+    if (!rows.length) {
+      listEmpty(tbody, 7, 'No detections', 'Findings become detections with MITRE mapping once agents report.', '', null);
+      return;
+    }
+    rows.forEach((d) => {
+      tableRow(tbody, [
+        severityTag(d.severity),
+        statusTag(d.status || 'new'),
+        d.rule || '—',
+        (d.technique_id || '') + ' ' + (d.technique || ''),
+        d.host || '—',
+        String(d.score != null ? d.score : '—'),
+        fmtTime(d.time),
+      ]);
+    });
+  }
+
+  function renderHosts(items) {
+    cache.hosts = Array.isArray(items) ? items : [];
+    const tbody = $('hosts-rows');
+    tbody.innerHTML = '';
+    if (!cache.hosts.length) {
+      listEmpty(tbody, 5, 'No hosts', 'Hosts appear from findings and enrolled agents.', '', null);
+      return;
+    }
+    cache.hosts.forEach((h) => {
+      tableRow(tbody, [
+        h.hostname || '—',
+        h.online ? statusTag('online') : statusTag('offline'),
+        String(h.findings != null ? h.findings : 0),
+        h.containment_requested ? 'requested' : '—',
+        fmtTime(h.last_activity || h.last_seen),
+      ]);
+    });
+  }
+
+  function renderActors(items) {
+    const tbody = $('actors-rows');
+    tbody.innerHTML = '';
+    (items || []).forEach((a) => {
+      tableRow(tbody, [a.name || '—', a.motivation || '—', (a.ttps || []).join(', '), a.description || '—']);
+    });
+  }
+
+  function renderIOCs(items) {
+    const tbody = $('ioc-rows');
+    tbody.innerHTML = '';
+    (items || []).forEach((i) => {
+      tableRow(tbody, [i.type || '—', i.value || '—', severityTag(i.severity), i.action || 'detect_only', i.source || '—']);
+    });
+  }
+
+  function renderIdentity(events, entities) {
+    const tbody = $('identity-rows');
+    tbody.innerHTML = '';
+    (events || []).forEach((e) => {
+      tableRow(tbody, [severityTag(e.severity), e.user || '—', e.host || '—', e.rule || '—', e.detail || '—', fmtTime(e.time)]);
+    });
+    const et = $('identity-entity-rows');
+    et.innerHTML = '';
+    (entities || []).forEach((e) => {
+      tableRow(et, [e.user || '—', String(e.risk_score != null ? e.risk_score : '—'), e.privileged ? 'yes' : 'no', (e.signals || []).join(', ')]);
+    });
+  }
+
+  function renderSpotlight(vulns, assets) {
+    const tbody = $('spotlight-rows');
+    tbody.innerHTML = '';
+    (vulns || []).forEach((v) => {
+      tableRow(tbody, [severityTag(v.severity), v.cve || '—', v.host || '—', v.product || '—', String(v.exprt_score != null ? v.exprt_score : '—'), v.exploited_in_wild ? 'yes' : 'no']);
+    });
+    const at = $('discover-rows');
+    at.innerHTML = '';
+    (assets || []).forEach((a) => {
+      tableRow(at, [a.hostname || '—', a.platform || '—', a.sensor || '—', a.online ? 'online' : 'offline', (a.tags || []).join(', ')]);
+    });
+  }
+
+  function renderOverWatch(items) {
+    const tbody = $('overwatch-rows');
+    tbody.innerHTML = '';
+    (items || []).forEach((a) => {
+      tableRow(tbody, [severityTag(a.severity), a.title || '—', a.host || '—', a.actor_hint || '—', a.technique_id || '—', statusTag(a.status || 'open')]);
+    });
+  }
+
+  function renderFusion(items) {
+    const tbody = $('fusion-rows');
+    tbody.innerHTML = '';
+    (items || []).forEach((p) => {
+      tableRow(tbody, [p.name || '—', p.trigger || '—', (p.actions || []).join(', '), p.enabled ? 'yes' : 'no']);
+    });
+  }
+
+  function renderModules(items) {
+    const tbody = $('modules-rows');
+    tbody.innerHTML = '';
+    (items || []).forEach((m) => {
+      tableRow(tbody, [m.name || '—', m.crowdstrike_analogue || '—', statusTag(m.status || 'active'), m.note || '—']);
+    });
+  }
+
+  async function runHunt() {
+    const q = ($('hunt-query').value || '').trim();
+    $('hunt-msg').className = 'work-msg';
+    $('hunt-msg').textContent = 'Running…';
+    try {
+      const res = await request('/v1/hunt/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: q }),
+      });
+      const tbody = $('hunt-rows');
+      tbody.innerHTML = '';
+      (res.findings || []).forEach((f) => tableRow(tbody, ['finding', f.host, f.rule + ' — ' + f.description, fmtTime(f.time)]));
+      (res.processes || []).forEach((e) => tableRow(tbody, ['process', e.host, (e.executable || '') + ' ' + (e.command || ''), fmtTime(e.time)]));
+      (res.network || []).forEach((n) => tableRow(tbody, ['network', n.host, n.destination || '', fmtTime(n.time)]));
+      if (!tbody.children.length) listEmpty(tbody, 4, 'No hunt hits', 'Try a broader FQL-lite query.', '', null);
+      $('hunt-msg').className = 'work-msg is-ok';
+      $('hunt-msg').textContent = 'Done';
+    } catch (e) {
+      $('hunt-msg').className = 'work-msg is-error';
+      $('hunt-msg').textContent = e.message || 'Hunt failed';
+    }
+  }
+
+  async function requestContainment() {
+    try {
+      await request('/v1/containment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          host: ($('contain-host').value || '').trim(),
+          action: $('contain-action').value,
+          note: ($('contain-note').value || '').trim(),
+          actor: 'console',
+        }),
+      });
+      $('contain-msg').className = 'work-msg is-ok';
+      $('contain-msg').textContent = 'Request recorded (not enforced)';
+      const hosts = await request('/v1/hosts');
+      renderHosts(hosts);
+    } catch (e) {
+      $('contain-msg').className = 'work-msg is-error';
+      $('contain-msg').textContent = e.message || 'Failed';
+    }
+  }
+
+  async function runRTR() {
+    const host = ($('rtr-host').value || '').trim();
+    const command = $('rtr-cmd').value;
+    try {
+      const sess = await request('/v1/rtr/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ host, actor: 'console' }),
+      });
+      const out = await request('/v1/rtr/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sess.id, command }),
+      });
+      $('rtr-out').hidden = false;
+      $('rtr-out').textContent = out.output || JSON.stringify(out, null, 2);
+      $('rtr-msg').className = 'work-msg is-ok';
+      $('rtr-msg').textContent = 'Read-only diagnostic complete';
+    } catch (e) {
+      $('rtr-msg').className = 'work-msg is-error';
+      $('rtr-msg').textContent = e.message || 'RTR failed';
+    }
+  }
+
   function renderIntegrations(siem, sensor) {
     const on = !!(siem && siem.enabled);
     $('siem-enabled').textContent = on ? 'Yes' : 'No';
@@ -1841,11 +2255,36 @@ footer {
         renderTimeline([], []);
       }
 
-      const [siem, sensor] = await Promise.all([
+      const [siem, sensor, detections, hosts, actors, iocs, idEvents, idEntities, vulns, assets, ow, fusion, modules, report] = await Promise.all([
         request('/v1/siem/status'),
         request('/v1/sensor'),
+        request('/v1/detections'),
+        request('/v1/hosts'),
+        request('/v1/intel/actors'),
+        request('/v1/ioc'),
+        request('/v1/identity/events'),
+        request('/v1/identity/entities'),
+        request('/v1/spotlight/vulnerabilities'),
+        request('/v1/discover/assets'),
+        request('/v1/overwatch/alerts'),
+        request('/v1/fusion/playbooks'),
+        request('/v1/modules'),
+        request('/v1/reports/summary'),
       ]);
       renderIntegrations(siem || {}, sensor || {});
+      renderDetections(detections);
+      renderHosts(hosts);
+      renderActors(actors);
+      renderIOCs(iocs);
+      renderIdentity(idEvents, idEntities);
+      renderSpotlight(vulns, assets);
+      renderOverWatch(ow);
+      renderFusion(fusion);
+      renderModules(modules);
+      if (report) {
+        countUp($('m-ow'), report.overwatch_open || 0);
+        countUp($('m-cve'), report.critical_cves || 0);
+      }
     } catch (e) {
       if (e.message === 'HTTP 401') {
         $('app').hidden = true;
@@ -1876,8 +2315,12 @@ footer {
     location.reload();
   });
   $('detect-filter').addEventListener('input', () => renderFindings(cache.findings));
+  $('detections-filter').addEventListener('input', () => renderDetections(cache.detections));
   $('incident-filter').addEventListener('input', () => renderIncidents(cache.incidents));
   $('fleet-filter').addEventListener('input', () => renderFleet(cache.fleet));
+  $('hunt-run').addEventListener('click', runHunt);
+  $('contain-btn').addEventListener('click', requestContainment);
+  $('rtr-run').addEventListener('click', runRTR);
   $('incident-transition').addEventListener('click', transitionIncident);
   $('incident-finding').addEventListener('change', () => {
     selectedFindingId = $('incident-finding').value || '';

@@ -39,18 +39,28 @@ See [docs/deploy-remote.md](docs/deploy-remote.md).
 
 Honest about what ships today:
 
-| Capability | Status |
-|---|---|
-| EDR observation (process, file-activity signals, fleet heartbeats) | Shipping — observation only |
-| XDR correlation with Netra network events | Bridge / poller; normalized ingest |
-| Ransomware signals (mass file-activity) | Investigative signal, not prevention |
-| eBPF exec sensor | Scaffold (`bpf/`); loader path optional |
-| SIEM export | JSONL / API findings for downstream sinks |
-| AI assistive scoring | Assistive ranking of findings — not autonomous response |
-| Agent ↔ controller mTLS | Opt-in (`docs/agent-mtls.md`) |
-| Gateway API / Envoy front door | Opt-in (`docs/envoy-gateway.md`) |
+| Capability | CrowdStrike analogue | Status |
+|---|---|---|
+| Insight detections + MITRE | Falcon Insight XDR | Shipping — observation only |
+| Prevent IOA/IOC + policies | Falcon Prevent | Detect-only (never quarantine) |
+| Device Control / Firewall inventory | Device Control / Firewall Mgmt | Visibility |
+| Discover assets & apps | Falcon Discover | Shipping |
+| Spotlight CVEs | Falcon Spotlight | Shipping (inventory + seeds) |
+| OverWatch hunting alerts | Falcon OverWatch | Shipping (feed API) |
+| Adversary intel / actors | Falcon X | Shipping |
+| Identity + UEBA | Falcon Identity | Shipping |
+| Fusion playbooks / cases | Falcon Fusion / NG-SIEM | Ledger-only SOAR |
+| RTR diagnostics | Falcon RTR | Read-only store-backed commands |
+| Host containment requests | Host Management | Request ledger — never enforced |
+| Hunt (FQL-lite) + threat graph | Falcon Hunt / Threat Graph | Shipping |
+| Charlotte-lite assist | Charlotte AI | Assistive triage |
+| Cloud / Mobile | Falcon Cloud / Mobile | Preview stubs |
+| XDR via Netra | Insight XDR network | Bridge / poller |
+| SIEM export + connectors | Next-Gen SIEM | Webhook / syslog / NDJSON |
+| eBPF exec sensor | Sensor | Scaffold (`bpf/`) |
+| Agent mTLS / Envoy Gateway | Platform | Opt-in docs |
 
-No automatic containment, process kill, or malware prevention is claimed.
+No automatic containment, process kill, or malware prevention is claimed. See `GET /v1/modules`.
 
 ### Lab demo
 

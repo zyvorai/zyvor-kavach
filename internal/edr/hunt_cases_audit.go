@@ -1,0 +1,459 @@
+// SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+package edr
+
+import (
+	"encoding/json"
+	"net/http"
+	"strings"
+	"sync"
+	"time"
+)
+
+type Case struct {
+	ID          string    `json:"id"`
+	Title       string    `json:"title"`
+	Severity    string    `json:"severity"`
+	Status      string    `json:"status"`
+	Assignee    string    `json:"assignee,omitempty"`
+	FindingIDs  []string  `json:"finding_ids,omitempty"`
+	DetectionIDs []string `json:"detection_ids,omitempty"`
+	Tags        []string  `json:"tags,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	Notes       string    `json:"notes,omitempty"`
+}
+
+type GraphNode struct {
+	ID    string `json:"id"`
+	Type  string `json:"type"`
+	Label string `json:"label"`
+}
+
+type GraphEdge struct {
+	From  string `json:"from"`
+	To    string `json:"to"`
+	Rel   string `json:"rel"`
+}
+
+type AuditEntry struct {
+	ID     string    `json:"id"`
+	Time   time.Time `json:"time"`
+	Action string    `json:"action"`
+	Detail string    `json:"detail"`
+}
+
+type Connector struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Category string `json:"category"`
+	Status   string `json:"status"`
+	Endpoint string `json:"endpoint,omitempty"`
+}
+
+var (
+	caseMu   sync.Mutex
+	cases    []Case
+	auditMu  sync.Mutex
+	auditLog []AuditEntry
+	connList = []Connector{
+		{ID: "conn-netra", Name: "Netra Network XDR", Category: "network", Status: "available", Endpoint: "/v1/network-events"},
+		{ID: "conn-siem", Name: "SIEM Webhook", Category: "siem", Status: "optional"},
+		{ID: "conn-syslog", Name: "Syslog", Category: "siem", Status: "optional"},
+		{ID: "conn-llm", Name: "Charlotte LLM", Category: "ai", Status: "optional"},
+		{ID: "conn-okta", Name: "Identity (Okta/Entra)", Category: "identity", Status: "preview"},
+		{ID: "conn-cloud", Name: "Cloud CSPM", Category: "cloud", Status: "preview"},
+	}
+)
+
+func AppendAudit(_token, action, detail string) {
+	auditMu.Lock()
+	defer auditMu.Unlock()
+	auditLog = append(auditLog, AuditEntry{
+		ID: "aud-" + time.Now().UTC().Format("20060102150405.000000"),
+		Time: time.Now().UTC(), Action: action, Detail: detail,
+	})
+	if len(auditLog) > 5000 {
+		auditLog = auditLog[len(auditLog)-5000:]
+	}
+}
+
+func RegisterCases(mux *http.ServeMux, token string, store *Store) {
+	mux.HandleFunc("GET /v1/cases", func(w http.ResponseWriter, r *http.Request) {
+		if !requireAuth(w, r, token) {
+			return
+		}
+		caseMu.Lock()
+		out := append([]Case{}, cases...)
+		caseMu.Unlock()
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(out)
+	})
+	mux.HandleFunc("POST /v1/cases", func(w http.ResponseWriter, r *http.Request) {
+		if _, ok := requireAdminOrSession(w, r, token); !ok {
+			return
+		}
+		r.Body = http.MaxBytesReader(w, r.Body, 16384)
+		defer r.Body.Close()
+		var c Case
+		if json.NewDecoder(r.Body).Decode(&c) != nil || c.Title == "" {
+			http.Error(w, "invalid", 400)
+			return
+		}
+		now := time.Now().UTC()
+		if c.ID == "" {
+			c.ID = "case-" + now.Format("20060102150405")
+		}
+		if c.Status == "" {
+			c.Status = "open"
+		}
+		if c.Severity == "" {
+			c.Severity = "medium"
+		}
+		c.CreatedAt = now
+		c.UpdatedAt = now
+		caseMu.Lock()
+		cases = append(cases, c)
+		caseMu.Unlock()
+		AppendAudit(token, "case.create", c.Title)
+		_ = store
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(c)
+	})
+	mux.HandleFunc("POST /v1/cases/update", func(w http.ResponseWriter, r *http.Request) {
+		if _, ok := requireAdminOrSession(w, r, token); !ok {
+			return
+		}
+		r.Body = http.MaxBytesReader(w, r.Body, 16384)
+		defer r.Body.Close()
+		var body struct {
+			ID       string `json:"id"`
+			Status   string `json:"status"`
+			Assignee string `json:"assignee"`
+			Notes    string `json:"notes"`
+		}
+		if json.NewDecoder(r.Body).Decode(&body) != nil || body.ID == "" {
+			http.Error(w, "invalid", 400)
+			return
+		}
+		caseMu.Lock()
+		defer caseMu.Unlock()
+		for i := range cases {
+			if cases[i].ID == body.ID {
+				if body.Status != "" {
+					cases[i].Status = body.Status
+				}
+				if body.Assignee != "" {
+					cases[i].Assignee = body.Assignee
+				}
+				if body.Notes != "" {
+					cases[i].Notes = body.Notes
+				}
+				cases[i].UpdatedAt = time.Now().UTC()
+				AppendAudit(token, "case.update", body.ID)
+				w.Header().Set("Content-Type", "application/json")
+				_ = json.NewEncoder(w).Encode(cases[i])
+				return
+			}
+		}
+		http.Error(w, "not found", 404)
+	})
+}
+
+func RegisterHunt(mux *http.ServeMux, token string, store *Store) {
+	mux.HandleFunc("POST /v1/hunt/query", func(w http.ResponseWriter, r *http.Request) {
+		if !requireAuth(w, r, token) {
+			return
+		}
+		r.Body = http.MaxBytesReader(w, r.Body, 8192)
+		defer r.Body.Close()
+		var body struct {
+			Query string `json:"query"` // simple key:value filters, Falcon FQL-lite
+		}
+		if json.NewDecoder(r.Body).Decode(&body) != nil {
+			http.Error(w, "invalid", 400)
+			return
+		}
+		filters := parseHuntQuery(body.Query)
+		findings := []Finding{}
+		for _, f := range store.List() {
+			if matchHunt(f, filters) {
+				findings = append(findings, f)
+			}
+		}
+		store.mu.Lock()
+		procs := []Event{}
+		for _, e := range store.recentEvents {
+			if matchHuntEvent(e, filters) {
+				procs = append(procs, e)
+			}
+		}
+		nets := []NetworkEvent{}
+		for _, n := range store.networkEvents {
+			if hostFilter, ok := filters["host"]; ok && !strings.Contains(strings.ToLower(n.Host), hostFilter) {
+				continue
+			}
+			nets = append(nets, n)
+		}
+		store.mu.Unlock()
+		AppendAudit(token, "hunt.query", body.Query)
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"query": body.Query, "findings": findings, "processes": procs, "network": nets,
+			"note": "FQL-lite: host:, rule:, severity:, exe: filters",
+		})
+	})
+}
+
+func parseHuntQuery(q string) map[string]string {
+	out := map[string]string{}
+	for _, part := range strings.Fields(q) {
+		kv := strings.SplitN(part, ":", 2)
+		if len(kv) != 2 {
+			continue
+		}
+		out[strings.ToLower(kv[0])] = strings.ToLower(strings.Trim(kv[1], `"'`))
+	}
+	return out
+}
+
+func matchHunt(f Finding, filters map[string]string) bool {
+	if v, ok := filters["host"]; ok && !strings.Contains(strings.ToLower(f.Host), v) {
+		return false
+	}
+	if v, ok := filters["rule"]; ok && !strings.Contains(strings.ToLower(f.Rule), v) {
+		return false
+	}
+	if v, ok := filters["severity"]; ok && strings.ToLower(f.Severity) != v {
+		return false
+	}
+	if v, ok := filters["exe"]; ok && !strings.Contains(strings.ToLower(f.Evidence.Executable), v) {
+		return false
+	}
+	return true
+}
+
+func matchHuntEvent(e Event, filters map[string]string) bool {
+	if v, ok := filters["host"]; ok && !strings.Contains(strings.ToLower(e.Host), v) {
+		return false
+	}
+	if v, ok := filters["exe"]; ok && !strings.Contains(strings.ToLower(e.Executable), v) {
+		return false
+	}
+	if v, ok := filters["cmdline"]; ok && !strings.Contains(strings.ToLower(e.Command), v) {
+		return false
+	}
+	return len(filters) == 0 || filters["host"] != "" || filters["exe"] != "" || filters["cmdline"] != ""
+}
+
+func RegisterThreatGraph(mux *http.ServeMux, token string, store *Store) {
+	mux.HandleFunc("GET /v1/threat-graph", func(w http.ResponseWriter, r *http.Request) {
+		if !requireAuth(w, r, token) {
+			return
+		}
+		nodes := map[string]GraphNode{}
+		edges := []GraphEdge{}
+		add := func(id, typ, label string) {
+			if _, ok := nodes[id]; !ok {
+				nodes[id] = GraphNode{ID: id, Type: typ, Label: label}
+			}
+		}
+		for _, f := range store.List() {
+			hid := "host:" + f.Host
+			fid := "finding:" + f.ID
+			pid := "proc:" + f.Host + ":" + f.Evidence.Executable
+			add(hid, "host", f.Host)
+			add(fid, "finding", f.Rule)
+			add(pid, "process", f.Evidence.Executable)
+			edges = append(edges, GraphEdge{From: hid, To: fid, Rel: "triggered"})
+			edges = append(edges, GraphEdge{From: fid, To: pid, Rel: "evidence"})
+			if f.Evidence.ParentExe != "" {
+				pp := "proc:" + f.Host + ":" + f.Evidence.ParentExe
+				add(pp, "process", f.Evidence.ParentExe)
+				edges = append(edges, GraphEdge{From: pp, To: pid, Rel: "parent_of"})
+			}
+			if f.Destination != "" {
+				d := "net:" + f.Destination
+				add(d, "network", f.Destination)
+				edges = append(edges, GraphEdge{From: pid, To: d, Rel: "connected"})
+			}
+		}
+		nodeList := make([]GraphNode, 0, len(nodes))
+		for _, n := range nodes {
+			nodeList = append(nodeList, n)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"nodes": nodeList, "edges": edges})
+	})
+}
+
+func RegisterAudit(mux *http.ServeMux, token string) {
+	mux.HandleFunc("GET /v1/audit", func(w http.ResponseWriter, r *http.Request) {
+		if !requireAuth(w, r, token) {
+			return
+		}
+		auditMu.Lock()
+		out := append([]AuditEntry{}, auditLog...)
+		auditMu.Unlock()
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(out)
+	})
+}
+
+func RegisterReports(mux *http.ServeMux, token string, store *Store, registry *CredentialRegistry) {
+	mux.HandleFunc("GET /v1/reports/summary", func(w http.ResponseWriter, r *http.Request) {
+		if !requireAuth(w, r, token) {
+			return
+		}
+		findings := store.List()
+		sev := map[string]int{}
+		for _, f := range findings {
+			sev[f.Severity]++
+		}
+		online := 0
+		if registry != nil {
+			for _, st := range registry.Status(time.Now(), 90*time.Second) {
+				if st.State == "online" {
+					online++
+				}
+			}
+		}
+		owMu.Lock()
+		owOpen := 0
+		for _, a := range owAlerts {
+			if a.Status == "open" {
+				owOpen++
+			}
+		}
+		owMu.Unlock()
+		vulnMu.Lock()
+		critV := 0
+		for _, v := range vulns {
+			if v.Severity == "critical" {
+				critV++
+			}
+		}
+		vulnMu.Unlock()
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"findings": len(findings), "severities": sev, "fleet_online": online,
+			"overwatch_open": owOpen, "critical_cves": critV,
+			"detections": len(findings), "modules": len(FalconModules()),
+			"product": "kavach", "parity": "crowdstrike-falcon",
+		})
+	})
+}
+
+func RegisterConnectors(mux *http.ServeMux, token string) {
+	mux.HandleFunc("GET /v1/connectors", func(w http.ResponseWriter, r *http.Request) {
+		if !requireAuth(w, r, token) {
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(connList)
+	})
+}
+
+func RegisterCloudMobile(mux *http.ServeMux, token string) {
+	mux.HandleFunc("GET /v1/cloud/posture", func(w http.ResponseWriter, r *http.Request) {
+		if !requireAuth(w, r, token) {
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode([]map[string]any{
+			{"id": "cspm-1", "provider": "aws", "control": "public-s3", "status": "pass", "note": "seed"},
+			{"id": "cspm-2", "provider": "aws", "control": "root-mfa", "status": "fail", "note": "seed"},
+			{"id": "cspm-3", "provider": "k8s", "control": "privileged-pods", "status": "warn", "note": "seed"},
+		})
+	})
+	mux.HandleFunc("GET /v1/mobile/devices", func(w http.ResponseWriter, r *http.Request) {
+		if !requireAuth(w, r, token) {
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode([]map[string]any{
+			{"id": "mob-1", "platform": "ios", "owner": "demo", "status": "enrolled", "note": "preview seed"},
+			{"id": "mob-2", "platform": "android", "owner": "demo", "status": "enrolled", "note": "preview seed"},
+		})
+	})
+}
+
+func RegisterDeviceControl(mux *http.ServeMux, token string, store *Store) {
+	mux.HandleFunc("GET /v1/device-control", func(w http.ResponseWriter, r *http.Request) {
+		if !requireAuth(w, r, token) {
+			return
+		}
+		_ = store
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode([]map[string]any{
+			{"id": "usb-1", "host": "demo-host", "vendor": "Generic", "product": "USB Storage", "serial": "SEED001", "action": "observed", "time": time.Now().UTC()},
+			{"id": "usb-2", "host": "demo-host", "vendor": "YubiKey", "product": "OTP+FIDO", "serial": "SEED002", "action": "allowed", "time": time.Now().UTC()},
+		})
+	})
+	mux.HandleFunc("POST /v1/device-control", func(w http.ResponseWriter, r *http.Request) {
+		if !requireAuth(w, r, token) {
+			return
+		}
+		r.Body = http.MaxBytesReader(w, r.Body, 8192)
+		defer r.Body.Close()
+		var body map[string]any
+		if json.NewDecoder(r.Body).Decode(&body) != nil {
+			http.Error(w, "invalid", 400)
+			return
+		}
+		AppendAudit(token, "device-control.event", "ingest")
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "note": "observed only"})
+	})
+}
+
+func RegisterFirewall(mux *http.ServeMux, token string) {
+	mux.HandleFunc("GET /v1/firewall/rules", func(w http.ResponseWriter, r *http.Request) {
+		if !requireAuth(w, r, token) {
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode([]map[string]any{
+			{"id": "fw-1", "name": "allow-dns", "direction": "out", "proto": "udp", "port": 53, "action": "allow", "enabled": true},
+			{"id": "fw-2", "name": "block-smb-wan", "direction": "in", "proto": "tcp", "port": 445, "action": "block", "enabled": true},
+			{"id": "fw-3", "name": "allow-https", "direction": "out", "proto": "tcp", "port": 443, "action": "allow", "enabled": true},
+		})
+	})
+}
+
+func RegisterCharlotteAssist(mux *http.ServeMux, token string, store *Store) {
+	mux.HandleFunc("POST /v1/ai/assist", func(w http.ResponseWriter, r *http.Request) {
+		if !requireAuth(w, r, token) {
+			return
+		}
+		r.Body = http.MaxBytesReader(w, r.Body, 8192)
+		defer r.Body.Close()
+		var body struct {
+			Question  string `json:"question"`
+			FindingID string `json:"finding_id"`
+		}
+		if json.NewDecoder(r.Body).Decode(&body) != nil {
+			http.Error(w, "invalid", 400)
+			return
+		}
+		answer := "Review process tree, Netra correlation, and MITRE mapping. Containment remains a request ledger only."
+		if body.FindingID != "" {
+			for _, f := range store.List() {
+				if f.ID == body.FindingID {
+					d := MapDetection(f)
+					rs := ScoreFinding(f)
+					answer = "Finding " + f.Rule + " on " + f.Host + " maps to " + d.TechniqueID + " (" + d.Technique + "). Risk " + rs.Level + ". " + answer
+					if rs.LLMNote != "" {
+						answer = rs.LLMNote
+					}
+					break
+				}
+			}
+		}
+		if body.Question != "" {
+			answer = "Q: " + body.Question + " — " + answer
+		}
+		AppendAudit(token, "ai.assist", body.FindingID)
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"answer": answer, "assistive": true, "product": "charlotte-lite"})
+	})
+}

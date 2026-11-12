@@ -290,6 +290,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	DefaultSIEM = siem
 	siem.RegisterRoutes(mux, token, store)
 	RegisterAIRoutes(mux, token, store)
+	RegisterFalconPlatform(mux, token, store, registry)
 	mux.HandleFunc("GET /v1/sensor", func(w http.ResponseWriter, r *http.Request) {
 		got := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 		if subtle.ConstantTimeCompare([]byte(got), []byte(token)) != 1 && !validSession(r, token) {

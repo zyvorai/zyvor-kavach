@@ -208,6 +208,192 @@ paths:
       responses:
         "200":
           description: Status JSON
+/v1/modules:
+    get:
+      summary: CrowdStrike Falcon module capability map
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Module list}}
+  /v1/detections:
+    get:
+      summary: Falcon-style detections with MITRE mapping
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Detections}}
+  /v1/detections/triage:
+    post:
+      summary: Triage a detection
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Updated}}
+  /v1/ioc:
+    get:
+      summary: IOC management list
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: IOCs}}
+    post:
+      summary: Create detect-only IOC
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Created}}
+  /v1/ioa:
+    get:
+      summary: Custom IOA rules
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: IOAs}}
+  /v1/prevention/policies:
+    get:
+      summary: Prevention policies (detect-only)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Policies}}
+  /v1/hosts:
+    get:
+      summary: Host management inventory
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Hosts}}
+  /v1/host-groups:
+    get:
+      summary: Host groups
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Groups}}
+  /v1/containment:
+    get:
+      summary: Containment request ledger
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Requests}}
+    post:
+      summary: Record containment request (never enforced)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Recorded}}
+  /v1/rtr/commands:
+    get:
+      summary: RTR read-only command allowlist
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Commands}}
+  /v1/rtr/sessions:
+    get:
+      summary: RTR sessions
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Sessions}}
+    post:
+      summary: Open RTR session
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Session}}
+  /v1/rtr/execute:
+    post:
+      summary: Execute read-only RTR diagnostic
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Output}}
+  /v1/device-control:
+    get:
+      summary: USB/device control events
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Devices}}
+  /v1/firewall/rules:
+    get:
+      summary: Host firewall inventory
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Rules}}
+  /v1/discover/assets:
+    get:
+      summary: Falcon Discover asset inventory
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Assets}}
+  /v1/discover/apps:
+    get:
+      summary: Application inventory
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Apps}}
+  /v1/spotlight/vulnerabilities:
+    get:
+      summary: Spotlight CVE inventory
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Vulnerabilities}}
+  /v1/overwatch/alerts:
+    get:
+      summary: OverWatch managed hunting alerts
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Alerts}}
+  /v1/intel/actors:
+    get:
+      summary: Threat actor profiles
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Actors}}
+  /v1/intel/indicators:
+    get:
+      summary: Intel indicators
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Indicators}}
+  /v1/identity/events:
+    get:
+      summary: Identity threat events
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Events}}
+  /v1/identity/entities:
+    get:
+      summary: Identity entities with risk
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Entities}}
+  /v1/ueba:
+    get:
+      summary: UEBA entity scores
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Scores}}
+  /v1/fusion/playbooks:
+    get:
+      summary: Fusion SOAR playbooks
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Playbooks}}
+  /v1/fusion/runs:
+    get:
+      summary: Fusion playbook runs
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Runs}}
+  /v1/cases:
+    get:
+      summary: Case management
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Cases}}
+    post:
+      summary: Create case
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Created}}
+  /v1/hunt/query:
+    post:
+      summary: FQL-lite threat hunt
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Hunt results}}
+  /v1/threat-graph:
+    get:
+      summary: Threat correlation graph
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Graph}}
+  /v1/audit:
+    get:
+      summary: Audit log
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Entries}}
+  /v1/reports/summary:
+    get:
+      summary: SOC summary report
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Summary}}
+  /v1/connectors:
+    get:
+      summary: Connector registry
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Connectors}}
+  /v1/cloud/posture:
+    get:
+      summary: Cloud CSPM posture (preview)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Controls}}
+  /v1/mobile/devices:
+    get:
+      summary: Mobile devices (preview)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Devices}}
+  /v1/ai/assist:
+    post:
+      summary: Charlotte-lite assistive triage
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Answer}}
 components:
   securitySchemes:
     bearerAuth:
