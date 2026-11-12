@@ -2791,6 +2791,13 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
         <div class="field px-actions"><button type="button" id="vm-apply" class="secondary">Apply</button><button type="button" id="vm-sbom">Download SBOM</button></div>
       </div>
       <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Advisory feeds</h3>
+        <p class="hint" id="vm-feed-note"></p>
+        <table><thead><tr><th>Source</th><th>Enabled feeds</th><th>Last refresh</th><th>KEV entries</th><th>OSV packages cached</th><th>OSV advisories cached</th></tr></thead><tbody id="vm-feed-rows"></tbody></table>
+        <div id="vm-feed-errors"></div>
+        <div class="field px-actions"><button type="button" id="vm-feed-refresh" class="secondary">Refresh feeds</button></div>
+      </div>
+      <div class="table-wrap">
         <h3 style="margin:0 0 12px;font-size:17px">Exposure by host</h3>
         <table><thead><tr><th>Host</th><th>Exposure score</th><th>Vulnerabilities</th></tr></thead><tbody id="vm-exp-rows"></tbody></table>
       </div>
@@ -5887,6 +5894,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
   function vmHost() { return $('vm-host').value.trim(); }
   async function loadVulns() {
     setMsg('vm-msg', '', false);
+    loadVulnFeeds();
     const h = vmHost(), q = h ? '?host=' + encodeURIComponent(h) : '';
     const [ex, top, fi, ad, sw] = await Promise.allSettled([pgApi('/v1/vulns/exposure'), pgApi('/v1/vulns/top' + q), pgApi('/v1/vulns/findings' + q), pgApi('/v1/vulns/advisories'), pgApi('/v1/vulns/software' + q)]);
     if (ex.status === 'fulfilled' && ex.value) {
@@ -5902,6 +5910,23 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     if (sw.status === 'fulfilled' && sw.value) pxFill('vm-sw-rows', 3, sw.value.software, 'No software', 'No SBOM inventory rows have been reported.', (tb, x) => tableRow(tb, [x.host, x.component, x.version]));
     else pxFail('vm-sw-rows', 3, 'software', sw.reason);
   }
+  async function loadVulnFeeds() {
+    try {
+      const f = await pgApi('/v1/vulns/feeds/status');
+      const on = (f.enabled || []).length ? f.enabled.join(', ') : 'none (sample data)';
+      const last = f.last_refresh && !String(f.last_refresh).startsWith('0001') ? fmtTime(f.last_refresh) : 'never';
+      $('vm-feed-note').textContent = f.note || '';
+      pxFill('vm-feed-rows', 6, [f], 'No status', 'Feed status is unavailable.', (tb, x) => tableRow(tb, [x.source || '—', on, last, x.kev_count, x.osv_cached_packages, x.osv_cached_vulns]));
+      const box = $('vm-feed-errors'); box.replaceChildren();
+      (f.feed_errors || []).forEach((e) => { box.appendChild(el('p', String(e), 'work-msg is-error')); });
+    } catch (e) { pxFail('vm-feed-rows', 6, 'feed status', e); }
+  }
+  $('vm-feed-refresh').addEventListener('click', async () => {
+    setMsg('vm-msg', 'Refreshing feeds…', false);
+    try { await pgApi('/v1/vulns/feeds/refresh', { method: 'POST' }); setMsg('vm-msg', 'Feeds refreshed.', false); loadVulns(); }
+    catch (e) { setMsg('vm-msg', 'Could not refresh feeds: ' + e.message, true); }
+    loadVulnFeeds();
+  });
   $('vm-apply').addEventListener('click', loadVulns);
   $('vm-sbom').addEventListener('click', async () => {
     const h = vmHost();
