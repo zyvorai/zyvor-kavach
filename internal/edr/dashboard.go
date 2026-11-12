@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-//go:embed dashboard.html
+//go:embed dashboard.html static/*.svg
 var dashboardAssets embed.FS
 
 func sessionSignature(secret, payload string) string {
@@ -43,13 +43,20 @@ func validSession(r *http.Request, secret string) bool {
 	return subtle.ConstantTimeCompare([]byte(parts[1]), []byte(expected)) == 1
 }
 func registerDashboard(mux *http.ServeMux, token string, store *Store) {
+	mux.HandleFunc("GET /zyvor-mark.svg", func(w http.ResponseWriter, r *http.Request) {
+		serveEmbeddedSVG(w, "static/zyvor-mark.svg")
+	})
+	mux.HandleFunc("GET /zyvor-logomark.svg", func(w http.ResponseWriter, r *http.Request) {
+		serveEmbeddedSVG(w, "static/zyvor-logomark.svg")
+	})
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
 			return
 		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'")
+		// img-src 'self' for Zyvor sister-brand marks shared with Netra.
+		w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		b, _ := dashboardAssets.ReadFile("dashboard.html")
 		_, _ = w.Write(b)
@@ -109,4 +116,16 @@ func registerDashboard(mux *http.ServeMux, token string, store *Store) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]any{"process": events, "network": net})
 	})
+}
+
+func serveEmbeddedSVG(w http.ResponseWriter, name string) {
+	b, err := dashboardAssets.ReadFile(name)
+	if err != nil {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "image/svg+xml; charset=utf-8")
+	w.Header().Set("Cache-Control", "public, max-age=86400")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	_, _ = w.Write(b)
 }
