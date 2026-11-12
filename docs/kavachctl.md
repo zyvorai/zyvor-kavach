@@ -112,3 +112,40 @@ kavachctl journal verify               # checks the hash chain; exits non-zero i
 ```
 
 `export` streams the response straight to the file or stdout. With `--out`, an existing file is never overwritten unless you pass `--force`, and no file is created if the server returns an error. Server error messages (for example `days must be 7, 14 or 30`) are shown verbatim with the HTTP status. Adding or removing an alert rule also records `alert_rule.create` / `alert_rule.delete` in the journal. Writes (`notes add|rm`, `saved-searches add|rm`, `alerts rules add|rm`) need an admin token.
+
+## Intel feeds, detection lab, SOC, posture, compliance evidence
+
+```bash
+kavachctl intel feeds list                  # URL path and query are masked
+kavachctl intel feeds add --name abuse --url https://feeds.example.com/ioc.csv --format csv \
+    --interval 60 --ttl-days 7 --tlp green  # format: csv|plain|stix-lite-json
+kavachctl intel feeds status
+kavachctl intel feeds refresh abuse         # feed ID or name
+kavachctl intel feeds rm abuse
+
+kavachctl lab rules list
+kavachctl lab rules add rule.json           # FILE, or - for stdin
+kavachctl lab validate rule.json
+kavachctl lab test rule.json --events events.json
+cat rule.json | kavachctl lab backtest --rule -   # hits, noise/host/day, hits-per-day sparkline, sample hits
+kavachctl lab backtest --id lab-1
+kavachctl lab rules rm lab-1
+
+kavachctl soc metrics --days 30             # MTTA/MTTR, backlog by age, SLA breaches, noisy rules
+kavachctl soc shift-report --hours 12 --out shift.txt   # never overwrites without --force
+kavachctl soc storyline web-01 --hours 24   # nested under soc: top-level `storyline` is the id/host endpoint
+
+kavachctl posture summary
+kavachctl posture vulns --limit 20 --explain   # --explain prints the per-factor score breakdown
+kavachctl posture assets add --host db-01 --criticality 5 --owner dba --tags pci,db
+kavachctl posture assets list
+kavachctl posture baseline db-01            # omit HOST to baseline every observed host
+kavachctl posture drift db-01
+kavachctl posture assets rm db-01
+
+kavachctl compliance controls --framework cis
+kavachctl compliance evidence --framework cis --format html --out evidence.html   # refuses to overwrite without --force
+kavachctl compliance cert-in-clock          # open high/critical findings with time remaining
+```
+
+All lab commands print a sandbox notice: lab rules never raise alerts or touch production detections. `compliance controls` and `evidence` are observe-only evidence, not a certification, and `cert-in-clock` is informational (Kavach files no reports). Existing `compliance` and `compliance score` are unchanged. Tables accept `--json` or `-o json|yaml`; server error messages are shown verbatim with the HTTP status. Writes need an admin token.

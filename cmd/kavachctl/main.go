@@ -97,7 +97,16 @@ func run(args []string) error {
 		return request("GET", "/v1/air/investigations", nil)
 
 	case "intel":
+		if len(args) > 1 && args[1] == "feeds" {
+			return intelFeedsCmd(os.Stdout, args[2:])
+		}
 		return intelCmd(args[1:])
+	case "lab":
+		return labCmd(os.Stdout, args[1:])
+	case "soc":
+		return socCmd(os.Stdout, args[1:])
+	case "posture":
+		return postureCmd(os.Stdout, args[1:])
 	case "identity":
 		return identityCmd(args[1:])
 	case "ueba":
@@ -130,6 +139,9 @@ func run(args []string) error {
 	case "compliance":
 		if len(args) > 1 && args[1] == "score" {
 			return complianceScoreCmd(os.Stdout, args[2:])
+		}
+		if len(args) > 1 && (args[1] == "controls" || args[1] == "evidence" || args[1] == "cert-in-clock") {
+			return complianceExtraCmd(os.Stdout, args[1:])
 		}
 		return request("GET", "/v1/compliance", nil)
 	case "attack", "mitre":
