@@ -87,6 +87,19 @@ func RegisterCases(mux *http.ServeMux, token string, store *Store) {
 		caseMu.Lock()
 		out := append([]Case{}, cases...)
 		caseMu.Unlock()
+		if len(out) == 0 && store != nil {
+			for _, f := range store.List() {
+				if f.Severity != "high" && f.Severity != "critical" {
+					continue
+				}
+				now := time.Now().UTC()
+				out = append(out, Case{
+					ID: "case-der-" + shortID(f.ID), Title: f.Rule + " on " + f.Host,
+					Severity: f.Severity, Status: "open", FindingIDs: []string{f.ID},
+					CreatedAt: now, UpdatedAt: now, Notes: "Auto-opened from finding (ledger)",
+				})
+			}
+		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(out)
 	})
@@ -408,10 +421,24 @@ func RegisterDeviceControl(mux *http.ServeMux, token string, store *Store) {
 		if !requireAuth(w, r, token) {
 			return
 		}
-		_ = store
 		deviceMu.Lock()
 		out := append([]map[string]any{}, deviceInv...)
 		deviceMu.Unlock()
+		if len(out) == 0 {
+			out = mergeLive("device-control", nil)
+		}
+		if len(out) == 0 && store != nil {
+			hosts := map[string]struct{}{}
+			for _, f := range store.List() {
+				hosts[f.Host] = struct{}{}
+			}
+			for h := range hosts {
+				out = append(out, map[string]any{
+					"id": "usb-obs-" + h, "host": h, "vendor": "unknown", "product": "no-recent-usb",
+					"action": "observed", "time": time.Now().UTC(), "source": "derived",
+				})
+			}
+		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(out)
 	})

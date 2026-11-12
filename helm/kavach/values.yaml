@@ -175,9 +175,8 @@ resources:
   limits: {cpu: "1", memory: 512Mi}
 
 agent:
-  # Privileged-ish node DaemonSet — on by default: one pod per node.
-  # Set enabled=false for controller-only installs.
-  enabled: false
+  # Privileged-ish node DaemonSet — one pod per node when enabled.
+  enabled: true
   # Override KAVACH_SERVER (default: in-cluster Service URL).
   server: ""
   nodeSelector: {}

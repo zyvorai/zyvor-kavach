@@ -355,27 +355,46 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 			"siem":    siem.Status(),
 		})
 	})
-	if registry != nil {
-		mux.HandleFunc("GET /v1/fleet", func(w http.ResponseWriter, r *http.Request) {
-			got := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-			if !validSession(r, token) && subtle.ConstantTimeCompare([]byte(got), []byte(token)) != 1 {
-				http.Error(w, "unauthorized", 401)
-				return
+	fleetHandler := func(w http.ResponseWriter, r *http.Request) {
+		got := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+		if !validSession(r, token) && subtle.ConstantTimeCompare([]byte(got), []byte(token)) != 1 {
+			http.Error(w, "unauthorized", 401)
+			return
+		}
+		var out []AgentStatus
+		if registry != nil {
+			out = registry.Status(time.Now(), 90*time.Second)
+		}
+		seen := map[string]struct{}{}
+		for _, a := range out {
+			seen[a.Host] = struct{}{}
+		}
+		// Observed hosts from findings/events even before enrollment.
+		for _, f := range store.List() {
+			if _, ok := seen[f.Host]; ok || f.Host == "" {
+				continue
 			}
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(registry.Status(time.Now(), 90*time.Second))
-		})
-	} else {
-		mux.HandleFunc("GET /v1/fleet", func(w http.ResponseWriter, r *http.Request) {
-			got := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-			if !validSession(r, token) && subtle.ConstantTimeCompare([]byte(got), []byte(token)) != 1 {
-				http.Error(w, "unauthorized", 401)
-				return
+			seen[f.Host] = struct{}{}
+			out = append(out, AgentStatus{Host: f.Host, State: "observed", Sensor: "derived", Queued: 0})
+		}
+		store.mu.Lock()
+		for _, e := range store.recentEvents {
+			if _, ok := seen[e.Host]; ok || e.Host == "" {
+				continue
 			}
-			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte("[]"))
-		})
+			seen[e.Host] = struct{}{}
+			out = append(out, AgentStatus{Host: e.Host, State: "observed", Sensor: string(ProbeSensor()), Queued: 0})
+		}
+		store.mu.Unlock()
+		if len(out) == 0 {
+			if h, _ := os.Hostname(); h != "" {
+				out = append(out, AgentStatus{Host: h, State: "controller", Sensor: string(ProbeSensor()), LastSeen: time.Now().UTC()})
+			}
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(out)
 	}
+	mux.HandleFunc("GET /v1/fleet", fleetHandler)
 	if registry != nil {
 		registry.RegisterRoutes(mux, token)
 	}

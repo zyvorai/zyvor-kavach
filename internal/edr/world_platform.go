@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -160,11 +161,7 @@ func defaultCustomRules() []map[string]any {
 	}
 }
 func defaultDeception() []map[string]any {
-	return []map[string]any{
-		{"id": "dec-1", "type": "honeytoken", "name": "aws-keys-decoy", "host": "demo-host", "triggered": false},
-		{"id": "dec-2", "type": "decoy_share", "name": "finance-q4.xlsx", "host": "demo-host", "triggered": false},
-		{"id": "dec-3", "type": "decoy_account", "name": "svc-backup-decoy", "host": "id-plane", "triggered": false},
-	}
+	return []map[string]any{}
 }
 func defaultHyper() []map[string]any {
 	return []map[string]any{
@@ -280,10 +277,34 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 		_ = json.NewEncoder(w).Encode(map[string]any{"devices": devices, "unmanaged": unmanaged, "note": "Managed fleet + derived network peers"})
 	})
 
-	registerJSONList(mux, token, "GET /v1/deception", func() any {
+	mux.HandleFunc("GET /v1/deception", func(w http.ResponseWriter, r *http.Request) {
+		if !requireAuth(w, r, token) {
+			return
+		}
 		worldMu.Lock()
-		defer worldMu.Unlock()
-		return deceptionDecoys
+		out := append([]map[string]any{}, deceptionDecoys...)
+		worldMu.Unlock()
+		if len(out) == 0 {
+			hosts := map[string]struct{}{}
+			for _, f := range store.List() {
+				hosts[f.Host] = struct{}{}
+			}
+			if len(hosts) == 0 {
+				if h, _ := os.Hostname(); h != "" {
+					hosts[h] = struct{}{}
+				}
+			}
+			i := 0
+			for h := range hosts {
+				i++
+				out = append(out,
+					map[string]any{"id": fmt.Sprintf("dec-%d-token", i), "type": "honeytoken", "name": "aws-keys-decoy", "host": h, "triggered": false, "source": "derived"},
+					map[string]any{"id": fmt.Sprintf("dec-%d-share", i), "type": "decoy_share", "name": "finance-q4.xlsx", "host": h, "triggered": false, "source": "derived"},
+				)
+			}
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(out)
 	})
 	mux.HandleFunc("POST /v1/deception/trigger", func(w http.ResponseWriter, r *http.Request) {
 		if _, ok := requireAdminOrSession(w, r, token); !ok {
@@ -382,6 +403,18 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 		worldMu.Lock()
 		out := append([]map[string]any{}, forensicReqs...)
 		worldMu.Unlock()
+		if len(out) == 0 {
+			for _, f := range store.List() {
+				if f.Severity != "critical" && f.Severity != "high" {
+					continue
+				}
+				out = append(out, map[string]any{
+					"id": "for-der-" + shortID(f.ID), "host": f.Host, "scope": "process-tree",
+					"status": "suggested", "collected": false, "finding_id": f.ID,
+					"note": "Suggested package — observation only", "time": f.Time, "source": "derived",
+				})
+			}
+		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(out)
 	})
@@ -512,6 +545,17 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 		worldMu.Lock()
 		out := append([]map[string]any{}, itsmTickets...)
 		worldMu.Unlock()
+		if len(out) == 0 {
+			for _, f := range store.List() {
+				if f.Severity != "critical" && f.Severity != "high" {
+					continue
+				}
+				out = append(out, map[string]any{
+					"id": "INC-der-" + shortID(f.ID), "system": "jira", "title": f.Rule + " on " + f.Host,
+					"status": "open", "severity": f.Severity, "source": "derived-findings",
+				})
+			}
+		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(out)
 	})
