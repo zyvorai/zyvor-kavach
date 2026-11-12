@@ -206,14 +206,14 @@ func TestContentEvaluationCreatesFindings(t *testing.T) {
 	if ff := contentFileFindings(FileEvent{Time: now, Host: "h1", Path: "/root/.ssh/authorized_keys", Operation: "modify"}); len(ff) != 1 || ff[0].Rule != "linux-authorized-keys-modified" {
 		t.Fatalf("file content rule: %+v", ff)
 	}
-	// pending-telemetry rules never evaluate live
-	if x := contentEvaluate("registry", LabEvent{Path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\x"}, Finding{}); len(x) != 0 {
-		t.Fatalf("pending rule evaluated: %+v", x)
+	// registry/dns/auth/module rules are live now (no pending_telemetry)
+	if x := contentEvaluate("registry", LabEvent{Path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\x"}, Finding{}); len(x) != 1 {
+		t.Fatalf("registry rule not evaluated: %+v", x)
 	}
-	// ATT&CM matrix includes live content rules but not pending ones.
+	// ATT&CK matrix includes every live content rule, telemetry types included.
 	m := BuildATTACKMatrix(nil)
 	blob, _ := json.Marshal(m)
-	if !strings.Contains(string(blob), "linux-ld-preload-from-writable-dir") || strings.Contains(string(blob), "windows-run-key-value-added") {
+	if !strings.Contains(string(blob), "linux-ld-preload-from-writable-dir") || !strings.Contains(string(blob), "windows-run-key-value-added") {
 		t.Fatalf("attack matrix content coverage wrong")
 	}
 	// End to end through the store.
@@ -265,22 +265,22 @@ func TestContentEndpoints(t *testing.T) {
 		_ = json.Unmarshal(w.Body.Bytes(), &l)
 		return l.Count
 	}
-	if n := count("tactic=persistence"); n != 4 {
+	if n := count("tactic=persistence&batch=seed-v1"); n != 4 {
 		t.Errorf("tactic filter: %d", n)
 	}
-	if n := count("os=macos"); n != 2+2 { // 2 macos rules plus the 2 os=any rules
+	if n := count("os=macos&batch=seed-v1"); n != 2+2 { // 2 macos rules plus the 2 os=any rules
 		t.Errorf("os filter (macos + any): %d", n)
 	}
 	if n := count("os=windows&batch=seed-v1"); n < 3 {
 		t.Errorf("os+batch filter: %d", n)
 	}
-	if n := count("technique=T1574"); n != 1 {
+	if n := count("technique=T1574&batch=seed-v1"); n != 1 {
 		t.Errorf("technique parent prefix filter: %d", n)
 	}
-	if n := count("technique=T1574.006"); n != 1 {
+	if n := count("technique=T1574.006&batch=seed-v1"); n != 1 {
 		t.Errorf("technique exact filter: %d", n)
 	}
-	if n := count("q=onion"); n != 1 {
+	if n := count("q=onion&batch=seed-v1"); n != 1 {
 		t.Errorf("q filter: %d", n)
 	}
 	if n := count("q=zzzznomatch"); n != 0 {
@@ -298,7 +298,7 @@ func TestContentEndpoints(t *testing.T) {
 		t.Fatalf("coverage: %d", w.Code)
 	}
 	pend := cov["pending_telemetry"].(map[string]any)
-	if pend["count"].(float64) != 1 || cov["total_rules"].(float64) != float64(list.Count) {
+	if pend["count"].(float64) != 0 || cov["total_rules"].(float64) != float64(list.Count) {
 		t.Errorf("coverage numbers: %v", cov)
 	}
 	for _, k := range []string{"by_tactic", "by_technique", "by_os", "by_batch", "techniques_covered"} {

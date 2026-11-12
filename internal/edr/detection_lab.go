@@ -60,6 +60,9 @@ type LabEvent struct {
 	Rule        string    `json:"rule,omitempty"`
 	Severity    string    `json:"severity,omitempty"`
 	Operation   string    `json:"operation,omitempty"`
+	// Attrs carries type-specific fields (telemetry: key, query, method, module_path, ...). Content
+	// rules may reference them by name; the lab DSL (labFields) does not.
+	Attrs map[string]string `json:"attrs,omitempty"`
 }
 
 func (e LabEvent) field(name string) (string, bool) {
@@ -90,6 +93,9 @@ func (e LabEvent) field(name string) (string, bool) {
 			return "", false
 		}
 		return strconv.Itoa(*e.UID), true
+	}
+	if v == "" && e.Attrs != nil {
+		v = e.Attrs[name]
 	}
 	return v, v != ""
 }
@@ -179,6 +185,12 @@ func (r *LabRule) Validate() error {
 }
 
 func (n *LabNode) validate(path string, depth int, nodes *int) error {
+	return n.validateFields(path, depth, nodes, labFields)
+}
+
+// validateFields is validate with a caller-chosen set of allowed field names (content rules for
+// telemetry event types accept extra fields).
+func (n *LabNode) validateFields(path string, depth int, nodes *int, fields map[string]bool) error {
 	if depth > labMaxDepth {
 		return fmt.Errorf("%s: nesting deeper than %d", path, labMaxDepth)
 	}
@@ -205,22 +217,22 @@ func (n *LabNode) validate(path string, depth int, nodes *int) error {
 	switch {
 	case len(n.All) > 0:
 		for i := range n.All {
-			if err := n.All[i].validate(fmt.Sprintf("%s.all[%d]", path, i), depth+1, nodes); err != nil {
+			if err := n.All[i].validateFields(fmt.Sprintf("%s.all[%d]", path, i), depth+1, nodes, fields); err != nil {
 				return err
 			}
 		}
 		return nil
 	case len(n.Any) > 0:
 		for i := range n.Any {
-			if err := n.Any[i].validate(fmt.Sprintf("%s.any[%d]", path, i), depth+1, nodes); err != nil {
+			if err := n.Any[i].validateFields(fmt.Sprintf("%s.any[%d]", path, i), depth+1, nodes, fields); err != nil {
 				return err
 			}
 		}
 		return nil
 	case n.Not != nil:
-		return n.Not.validate(path+".not", depth+1, nodes)
+		return n.Not.validateFields(path+".not", depth+1, nodes, fields)
 	}
-	if !labFields[n.Field] {
+	if !fields[n.Field] {
 		return fmt.Errorf("%s.field: unknown field %q", path, n.Field)
 	}
 	if !labOps[n.Op] {

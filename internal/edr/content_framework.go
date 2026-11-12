@@ -7,12 +7,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"hash/fnv"
+	"log"
 	"net/http"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
 	"sync/atomic"
+	"time"
 )
 
 // Data-driven detection CONTENT framework. Rules are JSON packs embedded from content/*.json,
@@ -32,12 +35,13 @@ const (
 
 var (
 	contentIDRe       = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
-	contentBatchRe    = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]{0,63}$`)
+	contentBatchRe    = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$`)
 	contentSeverities = map[string]bool{"low": true, "medium": true, "high": true, "critical": true}
 	contentOSes       = map[string]bool{"linux": true, "macos": true, "windows": true, "any": true}
-	// Evaluated on the live path today: process, network, file. The rest are accepted by the schema
-	// and flagged pending_telemetry until a sensor emits them.
-	contentLiveTypes = map[string]bool{"process": true, "network": true, "file": true}
+	// Evaluated on the live path: process, network, file, plus the telemetry types (registry, dns,
+	// auth, module), which are evaluated after their POST /v1/events/{type} handler accepts them.
+	// pending_telemetry stays in the schema for compatibility and is false for every known type.
+	contentLiveTypes = map[string]bool{"process": true, "network": true, "file": true, "registry": true, "dns": true, "auth": true, "module": true}
 	contentAllTypes  = map[string]bool{"process": true, "network": true, "file": true, "registry": true, "dns": true, "auth": true, "module": true}
 	contentOps       = map[string]string{"equals": "equals", "contains": "contains", "regex": "regex", "prefix": "startswith", "suffix": "endswith", "in": "in"}
 )
@@ -77,7 +81,8 @@ type ContentRule struct {
 	Tests            *ContentTests `json:"tests,omitempty"`
 	PendingTelemetry bool          `json:"pending_telemetry"` // computed at load; ignored in pack input
 
-	node *LabNode // compiled matcher (shared with the detection lab)
+	node *LabNode    // compiled matcher (shared with the detection lab)
+	pre  []preClause // required-literal prefilter derived from node (see content_prefilter.go)
 }
 
 type contentPack struct {
@@ -96,10 +101,32 @@ var contentReg atomic.Pointer[ContentRegistry]
 
 // Matches reports whether the compiled rule matches the event (event kind is not enforced here).
 func (r *ContentRule) Matches(ev LabEvent) bool {
-	if r.node == nil {
-		return false
+	return r.matchCtx(newEvalCtx(ev), true)
+}
+
+// contentTelemetryRuleFields are the extra rule fields accepted per telemetry event type (names
+// follow TelemetryMatchView; module "kind" is exposed as module_kind because "kind" is the event
+// kind in the lab event). They live in LabEvent.Attrs. Convenience aliases are also filled:
+// registry path = key, module path = module_path, dns destination = query.
+var contentTelemetryRuleFields = map[string][]string{
+	"registry": {"user", "pid", "key", "value_name", "value_data"},
+	"dns":      {"user", "pid", "query", "qtype", "answers", "resolver"},
+	"auth":     {"user", "pid", "source_ip", "method", "outcome"},
+	"module":   {"user", "pid", "module_path", "hash", "signed", "signer", "module_kind"},
+}
+
+func contentFieldsFor(eventType string) map[string]bool {
+	extra, ok := contentTelemetryRuleFields[eventType]
+	if !ok {
+		return labFields
 	}
-	m, _ := r.node.eval(ev, false)
+	m := make(map[string]bool, len(labFields)+len(extra))
+	for k := range labFields {
+		m[k] = true
+	}
+	for _, k := range extra {
+		m[k] = true
+	}
 	return m
 }
 
@@ -232,10 +259,11 @@ func (r *ContentRule) validateAndCompile() error {
 		return fail("%v", err)
 	}
 	nodes := 0
-	if err := node.validate("match", 0, &nodes); err != nil {
+	if err := node.validateFields("match", 0, &nodes, contentFieldsFor(r.EventType)); err != nil {
 		return fail("%v", err)
 	}
 	r.node = &node
+	r.pre = buildPrefilter(&node)
 	r.PendingTelemetry = !contentLiveTypes[r.EventType]
 	return nil
 }
@@ -388,9 +416,10 @@ func contentEvaluate(kind string, ev LabEvent, base Finding) []Finding {
 		return nil
 	}
 	ev.Kind = kind
+	ctx := newEvalCtx(ev) // fields are looked up and lowercased once for all rules
 	var out []Finding
 	for _, r := range rules {
-		if !r.Matches(ev) {
+		if !r.matchCtx(ctx, true) {
 			continue
 		}
 		f := base
@@ -424,6 +453,108 @@ func contentNetworkFindings(n NetworkEvent) []Finding {
 func contentFileFindings(e FileEvent) []Finding {
 	return FilterExcluded(contentEvaluate("file", LabEvent{Time: e.Time, Host: e.Host, Path: e.Path, Operation: e.Operation},
 		Finding{Time: e.Time, Host: e.Host, PID: e.PID, Evidence: Event{Time: e.Time, Host: e.Host, PID: e.PID, Command: e.Operation + " " + e.Path}}))
+}
+
+// contentTelemetryEvent flattens a telemetry event into the rule event: TelemetryMatchView fields
+// land in Attrs (module "kind" renamed module_kind), with registry/module path and dns destination
+// aliases for rules written against the generic fields.
+func contentTelemetryEvent(typ string, e TelemetryEvent) LabEvent {
+	view := TelemetryMatchView(typ, e)
+	attrs := make(map[string]string, len(view))
+	for k, v := range view {
+		switch k {
+		case "type", "host", "time":
+		case "kind":
+			attrs["module_kind"] = v
+		default:
+			attrs[k] = v
+		}
+	}
+	ev := LabEvent{Time: e.Time, Host: e.Host, Operation: e.Operation, Attrs: attrs}
+	switch typ {
+	case "registry":
+		ev.Path = e.Key
+	case "module":
+		ev.Path = e.ModulePath
+	case "dns":
+		ev.Destination = e.Query
+	}
+	return ev
+}
+
+func telemetrySummary(typ string, e TelemetryEvent) string {
+	var s string
+	switch typ {
+	case "registry":
+		s = e.Operation + " " + e.Key
+		if e.ValueName != "" {
+			s += " " + e.ValueName
+		}
+		if e.ValueData != "" {
+			s += "=" + e.ValueData
+		}
+	case "dns":
+		s = "dns " + e.QType + " " + e.Query
+	case "auth":
+		s = fmt.Sprintf("auth %s %s user=%s src=%s", e.Method, e.Outcome, e.User, e.SourceIP)
+	case "module":
+		s = fmt.Sprintf("load %s %s signed=%t", e.Kind, e.ModulePath, e.Signed)
+	}
+	return labTruncate(s, 512)
+}
+
+// contentTelemetryFindings evaluates the live content rules of one telemetry type against one
+// accepted event. No-op (nil) when no packs are loaded or no rules target the type.
+func contentTelemetryFindings(typ string, e TelemetryEvent) []Finding {
+	reg := contentReg.Load()
+	if reg == nil || len(reg.byType[typ]) == 0 {
+		return nil
+	}
+	summary := telemetrySummary(typ, e)
+	base := Finding{Time: e.Time, Host: e.Host, PID: e.PID,
+		Evidence: Event{Time: e.Time, Host: e.Host, PID: e.PID, Command: summary}}
+	if typ == "dns" {
+		base.Destination = e.Query
+	}
+	fs := contentEvaluate(typ, contentTelemetryEvent(typ, e), base)
+	if len(fs) > 0 {
+		// Telemetry has no PID/ns uniqueness guarantee; disambiguate ids by event content.
+		h := fnv.New32a()
+		_, _ = h.Write([]byte(summary))
+		for i := range fs {
+			fs[i].ID = fmt.Sprintf("%s:%08x", fs[i].ID, h.Sum32())
+		}
+	}
+	return FilterExcluded(fs)
+}
+
+// contentTelemetryBudget bounds the time one POST spends evaluating content rules; events past the
+// budget are still accepted and stored but not evaluated (counted, logged, never silent).
+var contentTelemetryBudget = 150 * time.Millisecond
+
+// telemetryEvalSkipped counts telemetry events accepted but not evaluated because of the budget.
+var telemetryEvalSkipped atomic.Int64
+
+// contentTelemetryBatch evaluates a batch within the time budget. It returns the findings and how
+// many events were not evaluated.
+func contentTelemetryBatch(typ string, evs []TelemetryEvent, budget time.Duration) ([]Finding, int) {
+	reg := contentReg.Load()
+	if reg == nil || len(reg.byType[typ]) == 0 {
+		return nil, 0
+	}
+	deadline := time.Now().Add(budget)
+	var out []Finding
+	for i := range evs {
+		if i > 0 && time.Now().After(deadline) {
+			skipped := len(evs) - i
+			telemetryEvalSkipped.Add(int64(skipped))
+			log.Printf("content: %s telemetry batch exceeded %v evaluation budget; %d of %d events stored but not evaluated",
+				typ, budget, skipped, len(evs))
+			return out, skipped
+		}
+		out = append(out, contentTelemetryFindings(typ, evs[i])...)
+	}
+	return out, 0
 }
 
 // ---- HTTP API ----

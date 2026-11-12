@@ -49,6 +49,7 @@ func BuildATTACKMatrix(findings []Finding) map[string]any {
 		rules = append(rules, r)
 	}
 	sort.Strings(rules)
+	techIdx := map[string]int{}
 	for _, r := range rules {
 		m := all[r]
 		t := idx[m.Tactic]
@@ -56,17 +57,18 @@ func BuildATTACKMatrix(findings []Finding) map[string]any {
 			continue
 		}
 		key := m.Tactic + "|" + m.ID
-		x := tech[key]
-		if x == nil {
+		i, seen := techIdx[key]
+		if !seen {
 			t.Techniques = append(t.Techniques, ATTACKTechnique{ID: m.ID, Name: m.Technique, Covered: true})
-			x = &t.Techniques[len(t.Techniques)-1]
-			tech[key] = x
+			i = len(t.Techniques) - 1
+			techIdx[key] = i
 		}
-		x.Rules = append(x.Rules, r)
+		// Index, not pointer: appending to t.Techniques can move earlier elements, and a stale
+		// pointer would silently drop rules added to an existing technique.
+		t.Techniques[i].Rules = append(t.Techniques[i].Rules, r)
 		t.Covered = true
 	}
-	// Slice growth can move elements; rebuild pointers after construction.
-	tech = map[string]*ATTACKTechnique{}
+	// Slices are final now; take stable pointers for hit counting.
 	for _, t := range order {
 		for i := range t.Techniques {
 			tech[t.Tactic+"|"+t.Techniques[i].ID] = &t.Techniques[i]

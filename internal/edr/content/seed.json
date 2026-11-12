@@ -251,7 +251,7 @@
     {
       "id": "windows-run-key-value-added",
       "name": "Run or RunOnce registry autostart value added",
-      "description": "A value was written under a Run or RunOnce registry key, which executes a program at every logon. Pending registry telemetry from the sensor.",
+      "description": "A value was written under a Run or RunOnce registry key, which executes a program at every logon.",
       "tactic": "Persistence",
       "technique": "T1547.001",
       "technique_name": "Boot or Logon Autostart Execution: Registry Run Keys",

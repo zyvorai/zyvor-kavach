@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -175,6 +176,8 @@ func TelemetryMetrics() string {
 	for _, t := range TelemetryTypes {
 		fmt.Fprintf(&b, "kavach_telemetry_events_total{type=%q} %d\n", t, telemetryCounters[t].Load())
 	}
+	b.WriteString("# HELP kavach_telemetry_eval_skipped_total Telemetry events accepted but not evaluated against content rules (time budget).\n# TYPE kavach_telemetry_eval_skipped_total counter\n")
+	fmt.Fprintf(&b, "kavach_telemetry_eval_skipped_total %d\n", telemetryEvalSkipped.Load())
 	return b.String()
 }
 
@@ -203,13 +206,15 @@ func NewTelemetryStore(path string, max int) (*TelemetryStore, error) {
 	defer f.Close()
 	sc := bufio.NewScanner(f)
 	sc.Buffer(make([]byte, 4096), 1<<20)
+	line := 0
 	for sc.Scan() {
+		line++
 		var rec struct {
 			Type string `json:"type"`
 			TelemetryEvent
 		}
 		if json.Unmarshal(sc.Bytes(), &rec) != nil || telemetryCounters[rec.Type] == nil {
-			return nil, fmt.Errorf("corrupt telemetry ledger")
+			return nil, fmt.Errorf("corrupt telemetry ledger %s at line %d", path, line)
 		}
 		s.addLocked(rec.Type, rec.TelemetryEvent)
 	}
@@ -349,7 +354,18 @@ func RegisterTelemetryRoutes(mux *http.ServeMux, token string, store *Store, reg
 	}
 	ts, err := NewTelemetryStore(path, telemetryRingMax)
 	if err != nil {
-		ts, _ = NewTelemetryStore("", telemetryRingMax)
+		// Never silent: say what is wrong and what we did about it. The corrupt file is moved
+		// aside (not deleted) so it can be inspected, and persistence restarts on a fresh file.
+		bad := path + ".corrupt-" + time.Now().UTC().Format("20060102T150405Z")
+		if rerr := os.Rename(path, bad); rerr == nil {
+			log.Printf("telemetry: persisted ledger unreadable (%v); moved aside to %s and starting empty with persistence on %s", err, bad, path)
+			ts, err = NewTelemetryStore(path, telemetryRingMax)
+		} else {
+			log.Printf("telemetry: persisted ledger unreadable (%v) and could not be moved aside (%v); starting empty with persistence DISABLED", err, rerr)
+		}
+		if err != nil || ts == nil {
+			ts, _ = NewTelemetryStore("", telemetryRingMax)
+		}
 	}
 	defaultTelemetryMu.Lock()
 	DefaultTelemetry = ts
@@ -395,8 +411,15 @@ func RegisterTelemetryRoutes(mux *http.ServeMux, token string, store *Store, reg
 				http.Error(w, "storage error", 500)
 				return
 			}
+			// Detection hook: evaluate content rules of this type against the accepted events,
+			// within a time budget. Events are already stored; a findings failure is logged, not
+			// surfaced as a rejection of the batch.
+			nf, skipped, ferr := store.IngestTelemetry(typ, evs, contentTelemetryBudget)
+			if ferr != nil {
+				log.Printf("telemetry: %s findings persist: %v", typ, ferr)
+			}
 			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode(map[string]int{"accepted": len(evs)})
+			_ = json.NewEncoder(w).Encode(map[string]int{"accepted": len(evs), "findings": nf, "not_evaluated": skipped})
 		})
 		mux.HandleFunc("GET /v1/events/"+typ, func(w http.ResponseWriter, r *http.Request) {
 			if !requireAuth(w, r, token) {
@@ -431,4 +454,26 @@ func RegisterTelemetryRoutes(mux *http.ServeMux, token string, store *Store, reg
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(ts.Summary())
 	})
+}
+
+// IngestTelemetry evaluates content rules for already-accepted telemetry events and stores the
+// resulting findings like process/network/file findings. Evaluation runs outside the store lock
+// and within budget; it is a no-op on a nil store or when no rules target the type. It returns the
+// number of findings stored and the number of events skipped because the budget ran out.
+func (s *Store) IngestTelemetry(typ string, evs []TelemetryEvent, budget time.Duration) (int, int, error) {
+	if s == nil {
+		return 0, 0, nil
+	}
+	findings, skipped := contentTelemetryBatch(typ, evs, budget)
+	if len(findings) == 0 {
+		return 0, skipped, nil
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for i, f := range findings {
+		if err := s.appendFindingLocked(f); err != nil {
+			return i, skipped, err
+		}
+	}
+	return len(findings), skipped, nil
 }

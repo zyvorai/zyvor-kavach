@@ -223,7 +223,7 @@ paths:
     post:
       summary: Ingest registry event(s); object or array up to 500
       responses:
-        "200": { description: accepted count }
+        "200": { description: accepted count plus findings and not_evaluated (content-rule detections) }
   /v1/events/dns:
     get:
       summary: Recent DNS events (query host, limit)
@@ -232,7 +232,7 @@ paths:
     post:
       summary: Ingest DNS event(s); object or array up to 500
       responses:
-        "200": { description: accepted count }
+        "200": { description: accepted count plus findings and not_evaluated (content-rule detections) }
   /v1/events/auth:
     get:
       summary: Recent authentication events (query host, limit)
@@ -241,7 +241,7 @@ paths:
     post:
       summary: Ingest auth event(s); object or array up to 500
       responses:
-        "200": { description: accepted count }
+        "200": { description: accepted count plus findings and not_evaluated (content-rule detections) }
   /v1/events/module:
     get:
       summary: Recent module-load events (query host, limit)
@@ -250,7 +250,7 @@ paths:
     post:
       summary: Ingest module event(s); object or array up to 500
       responses:
-        "200": { description: accepted count }
+        "200": { description: accepted count plus findings and not_evaluated (content-rule detections) }
   /v1/file-events:
     post:
       summary: Ingest file-activity event
@@ -903,7 +903,7 @@ paths:
       responses: {'200': {description: OK}, '404': {description: Not found}}
   /v1/content/coverage:
     get:
-      summary: Content coverage counts by tactic, technique, os, batch, severity and event type; techniques covered; rules pending telemetry
+      summary: Content coverage counts by tactic, technique, os, batch, severity and event type; techniques covered (pending_telemetry is always empty now that registry, dns, auth and module rules are evaluated)
       security: [{bearerAuth: []}]
       responses: {'200': {description: OK}}
   /v1/lab/rules:
