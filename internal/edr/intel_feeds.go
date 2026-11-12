@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -93,13 +94,67 @@ func NewIntelFeeds(store *Store) *IntelFeeds {
 			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 		},
 	}
-	if b, err := os.ReadFile(f.path); err == nil {
-		_ = json.Unmarshal(b, &f.feeds)
-	}
-	for _, fd := range f.feeds {
-		f.stateLocked(fd)
-	}
+	f.load()
 	return f
+}
+
+// intelDisk is the on-disk form: feed definitions, per-feed sync status and
+// the feed-sourced indicators. Legacy files held a bare feed array.
+type intelDisk struct {
+	Feeds  []IntelFeed               `json:"feeds"`
+	States map[string]intelDiskState `json:"states,omitempty"`
+	IOCs   []IOC                     `json:"iocs,omitempty"`
+}
+
+type intelDiskState struct {
+	Status  FeedStatus           `json:"status"`
+	ETag    string               `json:"etag,omitempty"`
+	Expires map[string]time.Time `json:"expires,omitempty"`
+}
+
+func (f *IntelFeeds) load() {
+	b, err := os.ReadFile(f.path)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			log.Printf("intel feeds: read %s: %v (starting empty)", f.path, err)
+		}
+		return
+	}
+	var d intelDisk
+	if err := json.Unmarshal(b, &d); err != nil {
+		if err2 := json.Unmarshal(b, &d.Feeds); err2 != nil {
+			log.Printf("intel feeds: corrupt %s: %v (starting empty)", f.path, err)
+			return
+		}
+	}
+	f.feeds = d.Feeds
+	for _, fd := range f.feeds {
+		s := f.stateLocked(fd)
+		if ds, ok := d.States[fd.ID]; ok {
+			s.status, s.etag = ds.Status, ds.ETag
+			s.status.ID, s.status.Name = fd.ID, fd.Name
+			if ds.Expires != nil {
+				s.expires = ds.Expires
+			}
+		}
+	}
+	iocMu.Lock()
+	have := map[string]bool{}
+	for _, i := range iocs {
+		have[i.ID] = true
+	}
+	for _, i := range d.IOCs {
+		if have[i.ID] {
+			continue
+		}
+		for _, fd := range f.feeds {
+			if strings.HasPrefix(i.ID, feedIOCPrefix(fd.ID)) {
+				iocs = append(iocs, i)
+				break
+			}
+		}
+	}
+	iocMu.Unlock()
 }
 
 func (f *IntelFeeds) stateLocked(fd IntelFeed) *feedState {
@@ -112,7 +167,18 @@ func (f *IntelFeeds) stateLocked(fd IntelFeed) *feedState {
 }
 
 func (f *IntelFeeds) saveLocked() error {
-	b, err := json.MarshalIndent(f.feeds, "", "  ")
+	d := intelDisk{Feeds: f.feeds, States: map[string]intelDiskState{}}
+	for id, st := range f.state {
+		d.States[id] = intelDiskState{Status: st.status, ETag: st.etag, Expires: st.expires}
+	}
+	iocMu.Lock()
+	for _, i := range iocs {
+		if strings.HasPrefix(i.ID, "feed-") {
+			d.IOCs = append(d.IOCs, i)
+		}
+	}
+	iocMu.Unlock()
+	b, err := json.MarshalIndent(d, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -249,6 +315,9 @@ func (f *IntelFeeds) Fetch(ctx context.Context, id string) (FeedStatus, bool) {
 	}
 	s.status.Expired = f.sweepLocked(s)
 	s.status.Active = len(s.expires)
+	if err := f.saveLocked(); err != nil {
+		log.Printf("intel feeds: persist: %v", err)
+	}
 	return s.status, true
 }
 
