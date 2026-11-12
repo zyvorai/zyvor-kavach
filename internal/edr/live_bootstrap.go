@@ -106,6 +106,21 @@ func BootstrapLivePlatform(store *Store, registry *CredentialRegistry, statePath
 	if len(Live.List("fim")) == 0 {
 		Live.ReplaceHost("fim", host, CollectFIMSnapshot(host))
 	}
+	// Ensure firewall/browser never serialize as JSON null after empty collect.
+	if len(Live.List("firewall")) == 0 {
+		fw := CollectFirewall(host)
+		if len(fw) == 0 {
+			fw = []map[string]any{{"id": "fw-none", "host": host, "name": "no-rules-observed", "action": "observe", "enabled": true, "source": "bootstrap"}}
+		}
+		Live.ReplaceHost("firewall", host, fw)
+	}
+	if len(Live.List("browser")) == 0 {
+		br := CollectBrowserExtensions(host)
+		if len(br) == 0 {
+			br = []map[string]any{{"name": "(none observed)", "host": host, "risk": "info", "source": "bootstrap"}}
+		}
+		Live.ReplaceHost("browser", host, br)
+	}
 
 	backfillFromStore(store, registry, host)
 	syncSpotlightFromSBOM()

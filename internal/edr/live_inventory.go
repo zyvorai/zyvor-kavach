@@ -78,6 +78,9 @@ func (d *DomainInventory) ReplaceHost(domain, host string, rows []map[string]any
 
 func mergeLive(domain string, derived []map[string]any) []map[string]any {
 	live := Live.List(domain)
+	if derived == nil {
+		derived = []map[string]any{}
+	}
 	if len(live) == 0 {
 		return derived
 	}
