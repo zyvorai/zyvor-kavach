@@ -103,6 +103,9 @@ func TestTuningRestartAndCorruptFiles(t *testing.T) {
 	worldMu.Lock()
 	a, b := tuneHasExclusion("ex-rt"), tuneHasExclusion("ex-rv")
 	worldMu.Unlock()
+	worldMu.Lock()
+	exclusions = nil
+	worldMu.Unlock()
 	if !a || b {
 		t.Fatalf("active=%v reverted=%v", a, b)
 	}
