@@ -100,6 +100,15 @@ func printHelp(w io.Writer) {
 	row("device-control|yara|sigma|prevention", "Control surfaces")
 	row("mdr|bas|itsm|notify|rbac|retention", "Ops ledgers")
 
+	section("Fleet health / governance / tuning")
+	row("fleet health|gaps|stale|host HOST", "Sensor health and coverage gaps")
+	row("prevalence executables|rare|first-seen", "Executable prevalence")
+	row("blast-radius --host H", "Likely-affected graph")
+	row("canary list|create|delete ID|trips", "Deception canaries")
+	row("governance inventory|retention|redaction|redact-preview|subject", "Data governance (retention apply needs --yes)")
+	row("tuning suggestions|history|apply|revert ID", "Detection tuning")
+	row("digest list|set|delete ID|send-now ID|deliveries", "Scheduled digests")
+
 	section("AI Hub")
 	row("ai capabilities|briefing|scores|agents", "AI catalog / briefing")
 	row("ai chat <text>", "SOC copilot")
