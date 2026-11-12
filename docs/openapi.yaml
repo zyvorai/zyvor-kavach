@@ -186,6 +186,47 @@ paths:
       responses:
         "200":
           description: correlations count
+  /v1/events/summary:
+    get:
+      summary: Telemetry counts per type and host (registry, dns, auth, module)
+      responses:
+        "200": { description: counts }
+  /v1/events/registry:
+    get:
+      summary: Recent registry events (query host, limit)
+      responses:
+        "200": { description: events }
+    post:
+      summary: Ingest registry event(s); object or array up to 500
+      responses:
+        "200": { description: accepted count }
+  /v1/events/dns:
+    get:
+      summary: Recent DNS events (query host, limit)
+      responses:
+        "200": { description: events }
+    post:
+      summary: Ingest DNS event(s); object or array up to 500
+      responses:
+        "200": { description: accepted count }
+  /v1/events/auth:
+    get:
+      summary: Recent authentication events (query host, limit)
+      responses:
+        "200": { description: events }
+    post:
+      summary: Ingest auth event(s); object or array up to 500
+      responses:
+        "200": { description: accepted count }
+  /v1/events/module:
+    get:
+      summary: Recent module-load events (query host, limit)
+      responses:
+        "200": { description: events }
+    post:
+      summary: Ingest module event(s); object or array up to 500
+      responses:
+        "200": { description: accepted count }
   /v1/file-events:
     post:
       summary: Ingest file-activity event

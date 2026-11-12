@@ -80,6 +80,7 @@ func (m *Metrics) Write(w http.ResponseWriter, store *Store, registry *Credentia
 	var b strings.Builder
 	b.WriteString("# HELP kavach_uptime_seconds Seconds since server start.\n# TYPE kavach_uptime_seconds gauge\n")
 	fmt.Fprintf(&b, "kavach_uptime_seconds %.0f\n", time.Since(m.started).Seconds())
+	b.WriteString(TelemetryMetrics())
 	b.WriteString("# HELP kavach_http_inflight In-flight HTTP requests.\n# TYPE kavach_http_inflight gauge\n")
 	fmt.Fprintf(&b, "kavach_http_inflight %d\n", m.inflight.Load())
 
