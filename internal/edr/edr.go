@@ -484,7 +484,18 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]int{"correlations": len(findings)})
 	})
-	return mux
+	metrics := NewMetrics()
+	RegisterHealth(mux, store)
+	RegisterATTACK(mux, token, store)
+	RegisterComplianceScore(mux, token, store, registry)
+	RegisterStream(mux, token, store)
+	mux.HandleFunc("GET /metrics", func(w http.ResponseWriter, r *http.Request) {
+		if !requireAuth(w, r, token) {
+			return
+		}
+		metrics.Write(w, store, registry)
+	})
+	return Harden(metrics.Middleware(mux))
 }
 func Poll(ctx context.Context, scanner *Scanner, endpoint, token string, interval time.Duration, client *http.Client) error {
 	if interval < time.Second {

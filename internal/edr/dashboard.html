@@ -526,6 +526,19 @@ main {
   animation: livePing 1.8s var(--ease-apple) infinite;
 }
 
+.obs-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; margin-top:16px; }
+.obs-tactic { border:1px solid var(--border); border-radius:14px; padding:12px; background:var(--surface-1); }
+.obs-tactic h4 { margin:0 0 8px; font-size:13px; font-weight:600; }
+.obs-tactic.covered { border-color: var(--accent-green); }
+.obs-tactic.hit { border-color: var(--accent-amber); box-shadow:0 0 0 1px var(--accent-amber) inset; }
+.obs-tech { display:block; font-size:12px; color:var(--text-secondary, #6e6e73); margin:2px 0; }
+.obs-gauges { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-top:16px; }
+.obs-gauge { border:1px solid var(--border); border-radius:14px; padding:14px; background:var(--surface-1); }
+.obs-gauge b { display:block; font-size:28px; letter-spacing:-.02em; }
+.obs-bar { height:6px; border-radius:3px; background:var(--border); margin-top:8px; overflow:hidden; }
+.obs-bar > i { display:block; height:100%; background:var(--accent-green); }
+.obs-feed { list-style:none; margin:12px 0 0; padding:0; max-height:260px; overflow:auto; }
+.obs-feed li { padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; }
 .apple-metric-band {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -1159,6 +1172,7 @@ footer {
             <button type="button" data-page="overwatch" role="menuitem">OverWatch</button>
             <button type="button" data-page="response" role="menuitem">Response</button>
             <button type="button" data-page="ops" role="menuitem">Ops</button>
+            <button type="button" data-page="observe" role="menuitem">Observe</button>
             <button type="button" data-page="ebpf" role="menuitem">eBPF</button>
             <button type="button" data-page="finance" role="menuitem">Finance</button>
             <button type="button" data-page="sectors" role="menuitem">Sectors</button>
@@ -1798,6 +1812,26 @@ footer {
       </div>
     </section>
 
+    <section id="page-observe" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Posture</p>
+        <h1>Observe. Live.</h1>
+        <p class="lede">MITRE ATT&amp;CK coverage, compliance grade, and a live detection feed. Read-only — Kavach never contains.</p>
+      </header>
+      <div class="apple-metric-band" aria-label="Observe summary">
+        <div><span>ATT&amp;CK coverage</span><b id="obs-cov">—</b></div>
+        <div><span>Observed hits</span><b id="obs-hits">—</b></div>
+        <div><span>Compliance</span><b id="obs-grade">—</b></div>
+        <div><span>Live feed</span><b id="obs-live">connecting</b></div>
+      </div>
+      <h3 style="margin:24px 0 0;font-size:17px">ATT&amp;CK matrix</h3>
+      <div class="obs-grid" id="obs-matrix"></div>
+      <h3 style="margin:24px 0 0;font-size:17px">Compliance frameworks</h3>
+      <div class="obs-gauges" id="obs-gauges"></div>
+      <h3 style="margin:24px 0 0;font-size:17px">Live detections</h3>
+      <ul class="obs-feed" id="obs-feed" aria-live="polite"></ul>
+    </section>
+
     <section id="page-ebpf" class="page" hidden>
       <header class="page-hero">
         <p class="apple-eyebrow">Sensors</p>
@@ -2092,7 +2126,7 @@ footer {
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'ebpf', 'finance', 'sectors', 'modules', 'integrations'];
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'finance', 'sectors', 'modules', 'integrations'];
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -2215,7 +2249,7 @@ footer {
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'ebpf', 'finance', 'sectors']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'finance', 'sectors']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -3247,6 +3281,61 @@ footer {
     }
   }
 
+  function renderObserve(matrix, score) {
+    const m = matrix || {}, sc = score || {};
+    if ($('obs-cov')) $('obs-cov').textContent = m.coverage_pct != null ? m.coverage_pct + '%' : '—';
+    if ($('obs-hits')) $('obs-hits').textContent = m.observed_hits != null ? String(m.observed_hits) : '—';
+    if ($('obs-grade')) $('obs-grade').textContent = sc.grade ? sc.grade + ' · ' + sc.overall : '—';
+    const grid = $('obs-matrix');
+    if (grid) {
+      grid.replaceChildren();
+      for (const t of (m.tactics || [])) {
+        const card = el('div', '', 'obs-tactic' + (t.covered ? ' covered' : '') + (t.hits ? ' hit' : ''));
+        card.appendChild(el('h4', t.tactic + (t.hits ? ' · ' + t.hits : '')));
+        for (const x of (t.techniques || [])) card.appendChild(el('span', x.id + ' ' + x.name + (x.hits ? ' (' + x.hits + ')' : ''), 'obs-tech'));
+        if (!(t.techniques || []).length) card.appendChild(el('span', 'No rule yet', 'obs-tech'));
+        grid.appendChild(card);
+      }
+    }
+    const g = $('obs-gauges');
+    if (g) {
+      g.replaceChildren();
+      for (const f of (sc.frameworks || [])) {
+        const c = el('div', '', 'obs-gauge');
+        c.appendChild(el('span', f.framework));
+        c.appendChild(el('b', f.grade + ' · ' + f.score));
+        const bar = el('div', '', 'obs-bar'); const fill = document.createElement('i'); fill.style.width = Math.max(0, Math.min(100, f.score)) + '%'; bar.appendChild(fill); c.appendChild(bar);
+        g.appendChild(c);
+      }
+    }
+  }
+
+  let obsStream = null;
+  function startObserveStream() {
+    if (obsStream || typeof EventSource === 'undefined') return;
+    try {
+      obsStream = new EventSource('/v1/stream');
+      obsStream.onopen = () => { if ($('obs-live')) $('obs-live').textContent = 'live'; };
+      obsStream.onerror = () => { if ($('obs-live')) $('obs-live').textContent = 'reconnecting'; };
+      obsStream.addEventListener('finding', (ev) => {
+        let d; try { d = JSON.parse(ev.data); } catch (_) { return; }
+        const feed = $('obs-feed'); if (!feed) return;
+        const li = document.createElement('li');
+        li.append(severityTag(d.severity), ' ', d.host + ' — ' + d.rule + ' (' + (d.technique_id || '') + ') ');
+        feed.prepend(li);
+        while (feed.children.length > 50) feed.lastChild.remove();
+        loadObserve();
+      });
+    } catch (_) { /* optional */ }
+  }
+
+  async function loadObserve() {
+    try {
+      const [matrix, score] = await Promise.all([request('/v1/attack/matrix'), request('/v1/compliance/score')]);
+      renderObserve(matrix, score);
+    } catch (_) { renderObserve({}, {}); }
+  }
+
   async function load() {
     skeletonRows($('findings-rows'), findingsCols(), 4);
     skeletonRows($('incident-rows'), 6, 3);
@@ -3340,6 +3429,8 @@ footer {
       renderAIClusters(aiClusters);
       renderAIForecast(aiForecast);
       renderWorld(world);
+      loadObserve();
+      startObserveStream();
       try {
         const [ebpfStatus, ebpfHealth, ebpfFeatures, ebpfEvents] = await Promise.all([
           request('/v1/ebpf/status'),

@@ -14,6 +14,7 @@ Start here if you cloned the repo and want the full story.
 | [ebpf.md](ebpf.md) | Sensor / kernel observe |
 | [finance.md](finance.md) | Banks / markets / UPI / insurance observe |
 | [sectors.md](sectors.md) | Rail, aviation, industry, space, gov fleets |
+| [observability.md](observability.md) | Metrics, probes, ATT&CK, compliance score, live stream |
 | [deploy-remote.md](deploy-remote.md) | Lab / k8s deploy |
 | [envoy-gateway.md](envoy-gateway.md) | Gateway API |
 | [agent-mtls.md](agent-mtls.md) | mTLS agents |
