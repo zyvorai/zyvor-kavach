@@ -15,6 +15,7 @@ Start here if you cloned the repo and want the full story.
 | [finance.md](finance.md) | Banks / markets / UPI / insurance observe |
 | [sectors.md](sectors.md) | Rail, aviation, industry, space, gov fleets |
 | [observability.md](observability.md) | Metrics, probes, ATT&CK, compliance score, live stream |
+| [compliance-evidence.md](compliance-evidence.md) | Control-level compliance evidence, CERT-In clock |
 | [deploy-remote.md](deploy-remote.md) | Lab / k8s deploy |
 | [envoy-gateway.md](envoy-gateway.md) | Gateway API |
 | [agent-mtls.md](agent-mtls.md) | mTLS agents |
