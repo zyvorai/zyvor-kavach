@@ -1,0 +1,132 @@
+# Testing
+
+How we verify Kavach stays correct and observation-only.
+
+---
+
+## Quick suite
+
+```bash
+export KAVACH_TOKEN='Admin@321'
+go test ./...
+```
+
+CI (GitHub Actions) runs the same with Go **1.27**.
+
+---
+
+## Package focus
+
+| Package | What it covers |
+|---------|----------------|
+| `internal/edr` | Store, Detect, world/AI/eBPF/finance APIs, inventory, auth session |
+| `cmd/kavachctl` | Help/version local, flag parsing, mock HTTP status/findings |
+| `cmd/kavach-mcp` | Tool registration + client against test server |
+| `cmd/netra-bridge` | Bridge ingest validation |
+
+Examples:
+
+```bash
+go test ./internal/edr/ -run EBPF -count=1 -v
+go test ./cmd/kavachctl/ -count=1
+go test ./internal/edr/ -run 'Falcon|EBPF|AIPlatform|World' -count=1
+```
+
+---
+
+## API smoke (manual)
+
+With a running server:
+
+```bash
+export KAVACH_URL=http://127.0.0.1:8099
+export KAVACH_TOKEN=Admin@321
+
+curl -sf "$KAVACH_URL/healthz"
+curl -sf -H "Authorization: Bearer $KAVACH_TOKEN" "$KAVACH_URL/v1/summary"
+curl -sf -H "Authorization: Bearer $KAVACH_TOKEN" "$KAVACH_URL/v1/ebpf/status"
+curl -sf -H "Authorization: Bearer $KAVACH_TOKEN" "$KAVACH_URL/v1/finance/summary"
+curl -sf -H "Authorization: Bearer $KAVACH_TOKEN" "$KAVACH_URL/v1/sectors/summary"
+curl -sf -H "Authorization: Bearer $KAVACH_TOKEN" "$KAVACH_URL/v1/modules" | head
+```
+
+Or:
+
+```bash
+go build -o bin/kavachctl ./cmd/kavachctl
+KAVACH_URL=$KAVACH_URL KAVACH_TOKEN=$KAVACH_TOKEN ./bin/kavachctl status
+./bin/kavachctl ebpf health
+./bin/kavachctl finance summary
+./bin/kavachctl finance exchanges
+./bin/kavachctl sectors railways
+./bin/kavachctl sectors gov-portals
+```
+
+---
+
+## Lab demo script
+
+```bash
+export KAVACH_URL=http://127.0.0.1:8099   # or https://…:30943
+export KAVACH_TOKEN=Admin@321
+export KAVACH_TLS_INSECURE=true            # if self-signed HTTPS
+./scripts/demo-lab.sh
+```
+
+Exercises common GETs against a live controller.
+
+---
+
+## Console checks
+
+1. Open `/` — login shell shows username + password.  
+2. Sign in `admin` / `Admin@321`.  
+3. Confirm Overview uses full width (~1800px shell).  
+4. Browse → **eBPF** shows health metrics + feature table.  
+4b. Browse → **Finance** shows exchanges, rails, institutions, events.  
+4c. Browse → **Sectors** shows railways, gov portals, critical sites, events. 
+5. Theme toggle + Sign out clear the session cookie.
+
+---
+
+## Cluster deploy smoke
+
+```bash
+./scripts/deploy-remote.sh sus@HOST --k8s --envoy-gateway
+# wait for pods Ready
+kubectl -n kavach-system get pods,svc
+curl -sk -H "Authorization: Bearer Admin@321" \
+  https://kavach.HOST.sslip.io:30943/v1/summary
+```
+
+Helm requires `auth.token` ≥ 8 characters (`Admin@321` is valid).
+
+---
+
+## eBPF object build (Linux)
+
+```bash
+./scripts/build-bpf.sh
+ls bpf/*.o
+```
+
+CI does **not** require loading programs into a kernel. Unit tests cover the Go `/v1/ebpf` platform with seeded events.
+
+---
+
+## Observation-only regression mindset
+
+When adding features, assert:
+
+- No API claims `enforce: true` for Kavach eBPF.  
+- Containment remains a ledger (`GET /v1/containment`).  
+- Prevention policies stay detect-only.  
+- Tests that previously expected seed-only empty domains should expect live/bootstrap rows after inventory work.
+
+---
+
+## Race / flaky tips
+
+- Use `-count=1` to disable cache when debugging.  
+- Temp dirs via `t.TempDir()` for store paths.  
+- Set `KAVACH_SKIP_DOTENV=1` in CLI tests that inject `KAVACH_URL`.

@@ -47,9 +47,9 @@ TARGET_USER=""
 POSITIONAL=()
 SSH_OPTS=(-o StrictHostKeyChecking=accept-new -o ServerAliveInterval=30)
 
-IMAGE_REF="ghcr.io/zyvorai/kavach:0.1.0"
+IMAGE_REF="ghcr.io/zyvorai/kavach:0.1.1"
 IMAGE_REPO="ghcr.io/zyvorai/kavach"
-IMAGE_TAG="0.1.0"
+IMAGE_TAG="0.1.1"
 NODE_PORT="${KAVACH_NODE_PORT:-30899}"
 ENVOY_HTTPS_NODE_PORT="${KAVACH_ENVOY_HTTPS_NODE_PORT:-30943}"
 
@@ -216,7 +216,7 @@ ensure_go() {
     return 0
   fi
   log "installing Go toolchain..."
-  local ver="1.23.4"
+  local ver="1.27.4"
   local arch
   arch="\$(uname -m)"
   case "\$arch" in
@@ -310,7 +310,7 @@ build_image() {
   local tmp
   tmp="\$(mktemp -d)"
   cat > "\$tmp/Dockerfile" <<'DF'
-FROM alpine:3.20
+FROM alpine:3.24
 RUN addgroup -S kavach && adduser -S -G kavach kavach
 USER kavach
 WORKDIR /app

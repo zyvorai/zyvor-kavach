@@ -116,7 +116,7 @@ func registerDashboard(mux *http.ServeMux, token string, store *Store) {
 			"network": net,
 			"findings": store.List(),
 			"product":  "kavach",
-			"note":     "Falcon Insight timeline analogue — observation only",
+			"note":     "Insight timeline — observation only",
 		})
 	}
 	mux.HandleFunc("GET /v1/recent-events", func(w http.ResponseWriter, r *http.Request) {
@@ -125,7 +125,7 @@ func registerDashboard(mux *http.ServeMux, token string, store *Store) {
 		}
 		writeTimeline(w)
 	})
-	// Falcon Insight module advertises /v1/timeline — alias of recent-events + findings.
+	// Insight advertises /v1/timeline — alias of recent-events + findings.
 	mux.HandleFunc("GET /v1/timeline", func(w http.ResponseWriter, r *http.Request) {
 		if !isAuthorized(w, r) {
 			return

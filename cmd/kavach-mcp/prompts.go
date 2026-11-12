@@ -101,7 +101,7 @@ func registerResources(srv *mcpserver.Server, c *client) error {
 		},
 		{
 			URI: "kavach://modules", Name: "modules", MimeType: "application/json",
-			Description: "Falcon/beyond-Falcon module map",
+			Description: "Kavach module capability map",
 			Read: func(ctx context.Context) (string, error) {
 				b, status, err := c.do(ctx, "GET", "/v1/modules", nil, nil)
 				if err != nil {

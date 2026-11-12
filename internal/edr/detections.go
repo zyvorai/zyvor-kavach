@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// Detection is a Falcon Insight-style detection enriched with MITRE ATT&CK.
+// Detection is an Insight-style detection enriched with MITRE ATT&CK.
 type Detection struct {
 	ID          string    `json:"id"`
 	FindingID   string    `json:"finding_id"`

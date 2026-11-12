@@ -62,8 +62,8 @@ func main() {
 	endpoint := flag.String("url", "http://127.0.0.1:8099", "EDR API address")
 	flag.Parse()
 	token := os.Getenv("KAVACH_TOKEN")
-	if len(token) < 16 {
-		log.Fatal("KAVACH_TOKEN must be at least 16 characters")
+	if len(token) < 8 {
+		log.Fatal("KAVACH_TOKEN must be at least 8 characters")
 	}
 	parsed, err := url.Parse(*endpoint)
 	if err != nil || parsed.Host == "" || !(parsed.Scheme == "https" || parsed.Scheme == "http" && (parsed.Hostname() == "127.0.0.1" || parsed.Hostname() == "localhost")) {

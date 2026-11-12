@@ -20,7 +20,7 @@ spec:
         fsGroup: 100
       containers:
       - name: controller
-        image: ghcr.io/zyvorai/zyvor-edr:dev # publish an image before deploying
+        image: ghcr.io/zyvorai/kavach:0.1.1
         imagePullPolicy: IfNotPresent
         args: ["-mode","server","-listen","0.0.0.0:8099","-state","/app/data/findings.jsonl","-credentials","/app/data/agents.json","-tls-cert","/run/tls/tls.crt","-tls-key","/run/tls/tls.key"]
         ports: [{containerPort: 8099, name: https}]

@@ -1,0 +1,112 @@
+// Copyright 2026 Zyvor AI Labs · https://zyvor.dev
+// SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+
+package main
+
+import (
+	"fmt"
+	"io"
+	"os"
+	"text/tabwriter"
+)
+
+func usage() {
+	printHelp(os.Stdout)
+}
+
+func printHelp(w io.Writer) {
+	if w == nil {
+		w = os.Stdout
+	}
+	maybeBanner()
+	fmt.Fprintln(w, "kavachctl — Zyvor Kavach CLI (sister to netractl)")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Auth / config:")
+	fmt.Fprintln(w, "  KAVACH_URL            Controller base (default https://127.0.0.1:30899)")
+	fmt.Fprintln(w, "  KAVACH_TOKEN          Bearer token (or ~/.kavach/api-key / ZYVOR_EDR_TOKEN)")
+	fmt.Fprintln(w, "  KAVACH_TLS_INSECURE   true to skip TLS verify (auto on loopback)")
+	fmt.Fprintln(w, "  ~/.kavach/env         Optional dotenv (skipped if KAVACH_SKIP_DOTENV=1)")
+	fmt.Fprintln(w)
+	tw := tabwriter.NewWriter(w, 0, 2, 2, ' ', 0)
+	section := func(title string) {
+		fmt.Fprintln(tw)
+		fmt.Fprintf(tw, "%s\t\n", colorize(os.Stdout, ansiBold, title))
+	}
+	row := func(cmd, desc string) {
+		fmt.Fprintf(tw, "  %s\t%s\n", cmd, desc)
+	}
+
+	section("Cluster")
+	row("status [--json] [--wait]", "Health + summary + fleet board")
+	row("sensor", "Sensor / Netra poller / SIEM probe")
+	row("modules", "Kavach module capability map")
+	row("world modules", "Global XDR/EDR capability catalog")
+	row("ebpf status|health|events|…", "Observe-only eBPF platform (never enforce)")
+	row("finance summary|markets|upi|…", "Banks, stock markets, payments (observe)")
+	row("sectors summary|railways|airports|defence|…", "Railways, airports/flights, defence, govt (observe)")
+
+	section("Detect")
+	row("findings [--severity --rule --host]", "EDR findings")
+	row("detections [--severity --status --host]", "Insight detections (MITRE)")
+	row("incidents", "Incident workflow state")
+	row("timeline", "Insight timeline")
+	row("recent-events", "Recent process/network events")
+	row("hunt query <expr>", "POST /v1/hunt/query")
+	row("hunt kql <expr>", "POST /v1/hunt/kql")
+
+	section("Fleet")
+	row("fleet", "Agent fleet status")
+	row("hosts", "Host inventory")
+	row("host-groups", "Host groups")
+	row("agents", "Agent credential registry")
+	row("tenants", "Multi-site tenants")
+	row("sensor-health", "Sensor coverage gaps")
+
+	section("Response (observation ledger)")
+	row("containment", "Containment request ledger (never enforced)")
+	row("rtr commands", "RTR read-only allowlist")
+	row("rtr sessions", "Open RTR sessions")
+	row("cases", "Case management")
+	row("threat-graph", "Correlation graph")
+	row("storyline [--id --host]", "Attack storyline")
+	row("air", "Automated investigation suggestions")
+
+	section("Intel / Identity")
+	row("intel actors|indicators", "Threat intel")
+	row("identity events|entities", "Identity threats")
+	row("ueba", "UEBA scores")
+	row("watchlists", "Entity watchlists")
+	row("ioc|ioa|exclusions|rules", "Detection content")
+	row("overwatch", "OverWatch alerts")
+	row("dns threats", "DNS security threats")
+
+	section("World inventory")
+	row("discover assets|apps", "Discover inventory")
+	row("spotlight", "CVE inventory")
+	row("exposure|compliance|zero-trust", "Posture scorecards")
+	row("sbom|fim|persistence|firewall|browser", "Host collectors")
+	row("casb|cnapp workloads|cnapp misconfigs|ot", "Cloud / OT")
+	row("deception|email|dlp|forensics|sandbox", "Adjacent domains")
+	row("device-control|yara|sigma|prevention", "Control surfaces")
+	row("mdr|bas|itsm|notify|rbac|retention", "Ops ledgers")
+
+	section("AI Hub")
+	row("ai capabilities|briefing|scores|agents", "AI catalog / briefing")
+	row("ai chat <text>", "SOC copilot")
+	row("ai nl-hunt <text>", "Natural-language hunt")
+	row("ai assist <text>", "Assistive analyst help")
+	row("ai cluster|forecast|anomaly|stream|guardian|xdr-fusion", "AI reads")
+	row("ai score|narrative|report [--id]", "Per-finding AI")
+
+	section("Ops / export")
+	row("audit", "Console audit log")
+	row("report", "SOC summary report")
+	row("siem status|export", "SIEM sink / NDJSON export")
+	row("fusion playbooks|runs", "Fusion SOAR")
+	row("connectors|cloud|mobile", "Integrations preview")
+	row("get <path>", "Raw GET under /v1 or absolute path")
+
+	_ = tw.Flush()
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Sister to netractl. Observation-only — Kavach never contains, kills, or isolates.")
+}

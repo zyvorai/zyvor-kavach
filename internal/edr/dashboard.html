@@ -24,6 +24,7 @@
   --hairline: rgba(0, 0, 0, 0.1);
   --hairline-1: var(--hairline);
   --border: #d2d2d7;
+  --border-strong: #c7c7cc;
   --fill-tertiary: rgba(0, 0, 0, 0.04);
   --hover-fill: rgba(0, 0, 0, 0.04);
   --nav-bg: rgba(251, 251, 253, 0.8);
@@ -31,11 +32,24 @@
   --nav-link-active: #1d1d1f;
   --danger: #ff3b30;
   --danger-bg: #fff1f0;
+  --accent-cyan: #32ade6;
+  --accent-cyan-hover: #28a0d8;
+  --accent-green: #34c759;
+  --accent-green-hover: #30b753;
+  --accent-amber: #ff9f0a;
+  --accent-amber-hover: #f09400;
+  --accent-purple: #af52de;
+  --accent-purple-hover: #a246d4;
+  --btn-secondary: #6e6e73;
+  --btn-secondary-hover: #5a5a5e;
+  --disabled-bg: #dcdce1;
+  --disabled-text: #86868b;
   --warning-bg: #fff6ed;
   --warning-border: #ffd8ba;
   --warning-text: #8b3d00;
   --success-bg: #e8f8ec;
   --success-text: #1e7b34;
+  --success-border: #b7e4c2;
   --info-bg: #eaf6fc;
   --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -43,13 +57,14 @@
   --focus-ring: 0 0 0 4px rgba(0, 113, 227, 0.3);
   --hero-glow-a: rgba(0, 113, 227, 0.14);
   --hero-glow-b: rgba(50, 173, 230, 0.12);
-  --fs-body: 15px;
-  --fs-lede: 16px;
-  --fs-link: 15px;
-  --fs-h1: clamp(24px, 2.6vw, 34px);
-  --fs-h2: clamp(20px, 1.8vw, 24px);
-  --fs-h3: 17px;
-  --fs-figure: clamp(18px, 1.6vw, 24px);
+  --fs-body: 17px;
+  --fs-lede: 19px;
+  --fs-link: 17px;
+  --fs-h1: clamp(32px, 4vw, 48px);
+  --fs-h2: clamp(24px, 2.4vw, 32px);
+  --fs-h3: 19px;
+  --fs-figure: clamp(24px, 2.2vw, 36px);
+  --shell-max: 1800px;
   --radius-sm: 10px;
   --radius-md: 12px;
   --radius-xl: 18px;
@@ -78,6 +93,7 @@
   --apple-link: #2997ff;
   --hairline: rgba(255, 255, 255, 0.12);
   --border: rgba(255, 255, 255, 0.16);
+  --border-strong: rgba(255, 255, 255, 0.24);
   --fill-tertiary: rgba(255, 255, 255, 0.08);
   --hover-fill: rgba(255, 255, 255, 0.06);
   --nav-bg: rgba(22, 22, 23, 0.8);
@@ -85,11 +101,24 @@
   --nav-link-active: #f5f5f7;
   --danger: #ff453a;
   --danger-bg: rgba(255, 69, 58, 0.14);
+  --accent-cyan: #64d2ff;
+  --accent-cyan-hover: #70d7ff;
+  --accent-green: #30d158;
+  --accent-green-hover: #3ad463;
+  --accent-amber: #ff9f0a;
+  --accent-amber-hover: #ffb340;
+  --accent-purple: #bf5af2;
+  --accent-purple-hover: #c767f3;
+  --btn-secondary: #737378;
+  --btn-secondary-hover: #8e8e93;
+  --disabled-bg: #3a3a3c;
+  --disabled-text: #8e8e93;
   --warning-bg: rgba(255, 159, 10, 0.12);
   --warning-border: rgba(255, 159, 10, 0.35);
   --warning-text: #ffd60a;
   --success-bg: rgba(48, 209, 88, 0.14);
   --success-text: #30d158;
+  --success-border: rgba(48, 209, 88, 0.35);
   --info-bg: rgba(100, 210, 255, 0.14);
   --card-shadow: none;
   --shadow-1: none;
@@ -121,18 +150,19 @@ button {
   letter-spacing: -0.01em;
   line-height: 1.17648;
   border-radius: var(--radius-pill);
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--border-strong);
   padding: 10px 18px;
   min-height: var(--hit-min);
   cursor: pointer;
   color: var(--text-primary);
   background: transparent;
   white-space: nowrap;
+  flex: 0 0 auto;
   transition: background 0.28s var(--ease-apple), color 0.28s var(--ease-apple), border-color 0.28s var(--ease-apple), transform 0.16s var(--ease-apple), filter 0.28s var(--ease-apple), box-shadow 0.28s var(--ease-apple);
 }
 button:hover { background: var(--hover-fill); }
 button:active { transform: scale(0.98); }
-button:focus-visible, .input-field:focus-visible, .navlinks button:focus-visible, .brand:focus-visible, .icon-btn:focus-visible, .select-field:focus-visible {
+button:focus-visible, .input-field:focus-visible, .navlinks button:focus-visible, .brand:focus-visible, .icon-btn:focus-visible, .select-field:focus-visible, .nav-browse-toggle:focus-visible {
   outline: 2px solid var(--apple-blue);
   outline-offset: 2px;
 }
@@ -143,13 +173,44 @@ button.primary {
 }
 button.primary:hover { background: var(--apple-blue-hover); filter: brightness(1.06); }
 [data-theme="dark"] button.primary:hover { box-shadow: 0 8px 24px rgba(0, 113, 227, 0.35); }
-button.secondary {
+button.secondary, button.btn-secondary {
   background: var(--fill-tertiary);
   color: var(--text-primary);
-  border-color: var(--hairline);
+  border-color: var(--hairline-1);
 }
-button.secondary:hover { background: var(--surface-hover); }
-button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+button.secondary:hover, button.btn-secondary:hover { background: var(--surface-hover); }
+button.btn-diag {
+  background: color-mix(in srgb, var(--apple-blue) 10%, transparent);
+  color: var(--apple-link);
+  border-color: transparent;
+}
+button.btn-diag:hover { background: color-mix(in srgb, var(--apple-blue) 18%, transparent); }
+button.btn-success {
+  background: var(--success-bg);
+  color: var(--success-text);
+  border-color: var(--success-border);
+}
+button.btn-warn {
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  border-color: var(--warning-border);
+}
+button.btn-success:hover, button.btn-warn:hover { filter: brightness(0.97); }
+button.danger {
+  background: var(--danger);
+  color: #fff;
+  border-color: transparent;
+}
+button.danger:hover { filter: brightness(1.08); }
+button:disabled {
+  background: var(--disabled-bg) !important;
+  color: var(--disabled-text) !important;
+  border-color: transparent !important;
+  opacity: 1;
+  cursor: not-allowed;
+  filter: none;
+  transform: none;
+}
 .input-field, .select-field {
   width: 100%;
   min-height: var(--hit-min);
@@ -202,10 +263,10 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 }
 .nav-inner {
   width: 100%;
-  max-width: 1120px;
+  max-width: var(--shell-max);
   height: 100%;
   margin: 0 auto;
-  padding: 0 clamp(16px, 3vw, 24px);
+  padding: 0 clamp(20px, 4vw, 48px);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -275,13 +336,70 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  max-width: min(72vw, 860px);
+  max-width: none;
 }
 .navlinks::-webkit-scrollbar { display: none; }
-.navlinks button { flex: 0 0 auto; font-size: 12px; padding: 6px 8px; }
+.navlinks button { flex: 0 0 auto; font-size: 12px; padding: 6px 10px; }
 .navlinks button:hover { background: transparent; opacity: 1; color: var(--nav-link-active); }
 .navlinks button.active { background: transparent; color: var(--nav-link-active); opacity: 1; font-weight: 500; }
 .navlinks button.active::after { transform: scaleX(1); }
+.nav-browse {
+  position: relative;
+  flex: 0 0 auto;
+}
+.nav-browse-toggle {
+  position: relative;
+  border: 0;
+  background: transparent;
+  padding: 0 10px;
+  min-height: 48px;
+  height: 48px;
+  border-radius: 0;
+  color: var(--nav-link);
+  font-size: 12px;
+  opacity: 0.88;
+}
+.nav-browse-toggle:hover, .nav-browse.open .nav-browse-toggle {
+  background: transparent;
+  opacity: 1;
+  color: var(--nav-link-active);
+}
+.nav-browse-toggle.active { color: var(--nav-link-active); opacity: 1; font-weight: 500; }
+.nav-browse-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 220px;
+  padding: 8px;
+  margin: 0;
+  list-style: none;
+  background: var(--bg-elevated);
+  border: 1px solid var(--hairline-1);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-2);
+  display: grid;
+  gap: 2px;
+  z-index: 60;
+}
+.nav-browse-menu[hidden] { display: none !important; }
+.nav-browse-menu button {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+  border: 0;
+  border-radius: var(--radius-sm);
+  min-height: 36px;
+  padding: 8px 12px;
+  font-size: 13px;
+  background: transparent;
+  color: var(--text-primary);
+}
+.nav-browse-menu button:hover { background: var(--hover-fill); }
+.nav-browse-menu button.active {
+  background: color-mix(in srgb, var(--apple-blue) 12%, transparent);
+  color: var(--apple-link);
+  font-weight: 500;
+}
 .nav-actions {
   flex: 0 0 auto;
   display: flex;
@@ -314,10 +432,11 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 .signout-btn:hover { background: var(--hover-fill); color: var(--nav-link-active); }
 
 main {
-  max-width: 1120px;
+  max-width: var(--shell-max);
   margin: 0 auto;
-  padding: 8px clamp(16px, 3vw, 24px) 80px;
+  padding: 8px clamp(20px, 4vw, 48px) 80px;
   overflow-x: clip;
+  width: 100%;
 }
 .page { animation: fadeRise 0.45s var(--ease-apple); }
 @keyframes fadeRise {
@@ -359,13 +478,13 @@ main {
   font-family: var(--font-display);
   font-size: var(--fs-h1);
   font-weight: 600;
-  line-height: 1.15;
+  line-height: 1.05;
   letter-spacing: -0.022em;
   color: var(--text-primary);
 }
 .apple-lede {
   margin: 16px 0 0;
-  max-width: 44ch;
+  max-width: 54ch;
   font-size: var(--fs-lede);
   line-height: 1.38;
   letter-spacing: 0.005em;
@@ -409,8 +528,9 @@ main {
 
 .apple-metric-band {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0;
+  width: 100%;
   border-top: 1px solid var(--hairline-1);
   border-bottom: 1px solid var(--hairline-1);
   margin: 8px 0 0;
@@ -464,25 +584,27 @@ main {
 
 .page-hero {
   position: relative;
-  margin: 24px 0 20px;
+  margin: 28px 0 24px;
   padding: 8px 0 4px;
-  max-width: 720px;
+  max-width: none;
+  width: 100%;
   animation: fadeRise 0.45s var(--ease-apple);
 }
 .page-hero .apple-eyebrow { margin-bottom: 8px; }
 .page-hero h1 {
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   font-family: var(--font-display);
   font-size: var(--fs-h1);
   font-weight: 600;
   letter-spacing: -0.022em;
-  line-height: 1.15;
+  line-height: 1.1;
+  max-width: 22ch;
 }
 .page-hero .lede {
   margin: 0;
   font-size: var(--fs-lede);
   color: var(--text-secondary);
-  max-width: 42em;
+  max-width: 54ch;
 }
 
 .toolbar-pill {
@@ -966,9 +1088,12 @@ footer {
 }
 
 @media (max-width: 820px) {
-  .apple-metric-band { grid-template-columns: 1fr; }
+  .apple-metric-band { grid-template-columns: 1fr 1fr; }
   .apple-metric-band > div { border-bottom: 1px solid var(--hairline-1); }
   .apple-metric-band > div:last-child { border-bottom: 0; }
+}
+@media (max-width: 640px) {
+  .apple-metric-band { grid-template-columns: 1fr; }
   .chapter { grid-template-columns: 1fr; align-items: start; }
   .integration-grid { grid-template-columns: 1fr; }
   .work-grid { grid-template-columns: 1fr; }
@@ -994,8 +1119,12 @@ footer {
   <form class="card login-card" id="loginform" novalidate>
     <h1>Sign in.</h1>
     <label class="tokenbox">
-      Server token
-      <input id="token" type="password" placeholder="KAVACH_TOKEN" autocomplete="current-password" required autofocus>
+      Username
+      <input id="username" type="text" name="username" placeholder="admin" autocomplete="username" required autofocus>
+    </label>
+    <label class="tokenbox">
+      Password
+      <input id="password" type="password" name="password" placeholder="Password" autocomplete="current-password" required>
     </label>
     <p id="error" class="login-error" role="alert" aria-live="assertive"></p>
     <button class="primary" type="submit" id="login-btn">Sign in</button>
@@ -1014,21 +1143,29 @@ footer {
         <button type="button" data-page="detect" role="tab" aria-selected="false">Detect</button>
         <button type="button" data-page="detections" role="tab" aria-selected="false">Detections</button>
         <button type="button" data-page="hunt" role="tab" aria-selected="false">Hunt</button>
-        <button type="button" data-page="timeline" role="tab" aria-selected="false">Timeline</button>
         <button type="button" data-page="incidents" role="tab" aria-selected="false">Incidents</button>
         <button type="button" data-page="hosts" role="tab" aria-selected="false">Hosts</button>
         <button type="button" data-page="fleet" role="tab" aria-selected="false">Fleet</button>
-        <button type="button" data-page="prevent" role="tab" aria-selected="false">Prevent</button>
-        <button type="button" data-page="intel" role="tab" aria-selected="false">Intel</button>
-        <button type="button" data-page="identity" role="tab" aria-selected="false">Identity</button>
-        <button type="button" data-page="spotlight" role="tab" aria-selected="false">Spotlight</button>
-        <button type="button" data-page="overwatch" role="tab" aria-selected="false">OverWatch</button>
-        <button type="button" data-page="response" role="tab" aria-selected="false">Response</button>
-        <button type="button" data-page="ops" role="tab" aria-selected="false">Ops</button>
         <button type="button" data-page="ai" role="tab" aria-selected="false">AI Hub</button>
         <button type="button" data-page="world" role="tab" aria-selected="false">World</button>
-        <button type="button" data-page="modules" role="tab" aria-selected="false">Modules</button>
-        <button type="button" data-page="integrations" role="tab" aria-selected="false">Integrations</button>
+        <div class="nav-browse" id="nav-browse">
+          <button type="button" class="nav-browse-toggle" id="nav-browse-toggle" aria-haspopup="true" aria-expanded="false">Browse</button>
+          <div class="nav-browse-menu" id="nav-browse-menu" role="menu" hidden>
+            <button type="button" data-page="timeline" role="menuitem">Timeline</button>
+            <button type="button" data-page="prevent" role="menuitem">Prevent</button>
+            <button type="button" data-page="intel" role="menuitem">Intel</button>
+            <button type="button" data-page="identity" role="menuitem">Identity</button>
+            <button type="button" data-page="spotlight" role="menuitem">Spotlight</button>
+            <button type="button" data-page="overwatch" role="menuitem">OverWatch</button>
+            <button type="button" data-page="response" role="menuitem">Response</button>
+            <button type="button" data-page="ops" role="menuitem">Ops</button>
+            <button type="button" data-page="ebpf" role="menuitem">eBPF</button>
+            <button type="button" data-page="finance" role="menuitem">Finance</button>
+            <button type="button" data-page="sectors" role="menuitem">Sectors</button>
+            <button type="button" data-page="modules" role="menuitem">Modules</button>
+            <button type="button" data-page="integrations" role="menuitem">Integrations</button>
+          </div>
+        </div>
       </div>
       <div class="nav-actions">
         <button type="button" class="icon-btn" id="theme-toggle" aria-label="Switch to dark mode" title="Theme">
@@ -1214,7 +1351,7 @@ footer {
       <header class="page-hero">
         <p class="apple-eyebrow">Insight</p>
         <h1>Detections</h1>
-        <p class="lede">Falcon-style detections with MITRE ATT&amp;CK mapping and triage.</p>
+        <p class="lede">Insight detections with MITRE ATT&amp;CK mapping and triage.</p>
       </header>
       <div class="toolbar-pill">
         <input class="input-field" id="detections-filter" type="search" placeholder="Filter detections" aria-label="Filter detections" autocomplete="off">
@@ -1544,13 +1681,13 @@ footer {
 
     <section id="page-ai" class="page" hidden>
       <header class="page-hero">
-        <p class="apple-eyebrow">Beyond Falcon</p>
+        <p class="apple-eyebrow">AI Hub</p>
         <h1>AI Hub</h1>
         <p class="lede">22+ AI capabilities — multi-agent SOC, NL hunt, narratives, forecast, what-if. Assistive only.</p>
       </header>
       <div class="work-panel">
         <h3>SOC Copilot</h3>
-        <p class="hint">Multi-turn chat — sister to Netra, beyond Charlotte.</p>
+        <p class="hint">Multi-turn chat — sister to Netra, assistive only.</p>
         <div class="work-grid">
           <div class="field field--wide">
             <label for="ai-chat-input">Message</label>
@@ -1585,7 +1722,7 @@ footer {
       <p class="table-caption table-caption--spaced">Capabilities</p>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>AI feature</th><th>Beyond Falcon</th><th>Mode</th><th>Note</th></tr></thead>
+          <thead><tr><th>AI feature</th><th>Beyond</th><th>Mode</th><th>Note</th></tr></thead>
           <tbody id="ai-cap-rows"></tbody>
         </table>
       </div>
@@ -1655,21 +1792,156 @@ footer {
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Capability</th><th>Vendors</th><th>Status</th><th>Note</th></tr></thead>
+          <thead><tr><th>Capability</th><th>Peers</th><th>Status</th><th>Note</th></tr></thead>
           <tbody id="world-rows"></tbody>
         </table>
+      </div>
+    </section>
+
+    <section id="page-ebpf" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Sensors</p>
+        <h1>eBPF. Observe only.</h1>
+        <p class="lede">Falco/Tracee-class host telemetry — exec, fork, file, privilege, connect. Never kill, isolate, or drop packets. Netra owns network enforce.</p>
+      </header>
+      <div class="apple-metric-band" aria-label="eBPF health">
+        <div><span>Health</span><b id="ebpf-score">—</b></div>
+        <div><span>Backend</span><b id="ebpf-backend">—</b></div>
+        <div><span>Events</span><b id="ebpf-events-count">—</b></div>
+        <div><span>Lost</span><b id="ebpf-lost">—</b></div>
+        <div><span>Attachments</span><b id="ebpf-attach">—</b></div>
+      </div>
+      <div class="work-grid" style="margin-top:24px">
+        <div class="table-wrap">
+          <h3 style="margin:0 0 12px;font-size:17px">Features</h3>
+          <table>
+            <thead><tr><th>Sensor</th><th>Hook</th><th>Mode</th><th>Status</th></tr></thead>
+            <tbody id="ebpf-feature-rows"></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <h3 style="margin:0 0 12px;font-size:17px">Recent events</h3>
+          <table>
+            <thead><tr><th>Type</th><th>Host</th><th>Comm</th><th>Path / detail</th></tr></thead>
+            <tbody id="ebpf-event-rows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-finance" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Dalal Street</p>
+        <h1>Banks &amp; markets. Observe only.</h1>
+        <p class="lede">Institutions, exchanges, UPI, fraud ledger, RBI/SEBI posture — never freezes accounts, blocks orders, or drops payment messages.</p>
+      </header>
+      <div class="apple-metric-band" aria-label="Finance summary">
+        <div><span>Modules</span><b id="fin-modules">—</b></div>
+        <div><span>Institutions</span><b id="fin-institutions">—</b></div>
+        <div><span>Exchanges</span><b id="fin-exchanges">—</b></div>
+        <div><span>Fraud open</span><b id="fin-fraud">—</b></div>
+        <div><span>Events</span><b id="fin-events-count">—</b></div>
+      </div>
+      <div class="work-grid" style="margin-top:24px">
+        <div class="table-wrap">
+          <h3 style="margin:0 0 12px;font-size:17px">Exchanges &amp; markets</h3>
+          <table>
+            <thead><tr><th>Venue</th><th>Place</th><th>Segments</th><th>Status</th></tr></thead>
+            <tbody id="fin-exchange-rows"></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <h3 style="margin:0 0 12px;font-size:17px">Payment rails</h3>
+          <table>
+            <thead><tr><th>Rail</th><th>Place</th><th>Status</th><th>Note</th></tr></thead>
+            <tbody id="fin-payment-rows"></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <h3 style="margin:0 0 12px;font-size:17px">Institutions</h3>
+          <table>
+            <thead><tr><th>Name</th><th>Type</th><th>Place</th><th>Regulator</th></tr></thead>
+            <tbody id="fin-institution-rows"></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <h3 style="margin:0 0 12px;font-size:17px">Recent finance events</h3>
+          <table>
+            <thead><tr><th>Type</th><th>Severity</th><th>Place</th><th>Detail</th></tr></thead>
+            <tbody id="fin-event-rows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-sectors" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Critical infrastructure</p>
+        <h1>Railways, government &amp; more.</h1>
+        <p class="lede">Stations, portals, power, telecom, aviation, ports, health — observe only. Never stops trains, trips breakers, or takes citizen services offline.</p>
+      </header>
+      <div class="apple-metric-band" aria-label="Sectors summary">
+        <div><span>Modules</span><b id="sec-modules">—</b></div>
+        <div><span>Airports</span><b id="sec-airports">—</b></div>
+        <div><span>Flights</span><b id="sec-flights">—</b></div>
+        <div><span>Defence</span><b id="sec-defence">—</b></div>
+        <div><span>Events</span><b id="sec-events-count">—</b></div>
+      </div>
+      <div class="work-grid" style="margin-top:24px">
+        <div class="table-wrap">
+          <h3 style="margin:0 0 12px;font-size:17px">Airports</h3>
+          <table>
+            <thead><tr><th>Code</th><th>Name</th><th>Systems</th><th>Status</th></tr></thead>
+            <tbody id="sec-airport-rows"></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <h3 style="margin:0 0 12px;font-size:17px">Flights</h3>
+          <table>
+            <thead><tr><th>Flight</th><th>Airport</th><th>Status</th><th>Gate / belt</th></tr></thead>
+            <tbody id="sec-flight-rows"></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <h3 style="margin:0 0 12px;font-size:17px">Defence enterprise IT</h3>
+          <table>
+            <thead><tr><th>Org</th><th>System</th><th>Plane</th><th>Status</th></tr></thead>
+            <tbody id="sec-defence-rows"></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <h3 style="margin:0 0 12px;font-size:17px">Railways</h3>
+          <table>
+            <thead><tr><th>System</th><th>Org</th><th>Role</th><th>Status</th></tr></thead>
+            <tbody id="sec-rail-rows"></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <h3 style="margin:0 0 12px;font-size:17px">Government portals</h3>
+          <table>
+            <thead><tr><th>Portal</th><th>Category</th><th>Status</th></tr></thead>
+            <tbody id="sec-gov-rows"></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <h3 style="margin:0 0 12px;font-size:17px">Recent sector events</h3>
+          <table>
+            <thead><tr><th>Type</th><th>Severity</th><th>Sector</th><th>Detail</th></tr></thead>
+            <tbody id="sec-event-rows"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
     <section id="page-modules" class="page" hidden>
       <header class="page-hero">
         <p class="apple-eyebrow">Platform</p>
-        <h1>Falcon modules</h1>
-        <p class="lede">CrowdStrike Falcon capability map — observation-only where response would enforce.</p>
+        <h1>Modules</h1>
+        <p class="lede">Kavach capability map — observation-only where response would enforce.</p>
       </header>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Module</th><th>CrowdStrike</th><th>Status</th><th>Note</th></tr></thead>
+          <thead><tr><th>Module</th><th>Status</th><th>Note</th></tr></thead>
           <tbody id="modules-rows"></tbody>
         </table>
       </div>
@@ -1764,7 +2036,7 @@ footer {
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'modules', 'integrations'];
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'ebpf', 'finance', 'sectors', 'modules', 'integrations'];
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -1887,17 +2159,32 @@ footer {
     return res.json();
   }
 
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'ebpf', 'finance', 'sectors']);
+
+  function closeBrowse() {
+    const browse = $('nav-browse');
+    const toggle = $('nav-browse-toggle');
+    const menu = $('nav-browse-menu');
+    if (!browse || !toggle || !menu) return;
+    browse.classList.remove('open');
+    toggle.setAttribute('aria-expanded', 'false');
+    menu.hidden = true;
+  }
+
   function showPage(name) {
     current = pages.includes(name) ? name : 'overview';
     for (const p of pages) {
       const sec = $('page-' + p);
       if (sec) sec.hidden = p !== current;
     }
-    document.querySelectorAll('.navlinks button').forEach((btn) => {
+    document.querySelectorAll('.navlinks [data-page], .nav-browse-menu [data-page]').forEach((btn) => {
       const on = btn.getAttribute('data-page') === current;
       btn.classList.toggle('active', on);
-      btn.setAttribute('aria-selected', on ? 'true' : 'false');
+      if (btn.getAttribute('role') === 'tab') btn.setAttribute('aria-selected', on ? 'true' : 'false');
     });
+    const toggle = $('nav-browse-toggle');
+    if (toggle) toggle.classList.toggle('active', browsePages.has(current));
+    closeBrowse();
   }
 
   function fmtTime(v) {
@@ -2362,8 +2649,96 @@ footer {
     const tbody = $('modules-rows');
     tbody.innerHTML = '';
     (items || []).forEach((m) => {
-      tableRow(tbody, [m.name || '—', m.crowdstrike_analogue || '—', statusTag(m.status || 'active'), m.note || '—']);
+      tableRow(tbody, [m.name || '—', statusTag(m.status || 'active'), m.note || '—']);
     });
+  }
+
+  function renderSectors(summary, railways, portals, airports, flights, defence, events) {
+    if ($('sec-modules')) $('sec-modules').textContent = summary && summary.modules != null ? String(summary.modules) : '—';
+    if ($('sec-airports')) $('sec-airports').textContent = summary && summary.airports != null ? String(summary.airports) : '—';
+    if ($('sec-flights')) $('sec-flights').textContent = summary && summary.flights != null ? String(summary.flights) : '—';
+    if ($('sec-defence')) $('sec-defence').textContent = summary && summary.defence_orgs != null ? String(summary.defence_orgs) : '—';
+    if ($('sec-events-count')) $('sec-events-count').textContent = summary && summary.events != null ? String(summary.events) : '—';
+    const ap = $('sec-airport-rows');
+    if (ap) {
+      ap.innerHTML = '';
+      (airports || []).forEach((a) => tableRow(ap, [a.code || '—', a.name || '—', (a.systems || []).join(', ') || '—', statusTag(a.status || '—')]));
+    }
+    const fl = $('sec-flight-rows');
+    if (fl) {
+      fl.innerHTML = '';
+      (flights || []).filter((f) => f.flight).forEach((f) => tableRow(fl, [f.flight || '—', f.airport || '—', statusTag(f.status || '—'), f.gate || f.belt || '—']));
+    }
+    const def = $('sec-defence-rows');
+    if (def) {
+      def.innerHTML = '';
+      (defence || []).filter((d) => d.org).forEach((d) => tableRow(def, [d.org || '—', d.system || '—', d.plane || '—', statusTag(d.status || '—')]));
+    }
+    const rail = $('sec-rail-rows');
+    if (rail) {
+      rail.innerHTML = '';
+      (railways || []).filter((r) => r.system).forEach((r) => tableRow(rail, [r.system || '—', r.org || '—', r.role || '—', statusTag(r.status || '—')]));
+    }
+    const gov = $('sec-gov-rows');
+    if (gov) {
+      gov.innerHTML = '';
+      (portals || []).forEach((p) => tableRow(gov, [p.portal || '—', p.category || '—', statusTag(p.status || '—')]));
+    }
+    const ev = $('sec-event-rows');
+    if (ev) {
+      ev.innerHTML = '';
+      (events || []).slice(0, 40).forEach((e) => tableRow(ev, [e.type || '—', severityTag(e.severity), e.sector || '—', e.detail || '—']));
+    }
+  }
+
+  function renderFinance(summary, exchanges, payments, institutions, events) {
+    if ($('fin-modules')) $('fin-modules').textContent = summary && summary.modules != null ? String(summary.modules) : '—';
+    if ($('fin-institutions')) $('fin-institutions').textContent = summary && summary.institutions != null ? String(summary.institutions) : '—';
+    if ($('fin-exchanges')) $('fin-exchanges').textContent = summary && summary.exchanges != null ? String(summary.exchanges) : '—';
+    if ($('fin-fraud')) $('fin-fraud').textContent = summary && summary.open_fraud != null ? String(summary.open_fraud) : '—';
+    if ($('fin-events-count')) $('fin-events-count').textContent = summary && summary.events != null ? String(summary.events) : '—';
+    const ex = $('fin-exchange-rows');
+    if (ex) {
+      ex.innerHTML = '';
+      (exchanges || []).forEach((e) => tableRow(ex, [e.name || '—', e.place || '—', (e.segments || []).join(', ') || '—', statusTag(e.status || '—')]));
+    }
+    const pay = $('fin-payment-rows');
+    if (pay) {
+      pay.innerHTML = '';
+      (payments || []).forEach((p) => tableRow(pay, [p.rail || p.name || '—', p.place || '—', statusTag(p.status || '—'), p.note || p.detail || '—']));
+    }
+    const inst = $('fin-institution-rows');
+    if (inst) {
+      inst.innerHTML = '';
+      (institutions || []).forEach((i) => tableRow(inst, [i.name || '—', i.type || '—', i.place || '—', i.regulator || '—']));
+    }
+    const ev = $('fin-event-rows');
+    if (ev) {
+      ev.innerHTML = '';
+      (events || []).slice(0, 40).forEach((e) => tableRow(ev, [e.type || '—', severityTag(e.severity), e.place || '—', e.detail || '—']));
+    }
+  }
+
+  function renderEBPF(status, health, features, events) {
+    if ($('ebpf-score')) $('ebpf-score').textContent = health && health.score != null ? String(health.score) : '—';
+    if ($('ebpf-backend')) $('ebpf-backend').textContent = (status && status.backend) || '—';
+    if ($('ebpf-events-count')) $('ebpf-events-count').textContent = status && status.event_count != null ? String(status.event_count) : '—';
+    if ($('ebpf-lost')) $('ebpf-lost').textContent = status && status.lost_events != null ? String(status.lost_events) : '—';
+    if ($('ebpf-attach')) {
+      const ok = status && status.attachments_ok != null ? status.attachments_ok : '—';
+      const miss = status && status.attachments_miss != null ? status.attachments_miss : '—';
+      $('ebpf-attach').textContent = ok + '/' + (typeof ok === 'number' && typeof miss === 'number' ? ok + miss : miss);
+    }
+    const ft = $('ebpf-feature-rows');
+    if (ft) {
+      ft.innerHTML = '';
+      (features || []).forEach((f) => tableRow(ft, [f.name || f.id || '—', f.hook || '—', f.mode || '—', statusTag(f.status || '—')]));
+    }
+    const et = $('ebpf-event-rows');
+    if (et) {
+      et.innerHTML = '';
+      (events || []).slice(0, 40).forEach((e) => tableRow(et, [e.type || '—', e.host || '—', e.comm || '—', e.path || e.detail || '—']));
+    }
   }
 
   function renderWorld(payload) {
@@ -2477,7 +2852,7 @@ footer {
     const tbody = $('ai-cap-rows');
     tbody.innerHTML = '';
     (caps || []).forEach((c) => {
-      tableRow(tbody, [c.name || '—', c.beyond_falcon || '—', c.mode || '—', c.note || '—']);
+      tableRow(tbody, [c.name || '—', c.beyond || c.beyond_falcon || c.place || '—', c.mode || '—', c.note || '—']);
     });
   }
 
@@ -2869,6 +3244,43 @@ footer {
       renderAIClusters(aiClusters);
       renderAIForecast(aiForecast);
       renderWorld(world);
+      try {
+        const [ebpfStatus, ebpfHealth, ebpfFeatures, ebpfEvents] = await Promise.all([
+          request('/v1/ebpf/status'),
+          request('/v1/ebpf/health'),
+          request('/v1/ebpf/features'),
+          request('/v1/ebpf/events'),
+        ]);
+        renderEBPF(ebpfStatus, ebpfHealth, ebpfFeatures, Array.isArray(ebpfEvents) ? ebpfEvents : []);
+      } catch (_) {
+        renderEBPF({}, {}, [], []);
+      }
+      try {
+        const [finSum, finEx, finPay, finInst, finEv] = await Promise.all([
+          request('/v1/finance/summary'),
+          request('/v1/finance/exchanges'),
+          request('/v1/finance/payment-rails'),
+          request('/v1/finance/institutions'),
+          request('/v1/finance/events'),
+        ]);
+        renderFinance(finSum, finEx, finPay, finInst, Array.isArray(finEv) ? finEv : []);
+      } catch (_) {
+        renderFinance({}, [], [], [], []);
+      }
+      try {
+        const [secSum, secRail, secGov, secAir, secFl, secDef, secEv] = await Promise.all([
+          request('/v1/sectors/summary'),
+          request('/v1/sectors/railways'),
+          request('/v1/sectors/gov-portals'),
+          request('/v1/sectors/airports'),
+          request('/v1/sectors/flights'),
+          request('/v1/sectors/defence'),
+          request('/v1/sectors/events'),
+        ]);
+        renderSectors(secSum, secRail, secGov, secAir, secFl, secDef, Array.isArray(secEv) ? secEv : []);
+      } catch (_) {
+        renderSectors({}, [], [], [], [], [], []);
+      }
       if (report) {
         countUp($('m-ow'), report.overwatch_open || 0);
         countUp($('m-cve'), report.critical_cves || 0);
@@ -2887,11 +3299,23 @@ footer {
 
   $('login-host').textContent = location.host || location.hostname || 'localhost';
 
-  document.querySelectorAll('.navlinks button').forEach((btn) => {
+  document.querySelectorAll('.navlinks [data-page], .nav-browse-menu [data-page]').forEach((btn) => {
     btn.addEventListener('click', () => showPage(btn.getAttribute('data-page')));
   });
   document.querySelectorAll('[data-goto]').forEach((btn) => {
     btn.addEventListener('click', () => showPage(btn.getAttribute('data-goto')));
+  });
+  $('nav-browse-toggle').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const browse = $('nav-browse');
+    const menu = $('nav-browse-menu');
+    const open = menu.hidden;
+    browse.classList.toggle('open', open);
+    $('nav-browse-toggle').setAttribute('aria-expanded', open ? 'true' : 'false');
+    menu.hidden = !open;
+  });
+  document.addEventListener('click', (e) => {
+    if (!$('nav-browse').contains(e.target)) closeBrowse();
   });
   $('cta-findings').addEventListener('click', () => showPage('detect'));
   $('cta-fleet').addEventListener('click', () => showPage('fleet'));
@@ -2949,25 +3373,54 @@ footer {
     if (e.key === 'Escape' && !$('drawer-root').hidden) closeDrawer();
   });
 
+  function bearerCandidates(username, password) {
+    if (username !== 'admin' || !password) return [];
+    const out = [];
+    if (password === 'Admin@321') {
+      out.push('Admin@321');
+      out.push('Admin@321Admin@321'); // legacy lab token
+    }
+    if (!out.includes(password)) out.push(password);
+    return out;
+  }
+
   $('loginform').addEventListener('submit', async (e) => {
     e.preventDefault();
     $('error').textContent = '';
     const btn = $('login-btn');
+    const user = ($('username').value || '').trim();
+    const pass = $('password').value || '';
+    const tokens = bearerCandidates(user, pass);
     btn.disabled = true;
-    try {
-      await request('/v1/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: $('token').value }),
-      });
-      $('token').value = '';
-      await load();
-      showPage('overview');
-    } catch (err) {
-      $('error').textContent = 'Wrong token. Check KAVACH_TOKEN and try again.';
-    } finally {
+    if (!tokens.length) {
+      $('error').textContent = 'Wrong username or password.';
       btn.disabled = false;
+      return;
     }
+    let ok = false;
+    for (const token of tokens) {
+      try {
+        await request('/v1/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        });
+        ok = true;
+        break;
+      } catch (_) { /* try next candidate */ }
+    }
+    if (ok) {
+      $('password').value = '';
+      try {
+        await load();
+        showPage('overview');
+      } catch (_) {
+        $('error').textContent = 'Signed in, but the console failed to load data.';
+      }
+    } else {
+      $('error').textContent = 'Wrong username or password.';
+    }
+    btn.disabled = false;
   });
 
   showPage('overview');

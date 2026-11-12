@@ -15,40 +15,40 @@ import (
 	"time"
 )
 
-// AICapability describes a Kavach AI feature that goes beyond Falcon Charlotte.
+// AICapability describes a Kavach AI feature.
 type AICapability struct {
-	ID       string   `json:"id"`
-	Name     string   `json:"name"`
-	Beyond   string   `json:"beyond_falcon"`
-	APIs     []string `json:"apis"`
-	Mode     string   `json:"mode"` // heuristic | optional_llm | hybrid
-	Note     string   `json:"note"`
+	ID     string   `json:"id"`
+	Name   string   `json:"name"`
+	Beyond string   `json:"beyond"` // short differentiator vs typical EDR AI
+	APIs   []string `json:"apis"`
+	Mode   string   `json:"mode"` // heuristic | optional_llm | hybrid
+	Note   string   `json:"note"`
 }
 
 func AICapabilities() []AICapability {
 	return []AICapability{
-		{ID: "chat", Name: "SOC Copilot Chat", Beyond: "Charlotte AI (multi-turn)", APIs: []string{"/v1/ai/chat"}, Mode: "hybrid", Note: "Multi-turn analyst chat with local reasoning"},
-		{ID: "nl-hunt", Name: "Natural-language Hunt", Beyond: "FQL + Charlotte", APIs: []string{"/v1/ai/nl-hunt"}, Mode: "heuristic", Note: "English → hunt filters + results"},
-		{ID: "narrative", Name: "Incident Narratives", Beyond: "Charlotte summarize", APIs: []string{"/v1/ai/narrative"}, Mode: "hybrid", Note: "Story-form attack narrative"},
-		{ID: "cluster", Name: "Alert Clustering", Beyond: "Workbench triage", APIs: []string{"/v1/ai/cluster"}, Mode: "heuristic", Note: "Dedup / cluster related findings"},
-		{ID: "attack-path", Name: "Attack Path Predictor", Beyond: "Threat Graph", APIs: []string{"/v1/ai/attack-path"}, Mode: "heuristic", Note: "Next-step adversary predictions"},
-		{ID: "forecast", Name: "Breach Risk Forecast", Beyond: "ExPRT / Spotlight", APIs: []string{"/v1/ai/forecast"}, Mode: "heuristic", Note: "24–72h risk forecast"},
-		{ID: "similarity", Name: "Finding Similarity", Beyond: "IOC match", APIs: []string{"/v1/ai/similarity"}, Mode: "heuristic", Note: "Nearest-neighbor findings"},
-		{ID: "classify", Name: "Behavior Family Classifier", Beyond: "ML NGAV labels", APIs: []string{"/v1/ai/classify"}, Mode: "heuristic", Note: "Ransomware / C2 / LOTL / etc."},
-		{ID: "fp", Name: "False-Positive Scorer", Beyond: "Detection triage", APIs: []string{"/v1/ai/fp-score"}, Mode: "heuristic", Note: "FP likelihood with rationale"},
-		{ID: "remediation", Name: "Remediation Advisor", Beyond: "RTR guidance", APIs: []string{"/v1/ai/remediation"}, Mode: "heuristic", Note: "Guidance only — never executes"},
-		{ID: "report", Name: "Auto Incident Report", Beyond: "Case notes", APIs: []string{"/v1/ai/report"}, Mode: "hybrid", Note: "Markdown incident report"},
-		{ID: "playbook", Name: "Playbook Recommender", Beyond: "Fusion library", APIs: []string{"/v1/ai/playbook-suggest"}, Mode: "heuristic", Note: "Suggest Fusion playbooks"},
-		{ID: "anomaly", Name: "Deep Anomaly Detector", Beyond: "UEBA", APIs: []string{"/v1/ai/anomaly"}, Mode: "heuristic", Note: "Host/process anomaly vectors"},
-		{ID: "agents", Name: "Multi-Agent SOC", Beyond: "Charlotte single agent", APIs: []string{"/v1/ai/agents", "/v1/ai/agents/run"}, Mode: "hybrid", Note: "Triage / Hunt / Intel / IR agents"},
-		{ID: "briefing", Name: "Daily SOC Briefing", Beyond: "Dashboards", APIs: []string{"/v1/ai/briefing"}, Mode: "heuristic", Note: "Executive + analyst brief"},
-		{ID: "what-if", Name: "What-If Simulator", Beyond: "n/a in Falcon", APIs: []string{"/v1/ai/what-if"}, Mode: "heuristic", Note: "Simulate adversary progression"},
-		{ID: "memory", Name: "Analyst Memory", Beyond: "n/a", APIs: []string{"/v1/ai/memory"}, Mode: "heuristic", Note: "Remember analyst preferences"},
-		{ID: "stream", Name: "Event Stream Analyst", Beyond: "n/a", APIs: []string{"/v1/ai/stream"}, Mode: "heuristic", Note: "Batch-analyze recent telemetry"},
-		{ID: "guardian", Name: "AI Workload Guardian", Beyond: "Falcon Guardian", APIs: []string{"/v1/ai/guardian"}, Mode: "heuristic", Note: "Observe AI/agent process risk"},
-		{ID: "fusion-xdr", Name: "Netra×Kavach AI Fusion", Beyond: "Insight XDR", APIs: []string{"/v1/ai/xdr-fusion"}, Mode: "heuristic", Note: "Cross-domain AI correlation"},
-		{ID: "embeddings", Name: "Finding Embeddings", Beyond: "n/a", APIs: []string{"/v1/ai/embeddings"}, Mode: "heuristic", Note: "Deterministic feature vectors"},
-		{ID: "autopilot", Name: "Triage Autopilot", Beyond: "Falcon Complete agents", APIs: []string{"/v1/ai/autopilot"}, Mode: "heuristic", Note: "Suggested triage batch — never auto-closes"},
+		{ID: "chat", Name: "SOC Copilot Chat", Beyond: "Multi-turn SOC chat", APIs: []string{"/v1/ai/chat"}, Mode: "hybrid", Note: "Multi-turn analyst chat with local reasoning"},
+		{ID: "nl-hunt", Name: "Natural-language Hunt", Beyond: "English → hunt", APIs: []string{"/v1/ai/nl-hunt"}, Mode: "heuristic", Note: "English → hunt filters + results"},
+		{ID: "narrative", Name: "Incident Narratives", Beyond: "Story-form IR", APIs: []string{"/v1/ai/narrative"}, Mode: "hybrid", Note: "Story-form attack narrative"},
+		{ID: "cluster", Name: "Alert Clustering", Beyond: "Finding dedup", APIs: []string{"/v1/ai/cluster"}, Mode: "heuristic", Note: "Dedup / cluster related findings"},
+		{ID: "attack-path", Name: "Attack Path Predictor", Beyond: "Next-step predict", APIs: []string{"/v1/ai/attack-path"}, Mode: "heuristic", Note: "Next-step adversary predictions"},
+		{ID: "forecast", Name: "Breach Risk Forecast", Beyond: "24–72h risk", APIs: []string{"/v1/ai/forecast"}, Mode: "heuristic", Note: "24–72h risk forecast"},
+		{ID: "similarity", Name: "Finding Similarity", Beyond: "Nearest neighbor", APIs: []string{"/v1/ai/similarity"}, Mode: "heuristic", Note: "Nearest-neighbor findings"},
+		{ID: "classify", Name: "Behavior Family Classifier", Beyond: "Family labels", APIs: []string{"/v1/ai/classify"}, Mode: "heuristic", Note: "Ransomware / C2 / LOTL / etc."},
+		{ID: "fp", Name: "False-Positive Scorer", Beyond: "FP likelihood", APIs: []string{"/v1/ai/fp-score"}, Mode: "heuristic", Note: "FP likelihood with rationale"},
+		{ID: "remediation", Name: "Remediation Advisor", Beyond: "Guidance only", APIs: []string{"/v1/ai/remediation"}, Mode: "heuristic", Note: "Guidance only — never executes"},
+		{ID: "report", Name: "Auto Incident Report", Beyond: "Markdown IR", APIs: []string{"/v1/ai/report"}, Mode: "hybrid", Note: "Markdown incident report"},
+		{ID: "playbook", Name: "Playbook Recommender", Beyond: "Fusion suggest", APIs: []string{"/v1/ai/playbook-suggest"}, Mode: "heuristic", Note: "Suggest Fusion playbooks"},
+		{ID: "anomaly", Name: "Deep Anomaly Detector", Beyond: "Host vectors", APIs: []string{"/v1/ai/anomaly"}, Mode: "heuristic", Note: "Host/process anomaly vectors"},
+		{ID: "agents", Name: "Multi-Agent SOC", Beyond: "Multi-agent", APIs: []string{"/v1/ai/agents", "/v1/ai/agents/run"}, Mode: "hybrid", Note: "Triage / Hunt / Intel / IR agents"},
+		{ID: "briefing", Name: "Daily SOC Briefing", Beyond: "Exec + analyst", APIs: []string{"/v1/ai/briefing"}, Mode: "heuristic", Note: "Executive + analyst brief"},
+		{ID: "what-if", Name: "What-If Simulator", Beyond: "Progression sim", APIs: []string{"/v1/ai/what-if"}, Mode: "heuristic", Note: "Simulate adversary progression"},
+		{ID: "memory", Name: "Analyst Memory", Beyond: "Preferences", APIs: []string{"/v1/ai/memory"}, Mode: "heuristic", Note: "Remember analyst preferences"},
+		{ID: "stream", Name: "Event Stream Analyst", Beyond: "Batch telemetry", APIs: []string{"/v1/ai/stream"}, Mode: "heuristic", Note: "Batch-analyze recent telemetry"},
+		{ID: "guardian", Name: "AI Workload Guardian", Beyond: "AI process risk", APIs: []string{"/v1/ai/guardian"}, Mode: "heuristic", Note: "Observe AI/agent process risk"},
+		{ID: "fusion-xdr", Name: "Netra×Kavach AI Fusion", Beyond: "Cross-domain", APIs: []string{"/v1/ai/xdr-fusion"}, Mode: "heuristic", Note: "Cross-domain AI correlation"},
+		{ID: "embeddings", Name: "Finding Embeddings", Beyond: "Feature vectors", APIs: []string{"/v1/ai/embeddings"}, Mode: "heuristic", Note: "Deterministic feature vectors"},
+		{ID: "autopilot", Name: "Triage Autopilot", Beyond: "Suggested triage", APIs: []string{"/v1/ai/autopilot"}, Mode: "heuristic", Note: "Suggested triage batch — never auto-closes"},
 	}
 }
 
@@ -91,7 +91,7 @@ type BehaviorClass struct {
 	TechniqueID string   `json:"technique_id,omitempty"`
 }
 
-// RegisterAIPlatform wires beyond-Falcon AI APIs.
+// RegisterAIPlatform wires Kavach AI APIs.
 func RegisterAIPlatform(mux *http.ServeMux, token string, store *Store) {
 	mux.HandleFunc("GET /v1/ai/capabilities", func(w http.ResponseWriter, r *http.Request) {
 		if !requireAuth(w, r, token) {
@@ -99,10 +99,9 @@ func RegisterAIPlatform(mux *http.ServeMux, token string, store *Store) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{
-			"product": "kavach-ai",
-			"beyond_falcon": true,
+			"product":        "kavach-ai",
 			"llm_configured": os.Getenv("KAVACH_LLM_URL") != "",
-			"capabilities": AICapabilities(),
+			"capabilities":   AICapabilities(),
 		})
 	})
 
@@ -554,7 +553,7 @@ func localChatReply(msg string, store *Store) string {
 	case strings.Contains(low, "netra") || strings.Contains(low, "xdr"):
 		return "Netra×Kavach AI Fusion correlates denied network flows with process findings. Open /v1/ai/xdr-fusion or the Integrations page."
 	default:
-		return fmt.Sprintf("Kavach AI Copilot online — %d findings in scope. Ask for a briefing, ransomware hunt, attack path, or false-positive review. Beyond Falcon Charlotte: multi-agent SOC, NL hunt, forecast, and what-if simulation.", n)
+		return fmt.Sprintf("Kavach AI Copilot online — %d findings in scope. Ask for a briefing, ransomware hunt, attack path, or false-positive review. Multi-agent SOC, NL hunt, forecast, and what-if are available.", n)
 	}
 }
 
@@ -1006,7 +1005,7 @@ func socBriefing(store *Store) map[string]any {
 		"top_clusters": top,
 		"forecast": fc,
 		"ai_capabilities": len(AICapabilities()),
-		"beyond_falcon": true,
+		"lineage":         "kaveri-briefing",
 	}
 }
 
@@ -1087,7 +1086,7 @@ func xdrAIFusion(store *Store) map[string]any {
 		"network_events": nets,
 		"netra_poller": NetraPollerStatus(),
 		"ai_insight": fmt.Sprintf("Fusion model links %d XDR-tagged endpoint findings with %d network events.", xdr, nets),
-		"beyond_falcon": "Native Netra×Kavach cross-domain AI — not a third-party SIEM bolt-on",
+		"note":       "Native Netra×Kavach cross-domain AI — observation only",
 	}
 }
 

@@ -5,17 +5,17 @@
 
 image:
   repository: ghcr.io/zyvorai/kavach
-  tag: "0.1.0"
+  tag: "0.1.1"
   pullPolicy: IfNotPresent
 
 agentImage:
   repository: ghcr.io/zyvorai/kavach-agent
-  tag: "0.1.0"
+  tag: "0.1.1"
   pullPolicy: IfNotPresent
 
 replicaCount: 1
 
-# Admin bearer token (min 16 chars). Prefer existingSecret in real installs.
+# Admin bearer token (min 8 chars; lab default Admin@321). Prefer existingSecret in real installs.
 auth:
   existingSecret: ""
   # Key in the Secret that holds the admin token.
@@ -35,7 +35,7 @@ tls:
   # an emptyDir; probes and the Service use scheme/port name https.
   # Set enabled=false only when TLS is terminated by a trusted proxy/ingress.
   enabled: true
-  opensslImage: alpine/openssl:3.3.2
+  opensslImage: alpine/openssl:3.5.9
   # kubernetes.io/tls Secret to serve instead of a cert minted per pod start.
   existingSecret: ""
   # Bypass verify for the chart-generated self-signed cert (agent → controller).

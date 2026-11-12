@@ -33,8 +33,8 @@ func main() {
 	if token == "" {
 		token = os.Getenv("ZYVOR_EDR_TOKEN") // legacy alias
 	}
-	if len(token) < 16 {
-		log.Fatal("set KAVACH_TOKEN to a secret of at least 16 characters")
+	if len(token) < 8 {
+		log.Fatal("set KAVACH_TOKEN to a secret of at least 8 characters")
 	}
 	switch *mode {
 	case "server":

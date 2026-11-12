@@ -21,7 +21,7 @@ func registerMutateTools(srv *mcpserver.Server, c *client) error {
 			"host":     strProp("Target host"),
 		}, "scenario"), bodyFields: true},
 		{name: "kavach_ai_autopilot", method: "POST", path: "/v1/ai/autopilot", description: "Triage autopilot suggestions (never auto-applies).", schema: emptySchema(), bodyFields: true},
-		{name: "kavach_ai_assist", method: "POST", path: "/v1/ai/assist", description: "Charlotte-lite assistive triage.", schema: objSchema(map[string]any{
+		{name: "kavach_ai_assist", method: "POST", path: "/v1/ai/assist", description: "Assistive triage.", schema: objSchema(map[string]any{
 			"question":   strProp("Question"),
 			"finding_id": strProp("Finding ID"),
 		}), bodyFields: true},

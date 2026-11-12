@@ -12,7 +12,7 @@ go build -o bin/kavach-mcp ./cmd/kavach-mcp
 
 ```bash
 export KAVACH_URL=https://kavach.80.79.5.173.sslip.io:30943
-export KAVACH_TOKEN='Admin@321Admin@321'
+export KAVACH_TOKEN='Admin@321'
 export KAVACH_MCP_TLS_INSECURE=true   # self-signed lab certs
 # optional ledger mutations (still observation-only on the controller):
 # export KAVACH_MCP_ALLOW_MUTATIONS=true

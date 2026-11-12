@@ -60,7 +60,7 @@ var (
 		{ID: "conn-netra", Name: "Netra Network XDR", Category: "network", Status: "available", Endpoint: "/v1/network-events"},
 		{ID: "conn-siem", Name: "SIEM Webhook", Category: "siem", Status: "optional"},
 		{ID: "conn-syslog", Name: "Syslog", Category: "siem", Status: "optional"},
-		{ID: "conn-llm", Name: "Charlotte LLM", Category: "ai", Status: "optional"},
+		{ID: "conn-llm", Name: "LLM gateway", Category: "ai", Status: "optional"},
 		{ID: "conn-okta", Name: "Identity (Okta/Entra)", Category: "identity", Status: "available"},
 		{ID: "conn-cloud", Name: "Cloud CSPM", Category: "cloud", Status: "available"},
 		{ID: "conn-inventory", Name: "Generic Inventory Ingest", Category: "inventory", Status: "available", Endpoint: "/v1/inventory"},
@@ -182,7 +182,7 @@ func RegisterHunt(mux *http.ServeMux, token string, store *Store) {
 		r.Body = http.MaxBytesReader(w, r.Body, 8192)
 		defer r.Body.Close()
 		var body struct {
-			Query string `json:"query"` // simple key:value filters, Falcon FQL-lite
+			Query string `json:"query"` // simple key:value filters
 		}
 		if json.NewDecoder(r.Body).Decode(&body) != nil {
 			http.Error(w, "invalid", 400)
@@ -352,8 +352,8 @@ func RegisterReports(mux *http.ServeMux, token string, store *Store, registry *C
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"findings": len(findings), "severities": sev, "fleet_online": online,
 			"overwatch_open": owOpen, "critical_cves": critV,
-			"detections": len(findings), "modules": len(FalconModules()),
-			"product": "kavach", "parity": "crowdstrike-falcon",
+			"detections": len(findings), "modules": len(KavachModules()),
+			"product": "kavach", "parity": "bharat-kshetra",
 		})
 	})
 }

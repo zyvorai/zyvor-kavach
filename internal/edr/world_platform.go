@@ -13,12 +13,12 @@ import (
 
 // WorldModule maps a global-vendor capability onto Kavach (observation-only).
 type WorldModule struct {
-	ID       string   `json:"id"`
-	Name     string   `json:"name"`
-	Vendors  []string `json:"vendors"` // who ships an analogue
-	Status   string   `json:"status"`
-	APIs     []string `json:"apis"`
-	Note     string   `json:"note"`
+	ID      string   `json:"id"`
+	Name    string   `json:"name"`
+	Vendors []string `json:"vendors"` // peer-product analogues for operators
+	Status  string   `json:"status"`
+	APIs    []string `json:"apis"`
+	Note    string   `json:"note"`
 }
 
 func WorldModules() []WorldModule {
@@ -26,23 +26,23 @@ func WorldModules() []WorldModule {
 		{ID: "storyline", Name: "Attack Storyline", Vendors: []string{"SentinelOne Storyline", "Cortex Causality", "MDE Timeline"}, Status: "active", APIs: []string{"/v1/storyline"}, Note: "Reconstruct process/network chain"},
 		{ID: "air", Name: "Automated Investigation", Vendors: []string{"Microsoft AIR", "S1 Purple Auto-Triage"}, Status: "active", APIs: []string{"/v1/air/investigations"}, Note: "Suggested investigation steps — never auto-remediates"},
 		{ID: "advanced-hunt", Name: "Advanced Hunting (KQL-lite)", Vendors: []string{"Microsoft Advanced Hunting", "Elastic ES|QL", "S1 Purple PowerQuery"}, Status: "active", APIs: []string{"/v1/hunt/kql"}, Note: "Query language over findings/events"},
-		{ID: "ranger", Name: "Network Discovery", Vendors: []string{"SentinelOne Ranger", "CrowdStrike Discover Network"}, Status: "active", APIs: []string{"/v1/network-discovery"}, Note: "Unmanaged / rogue device inventory"},
+		{ID: "ranger", Name: "Network Discovery", Vendors: []string{"SentinelOne Ranger", "Discover Network"}, Status: "active", APIs: []string{"/v1/network-discovery"}, Note: "Unmanaged / rogue device inventory"},
 		{ID: "deception", Name: "Deception / Honeytokens", Vendors: []string{"Proofpoint", "Zscaler Deception", "Elastic Deception"}, Status: "active", APIs: []string{"/v1/deception"}, Note: "Decoy assets + tripwire events"},
 		{ID: "casb", Name: "CASB / SaaS Security", Vendors: []string{"Microsoft Defender for Cloud Apps", "Netskope", "Prisma"}, Status: "active", APIs: []string{"/v1/casb/apps"}, Note: "SaaS app risk inventory"},
 		{ID: "email", Name: "Email Security", Vendors: []string{"Proofpoint", "Mimecast", "Defender for Office"}, Status: "active", APIs: []string{"/v1/email/threats"}, Note: "Phish / BEC / malware mail signals"},
 		{ID: "dlp", Name: "Data Loss Prevention", Vendors: []string{"Symantec DLP", "Forcepoint", "Microsoft Purview"}, Status: "active", APIs: []string{"/v1/dlp/events"}, Note: "Sensitive-data movement signals"},
 		{ID: "cnapp", Name: "CNAPP / CWPP", Vendors: []string{"Wiz", "Prisma Cloud", "Defender for Cloud", "S1 Cloud"}, Status: "active", APIs: []string{"/v1/cnapp/workloads", "/v1/cnapp/misconfigs"}, Note: "Cloud workload + posture"},
-		{ID: "asrm", Name: "Exposure / ASRM", Vendors: []string{"CrowdStrike ExPRT", "S1 Exposure", "Tenable"}, Status: "active", APIs: []string{"/v1/exposure"}, Note: "Attack-surface risk ranking"},
+		{ID: "asrm", Name: "Exposure / ASRM", Vendors: []string{"ExPRT", "S1 Exposure", "Tenable"}, Status: "active", APIs: []string{"/v1/exposure"}, Note: "Attack-surface risk ranking"},
 		{ID: "compliance", Name: "Compliance Posture", Vendors: []string{"Wiz Compliance", "Prisma", "Rapid7"}, Status: "active", APIs: []string{"/v1/compliance"}, Note: "CIS / NIST control mapping"},
-		{ID: "forensics", Name: "Forensic Package", Vendors: []string{"CrowdStrike Falcon Forensics", "MDE investigation package"}, Status: "active", APIs: []string{"/v1/forensics"}, Note: "Collection requests — ledger only"},
+		{ID: "forensics", Name: "Forensic Package", Vendors: []string{"Forensics packages", "MDE investigation package"}, Status: "active", APIs: []string{"/v1/forensics"}, Note: "Collection requests — ledger only"},
 		{ID: "fim", Name: "File Integrity Monitoring", Vendors: []string{"OSSEC/Wazuh", "Tripwire", "Elastic FIM"}, Status: "active", APIs: []string{"/v1/fim"}, Note: "Critical path change watch"},
 		{ID: "persistence", Name: "Persistence Hunt", Vendors: []string{"MDE", "Elastic", "Velociraptor"}, Status: "active", APIs: []string{"/v1/persistence"}, Note: "Cron/systemd/autorun inventory"},
-		{ID: "yara", Name: "YARA Rules", Vendors: []string{"Elastic", "CrowdStrike", "VirusTotal"}, Status: "active", APIs: []string{"/v1/yara"}, Note: "Custom YARA rule library"},
+		{ID: "yara", Name: "YARA Rules", Vendors: []string{"Elastic", "VirusTotal"}, Status: "active", APIs: []string{"/v1/yara"}, Note: "Custom YARA rule library"},
 		{ID: "sigma", Name: "Sigma Rules", Vendors: []string{"Elastic", "Splunk", "SigmaHQ"}, Status: "active", APIs: []string{"/v1/sigma"}, Note: "Sigma detection rule library"},
 		{ID: "watchlists", Name: "Watchlists", Vendors: []string{"Splunk", "Sentinel", "Elastic"}, Status: "active", APIs: []string{"/v1/watchlists"}, Note: "Entity watchlists"},
 		{ID: "exclusions", Name: "Exclusions / Suppressions", Vendors: []string{"All major EDR"}, Status: "active", APIs: []string{"/v1/exclusions"}, Note: "Detection suppressions"},
-		{ID: "sensor-health", Name: "Sensor Coverage Gaps", Vendors: []string{"S1 Ranger gaps", "Falcon sensor health"}, Status: "active", APIs: []string{"/v1/sensor-health"}, Note: "Coverage / stale / missing agents"},
-		{ID: "sandbox", Name: "Sandbox Detonation", Vendors: []string{"CrowdStrike Falcon Sandbox", "Joe Sandbox", "Any.Run"}, Status: "active", APIs: []string{"/v1/sandbox"}, Note: "External detonation reports via inventory ingest"},
+		{ID: "sensor-health", Name: "Sensor Coverage Gaps", Vendors: []string{"S1 Ranger gaps", "Sensor health"}, Status: "active", APIs: []string{"/v1/sensor-health"}, Note: "Coverage / stale / missing agents"},
+		{ID: "sandbox", Name: "Sandbox Detonation", Vendors: []string{"Joe Sandbox", "Any.Run"}, Status: "active", APIs: []string{"/v1/sandbox"}, Note: "External detonation reports via inventory ingest"},
 		{ID: "itsm", Name: "ITSM Ticketing", Vendors: []string{"ServiceNow", "Jira", "PagerDuty"}, Status: "active", APIs: []string{"/v1/itsm/tickets"}, Note: "Ticket ledger / connectors"},
 		{ID: "notify", Name: "Notification Channels", Vendors: []string{"Slack", "Teams", "PagerDuty", "Email"}, Status: "active", APIs: []string{"/v1/notify/channels"}, Note: "Alert channel registry"},
 		{ID: "rbac", Name: "RBAC Roles", Vendors: []string{"All enterprise platforms"}, Status: "active", APIs: []string{"/v1/rbac/roles"}, Note: "Catalog + optional enforcement via KAVACH_RBAC=1"},
@@ -54,14 +54,14 @@ func WorldModules() []WorldModule {
 		{ID: "ot-iot", Name: "OT / IoT", Vendors: []string{"Nozomi", "Claroty", "Microsoft Defender for IoT"}, Status: "active", APIs: []string{"/v1/ot/devices"}, Note: "OT/IoT via POST /v1/inventory domain=ot"},
 		{ID: "sbom", Name: "Supply Chain / SBOM", Vendors: []string{"Snyk", "Anchore", "FOSSA"}, Status: "active", APIs: []string{"/v1/sbom"}, Note: "Component inventory + CVEs"},
 		{ID: "hyperauto", Name: "Hyperautomation", Vendors: []string{"S1 Hyperautomation", "Cortex XSOAR", "Splunk SOAR"}, Status: "active", APIs: []string{"/v1/hyperautomation/workflows"}, Note: "No-code workflow catalog (ledger)"},
-		{ID: "mdr", Name: "MDR / Vigilance Desk", Vendors: []string{"S1 Vigilance", "Falcon Complete", "MDE Experts"}, Status: "active", APIs: []string{"/v1/mdr/queue"}, Note: "Managed detection queue"},
-		{ID: "geoip", Name: "Geo enrichment", Vendors: []string{"MaxMind", "CrowdStrike", "Elastic"}, Status: "active", APIs: []string{"/v1/enrich/geo"}, Note: "Offline heuristic geo + private/docs ranges"},
+		{ID: "mdr", Name: "MDR / Vigilance Desk", Vendors: []string{"S1 Vigilance", "MDE Experts"}, Status: "active", APIs: []string{"/v1/mdr/queue"}, Note: "Managed detection queue"},
+		{ID: "geoip", Name: "Geo enrichment", Vendors: []string{"MaxMind", "Elastic"}, Status: "active", APIs: []string{"/v1/enrich/geo"}, Note: "Offline heuristic geo + private/docs ranges"},
 		{ID: "tls-inventory", Name: "TLS / Cert Inventory", Vendors: []string{"Censys", "Qualys SSL"}, Status: "active", APIs: []string{"/v1/tls/certs"}, Note: "Certificate inventory"},
 		{ID: "rollback", Name: "Rollback Advisor", Vendors: []string{"SentinelOne Rollback"}, Status: "active", APIs: []string{"/v1/rollback"}, Note: "Guidance only — never restores files"},
 		{ID: "custom-rules", Name: "Custom Detection Engine", Vendors: []string{"S1 STAR", "Elastic rules", "Splunk"}, Status: "active", APIs: []string{"/v1/rules"}, Note: "Custom detection rule store"},
 		{ID: "browser", Name: "Browser / Extension Risk", Vendors: []string{"Island", "Chrome Enterprise", "Talon"}, Status: "active", APIs: []string{"/v1/browser/extensions"}, Note: "Agent Chromium extension scan + inventory ingest"},
-		{ID: "mfa-fatigue", Name: "MFA Fatigue / ITDR+", Vendors: []string{"CrowdStrike Identity", "Microsoft ITDR"}, Status: "active", APIs: []string{"/v1/itdr/mfa"}, Note: "MFA push-bomb / token abuse signals"},
-		{ID: "world-catalog", Name: "Global Capability Catalog", Vendors: []string{"AMTSO XDR matrix", "IDC XDR 2025"}, Status: "active", APIs: []string{"/v1/world/modules"}, Note: "This catalog"},
+		{ID: "mfa-fatigue", Name: "MFA Fatigue / ITDR+", Vendors: []string{"Identity", "Microsoft ITDR"}, Status: "active", APIs: []string{"/v1/itdr/mfa"}, Note: "MFA push-bomb / token abuse signals"},
+		{ID: "world-catalog", Name: "Global Capability Catalog", Vendors: []string{"AMTSO XDR matrix", "IDC XDR"}, Status: "active", APIs: []string{"/v1/world/modules"}, Note: "This catalog"},
 	}
 }
 
@@ -171,7 +171,7 @@ func defaultHyper() []map[string]any {
 	}
 }
 
-// RegisterWorldPlatform adds global-vendor parity APIs beyond Falcon.
+// RegisterWorldPlatform adds world-catalog APIs.
 func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, registry *CredentialRegistry) {
 	mux.HandleFunc("GET /v1/world/modules", func(w http.ResponseWriter, r *http.Request) {
 		if !requireAuth(w, r, token) {

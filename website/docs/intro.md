@@ -5,27 +5,39 @@ title: Intro
 
 # Kavach
 
-**Security without compromise.** Zyvor Kavach is unified endpoint, cloud and AI
-security — observation-first EDR with Netra XDR correlation for Linux and
-Kubernetes.
+**Security without compromise.** Zyvor Kavach is observation-first endpoint, cloud, and AI security — the sister console to Netra. Detect and report. Never contain, kill, or isolate.
 
 ## Quickstart
 
 ```bash
-export KAVACH_TOKEN='replace-with-at-least-16-random-characters'
-go run ./cmd/kavach -mode server
+export KAVACH_TOKEN='Admin@321'
+go test ./...
+go run ./cmd/kavach -mode server -listen 127.0.0.1:8099
 # second terminal:
-go run ./cmd/kavach -mode agent
+go run ./cmd/kavach -mode agent -url http://127.0.0.1:8099
 ```
 
-## Next
+Console: http://127.0.0.1:8099/ — sign in **`admin` / `Admin@321`**.
 
-- [Architecture](./architecture.md)
-- [Remote deploy](./deploy-remote.md)
-- [Agent mTLS](./agent-mtls.md)
-- [Envoy Gateway](./envoy-gateway.md)
-- API: [docs/openapi.yaml](https://github.com/zyvorai/zyvor-kavach/blob/main/docs/openapi.yaml)
-- Lab demo: [scripts/demo-lab.sh](https://github.com/zyvorai/zyvor-kavach/blob/main/scripts/demo-lab.sh)
+## Documentation map
+
+| Guide | |
+|-------|--|
+| [Tutorial](./tutorial.md) | First hour end-to-end |
+| [Architecture](./architecture.md) | Components and data path |
+| [Use cases](./use-cases.md) | SOC, hunt, XDR, compliance |
+| [Testing](./testing.md) | Unit, smoke, lab |
+| [Console](./console.md) | Login and UX |
+| [kavachctl](./kavachctl.md) | Operator CLI |
+| [eBPF](./ebpf.md) | Observe-only sensors |
+| [Finance](./finance.md) | Banks / markets / UPI |
+| [Sectors](./sectors.md) | Railways, airports, defence, govt |
+| [Remote deploy](./deploy-remote.md) | Helm / k3s |
+| [Envoy Gateway](./envoy-gateway.md) | Gateway API |
+| [Agent mTLS](./agent-mtls.md) | Client certificates |
+| [MCP](./mcp-integration.md) | AI agent tooling |
+
+API contract: [openapi.yaml](https://github.com/zyvorai/zyvor-kavach/blob/main/docs/openapi.yaml)
 
 Site: https://zyvorai.github.io/zyvor-kavach/  
 Repo: https://github.com/zyvorai/zyvor-kavach

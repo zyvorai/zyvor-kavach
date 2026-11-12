@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
-FROM golang:1.23-alpine AS builder
+FROM golang:1.27-alpine AS builder
 WORKDIR /src
 COPY go.mod ./
 COPY cmd ./cmd
 COPY internal ./internal
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags='-s -w' -o /kavach ./cmd/kavach
 
-FROM alpine:3.20
+FROM alpine:3.24
 RUN addgroup -S kavach && adduser -S -G kavach kavach \
  && mkdir -p /app/data && chown -R kavach:kavach /app
 USER kavach
