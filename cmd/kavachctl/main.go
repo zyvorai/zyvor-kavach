@@ -125,7 +125,14 @@ func run(args []string) error {
 	case "exposure":
 		return request("GET", "/v1/exposure", nil)
 	case "compliance":
+		if len(args) > 1 && args[1] == "score" {
+			return request("GET", "/v1/compliance/score", nil)
+		}
 		return request("GET", "/v1/compliance", nil)
+	case "attack", "mitre":
+		return request("GET", "/v1/attack/matrix", nil)
+	case "metrics":
+		return request("GET", "/metrics", nil)
 	case "zero-trust":
 		return request("GET", "/v1/zero-trust", nil)
 	case "sbom":

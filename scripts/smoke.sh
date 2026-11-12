@@ -26,4 +26,5 @@ if [ -d cmd/kavach-agent ]; then
   go build -o /dev/null ./cmd/kavach-agent
 fi
 
+go test -race ./internal/edr/ -run 'Health|RateLimiter|TokenBucket|ATTACK|Stream' >/dev/null
 printf '%s\n' 'Build, unit and integration checks passed.'

@@ -674,6 +674,34 @@ paths:
       summary: v1 cnapp workloads
       security: [{bearerAuth: []}]
       responses: {'200': {description: OK}}
+  /v1/attack/matrix:
+    get:
+      summary: MITRE ATT&CK coverage matrix and observed hits (observe-only)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/compliance/score:
+    get:
+      summary: Overall compliance grade across CIS/NIST/SOC2/ISO
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/stream:
+    get:
+      summary: Server-Sent Events of new detections (event "finding")
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: text/event-stream}}
+  /metrics:
+    get:
+      summary: Prometheus text metrics
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /livez:
+    get:
+      summary: Liveness probe (no auth)
+      responses: {'200': {description: ok}}
+  /readyz:
+    get:
+      summary: Readiness probe (no auth)
+      responses: {'200': {description: ready}}
   /v1/compliance:
     get:
       summary: v1 compliance

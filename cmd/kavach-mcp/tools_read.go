@@ -153,6 +153,8 @@ func registerReadTools(srv *mcpserver.Server, c *client) error {
 		{name: "kavach_cnapp_workloads", method: "GET", path: "/v1/cnapp/workloads", description: "CNAPP/CWPP workloads.", schema: emptySchema()},
 		{name: "kavach_cnapp_misconfigs", method: "GET", path: "/v1/cnapp/misconfigs", description: "Cloud misconfigurations.", schema: emptySchema()},
 		{name: "kavach_exposure", method: "GET", path: "/v1/exposure", description: "Attack surface / ASRM score.", schema: emptySchema()},
+		{name: "kavach_attack_matrix", method: "GET", path: "/v1/attack/matrix", description: "MITRE ATT&CK tactic/technique coverage and observed hits (observe-only).", schema: emptySchema()},
+		{name: "kavach_compliance_score", method: "GET", path: "/v1/compliance/score", description: "Overall compliance posture grade across CIS/NIST/SOC2/ISO.", schema: emptySchema()},
 		{name: "kavach_compliance", method: "GET", path: "/v1/compliance", description: "CIS/NIST/SOC2 compliance posture.", schema: emptySchema()},
 		{name: "kavach_forensics", method: "GET", path: "/v1/forensics", description: "Forensic package request ledger.", schema: emptySchema()},
 		{name: "kavach_fim", method: "GET", path: "/v1/fim", description: "File integrity monitoring events.", schema: emptySchema()},

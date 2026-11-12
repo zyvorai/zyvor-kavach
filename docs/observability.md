@@ -1,0 +1,37 @@
+# Observability & posture
+
+All endpoints are read-only. Kavach observes; it never contains.
+
+| Endpoint | Auth | What |
+|---|---|---|
+| `GET /livez` · `/readyz` | none | Probes (Helm uses both) |
+| `GET /metrics` | bearer/session | Prometheus: findings by severity, agents online, request counts and latency |
+| `GET /v1/attack/matrix` | bearer/session | MITRE ATT&CK tactics → techniques, rule coverage, observed hits |
+| `GET /v1/compliance/score` | bearer/session | Overall grade + per-framework score (CIS, NIST CSF, SOC2, ISO 27001) |
+| `GET /v1/stream` | bearer/session | Server-Sent Events, `event: finding` with a detection payload |
+
+```bash
+kavachctl attack
+kavachctl compliance score
+kavachctl metrics
+curl -N -H "Authorization: Bearer $KAVACH_TOKEN" $KAVACH_URL/v1/stream
+```
+
+Console: **Browse → Observe** shows the ATT&CK heatmap, compliance gauges and live feed.
+
+## Prometheus scrape
+
+```yaml
+scrape_configs:
+  - job_name: kavach
+    scheme: https
+    tls_config: {insecure_skip_verify: true}   # lab self-signed cert
+    authorization: {credentials: "<KAVACH_TOKEN>"}
+    static_configs: [{targets: ["HOST:30899"]}]
+```
+
+## Hardening
+
+Every response carries `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy` and a CSP.
+`POST /v1/session` is limited to a burst of 10 then 1 per 2 s per IP. Other POST/DELETE requests are
+limited per IP by `KAVACH_RATE_LIMIT` (requests/sec, default `100`; `0` disables). Exceeding returns `429`.

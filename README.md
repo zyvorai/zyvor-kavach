@@ -74,6 +74,7 @@ go run ./cmd/kavach -mode server -listen 0.0.0.0:8099
 | **Finance** | Banks, UPI, insurance, IRDAI — never freezes money — [finance.md](docs/finance.md) |
 | **Sectors** | Rail, fleets, industry, space — never immobilizes — [sectors.md](docs/sectors.md) |
 | **eBPF** | Observe-only CO-RE — [ebpf.md](docs/ebpf.md) |
+| **Observe** | ATT&CK matrix · compliance grade · live SSE · Prometheus — [observability.md](docs/observability.md) |
 | **MCP** | Agent tooling — [mcp-integration.md](docs/mcp-integration.md) |
 
 ```bash

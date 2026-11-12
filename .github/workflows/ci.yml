@@ -17,5 +17,11 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-go@v5
       with: {go-version: '1.27', cache: true}
-    - run: go test ./...
+    - run: go test -race ./...
     - run: go vet ./...
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+    - uses: actions/checkout@v4
+    - run: docker build -t kavach:ci .
