@@ -1,20 +1,20 @@
 # Kavach UX contract — apple.com
 
-Kavach's investigation console and docs site (`website/`) follow one
-apple.com-style contract, adapted from Netra's `docs/design/APPLE-UX-CONTRACT.md`.
-Kavach keeps its own identity: security without compromise, observation-first,
-quiet until a finding needs attention.
+Kavach’s investigation console is the embedded surface in
+`internal/edr/dashboard.html` (served by `internal/edr/dashboard.go`). The docs
+site (`website/`) shares the same tokens. There is no separate Vite `web/` app
+yet — deepen the embed until IA outgrows ~5 views.
 
-Docs tokens live in `website/src/css/custom.css`. Console styles should reuse the
-same values when a dedicated `web/` surface lands.
+Identity: security without compromise, observation-first, quiet until a finding
+needs attention.
 
 ## Surface tiers
 
 | Tier | Kavach surfaces | Density | Layout |
 |---|---|---|---|
-| **Story** | Login, Overview / summary | Very low | Eyebrow, display title, lede, one CTA; metric band instead of a tile grid |
-| **Browse** | Findings, events, fleet, incidents | Medium | Page hero + toolbar + hairline table |
-| **Work** | Incident transition, enroll/revoke, mTLS ops | High | Card panels, tokens only |
+| **Story** | Login, Overview | Very low | Eyebrow, display, lede, one primary CTA; hairline metric band; chapter rows |
+| **Browse** | Detect, Incidents, Fleet | Medium | Page hero + glass toolbar + hairline `table-wrap` |
+| **Work** | Integrations cards; API-only mutations | High | Card panels, tokens only |
 
 ## Tokens
 
@@ -32,28 +32,28 @@ same values when a dedicated `web/` surface lands.
 
 | Token | Value | Used by |
 |---|---|---|
-| `--fs-h1` | `clamp(24px, 2.6vw, 34px)` | Page heroes, login title |
-| `--fs-h2` | `clamp(20px, 1.8vw, 24px)` | Section headings |
-| `--fs-h3` | `17px` | Card titles |
+| `--fs-h1` | `clamp(24px, 2.6vw, 34px)` | Page heroes, login display |
+| `--fs-h2` | `clamp(20px, 1.8vw, 24px)` | Chapter / card headings |
+| `--fs-h3` | `17px` | Empty-state titles, integration titles |
 | `--fs-figure` | `clamp(18px, 1.6vw, 24px)` | Metric figures |
 | `--fs-lede` | `16px` | Hero / page lede |
 | `--fs-body` | `15px` | Body, buttons |
 
-Page heroes are compact titles, not posters: findings data starts within the
-first screen.
+Page heroes are compact titles, not posters: data starts within the first screen.
 
 ## Laws
 
-1. **Elevation runs up.** Dark: page `#000` → panel `#1d1d1f` → card lighter. Light: white page, white card with a hairline. A grey panel on a white page is a bug.
+1. **Elevation runs up.** Dark: page `#000` → panel `#1d1d1f`. Light: white page, white surface with a hairline. A grey panel on a white page is a bug.
 2. **Color is deviation.** Nominal values are graphite. Blue means intent (CTA, link, focus). Red/amber/green only when a value really deviates or is confirmed good.
-3. **One primary action per view.** Everything else is secondary or ghost.
-4. **No hard-coded hex in components.** Use tokens; define new ones next to the shared palette.
-5. **Read-only surfaces stay read-only.** Observation views must not grow mutating controls without an explicit work-tier redesign.
+3. **One primary action per view.** Everything else is secondary, ghost, or text link.
+4. **No hard-coded hex in markup.** Use tokens; define new ones next to the shared palette in `dashboard.html` / `website/src/css/custom.css`.
+5. **Read-only surfaces stay read-only.** Observation views must not grow mutating controls without an explicit Work-tier redesign.
 
 ## Author checklist
 
 1. Pick the tier first.
-2. Story: one composition, no card grid.
-3. Browse: toolbar + table; search uses a shared input field.
-4. Empty lists get a title, a sentence, and a next action; loading shows a skeleton.
-5. Check light and dark at 1440px and 390px; no horizontal scroll at 390px.
+2. Story: one composition, hairline metric band (not a card grid), optional status pill.
+3. Browse: glass toolbar + search + `table-wrap`; tertiary 12px headers.
+4. Empty lists: title, sentence, next action; loading shows skeletons.
+5. Motion: `fadeRise`, count-up, live-dot — gated by `prefers-reduced-motion`.
+6. Check light and dark at 1440px and 390px; no horizontal scroll at 390px.
