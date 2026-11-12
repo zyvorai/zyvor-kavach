@@ -155,15 +155,17 @@ export KAVACH_TOKEN=Admin@321 KAVACH_TLS_INSECURE=true
 
 ---
 
-## Finance (banks & markets)
+## Finance (banks, markets & insurance)
 
-Dalal Street module for banks, NBFCs, BSE/NSE/GIFT, UPI, cards, SWIFT, fraud/KYC/sanctions, RBI/SEBI posture — **observe only** (never freezes money).
+Dalal Street module for banks, NBFCs, BSE/NSE/GIFT, UPI, cards, SWIFT, insurance/TPA/IRDAI, fraud/KYC/sanctions, RBI/SEBI posture — **observe only** (never freezes money or cancels policies).
 
 ```bash
 ./bin/kavachctl finance summary
 ./bin/kavachctl finance exchanges
 ./bin/kavachctl finance upi
 ./bin/kavachctl finance sebi
+./bin/kavachctl finance insurance
+./bin/kavachctl finance irdai
 ```
 
 APIs under `/v1/finance/*`. Console: **Browse → Finance**.
@@ -172,9 +174,9 @@ APIs under `/v1/finance/*`. Console: **Browse → Finance**.
 
 ---
 
-## Sectors (railways, government & more)
+## Sectors (rail, industry, space & more)
 
-Critical infrastructure observe — railways, metro, gov portals, power/SCADA, telecom, aviation, ports, health, education, smart city — **never** stops services.
+Critical infrastructure observe — railways, aviation, defence, gov fleets, automotive/OEM, manufacturing, ISRO/space, gov portals, power/SCADA — **never** stops services, immobilizes vehicles, or commands spacecraft.
 
 ```bash
 ./bin/kavachctl sectors summary
@@ -182,6 +184,13 @@ Critical infrastructure observe — railways, metro, gov portals, power/SCADA, t
 ./bin/kavachctl sectors airports
 ./bin/kavachctl sectors flights
 ./bin/kavachctl sectors defence
+./bin/kavachctl sectors gov-vehicles
+./bin/kavachctl sectors public-vehicles
+./bin/kavachctl sectors city-buses
+./bin/kavachctl sectors taxis-cabs
+./bin/kavachctl sectors automotive
+./bin/kavachctl sectors manufacturing
+./bin/kavachctl sectors isro-centers
 ./bin/kavachctl sectors gov-portals
 ./bin/kavachctl sectors critical-sites
 ```
@@ -224,8 +233,8 @@ Honest about what ships:
 | AI Platform (22+) | Chat, NL hunt, forecast, multi-agent, … |
 | World catalog (35+) | Storyline, AIR, CNAPP, FIM, … |
 | eBPF observe platform | `/v1/ebpf/*` + CO-RE objects |
-| Banks / markets / UPI / fraud | `/v1/finance/*` — never freezes money |
-| Railways / govt / energy / aviation / … | `/v1/sectors/*` — never stops services |
+| Banks / markets / UPI / insurance / fraud | `/v1/finance/*` — never freezes money or cancels policies |
+| Rail / aviation / industry / space / gov fleets / … | `/v1/sectors/*` — never stops services |
 | Netra XDR | Bridge / poller |
 | SIEM export · MCP · mTLS · Envoy | Opt-in docs |
 
@@ -244,8 +253,8 @@ Honest about what ships:
 | **[Console](docs/console.md)** | Login, UX, pages |
 | **[kavachctl](docs/kavachctl.md)** | Operator CLI |
 | **[eBPF](docs/ebpf.md)** | Sensors, pins, APIs |
-| **[Finance](docs/finance.md)** | Banks, stock markets, UPI, RBI/SEBI |
-| **[Sectors](docs/sectors.md)** | Railways, government, energy, aviation, … |
+| **[Finance](docs/finance.md)** | Banks, markets, UPI, insurance, RBI/SEBI/IRDAI |
+| **[Sectors](docs/sectors.md)** | Rail, aviation, industry, space, gov fleets, … |
 | **[Deploy remote](docs/deploy-remote.md)** | Helm / k3s lab |
 | **[Envoy Gateway](docs/envoy-gateway.md)** | Gateway API |
 | **[Agent mTLS](docs/agent-mtls.md)** | Client certs |

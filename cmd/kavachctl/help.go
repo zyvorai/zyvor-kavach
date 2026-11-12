@@ -42,8 +42,8 @@ func printHelp(w io.Writer) {
 	row("modules", "Kavach module capability map")
 	row("world modules", "Global XDR/EDR capability catalog")
 	row("ebpf status|health|events|…", "Observe-only eBPF platform (never enforce)")
-	row("finance summary|markets|upi|…", "Banks, stock markets, payments (observe)")
-	row("sectors summary|railways|airports|defence|…", "Railways, airports/flights, defence, govt (observe)")
+	row("finance summary|insurance|irdai|…", "Banks, markets, insurance (observe)")
+	row("sectors summary|automotive|space|…", "Rail, aviation, industry, space, gov fleets (observe)")
 
 	section("Detect")
 	row("findings [--severity --rule --host]", "EDR findings")

@@ -49,8 +49,8 @@ func KavachModules() []KavachModule {
 		{ID: "connectors", Name: "Connectors", Status: "active", APIs: []string{"/v1/connectors"}, Note: "Third-party data source registry"},
 		{ID: "world", Name: "World catalog", Status: "active", APIs: []string{"/v1/world/modules"}, Note: "Global XDR/EDR capability map"},
 		{ID: "ebpf", Name: "eBPF", Status: "active", APIs: []string{"/v1/ebpf/status", "/v1/ebpf/events", "/v1/ebpf/health"}, Note: "Observe-only CO-RE — never kill or drop"},
-		{ID: "finance", Name: "Finance", Status: "active", APIs: []string{"/v1/finance/summary", "/v1/finance/modules"}, Note: "Banks, markets, UPI, fraud ledger — never freezes money"},
-		{ID: "sectors", Name: "Sectors", Status: "active", APIs: []string{"/v1/sectors/summary", "/v1/sectors/modules"}, Note: "Railways, government, energy, telecom, aviation — never stops services"},
+		{ID: "finance", Name: "Finance", Status: "active", APIs: []string{"/v1/finance/summary", "/v1/finance/modules"}, Note: "Banks, markets, UPI, insurance — never freezes money or cancels policies"},
+		{ID: "sectors", Name: "Sectors", Status: "active", APIs: []string{"/v1/sectors/summary", "/v1/sectors/modules"}, Note: "Rail, aviation, public vehicles, industry, space — observe only"},
 	}
 }
 

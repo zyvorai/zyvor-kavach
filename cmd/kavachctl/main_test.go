@@ -56,6 +56,70 @@ func TestCatalogHasLocalAndAPI(t *testing.T) {
 	}
 }
 
+func TestCatalogCoversPublicVehiclesAndInsurance(t *testing.T) {
+	want := []string{
+		"sectors-public-vehicles", "sectors-city-buses", "sectors-taxis",
+		"sectors-school-buses", "sectors-ferries", "sectors-gov-vehicles",
+		"sectors-automotive", "sectors-manufacturing", "sectors-isro",
+		"finance-insurance", "finance-insurance-lines", "finance-tpa",
+		"finance-reinsurance", "finance-irdai", "finance-motor",
+	}
+	have := map[string]bool{}
+	for _, c := range allCLICommands() {
+		have[c.Name] = true
+	}
+	for _, name := range want {
+		if !have[name] {
+			t.Fatalf("catalog missing %s", name)
+		}
+	}
+}
+
+func TestSectorsAndFinanceCmdRouting(t *testing.T) {
+	mux := http.NewServeMux()
+	hits := map[string]int{}
+	for _, p := range []string{
+		"/v1/sectors/public-vehicles", "/v1/sectors/city-buses", "/v1/sectors/taxis-cabs",
+		"/v1/sectors/ferries", "/v1/finance/insurance", "/v1/finance/irdai", "/v1/finance/motor-insurance",
+	} {
+		path := p
+		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+			hits[path]++
+			_ = json.NewEncoder(w).Encode([]map[string]any{{"ok": true}})
+		})
+	}
+	ts := httptest.NewServer(mux)
+	defer ts.Close()
+
+	t.Setenv("KAVACH_SKIP_DOTENV", "1")
+	t.Setenv("KAVACH_URL", ts.URL)
+	t.Setenv("KAVACH_TOKEN", "test-token-admin321")
+	base = ts.URL
+
+	cases := [][]string{
+		{"sectors", "public-vehicles"},
+		{"sectors", "city-buses"},
+		{"sectors", "taxis-cabs"},
+		{"sectors", "ferries"},
+		{"finance", "insurance"},
+		{"finance", "irdai"},
+		{"finance", "motor-insurance"},
+	}
+	for _, args := range cases {
+		if err := run(args); err != nil {
+			t.Fatalf("run %v: %v", args, err)
+		}
+	}
+	for _, path := range []string{
+		"/v1/sectors/public-vehicles", "/v1/sectors/city-buses", "/v1/sectors/taxis-cabs",
+		"/v1/sectors/ferries", "/v1/finance/insurance", "/v1/finance/irdai", "/v1/finance/motor-insurance",
+	} {
+		if hits[path] != 1 {
+			t.Fatalf("%s hit=%d", path, hits[path])
+		}
+	}
+}
+
 func TestRequestAgainstMock(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {

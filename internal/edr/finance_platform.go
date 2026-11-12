@@ -47,7 +47,12 @@ func FinanceModules() []FinanceModule {
 		{ID: "rbi", Name: "RBI Circular Posture", Place: "Mint Street", APIs: []string{"/v1/finance/rbi"}, Status: "active", Note: "Regulatory control checklist (observe)"},
 		{ID: "sebi", Name: "SEBI Market Integrity", Place: "Bandra Kurla", APIs: []string{"/v1/finance/sebi"}, Status: "active", Note: "Broker / PMS / AIF integrity signals"},
 		{ID: "nbfc", Name: "NBFC Portfolio", Place: "Andheri", APIs: []string{"/v1/finance/nbfc"}, Status: "active", Note: "NBFC app / API observe"},
-		{ID: "insurance", Name: "Insurance Systems", Place: "Lower Parel", APIs: []string{"/v1/finance/insurance"}, Status: "active", Note: "Policy admin / claims hosts"},
+		{ID: "insurance", Name: "Insurance Systems", Place: "Lower Parel", APIs: []string{"/v1/finance/insurance"}, Status: "active", Note: "Life / general / health / motor hosts"},
+		{ID: "insurance-lines", Name: "Insurance lines", Place: "Lower Parel", APIs: []string{"/v1/finance/insurance-lines"}, Status: "active", Note: "Product line inventory"},
+		{ID: "insurance-tpa", Name: "Insurance TPA", Place: "Hyderabad", APIs: []string{"/v1/finance/insurance-tpa"}, Status: "active", Note: "TPA / claims processors"},
+		{ID: "reinsurance", Name: "Reinsurance", Place: "Nariman Point", APIs: []string{"/v1/finance/reinsurance"}, Status: "active", Note: "Reinsurer connectors"},
+		{ID: "irdai", Name: "IRDAI posture", Place: "Hyderabad", APIs: []string{"/v1/finance/irdai"}, Status: "active", Note: "Regulatory checklist (observe)"},
+		{ID: "motor-insurance", Name: "Motor insurance", Place: "BKC", APIs: []string{"/v1/finance/motor-insurance"}, Status: "active", Note: "Motor policy systems — never cancels policies"},
 		{ID: "mutual-funds", Name: "AMFI / Mutual Funds", Place: "Bandra Kurla", APIs: []string{"/v1/finance/mutual-funds"}, Status: "active", Note: "AMC / RTA connector inventory"},
 	}
 }
@@ -75,6 +80,8 @@ func seedFinanceDemo() {
 		{"id": "fin-evt-3", "type": "insider_watch", "severity": "high", "place": "Dalal Street", "host": host, "detail": "Dealer workstation accessed restricted research share", "time": now.Add(-5 * time.Minute)},
 		{"id": "fin-evt-4", "type": "swift_channel", "severity": "low", "place": "Nariman Point", "host": host, "detail": "SWIFT Alliance Access heartbeat delayed", "time": now.Add(-3 * time.Minute)},
 		{"id": "fin-evt-5", "type": "atm_offline", "severity": "medium", "place": "MG Road", "host": "atm-blr-0142", "detail": "ATM host missed heartbeat 90s", "time": now.Add(-2 * time.Minute)},
+		{"id": "fin-evt-6", "type": "claims_burst", "severity": "high", "place": "Lower Parel", "host": host, "detail": "Health claims API burst from unusual TPA connector", "time": now.Add(-11 * time.Minute)},
+		{"id": "fin-evt-7", "type": "motor_fnol_anomaly", "severity": "medium", "place": "BKC", "host": "motor-fnol-01", "detail": "Motor FNOL volume spike vs baseline", "time": now.Add(-6 * time.Minute)},
 	}
 }
 
@@ -297,8 +304,59 @@ func financeNBFC() []map[string]any {
 
 func financeInsurance() []map[string]any {
 	return []map[string]any{
-		{"system": "policy-admin", "place": "Lower Parel", "status": "online"},
-		{"system": "claims", "place": "Lower Parel", "status": "online"},
+		{"insurer": "LIC", "line": "life", "system": "policy-admin", "place": "Yogakshema", "status": "online"},
+		{"insurer": "LIC", "line": "life", "system": "claims", "place": "Yogakshema", "status": "online"},
+		{"insurer": "New India Assurance", "line": "general", "system": "policy-admin", "place": "Fort", "status": "online"},
+		{"insurer": "ICICI Lombard", "line": "general", "system": "claims", "place": "BKC", "status": "online"},
+		{"insurer": "Star Health", "line": "health", "system": "policy-admin", "place": "Chennai", "status": "online"},
+		{"insurer": "HDFC Ergo", "line": "motor", "system": "fnol", "place": "BKC", "status": "degraded"},
+		{"note": "Observe only — Kavach never cancels policies or freezes claims payouts"},
+	}
+}
+
+func financeInsuranceLines() []map[string]any {
+	return []map[string]any{
+		{"line": "life", "products": []string{"term", "endowment", "ulip"}, "status": "observed"},
+		{"line": "general", "products": []string{"fire", "marine", "liability"}, "status": "observed"},
+		{"line": "health", "products": []string{"individual", "group"}, "status": "observed"},
+		{"line": "motor", "products": []string{"od", "tp", "comprehensive"}, "status": "observed"},
+		{"line": "crop", "products": []string{"pmfby"}, "status": "observed"},
+	}
+}
+
+func financeInsuranceTPA() []map[string]any {
+	return []map[string]any{
+		{"tpa": "Medi Assist", "place": "Bengaluru", "status": "online"},
+		{"tpa": "Paramount Health", "place": "Mumbai", "status": "online"},
+		{"tpa": "Health India TPA", "place": "Mumbai", "status": "degraded"},
+		{"system": "Cashless hospital network bridge", "status": "online"},
+	}
+}
+
+func financeReinsurance() []map[string]any {
+	return []map[string]any{
+		{"reinsurer": "GIC Re", "place": "Nariman Point", "status": "online"},
+		{"reinsurer": "International panel connector", "place": "BKC", "status": "online"},
+		{"system": "Treaty bordereaux IT", "status": "online"},
+	}
+}
+
+func financeIRDAI() []map[string]any {
+	return []map[string]any{
+		{"circular": "Cyber security guidelines", "place": "Hyderabad", "control": "SOC monitoring", "status": "mapped"},
+		{"circular": "IT governance", "place": "Hyderabad", "control": "Board IT oversight", "status": "mapped"},
+		{"circular": "Outsourcing", "place": "Hyderabad", "control": "TPA connector inventory", "status": "partial"},
+		{"circular": "Policyholder protection", "place": "Hyderabad", "control": "Claims SLA observe", "status": "mapped"},
+	}
+}
+
+func financeMotorInsurance() []map[string]any {
+	return []map[string]any{
+		{"system": "Motor FNOL", "place": "BKC", "status": "online"},
+		{"system": "Motor underwriting", "place": "BKC", "status": "online"},
+		{"system": "Garage network IT", "place": "Pune", "status": "online"},
+		{"system": "Vahan e-insurance bridge", "place": "Electronic City", "status": "online"},
+		{"note": "Never cancels motor policies or blocks vehicle registration"},
 	}
 }
 
@@ -337,10 +395,12 @@ func financeSummary(store *Store, registry *CredentialRegistry) map[string]any {
 		"exchanges":     len(financeExchanges()),
 		"workstations":  len(financeWorkstations(store, registry)),
 		"payment_rails": len(financePaymentRails()),
-		"open_fraud":    len(financeFraud()),
-		"events":        len(listFinanceEvents("")),
-		"places":        []string{"Dalal Street", "GIFT City", "Mint Street", "Bandra Kurla", "Nariman Point", "Hyderabad"},
-		"note":          "Banking & markets security observe — never freezes accounts, blocks orders, or drops payment messages",
+		"open_fraud":      len(financeFraud()),
+		"insurance":       len(financeInsurance()) - 1,
+		"insurance_lines": len(financeInsuranceLines()),
+		"events":          len(listFinanceEvents("")),
+		"places":          []string{"Dalal Street", "GIFT City", "Mint Street", "Bandra Kurla", "Nariman Point", "Hyderabad"},
+		"note":            "Banking, markets & insurance observe — never freezes accounts, cancels policies, or drops payment messages",
 	}
 }
 
@@ -420,6 +480,11 @@ func RegisterFinancePlatform(mux *http.ServeMux, token string, store *Store, reg
 	get("/v1/finance/sebi", func() any { return financeSEBI() })
 	get("/v1/finance/nbfc", func() any { return financeNBFC() })
 	get("/v1/finance/insurance", func() any { return financeInsurance() })
+	get("/v1/finance/insurance-lines", func() any { return financeInsuranceLines() })
+	get("/v1/finance/insurance-tpa", func() any { return financeInsuranceTPA() })
+	get("/v1/finance/reinsurance", func() any { return financeReinsurance() })
+	get("/v1/finance/irdai", func() any { return financeIRDAI() })
+	get("/v1/finance/motor-insurance", func() any { return financeMotorInsurance() })
 	get("/v1/finance/mutual-funds", func() any { return financeMutualFunds() })
 
 	mux.HandleFunc("GET /v1/finance/events", func(w http.ResponseWriter, r *http.Request) {

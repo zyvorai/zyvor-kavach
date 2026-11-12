@@ -1833,13 +1833,13 @@ footer {
       <header class="page-hero">
         <p class="apple-eyebrow">Dalal Street</p>
         <h1>Banks &amp; markets. Observe only.</h1>
-        <p class="lede">Institutions, exchanges, UPI, fraud ledger, RBI/SEBI posture — never freezes accounts, blocks orders, or drops payment messages.</p>
+        <p class="lede">Institutions, exchanges, UPI, insurance, RBI/SEBI/IRDAI posture — never freezes accounts, cancels policies, or drops payment messages.</p>
       </header>
       <div class="apple-metric-band" aria-label="Finance summary">
         <div><span>Modules</span><b id="fin-modules">—</b></div>
         <div><span>Institutions</span><b id="fin-institutions">—</b></div>
         <div><span>Exchanges</span><b id="fin-exchanges">—</b></div>
-        <div><span>Fraud open</span><b id="fin-fraud">—</b></div>
+        <div><span>Insurance</span><b id="fin-insurance">—</b></div>
         <div><span>Events</span><b id="fin-events-count">—</b></div>
       </div>
       <div class="work-grid" style="margin-top:24px">
@@ -1865,6 +1865,20 @@ footer {
           </table>
         </div>
         <div class="table-wrap">
+          <h3 style="margin:0 0 12px;font-size:17px">Insurance</h3>
+          <table>
+            <thead><tr><th>Insurer</th><th>Line</th><th>System</th><th>Status</th></tr></thead>
+            <tbody id="fin-insurance-rows"></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <h3 style="margin:0 0 12px;font-size:17px">IRDAI posture</h3>
+          <table>
+            <thead><tr><th>Circular</th><th>Control</th><th>Status</th></tr></thead>
+            <tbody id="fin-irdai-rows"></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
           <h3 style="margin:0 0 12px;font-size:17px">Recent finance events</h3>
           <table>
             <thead><tr><th>Type</th><th>Severity</th><th>Place</th><th>Detail</th></tr></thead>
@@ -1877,22 +1891,64 @@ footer {
     <section id="page-sectors" class="page" hidden>
       <header class="page-hero">
         <p class="apple-eyebrow">Critical infrastructure</p>
-        <h1>Railways, government &amp; more.</h1>
-        <p class="lede">Stations, portals, power, telecom, aviation, ports, health — observe only. Never stops trains, trips breakers, or takes citizen services offline.</p>
+        <h1>Railways, industry &amp; space.</h1>
+        <p class="lede">Rail, aviation, defence, gov fleets, automotive, manufacturing, space — observe only. Never stops trains, immobilizes vehicles, or commands spacecraft.</p>
       </header>
       <div class="apple-metric-band" aria-label="Sectors summary">
         <div><span>Modules</span><b id="sec-modules">—</b></div>
-        <div><span>Airports</span><b id="sec-airports">—</b></div>
-        <div><span>Flights</span><b id="sec-flights">—</b></div>
-        <div><span>Defence</span><b id="sec-defence">—</b></div>
+        <div><span>Public fleets</span><b id="sec-public-vehicles">—</b></div>
+        <div><span>City buses</span><b id="sec-city-buses">—</b></div>
+        <div><span>ISRO</span><b id="sec-isro">—</b></div>
         <div><span>Events</span><b id="sec-events-count">—</b></div>
       </div>
       <div class="work-grid" style="margin-top:24px">
+        <div class="table-wrap">
+          <h3 style="margin:0 0 12px;font-size:17px">Government vehicles</h3>
+          <table>
+            <thead><tr><th>Fleet</th><th>Org</th><th>Vehicles</th><th>Status</th></tr></thead>
+            <tbody id="sec-govfleet-rows"></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <h3 style="margin:0 0 12px;font-size:17px">City buses</h3>
+          <table>
+            <thead><tr><th>Fleet</th><th>City</th><th>Vehicles</th><th>Status</th></tr></thead>
+            <tbody id="sec-bus-rows"></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <h3 style="margin:0 0 12px;font-size:17px">Taxis &amp; cabs</h3>
+          <table>
+            <thead><tr><th>Fleet</th><th>City</th><th>Vehicles</th><th>Status</th></tr></thead>
+            <tbody id="sec-taxi-rows"></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <h3 style="margin:0 0 12px;font-size:17px">Vehicle OEMs</h3>
+          <table>
+            <thead><tr><th>OEM</th><th>Plant</th><th>Systems</th><th>Status</th></tr></thead>
+            <tbody id="sec-oem-rows"></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <h3 style="margin:0 0 12px;font-size:17px">ISRO centers</h3>
+          <table>
+            <thead><tr><th>Center</th><th>Name</th><th>City</th><th>Status</th></tr></thead>
+            <tbody id="sec-isro-rows"></tbody>
+          </table>
+        </div>
         <div class="table-wrap">
           <h3 style="margin:0 0 12px;font-size:17px">Airports</h3>
           <table>
             <thead><tr><th>Code</th><th>Name</th><th>Systems</th><th>Status</th></tr></thead>
             <tbody id="sec-airport-rows"></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <h3 style="margin:0 0 12px;font-size:17px">Manufacturing</h3>
+          <table>
+            <thead><tr><th>Host / plant</th><th>Role</th><th>State</th></tr></thead>
+            <tbody id="sec-mfg-rows"></tbody>
           </table>
         </div>
         <div class="table-wrap">
@@ -2653,12 +2709,42 @@ footer {
     });
   }
 
-  function renderSectors(summary, railways, portals, airports, flights, defence, events) {
+  function renderSectors(summary, railways, portals, airports, flights, defence, govFleet, buses, taxis, oems, isro, mfg, events) {
     if ($('sec-modules')) $('sec-modules').textContent = summary && summary.modules != null ? String(summary.modules) : '—';
-    if ($('sec-airports')) $('sec-airports').textContent = summary && summary.airports != null ? String(summary.airports) : '—';
-    if ($('sec-flights')) $('sec-flights').textContent = summary && summary.flights != null ? String(summary.flights) : '—';
-    if ($('sec-defence')) $('sec-defence').textContent = summary && summary.defence_orgs != null ? String(summary.defence_orgs) : '—';
+    if ($('sec-public-vehicles')) $('sec-public-vehicles').textContent = summary && summary.public_vehicles != null ? String(summary.public_vehicles) : '—';
+    if ($('sec-city-buses')) $('sec-city-buses').textContent = summary && summary.city_buses != null ? String(summary.city_buses) : '—';
+    if ($('sec-isro')) $('sec-isro').textContent = summary && summary.isro_centers != null ? String(summary.isro_centers) : '—';
     if ($('sec-events-count')) $('sec-events-count').textContent = summary && summary.events != null ? String(summary.events) : '—';
+    const gf = $('sec-govfleet-rows');
+    if (gf) {
+      gf.innerHTML = '';
+      (govFleet || []).filter((g) => g.fleet).forEach((g) => tableRow(gf, [g.fleet || '—', g.org || '—', g.vehicles_observe != null ? String(g.vehicles_observe) : '—', statusTag(g.status || '—')]));
+    }
+    const bus = $('sec-bus-rows');
+    if (bus) {
+      bus.innerHTML = '';
+      (buses || []).filter((b) => b.fleet).forEach((b) => tableRow(bus, [b.fleet || '—', b.city || '—', b.vehicles_observe != null ? String(b.vehicles_observe) : '—', statusTag(b.status || '—')]));
+    }
+    const tx = $('sec-taxi-rows');
+    if (tx) {
+      tx.innerHTML = '';
+      (taxis || []).filter((t) => t.fleet).forEach((t) => tableRow(tx, [t.fleet || '—', t.city || '—', t.vehicles_observe != null ? String(t.vehicles_observe) : '—', statusTag(t.status || '—')]));
+    }
+    const oem = $('sec-oem-rows');
+    if (oem) {
+      oem.innerHTML = '';
+      (oems || []).filter((o) => o.oem).forEach((o) => tableRow(oem, [o.oem || '—', o.plant || '—', (o.systems || []).join(', ') || '—', statusTag(o.status || '—')]));
+    }
+    const is = $('sec-isro-rows');
+    if (is) {
+      is.innerHTML = '';
+      (isro || []).forEach((c) => tableRow(is, [c.center || '—', c.name || '—', c.city || '—', statusTag(c.status || '—')]));
+    }
+    const mf = $('sec-mfg-rows');
+    if (mf) {
+      mf.innerHTML = '';
+      (mfg || []).filter((m) => !m.note).forEach((m) => tableRow(mf, [m.host || m.plant || '—', m.role || m.city || '—', statusTag(m.state || m.status || '—')]));
+    }
     const ap = $('sec-airport-rows');
     if (ap) {
       ap.innerHTML = '';
@@ -2691,11 +2777,11 @@ footer {
     }
   }
 
-  function renderFinance(summary, exchanges, payments, institutions, events) {
+  function renderFinance(summary, exchanges, payments, institutions, insurance, irdai, events) {
     if ($('fin-modules')) $('fin-modules').textContent = summary && summary.modules != null ? String(summary.modules) : '—';
     if ($('fin-institutions')) $('fin-institutions').textContent = summary && summary.institutions != null ? String(summary.institutions) : '—';
     if ($('fin-exchanges')) $('fin-exchanges').textContent = summary && summary.exchanges != null ? String(summary.exchanges) : '—';
-    if ($('fin-fraud')) $('fin-fraud').textContent = summary && summary.open_fraud != null ? String(summary.open_fraud) : '—';
+    if ($('fin-insurance')) $('fin-insurance').textContent = summary && summary.insurance != null ? String(summary.insurance) : '—';
     if ($('fin-events-count')) $('fin-events-count').textContent = summary && summary.events != null ? String(summary.events) : '—';
     const ex = $('fin-exchange-rows');
     if (ex) {
@@ -2711,6 +2797,16 @@ footer {
     if (inst) {
       inst.innerHTML = '';
       (institutions || []).forEach((i) => tableRow(inst, [i.name || '—', i.type || '—', i.place || '—', i.regulator || '—']));
+    }
+    const ins = $('fin-insurance-rows');
+    if (ins) {
+      ins.innerHTML = '';
+      (insurance || []).filter((i) => i.insurer).forEach((i) => tableRow(ins, [i.insurer || '—', i.line || '—', i.system || '—', statusTag(i.status || '—')]));
+    }
+    const ir = $('fin-irdai-rows');
+    if (ir) {
+      ir.innerHTML = '';
+      (irdai || []).forEach((r) => tableRow(ir, [r.circular || '—', r.control || '—', statusTag(r.status || '—')]));
     }
     const ev = $('fin-event-rows');
     if (ev) {
@@ -3256,30 +3352,38 @@ footer {
         renderEBPF({}, {}, [], []);
       }
       try {
-        const [finSum, finEx, finPay, finInst, finEv] = await Promise.all([
+        const [finSum, finEx, finPay, finInst, finIns, finIrdai, finEv] = await Promise.all([
           request('/v1/finance/summary'),
           request('/v1/finance/exchanges'),
           request('/v1/finance/payment-rails'),
           request('/v1/finance/institutions'),
+          request('/v1/finance/insurance'),
+          request('/v1/finance/irdai'),
           request('/v1/finance/events'),
         ]);
-        renderFinance(finSum, finEx, finPay, finInst, Array.isArray(finEv) ? finEv : []);
+        renderFinance(finSum, finEx, finPay, finInst, finIns, finIrdai, Array.isArray(finEv) ? finEv : []);
       } catch (_) {
-        renderFinance({}, [], [], [], []);
+        renderFinance({}, [], [], [], [], [], []);
       }
       try {
-        const [secSum, secRail, secGov, secAir, secFl, secDef, secEv] = await Promise.all([
+        const [secSum, secRail, secGov, secAir, secFl, secDef, secFleet, secBus, secTaxi, secOem, secIsro, secMfg, secEv] = await Promise.all([
           request('/v1/sectors/summary'),
           request('/v1/sectors/railways'),
           request('/v1/sectors/gov-portals'),
           request('/v1/sectors/airports'),
           request('/v1/sectors/flights'),
           request('/v1/sectors/defence'),
+          request('/v1/sectors/gov-vehicles'),
+          request('/v1/sectors/city-buses'),
+          request('/v1/sectors/taxis-cabs'),
+          request('/v1/sectors/vehicle-oem'),
+          request('/v1/sectors/isro-centers'),
+          request('/v1/sectors/manufacturing'),
           request('/v1/sectors/events'),
         ]);
-        renderSectors(secSum, secRail, secGov, secAir, secFl, secDef, Array.isArray(secEv) ? secEv : []);
+        renderSectors(secSum, secRail, secGov, secAir, secFl, secDef, secFleet, secBus, secTaxi, secOem, secIsro, secMfg, Array.isArray(secEv) ? secEv : []);
       } catch (_) {
-        renderSectors({}, [], [], [], [], [], []);
+        renderSectors({}, [], [], [], [], [], [], [], [], [], [], [], []);
       }
       if (report) {
         countUp($('m-ow'), report.overwatch_open || 0);

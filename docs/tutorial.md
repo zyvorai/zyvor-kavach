@@ -136,7 +136,10 @@ Console: **Browse → eBPF**.
 ./bin/kavachctl finance upi
 ./bin/kavachctl finance fraud
 ./bin/kavachctl finance sebi
-./bin/kavachctl finance events --type insider_watch
+./bin/kavachctl finance insurance
+./bin/kavachctl finance irdai
+./bin/kavachctl finance motor-insurance
+./bin/kavachctl finance events --type claims_burst
 ```
 
 Observation only: never freezes accounts, blocks trades, or drops payment messages.
@@ -155,8 +158,18 @@ Console: **Browse → Finance**. Full API map: [finance.md](finance.md).
 ./bin/kavachctl sectors airports
 ./bin/kavachctl sectors flights
 ./bin/kavachctl sectors defence
+./bin/kavachctl sectors gov-vehicles
+./bin/kavachctl sectors public-vehicles
+./bin/kavachctl sectors city-buses
+./bin/kavachctl sectors taxis-cabs
+./bin/kavachctl sectors school-buses
+./bin/kavachctl sectors ferries
+./bin/kavachctl sectors automotive
+./bin/kavachctl sectors manufacturing
+./bin/kavachctl sectors isro-centers
+./bin/kavachctl sectors space
 ./bin/kavachctl sectors critical-sites
-./bin/kavachctl sectors events --sector aviation
+./bin/kavachctl sectors events --sector city-buses
 ```
 
 Observation only: never stops trains, cancels flights, controls ATC, trips breakers, or touches weapons/C2.

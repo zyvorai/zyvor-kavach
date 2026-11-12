@@ -59,13 +59,13 @@ Health score, backend, event/lost counters, feature table, recent events. Data f
 
 ## Finance page
 
-Dalal Street band — modules, institutions, exchanges, open fraud, events — plus tables for venues, payment rails, institutions, and recent finance events. Data from `/v1/finance/summary|exchanges|payment-rails|institutions|events`.
+Dalal Street band — modules, institutions, exchanges, insurance, events — plus tables for venues, payment rails, institutions, insurers, IRDAI posture, and recent finance events. Data from `/v1/finance/summary|exchanges|payment-rails|institutions|insurance|irdai|events`.
 
 ---
 
 ## Sectors page
 
-Critical infrastructure band — modules, airports, flights, defence, events — plus airports, flights, defence enterprise IT, railways, portals, and recent sector events. Data from `/v1/sectors/summary|airports|flights|defence|railways|gov-portals|events`.
+Critical infrastructure band — modules, public fleets, city buses, ISRO, events — plus government vehicles, city buses, taxis, OEMs, manufacturing, ISRO centers, airports, flights, defence, railways, portals, and recent sector events. Data from `/v1/sectors/summary|gov-vehicles|city-buses|taxis-cabs|vehicle-oem|manufacturing|isro-centers|airports|flights|defence|railways|gov-portals|events`.
 
 ---
 

@@ -59,12 +59,36 @@ func SectorModules() []SectorModule {
 		{ID: "ports", Name: "Ports & shipping", Sector: "transport", Status: "active", APIs: []string{"/v1/sectors/ports"}, Note: "Port community / TOS systems"},
 		{ID: "highways", Name: "Highways / FASTag", Sector: "transport", Status: "active", APIs: []string{"/v1/sectors/highways"}, Note: "NHAI / FASTag / toll plazas"},
 		{ID: "transport-reg", Name: "Vahan / Sarathi", Sector: "transport", Status: "active", APIs: []string{"/v1/sectors/transport-reg"}, Note: "RTO registration systems"},
+		{ID: "gov-vehicles", Name: "Government vehicles", Sector: "transport", Status: "active", APIs: []string{"/v1/sectors/gov-vehicles"}, Note: "Motor pools / emergency fleets — never immobilizes"},
+		{ID: "public-vehicles", Name: "Public vehicles overview", Sector: "transport", Status: "active", APIs: []string{"/v1/sectors/public-vehicles"}, Note: "All public mobility fleets — never immobilizes"},
+		{ID: "city-buses", Name: "City buses / STU", Sector: "transport", Status: "active", APIs: []string{"/v1/sectors/city-buses"}, Note: "Municipal / STU bus fleets & depot IT"},
+		{ID: "brts", Name: "BRTS / BRT corridors", Sector: "transport", Status: "active", APIs: []string{"/v1/sectors/brts"}, Note: "Bus rapid transit ops IT"},
+		{ID: "taxis-cabs", Name: "Taxis / cabs", Sector: "transport", Status: "active", APIs: []string{"/v1/sectors/taxis-cabs"}, Note: "Radio taxi / aggregator fleet backends"},
+		{ID: "autos-rickshaw", Name: "Autos / e-rickshaw", Sector: "transport", Status: "active", APIs: []string{"/v1/sectors/autos-rickshaw"}, Note: "Auto / e-rickshaw / shared last-mile"},
+		{ID: "school-buses", Name: "School / college buses", Sector: "transport", Status: "active", APIs: []string{"/v1/sectors/school-buses"}, Note: "Institutional transport fleets"},
+		{ID: "municipal-fleet", Name: "Municipal fleets", Sector: "transport", Status: "active", APIs: []string{"/v1/sectors/municipal-fleet"}, Note: "Sanitation / tankers / sweepers"},
+		{ID: "intercity-coaches", Name: "Intercity coaches", Sector: "transport", Status: "active", APIs: []string{"/v1/sectors/intercity-coaches"}, Note: "State roadways / tourist coaches"},
+		{ID: "ferries", Name: "Public ferries", Sector: "transport", Status: "active", APIs: []string{"/v1/sectors/ferries"}, Note: "Ferry / water-bus ops IT"},
+		{ID: "automotive", Name: "Automotive / cars", Sector: "industry", Status: "active", APIs: []string{"/v1/sectors/automotive"}, Note: "OEM / dealers / telematics observe"},
+		{ID: "ev-charging", Name: "EV charging", Sector: "industry", Status: "active", APIs: []string{"/v1/sectors/ev-charging"}, Note: "CPO / charger backends"},
+		{ID: "vehicle-oem", Name: "Vehicle OEMs", Sector: "industry", Status: "active", APIs: []string{"/v1/sectors/vehicle-oem"}, Note: "OEM plant IT / MES bridges"},
+		{ID: "dealers", Name: "Auto dealers", Sector: "industry", Status: "active", APIs: []string{"/v1/sectors/dealers"}, Note: "Dealer DMS / workshop IT"},
+		{ID: "manufacturing", Name: "Manufacturing", Sector: "industry", Status: "active", APIs: []string{"/v1/sectors/manufacturing"}, Note: "Plant MES/OT bridges — no control writes"},
+		{ID: "industrial-parks", Name: "Industrial parks / SEZ", Sector: "industry", Status: "active", APIs: []string{"/v1/sectors/industrial-parks"}, Note: "SEZ / park IT inventory"},
+		{ID: "steel-cement", Name: "Steel & cement", Sector: "industry", Status: "active", APIs: []string{"/v1/sectors/steel-cement"}, Note: "Heavy industry plant IT"},
+		{ID: "electronics-mfg", Name: "Electronics manufacturing", Sector: "industry", Status: "active", APIs: []string{"/v1/sectors/electronics-mfg"}, Note: "Electronics / fab-adjacent IT"},
+		{ID: "textiles", Name: "Textiles", Sector: "industry", Status: "active", APIs: []string{"/v1/sectors/textiles"}, Note: "Textile / apparel plant IT"},
 		{ID: "health", Name: "Healthcare / ABDM", Sector: "health", Status: "active", APIs: []string{"/v1/sectors/health"}, Note: "Hospital / ABHA posture — no PHI mutation"},
 		{ID: "pharma", Name: "Pharma / CDSCO", Sector: "health", Status: "active", APIs: []string{"/v1/sectors/pharma"}, Note: "Regulatory / plant IT"},
 		{ID: "education", Name: "Education / DIKSHA", Sector: "education", Status: "active", APIs: []string{"/v1/sectors/education"}, Note: "EdTech / university hosts"},
 		{ID: "smart-city", Name: "Smart city / municipal", Sector: "civic", Status: "active", APIs: []string{"/v1/sectors/smart-city"}, Note: "ICC / CCTV / civic apps"},
 		{ID: "water", Name: "Water & irrigation", Sector: "civic", Status: "active", APIs: []string{"/v1/sectors/water"}, Note: "Utility SCADA IT observe"},
-		{ID: "space", Name: "Space / ISRO adjacent", Sector: "science", Status: "active", APIs: []string{"/v1/sectors/space"}, Note: "Ground-segment IT inventory"},
+		{ID: "space", Name: "Space overview", Sector: "science", Status: "active", APIs: []string{"/v1/sectors/space"}, Note: "Space domain map — never commands spacecraft"},
+		{ID: "isro-centers", Name: "ISRO centers", Sector: "science", Status: "active", APIs: []string{"/v1/sectors/isro-centers"}, Note: "Center campus IT inventory"},
+		{ID: "launch-range", Name: "Launch range IT", Sector: "science", Status: "active", APIs: []string{"/v1/sectors/launch-range"}, Note: "Range support IT — no flight command"},
+		{ID: "ground-stations", Name: "Ground stations", Sector: "science", Status: "active", APIs: []string{"/v1/sectors/ground-stations"}, Note: "TT&C / ISTRAC-style ground IT"},
+		{ID: "space-research", Name: "Space research", Sector: "science", Status: "active", APIs: []string{"/v1/sectors/space-research"}, Note: "IIST / academia research IT"},
+		{ID: "nsil-antrix", Name: "NSIL / Antrix", Sector: "science", Status: "active", APIs: []string{"/v1/sectors/nsil-antrix"}, Note: "Commercial space enterprise IT"},
 		{ID: "defence-civil", Name: "Civil defence / disaster", Sector: "defence", Status: "active", APIs: []string{"/v1/sectors/defence-civil"}, Note: "NDMA / SDRF IT — observe only"},
 		{ID: "defence", Name: "Defence enterprise IT", Sector: "defence", Status: "active", APIs: []string{"/v1/sectors/defence"}, Note: "MoD / service HQ enterprise IT — never weapons or C2"},
 		{ID: "defence-portals", Name: "Defence portals", Sector: "defence", Status: "active", APIs: []string{"/v1/sectors/defence-portals"}, Note: "Recruitment / pension / public MoD sites"},
@@ -108,6 +132,17 @@ func seedSectorDemo() {
 		{"id": "sec-evt-10", "type": "defence_portal", "severity": "low", "sector": "defence", "site": "joinindianarmy", "host": host, "detail": "Recruitment portal auth anomaly observe", "time": now.Add(-11 * time.Minute)},
 		{"id": "sec-evt-11", "type": "border_icp", "severity": "high", "sector": "border", "site": "ICP Attari", "host": "icp-attari-02", "detail": "Immigration workstation offline", "time": now.Add(-8 * time.Minute)},
 		{"id": "sec-evt-12", "type": "atc_it_mail", "severity": "medium", "sector": "atc-it", "site": "AAI", "host": "aai-mail-gw", "detail": "Enterprise mail gateway delayed (not ATC)", "time": now.Add(-1 * time.Minute)},
+		{"id": "sec-evt-13", "type": "gov_fleet_stale", "severity": "medium", "sector": "gov-vehicles", "site": "Delhi motor pool", "host": "fleet-dl-01", "detail": "Police fleet telematics gateway stale 120s", "time": now.Add(-14 * time.Minute)},
+		{"id": "sec-evt-14", "type": "oem_mes_bridge", "severity": "high", "sector": "vehicle-oem", "site": "Pune OEM", "host": "mes-oem-pune", "detail": "Plant MES IT bridge heartbeat missed", "time": now.Add(-16 * time.Minute)},
+		{"id": "sec-evt-15", "type": "ev_cpo_lag", "severity": "low", "sector": "ev-charging", "site": "Noida CPO", "host": "cpo-api-01", "detail": "Charger status feed lag > 60s", "time": now.Add(-9 * time.Minute)},
+		{"id": "sec-evt-16", "type": "plant_ot_bridge", "severity": "high", "sector": "manufacturing", "site": "Chennai SEZ", "host": "plant-mes-02", "detail": "Manufacturing OT bridge offline", "time": now.Add(-13 * time.Minute)},
+		{"id": "sec-evt-17", "type": "isro_campus_it", "severity": "medium", "sector": "isro-centers", "site": "VSSC", "host": "vssc-mail-gw", "detail": "Center enterprise mail delayed", "time": now.Add(-18 * time.Minute)},
+		{"id": "sec-evt-18", "type": "ground_station", "severity": "medium", "sector": "ground-stations", "site": "ISTRAC", "host": "gs-blr-01", "detail": "Ground-station IT heartbeat delayed (not TT&C cmd)", "time": now.Add(-7 * time.Minute)},
+		{"id": "sec-evt-19", "type": "city_bus_depot", "severity": "medium", "sector": "city-buses", "site": "BMTC depot", "host": "bmtc-avs-01", "detail": "Bus AVL gateway stale 90s", "time": now.Add(-10 * time.Minute)},
+		{"id": "sec-evt-20", "type": "taxi_dispatch_lag", "severity": "low", "sector": "taxis-cabs", "site": "Aggregator NOC", "host": "taxi-api-west", "detail": "Dispatch feed lag > 45s", "time": now.Add(-5 * time.Minute)},
+		{"id": "sec-evt-21", "type": "school_bus_gps", "severity": "medium", "sector": "school-buses", "site": "Delhi NCR", "host": "schoolbus-gw-02", "detail": "School-bus GPS aggregator heartbeat missed", "time": now.Add(-15 * time.Minute)},
+		{"id": "sec-evt-22", "type": "municipal_sweeper", "severity": "low", "sector": "municipal-fleet", "site": "MCGM", "host": "sanitation-telem-01", "detail": "Sweeper telematics batch delayed", "time": now.Add(-8 * time.Minute)},
+		{"id": "sec-evt-23", "type": "ferry_ops_it", "severity": "medium", "sector": "ferries", "site": "Mumbai ferry", "host": "ferry-ops-01", "detail": "Ferry schedule IT host offline", "time": now.Add(-12 * time.Minute)},
 	}
 }
 
@@ -448,6 +483,232 @@ func sectorTransportReg() []map[string]any {
 		{"system": "Vahan", "status": "online"},
 		{"system": "Sarathi", "status": "online"},
 		{"system": "eChallan", "status": "online"},
+		{"system": "National Register bridge", "status": "online"},
+	}
+}
+
+func sectorGovVehicles() []map[string]any {
+	return []map[string]any{
+		{"fleet": "Central motor pool", "org": "Central Govt", "vehicles_observe": 4200, "telematics": true, "status": "observed"},
+		{"fleet": "Delhi Police", "org": "Delhi Police", "vehicles_observe": 1800, "telematics": true, "status": "observed"},
+		{"fleet": "Ambulance / 108", "org": "State EMS", "vehicles_observe": 960, "telematics": true, "status": "degraded"},
+		{"fleet": "Fire services", "org": "Municipal", "vehicles_observe": 540, "telematics": true, "status": "observed"},
+		{"fleet": "Traffic police", "org": "State Police", "vehicles_observe": 720, "telematics": true, "status": "observed"},
+		{"fleet": "Disaster response / NDRF support", "org": "NDRF / SDRF", "vehicles_observe": 310, "telematics": true, "status": "observed"},
+		{"fleet": "Protocol / VVIP pool", "org": "State protocol", "vehicles_observe": 180, "telematics": true, "status": "observed"},
+		{"system": "Depot / workshop IT", "status": "online"},
+		{"note": "Observe only — Kavach never immobilizes or geofence-locks vehicles"},
+	}
+}
+
+func sectorPublicVehicles() []map[string]any {
+	return []map[string]any{
+		{"domain": "gov_emergency", "count": len(sectorGovVehicles()) - 2, "apis": []string{"/v1/sectors/gov-vehicles"}},
+		{"domain": "city_buses", "count": len(sectorCityBuses()) - 1, "apis": []string{"/v1/sectors/city-buses"}},
+		{"domain": "brts", "count": len(sectorBRTS()) - 1, "apis": []string{"/v1/sectors/brts"}},
+		{"domain": "taxis_cabs", "count": len(sectorTaxisCabs()) - 1, "apis": []string{"/v1/sectors/taxis-cabs"}},
+		{"domain": "autos_rickshaw", "count": len(sectorAutosRickshaw()) - 1, "apis": []string{"/v1/sectors/autos-rickshaw"}},
+		{"domain": "school_buses", "count": len(sectorSchoolBuses()) - 1, "apis": []string{"/v1/sectors/school-buses"}},
+		{"domain": "municipal_fleet", "count": len(sectorMunicipalFleet()) - 1, "apis": []string{"/v1/sectors/municipal-fleet"}},
+		{"domain": "intercity_coaches", "count": len(sectorIntercityCoaches()) - 1, "apis": []string{"/v1/sectors/intercity-coaches"}},
+		{"domain": "ferries", "count": len(sectorFerries()) - 1, "apis": []string{"/v1/sectors/ferries"}},
+		{"note": "Observe only — never immobilizes, cancels trips, or writes dispatch control"},
+	}
+}
+
+func sectorCityBuses() []map[string]any {
+	return []map[string]any{
+		{"fleet": "DTC", "city": "Delhi", "vehicles_observe": 6500, "systems": []string{"AVL", "depot IT"}, "status": "observed"},
+		{"fleet": "BEST", "city": "Mumbai", "vehicles_observe": 3200, "systems": []string{"AVL", "ETIM"}, "status": "observed"},
+		{"fleet": "BMTC", "city": "Bengaluru", "vehicles_observe": 6800, "systems": []string{"AVL", "depot IT"}, "status": "degraded"},
+		{"fleet": "MTC", "city": "Chennai", "vehicles_observe": 3400, "systems": []string{"AVL"}, "status": "observed"},
+		{"fleet": "TSRTC city", "city": "Hyderabad", "vehicles_observe": 2900, "systems": []string{"AVL", "ETIM"}, "status": "observed"},
+		{"fleet": "PMPML", "city": "Pune", "vehicles_observe": 1800, "systems": []string{"AVL"}, "status": "observed"},
+		{"fleet": "Electric city bus depot", "city": "Multi-city", "vehicles_observe": 4200, "systems": []string{"depot chargers IT"}, "status": "observed"},
+		{"system": "Common AVL / passenger info backend", "status": "online"},
+		{"note": "Never stops buses or rewrites route schedules"},
+	}
+}
+
+func sectorBRTS() []map[string]any {
+	return []map[string]any{
+		{"corridor": "Ahmedabad Janmarg", "city": "Ahmedabad", "status": "observed"},
+		{"corridor": "Pune Rainbow BRT", "city": "Pune", "status": "observed"},
+		{"corridor": "Indore iBus", "city": "Indore", "status": "observed"},
+		{"corridor": "Surat BRTS", "city": "Surat", "status": "degraded"},
+		{"system": "BRT station AFC / OCC IT", "status": "online"},
+		{"note": "Observe only — never writes BRT signal / barrier control"},
+	}
+}
+
+func sectorTaxisCabs() []map[string]any {
+	return []map[string]any{
+		{"fleet": "Radio taxi co-op", "city": "Delhi", "vehicles_observe": 12000, "status": "observed"},
+		{"fleet": "Aggregator ride-hailing (west)", "city": "Mumbai", "vehicles_observe": 85000, "status": "observed"},
+		{"fleet": "Aggregator ride-hailing (south)", "city": "Bengaluru", "vehicles_observe": 72000, "status": "degraded"},
+		{"fleet": "Airport prepaid taxi desk IT", "city": "Multi-airport", "vehicles_observe": 2400, "status": "observed"},
+		{"fleet": "Black / luxury cab fleet", "city": "NCR", "vehicles_observe": 1800, "status": "observed"},
+		{"system": "Dispatch / telematics backend", "status": "online"},
+		{"note": "Never cancels trips or remote-immobilizes cabs"},
+	}
+}
+
+func sectorAutosRickshaw() []map[string]any {
+	return []map[string]any{
+		{"fleet": "City auto unions", "city": "Multi-city", "vehicles_observe": 210000, "status": "observed"},
+		{"fleet": "E-rickshaw clusters", "city": "Delhi / UP", "vehicles_observe": 95000, "status": "observed"},
+		{"fleet": "Shared auto routes", "city": "Hyderabad", "vehicles_observe": 14000, "status": "observed"},
+		{"fleet": "App-based auto partners", "city": "Bengaluru", "vehicles_observe": 28000, "status": "degraded"},
+		{"system": "Permit / telematics observe bridge", "status": "online"},
+		{"note": "Observe only — never cancels permits or locks vehicles"},
+	}
+}
+
+func sectorSchoolBuses() []map[string]any {
+	return []map[string]any{
+		{"fleet": "CBSE school buses NCR", "org": "Private schools", "vehicles_observe": 8200, "status": "observed"},
+		{"fleet": "Municipal school transport", "org": "MCD / BMC", "vehicles_observe": 1600, "status": "observed"},
+		{"fleet": "College / university shuttles", "org": "Campuses", "vehicles_observe": 2400, "status": "observed"},
+		{"fleet": "Anganwadi / rural school vans", "org": "State education", "vehicles_observe": 5100, "status": "degraded"},
+		{"system": "Parent GPS / SOS aggregator IT", "status": "online"},
+		{"note": "Never disables GPS or alters child-safety alerts"},
+	}
+}
+
+func sectorMunicipalFleet() []map[string]any {
+	return []map[string]any{
+		{"fleet": "Garbage compactors", "org": "ULB", "vehicles_observe": 9800, "status": "observed"},
+		{"fleet": "Road sweepers", "org": "ULB", "vehicles_observe": 2100, "status": "observed"},
+		{"fleet": "Water tankers", "org": "ULB / Jal board", "vehicles_observe": 4300, "status": "degraded"},
+		{"fleet": "Fogging / vector control", "org": "Health dept", "vehicles_observe": 900, "status": "observed"},
+		{"fleet": "Construction / road works", "org": "PWD / ULB", "vehicles_observe": 1500, "status": "observed"},
+		{"system": "Sanitation telematics / depot IT", "status": "online"},
+		{"note": "Observe only — never kills routes or locks depots"},
+	}
+}
+
+func sectorIntercityCoaches() []map[string]any {
+	return []map[string]any{
+		{"fleet": "MSRTC", "region": "Maharashtra", "vehicles_observe": 16000, "status": "observed"},
+		{"fleet": "KSRTC", "region": "Karnataka", "vehicles_observe": 8500, "status": "observed"},
+		{"fleet": "APSRTC / TGSRTC", "region": "Andhra / Telangana", "vehicles_observe": 12000, "status": "observed"},
+		{"fleet": "UPSRTC", "region": "Uttar Pradesh", "vehicles_observe": 9500, "status": "degraded"},
+		{"fleet": "Private tourist / sleeper coaches", "region": "Pan-India", "vehicles_observe": 28000, "status": "observed"},
+		{"system": "Online booking / depot IT", "status": "online"},
+		{"note": "Never cancels coach trips or immobilizes fleet"},
+	}
+}
+
+func sectorFerries() []map[string]any {
+	return []map[string]any{
+		{"fleet": "Mumbai harbour ferries", "city": "Mumbai", "vessels_observe": 80, "status": "observed"},
+		{"fleet": "Kochi water metro / boats", "city": "Kochi", "vessels_observe": 24, "status": "observed"},
+		{"fleet": "Goa river / harbour", "city": "Goa", "vessels_observe": 40, "status": "observed"},
+		{"fleet": "Kolkata / Hooghly launches", "city": "Kolkata", "vessels_observe": 60, "status": "degraded"},
+		{"fleet": "Andaman / island connectivity desk IT", "city": "Port Blair", "vessels_observe": 18, "status": "observed"},
+		{"system": "Ferry schedule / ticket IT", "status": "online"},
+		{"note": "Observe only — never commands vessels or cancels sailings"},
+	}
+}
+
+func sectorAutomotive() []map[string]any {
+	return []map[string]any{
+		{"domain": "oem_plants", "count": len(sectorVehicleOEM()) - 1, "apis": []string{"/v1/sectors/vehicle-oem"}},
+		{"domain": "dealers", "count": len(sectorDealers()) - 1, "apis": []string{"/v1/sectors/dealers"}},
+		{"domain": "ev_charging", "count": len(sectorEVCharging()) - 1, "apis": []string{"/v1/sectors/ev-charging"}},
+		{"regulator": "ARAI / MoHI", "posture": "mapped"},
+		{"system": "Connected-car telematics observe", "status": "observed", "note": "No remote immobilize"},
+		{"note": "Observe only — never writes vehicle control or cancels registrations"},
+	}
+}
+
+func sectorEVCharging() []map[string]any {
+	return []map[string]any{
+		{"cpo": "Public CPO North", "chargers_observe": 4200, "status": "online"},
+		{"cpo": "Public CPO West", "chargers_observe": 3100, "status": "online"},
+		{"cpo": "Fleet depot chargers", "chargers_observe": 800, "status": "degraded"},
+		{"system": "CPO API backend", "status": "online"},
+		{"note": "No charger session kill or tariff writes"},
+	}
+}
+
+func sectorVehicleOEM() []map[string]any {
+	return []map[string]any{
+		{"oem": "Maruti Suzuki", "plant": "Gurugram / Manesar", "systems": []string{"MES", "plant IT"}, "status": "observed"},
+		{"oem": "Tata Motors", "plant": "Pune / Jamshedpur", "systems": []string{"MES", "plant IT"}, "status": "observed"},
+		{"oem": "Hyundai", "plant": "Chennai", "systems": []string{"MES"}, "status": "observed"},
+		{"oem": "Mahindra", "plant": "Chennai / Nashik", "systems": []string{"MES"}, "status": "observed"},
+		{"oem": "Ashok Leyland", "plant": "Ennore", "systems": []string{"MES"}, "status": "observed"},
+		{"note": "MES/OT control remains with plant OT — Kavach observes IT bridges only"},
+	}
+}
+
+func sectorDealers() []map[string]any {
+	return []map[string]any{
+		{"dealer": "Metro Motors Delhi", "dms": true, "workshop": true, "status": "online"},
+		{"dealer": "Coastal Cars Chennai", "dms": true, "workshop": true, "status": "online"},
+		{"dealer": "Deccan Auto Pune", "dms": true, "workshop": false, "status": "degraded"},
+		{"system": "OEM dealer portal", "status": "online"},
+		{"note": "No warranty / invoice mutation"},
+	}
+}
+
+func sectorManufacturing(store *Store, registry *CredentialRegistry) []map[string]any {
+	_ = store
+	out := []map[string]any{}
+	if registry != nil {
+		for _, a := range registry.Status(time.Now(), 90*time.Second) {
+			low := strings.ToLower(a.Host)
+			if strings.Contains(low, "mes") || strings.Contains(low, "plant") || strings.Contains(low, "oem") {
+				out = append(out, map[string]any{"host": a.Host, "state": a.State, "role": "plant_bridge", "sensor": a.Sensor})
+			}
+		}
+	}
+	if len(out) == 0 {
+		out = []map[string]any{
+			{"host": "plant-mes-01", "state": "online", "role": "plant_bridge", "sensor": "derived"},
+			{"host": "plant-mes-02", "state": "stale", "role": "plant_bridge", "sensor": "derived"},
+			{"plant": "Discrete assembly", "city": "Pune", "status": "observed"},
+			{"plant": "Process chemical", "city": "Vadodara", "status": "observed"},
+		}
+	}
+	out = append(out, map[string]any{"note": "Never writes plant OT/MES control"})
+	return out
+}
+
+func sectorIndustrialParks() []map[string]any {
+	return []map[string]any{
+		{"park": "Sriperumbudur SEZ", "city": "Chennai", "status": "online"},
+		{"park": "Sri City", "city": "Andhra", "status": "online"},
+		{"park": "Neemrana", "city": "Rajasthan", "status": "online"},
+		{"park": "Sanand", "city": "Gujarat", "status": "online"},
+		{"system": "Park common IT / CCTV", "status": "online"},
+	}
+}
+
+func sectorSteelCement() []map[string]any {
+	return []map[string]any{
+		{"plant": "Integrated steel", "location": "Jharkhand", "status": "observed"},
+		{"plant": "Steel rolling", "location": "Odisha", "status": "observed"},
+		{"plant": "Cement kiln IT", "location": "Rajasthan", "status": "observed"},
+		{"plant": "Cement grinding", "location": "Andhra", "status": "observed"},
+	}
+}
+
+func sectorElectronicsMfg() []map[string]any {
+	return []map[string]any{
+		{"plant": "Mobile assembly", "location": "Noida", "status": "observed"},
+		{"plant": "EMS / PCB", "location": "Chennai", "status": "observed"},
+		{"plant": "Semiconductor OSAT-adjacent IT", "location": "Gujarat", "status": "observed"},
+		{"note": "Fab process control remains outside Kavach"},
+	}
+}
+
+func sectorTextiles() []map[string]any {
+	return []map[string]any{
+		{"plant": "Spinning mill IT", "location": "Coimbatore", "status": "observed"},
+		{"plant": "Apparel unit", "location": "Tiruppur", "status": "observed"},
+		{"plant": "Technical textiles", "location": "Surat", "status": "observed"},
 	}
 }
 
@@ -496,9 +757,63 @@ func sectorWater() []map[string]any {
 
 func sectorSpace() []map[string]any {
 	return []map[string]any{
-		{"system": "Ground segment IT", "status": "observed"},
-		{"system": "Mission support desktops", "status": "observed"},
-		{"note": "No spacecraft command path"},
+		{"domain": "isro_centers", "count": len(sectorISROCenters()), "apis": []string{"/v1/sectors/isro-centers"}},
+		{"domain": "launch_range", "count": len(sectorLaunchRange()) - 1, "apis": []string{"/v1/sectors/launch-range"}},
+		{"domain": "ground_stations", "count": len(sectorGroundStations()) - 1, "apis": []string{"/v1/sectors/ground-stations"}},
+		{"domain": "space_research", "count": len(sectorSpaceResearch()) - 1, "apis": []string{"/v1/sectors/space-research"}},
+		{"domain": "nsil_antrix", "count": len(sectorNSILAntrix()) - 1, "apis": []string{"/v1/sectors/nsil-antrix"}},
+		{"note": "Hard rule: never spacecraft command, launch commit, or TT&C control writes"},
+	}
+}
+
+func sectorISROCenters() []map[string]any {
+	return []map[string]any{
+		{"center": "VSSC", "name": "Vikram Sarabhai Space Centre", "city": "Thiruvananthapuram", "status": "observed"},
+		{"center": "SAC", "name": "Space Applications Centre", "city": "Ahmedabad", "status": "observed"},
+		{"center": "URSC", "name": "U R Rao Satellite Centre", "city": "Bengaluru", "status": "observed"},
+		{"center": "SDSC SHAR", "name": "Satish Dhawan Space Centre", "city": "Sriharikota", "status": "observed"},
+		{"center": "NRSC", "name": "National Remote Sensing Centre", "city": "Hyderabad", "status": "observed"},
+		{"center": "LPSC", "name": "Liquid Propulsion Systems Centre", "city": "Valiamala / Bengaluru", "status": "observed"},
+		{"center": "ISTRAC", "name": "ISRO Telemetry Tracking and Command", "city": "Bengaluru", "status": "observed"},
+		{"center": "HSFC", "name": "Human Space Flight Centre", "city": "Bengaluru", "status": "observed"},
+	}
+}
+
+func sectorLaunchRange() []map[string]any {
+	return []map[string]any{
+		{"system": "Range safety support IT", "site": "SDSC SHAR", "status": "online", "plane": "enterprise_it"},
+		{"system": "Countdown display IT", "site": "SDSC SHAR", "status": "online", "plane": "enterprise_it"},
+		{"system": "Weather desk IT", "site": "SDSC SHAR", "status": "online", "plane": "enterprise_it"},
+		{"note": "No launch commit / flight termination path"},
+	}
+}
+
+func sectorGroundStations() []map[string]any {
+	return []map[string]any{
+		{"station": "ISTRAC Bengaluru", "role": "TT&C IT", "status": "online"},
+		{"station": "Lucknow ground", "role": "TT&C IT", "status": "online"},
+		{"station": "Sriharikota ground", "role": "TT&C IT", "status": "online"},
+		{"station": "Mauritius / overseas desk IT", "role": "support", "status": "online"},
+		{"note": "Enterprise/IT observe only — no uplink command"},
+	}
+}
+
+func sectorSpaceResearch() []map[string]any {
+	return []map[string]any{
+		{"org": "IIST", "system": "Campus / lab IT", "status": "observed"},
+		{"org": "PRL", "system": "Research lab IT", "status": "observed"},
+		{"org": "NARL", "system": "Research IT", "status": "observed"},
+		{"org": "University space labs", "system": "Academic IT", "status": "observed"},
+		{"note": "No payload command or classified mission path"},
+	}
+}
+
+func sectorNSILAntrix() []map[string]any {
+	return []map[string]any{
+		{"org": "NSIL", "system": "Enterprise IT", "status": "observed"},
+		{"org": "Antrix", "system": "Enterprise IT", "status": "observed"},
+		{"org": "Private launch partners", "system": "Partner desk IT", "status": "observed"},
+		{"note": "Commercial enterprise only"},
 	}
 }
 
@@ -591,6 +906,9 @@ func sectorCriticalSites() []map[string]any {
 		{"id": "site-tel-noc", "name": "National telecom NOC", "sector": "telecom", "tier": "high"},
 		{"id": "site-mod-hq", "name": "MoD enterprise campus", "sector": "defence", "tier": "critical"},
 		{"id": "site-icp-attari", "name": "ICP Attari", "sector": "border", "tier": "high"},
+		{"id": "site-oem-pune", "name": "OEM plant Pune", "sector": "vehicle-oem", "tier": "high"},
+		{"id": "site-vssc", "name": "VSSC campus", "sector": "space", "tier": "critical"},
+		{"id": "site-shar", "name": "SDSC SHAR", "sector": "space", "tier": "critical"},
 	}
 }
 
@@ -604,21 +922,27 @@ func sectorCitizenServices() []map[string]any {
 
 func sectorSummary(store *Store, registry *CredentialRegistry) map[string]any {
 	return map[string]any{
-		"product":        "kavach-sectors",
-		"mode":           "observe-only",
-		"enforce":        false,
-		"modules":        len(SectorModules()),
-		"rail_systems":   len(sectorRailways()),
-		"gov_portals":    len(sectorGovPortals()),
-		"airports":       len(sectorAirports()),
-		"flights":        len(sectorFlights()) - 1,
-		"airlines":       len(sectorAirlines()) - 1,
-		"defence_orgs":   len(sectorDefence()) - 1,
-		"critical_sites": len(sectorCriticalSites()),
-		"scada_hosts":    len(sectorSCADA(store, registry)) - 1,
-		"events":         len(listSectorEvents("")),
-		"sectors":        []string{"railways", "government", "energy", "telecom", "aviation", "defence", "ports", "health", "education", "civic"},
-		"note":           "Critical infrastructure observe — never stops trains, cancels flights, trips power, or touches weapons/C2",
+		"product":         "kavach-sectors",
+		"mode":            "observe-only",
+		"enforce":         false,
+		"modules":         len(SectorModules()),
+		"rail_systems":    len(sectorRailways()),
+		"gov_portals":     len(sectorGovPortals()),
+		"airports":        len(sectorAirports()),
+		"flights":         len(sectorFlights()) - 1,
+		"airlines":        len(sectorAirlines()) - 1,
+		"defence_orgs":    len(sectorDefence()) - 1,
+		"gov_vehicles":     len(sectorGovVehicles()) - 2,
+		"public_vehicles":  len(sectorPublicVehicles()) - 1,
+		"city_buses":       len(sectorCityBuses()) - 2,
+		"oem_plants":       len(sectorVehicleOEM()) - 1,
+		"manufacturing":    len(sectorManufacturing(store, registry)) - 1,
+		"isro_centers":     len(sectorISROCenters()),
+		"critical_sites":   len(sectorCriticalSites()),
+		"scada_hosts":      len(sectorSCADA(store, registry)) - 1,
+		"events":           len(listSectorEvents("")),
+		"sectors":          []string{"railways", "government", "energy", "telecom", "aviation", "defence", "industry", "science", "ports", "health", "education", "civic", "public-vehicles"},
+		"note":             "Critical infrastructure observe — never stops trains, immobilizes vehicles, commands spacecraft, or writes plant OT",
 	}
 }
 
@@ -710,12 +1034,36 @@ func RegisterSectorsPlatform(mux *http.ServeMux, token string, store *Store, reg
 	get("/v1/sectors/ports", func() any { return sectorPorts() })
 	get("/v1/sectors/highways", func() any { return sectorHighways() })
 	get("/v1/sectors/transport-reg", func() any { return sectorTransportReg() })
+	get("/v1/sectors/gov-vehicles", func() any { return sectorGovVehicles() })
+	get("/v1/sectors/public-vehicles", func() any { return sectorPublicVehicles() })
+	get("/v1/sectors/city-buses", func() any { return sectorCityBuses() })
+	get("/v1/sectors/brts", func() any { return sectorBRTS() })
+	get("/v1/sectors/taxis-cabs", func() any { return sectorTaxisCabs() })
+	get("/v1/sectors/autos-rickshaw", func() any { return sectorAutosRickshaw() })
+	get("/v1/sectors/school-buses", func() any { return sectorSchoolBuses() })
+	get("/v1/sectors/municipal-fleet", func() any { return sectorMunicipalFleet() })
+	get("/v1/sectors/intercity-coaches", func() any { return sectorIntercityCoaches() })
+	get("/v1/sectors/ferries", func() any { return sectorFerries() })
+	get("/v1/sectors/automotive", func() any { return sectorAutomotive() })
+	get("/v1/sectors/ev-charging", func() any { return sectorEVCharging() })
+	get("/v1/sectors/vehicle-oem", func() any { return sectorVehicleOEM() })
+	get("/v1/sectors/dealers", func() any { return sectorDealers() })
+	get("/v1/sectors/manufacturing", func() any { return sectorManufacturing(store, registry) })
+	get("/v1/sectors/industrial-parks", func() any { return sectorIndustrialParks() })
+	get("/v1/sectors/steel-cement", func() any { return sectorSteelCement() })
+	get("/v1/sectors/electronics-mfg", func() any { return sectorElectronicsMfg() })
+	get("/v1/sectors/textiles", func() any { return sectorTextiles() })
 	get("/v1/sectors/health", func() any { return sectorHealth() })
 	get("/v1/sectors/pharma", func() any { return sectorPharma() })
 	get("/v1/sectors/education", func() any { return sectorEducation() })
 	get("/v1/sectors/smart-city", func() any { return sectorSmartCity() })
 	get("/v1/sectors/water", func() any { return sectorWater() })
 	get("/v1/sectors/space", func() any { return sectorSpace() })
+	get("/v1/sectors/isro-centers", func() any { return sectorISROCenters() })
+	get("/v1/sectors/launch-range", func() any { return sectorLaunchRange() })
+	get("/v1/sectors/ground-stations", func() any { return sectorGroundStations() })
+	get("/v1/sectors/space-research", func() any { return sectorSpaceResearch() })
+	get("/v1/sectors/nsil-antrix", func() any { return sectorNSILAntrix() })
 	get("/v1/sectors/defence-civil", func() any { return sectorDefenceCivil() })
 	get("/v1/sectors/defence", func() any { return sectorDefence() })
 	get("/v1/sectors/defence-portals", func() any { return sectorDefencePortals() })

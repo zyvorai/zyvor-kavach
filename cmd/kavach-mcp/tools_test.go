@@ -50,6 +50,16 @@ func TestKavachMCPToolsListAndCall(t *testing.T) {
 	if !strings.Contains(out, "kavach_ai_chat") {
 		t.Fatalf("mutations should be registered: %s", out)
 	}
+	for _, tool := range []string{
+		"kavach_sectors_public_vehicles", "kavach_sectors_city_buses", "kavach_sectors_taxis_cabs",
+		"kavach_sectors_ferries", "kavach_sectors_gov_vehicles", "kavach_sectors_isro_centers",
+		"kavach_finance_insurance", "kavach_finance_insurance_lines", "kavach_finance_irdai",
+		"kavach_finance_motor_insurance", "kavach_finance_insurance_tpa", "kavach_finance_reinsurance",
+	} {
+		if !strings.Contains(out, tool) {
+			t.Fatalf("missing tool %s in list: %s", tool, out)
+		}
+	}
 
 	// tools/call findings
 	var callOut bytes.Buffer

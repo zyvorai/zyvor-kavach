@@ -294,6 +294,44 @@ func sectorsCmd(args []string) error {
 		return request("GET", "/v1/sectors/highways", nil)
 	case "transport-reg", "vahan", "sarathi":
 		return request("GET", "/v1/sectors/transport-reg", nil)
+	case "gov-vehicles", "gov-fleet", "fleet-gov":
+		return request("GET", "/v1/sectors/gov-vehicles", nil)
+	case "public-vehicles", "public-fleet", "pub-vehicles":
+		return request("GET", "/v1/sectors/public-vehicles", nil)
+	case "city-buses", "buses", "stu":
+		return request("GET", "/v1/sectors/city-buses", nil)
+	case "brts", "brt":
+		return request("GET", "/v1/sectors/brts", nil)
+	case "taxis-cabs", "taxis", "cabs":
+		return request("GET", "/v1/sectors/taxis-cabs", nil)
+	case "autos-rickshaw", "autos", "rickshaw", "e-rickshaw":
+		return request("GET", "/v1/sectors/autos-rickshaw", nil)
+	case "school-buses", "schoolbus":
+		return request("GET", "/v1/sectors/school-buses", nil)
+	case "municipal-fleet", "municipal", "sanitation-fleet":
+		return request("GET", "/v1/sectors/municipal-fleet", nil)
+	case "intercity-coaches", "coaches", "roadways":
+		return request("GET", "/v1/sectors/intercity-coaches", nil)
+	case "ferries", "ferry":
+		return request("GET", "/v1/sectors/ferries", nil)
+	case "automotive", "cars", "auto":
+		return request("GET", "/v1/sectors/automotive", nil)
+	case "ev-charging", "ev":
+		return request("GET", "/v1/sectors/ev-charging", nil)
+	case "vehicle-oem", "oem":
+		return request("GET", "/v1/sectors/vehicle-oem", nil)
+	case "dealers":
+		return request("GET", "/v1/sectors/dealers", nil)
+	case "manufacturing", "industry", "plants":
+		return request("GET", "/v1/sectors/manufacturing", nil)
+	case "industrial-parks", "sez":
+		return request("GET", "/v1/sectors/industrial-parks", nil)
+	case "steel-cement", "steel", "cement":
+		return request("GET", "/v1/sectors/steel-cement", nil)
+	case "electronics-mfg", "electronics":
+		return request("GET", "/v1/sectors/electronics-mfg", nil)
+	case "textiles":
+		return request("GET", "/v1/sectors/textiles", nil)
 	case "health":
 		return request("GET", "/v1/sectors/health", nil)
 	case "pharma":
@@ -306,6 +344,16 @@ func sectorsCmd(args []string) error {
 		return request("GET", "/v1/sectors/water", nil)
 	case "space":
 		return request("GET", "/v1/sectors/space", nil)
+	case "isro-centers", "isro":
+		return request("GET", "/v1/sectors/isro-centers", nil)
+	case "launch-range", "launch":
+		return request("GET", "/v1/sectors/launch-range", nil)
+	case "ground-stations", "ttc":
+		return request("GET", "/v1/sectors/ground-stations", nil)
+	case "space-research":
+		return request("GET", "/v1/sectors/space-research", nil)
+	case "nsil-antrix", "nsil", "antrix":
+		return request("GET", "/v1/sectors/nsil-antrix", nil)
 	case "defence-civil", "disaster":
 		return request("GET", "/v1/sectors/defence-civil", nil)
 	case "defence", "defense", "mod":
@@ -390,6 +438,16 @@ func financeCmd(args []string) error {
 		return request("GET", "/v1/finance/nbfc", nil)
 	case "insurance":
 		return request("GET", "/v1/finance/insurance", nil)
+	case "insurance-lines", "ins-lines":
+		return request("GET", "/v1/finance/insurance-lines", nil)
+	case "insurance-tpa", "tpa":
+		return request("GET", "/v1/finance/insurance-tpa", nil)
+	case "reinsurance":
+		return request("GET", "/v1/finance/reinsurance", nil)
+	case "irdai":
+		return request("GET", "/v1/finance/irdai", nil)
+	case "motor-insurance", "motor":
+		return request("GET", "/v1/finance/motor-insurance", nil)
 	case "mutual-funds", "amfi":
 		return request("GET", "/v1/finance/mutual-funds", nil)
 	case "events":

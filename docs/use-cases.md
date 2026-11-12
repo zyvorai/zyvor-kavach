@@ -132,10 +132,13 @@ kavachctl finance fraud
 kavachctl finance insider
 kavachctl finance sebi
 kavachctl finance rbi
-kavachctl finance events --type market_data_lag
+kavachctl finance insurance
+kavachctl finance irdai
+kavachctl finance motor-insurance
+kavachctl finance events --type claims_burst
 ```
 
-Hard rule: never freeze accounts, block orders, pause algos, or rewrite SWIFT/UPI. See [finance.md](finance.md).
+Hard rule: never freeze accounts, block orders, pause algos, cancel policies, or rewrite SWIFT/UPI. See [finance.md](finance.md).
 
 ---
 
@@ -156,11 +159,22 @@ kavachctl sectors flights
 kavachctl sectors airlines
 kavachctl sectors defence
 kavachctl sectors border
+kavachctl sectors gov-vehicles
+kavachctl sectors public-vehicles
+kavachctl sectors city-buses
+kavachctl sectors taxis-cabs
+kavachctl sectors school-buses
+kavachctl sectors municipal-fleet
+kavachctl sectors ferries
+kavachctl sectors automotive
+kavachctl sectors manufacturing
+kavachctl sectors isro-centers
+kavachctl sectors space
 kavachctl sectors critical-sites
-kavachctl sectors events --sector aviation
+kavachctl sectors events --sector city-buses
 ```
 
-Hard rule: never stop trains, cancel flights, control ATC, trip breakers, take portals offline, touch EVMs, or weapons/C2. See [sectors.md](sectors.md).
+Hard rule: never stop trains, cancel flights, control ATC, immobilize vehicles, command spacecraft, write plant OT, trip breakers, take portals offline, touch EVMs, or weapons/C2. See [sectors.md](sectors.md).
 
 ---
 
@@ -216,9 +230,9 @@ Follow [tutorial.md](tutorial.md) and [testing.md](testing.md).
 
 | Request | Kavach answer |
 |---------|----------------|
-| Freeze a bank account / block a trade | No — finance observe only |
-| Stop a train / cancel a flight / control ATC / trip a breaker | No — sectors observe only |
-| Touch weapons, C2, or EVMs | No — sectors observe only |
+| Freeze a bank account / block a trade / cancel a policy | No — finance observe only |
+| Stop a train / cancel a flight / immobilize a vehicle / trip a breaker | No — sectors observe only |
+| Command spacecraft / write plant OT / weapons / C2 / EVMs | No — sectors observe only |
 | Auto-isolate a host | No — ledger only |
 | Kill a PID from console | No |
 | Quarantine a binary | No |
