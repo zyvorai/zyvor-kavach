@@ -163,6 +163,20 @@ type Dispatcher struct {
 	Backoff  time.Duration
 
 	startOnce sync.Once
+
+	// ws, when set, receives hash-chained journal entries for rule changes.
+	ws *Workspace
+}
+
+// journalRule records an alert-rule change in the analyst journal.
+func (d *Dispatcher) journalRule(actor, action, target string) {
+	if d.ws == nil {
+		return
+	}
+	d.ws.mu.Lock()
+	defer d.ws.mu.Unlock()
+	d.ws.appendJournalLocked(actor, action, target)
+	_ = d.ws.saveLocked()
 }
 
 func NewDispatcher(store *Store) *Dispatcher {
@@ -388,7 +402,8 @@ func registerAlertRoutes(mux *http.ServeMux, token string, d *Dispatcher) {
 		_ = json.NewEncoder(w).Encode(map[string]any{"rules": out})
 	})
 	mux.HandleFunc("POST /v1/alerts/rules", func(w http.ResponseWriter, r *http.Request) {
-		if _, ok := requireAdminOrSession(w, r, token); !ok {
+		actor, ok := requireAdminOrSession(w, r, token)
+		if !ok {
 			return
 		}
 		r.Body = http.MaxBytesReader(w, r.Body, 8*1024)
@@ -438,12 +453,14 @@ func registerAlertRoutes(mux *http.ServeMux, token string, d *Dispatcher) {
 			http.Error(w, "storage error", 500)
 			return
 		}
+		d.journalRule(tuneActor(actor), "alert_rule.create", in.ID)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		_ = json.NewEncoder(w).Encode(in)
 	})
 	mux.HandleFunc("DELETE /v1/alerts/rules", func(w http.ResponseWriter, r *http.Request) {
-		if _, ok := requireAdminOrSession(w, r, token); !ok {
+		actor, ok := requireAdminOrSession(w, r, token)
+		if !ok {
 			return
 		}
 		id := r.URL.Query().Get("id")
@@ -456,6 +473,7 @@ func registerAlertRoutes(mux *http.ServeMux, token string, d *Dispatcher) {
 					http.Error(w, "storage error", 500)
 					return
 				}
+				d.journalRule(tuneActor(actor), "alert_rule.delete", id)
 				w.WriteHeader(http.StatusNoContent)
 				return
 			}
