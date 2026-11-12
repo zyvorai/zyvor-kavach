@@ -41,6 +41,19 @@ Every response carries `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Refer
 `POST /v1/session` is limited to a burst of 10 then 1 per 2 s per IP. Other POST/DELETE requests are
 limited per IP by `KAVACH_RATE_LIMIT` (requests/sec, default `100`; `0` disables). Exceeding returns `429`.
 
+## Exposure posture (Spotlight/Exposure class, observe only)
+- `GET/POST/DELETE /v1/posture/assets`: asset criticality (`host`, `criticality` 1-5, `owner`, `tags`; max 1000
+  assets, 10 tags), persisted in `<findings file>.posture.json`. Text is HTML-escaped; writes need admin token or session.
+- `GET /v1/posture/vuln-priority[?limit=]` ranks spotlight vulnerabilities with a transparent 0-100 score and a
+  per-item `breakdown`: CVSS/ExPRT x4 (40, falls back to severity) + criticality x6 (30, default 3 when the host is
+  unregistered) + host also has high/critical findings (5 + min(n,5), 10) + internet tag (`internet`, `internet-facing`,
+  `public`, `exposed`, `dmz`; 10) + `exploited_in_wild` (10).
+- `POST /v1/posture/baseline[?host=]` snapshots SBOM, FIM and persistence inventory (all observed hosts when `host`
+  is omitted; max 200 hosts, 2000 items per domain). `GET /v1/posture/drift?host=` returns `added`, `removed`,
+  `changed` with a `severity_hint`: new persistence entry high (critical if risk high/critical), setuid FIM
+  add/change critical, other FIM add/change high, SBOM add/change medium, removals low/medium. Max 200 items per class.
+- `GET /v1/posture/summary` rolls up asset criticality mix, top-5 priorities, and baselined hosts with drift.
+
 ## Alert rules and notifications
 
 Observation-only notifications: Kavach reports matching findings; it never blocks or kills anything.
