@@ -202,7 +202,7 @@ func RunAgentWithOptions(ctx context.Context, scanner *Scanner, endpoint, token 
 	}
 	_, _ = q.Flush(ctx, endpoint, token, client)
 	if count, err := q.Pending(); err == nil {
-		_ = SendHeartbeat(ctx, endpoint, token, scanner.Host, "proc-connector+poll", count, client)
+		_ = SendHeartbeat(ctx, endpoint, token, scanner.Host, string(ProbeSensor()), count, client)
 	}
 	for {
 		select {
@@ -211,7 +211,7 @@ func RunAgentWithOptions(ctx context.Context, scanner *Scanner, endpoint, token 
 		case <-heartbeat.C:
 			count, err := q.Pending()
 			if err == nil {
-				_ = SendHeartbeat(ctx, endpoint, token, scanner.Host, "proc-connector+poll", count, client)
+				_ = SendHeartbeat(ctx, endpoint, token, scanner.Host, string(ProbeSensor()), count, client)
 			}
 		case pid, ok := <-kernel:
 			if !ok {

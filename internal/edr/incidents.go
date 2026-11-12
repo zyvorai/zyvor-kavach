@@ -71,17 +71,26 @@ func (x *IncidentStore) Register(mux *http.ServeMux, token string) {
 		_ = json.NewEncoder(w).Encode(out)
 	})
 	mux.HandleFunc("POST /v1/incidents/transition", func(w http.ResponseWriter, r *http.Request) {
-		// Browser sessions are intentionally excluded: API token required for mutations.
-		if !secureEqual(strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer "), token) {
+		admin := secureEqual(strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer "), token)
+		sessionOK := validSession(r, token)
+		if !admin && !sessionOK {
 			http.Error(w, "unauthorized", 401)
 			return
 		}
 		r.Body = http.MaxBytesReader(w, r.Body, 4096)
 		defer r.Body.Close()
 		var change IncidentAction
-		if json.NewDecoder(r.Body).Decode(&change) != nil || len(change.FindingID) > 512 || len(change.Note) > 2048 || len(change.Actor) > 128 || strings.TrimSpace(change.Actor) == "" {
+		if json.NewDecoder(r.Body).Decode(&change) != nil || len(change.FindingID) > 512 || len(change.Note) > 2048 || len(change.Actor) > 128 {
 			http.Error(w, "invalid action", 400)
 			return
+		}
+		if strings.TrimSpace(change.Actor) == "" {
+			if sessionOK && !admin {
+				change.Actor = "console"
+			} else {
+				http.Error(w, "invalid action", 400)
+				return
+			}
 		}
 		switch change.Status {
 		case "open", "investigating", "resolved", "false_positive":

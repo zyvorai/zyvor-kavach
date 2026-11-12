@@ -12,6 +12,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -30,22 +31,47 @@ type NetraPoller struct {
 	lastCursor string
 }
 
+// PollerStatus is updated by the background poller for Integrations UI.
+var (
+	pollerMu     sync.Mutex
+	pollerLastOK time.Time
+	pollerLastEr string
+	pollerURL    string
+)
+
+func NetraPollerStatus() map[string]any {
+	pollerMu.Lock()
+	defer pollerMu.Unlock()
+	out := map[string]any{
+		"configured": pollerURL != "",
+		"url":        pollerURL,
+		"last_error": pollerLastEr,
+	}
+	if !pollerLastOK.IsZero() {
+		out["last_ok"] = pollerLastOK.Format(time.RFC3339)
+	}
+	return out
+}
+
 func NewNetraPollerFromEnv() *NetraPoller {
-	u := os.Getenv("KAVACH_NETRA_URL")
+	u := firstEnv("KAVACH_NETRA_URL", "KAVACH_NETRA_POLLER_URL")
 	if u == "" {
 		return nil
 	}
-	insecure, _ := strconv.ParseBool(os.Getenv("KAVACH_NETRA_TLS_INSECURE"))
+	insecure, _ := strconv.ParseBool(firstEnv("KAVACH_NETRA_TLS_INSECURE", "KAVACH_NETRA_POLLER_INSECURE_SKIP_VERIFY"))
 	interval := 15 * time.Second
-	if v := os.Getenv("KAVACH_NETRA_POLL_INTERVAL"); v != "" {
+	if v := firstEnv("KAVACH_NETRA_POLL_INTERVAL", "KAVACH_NETRA_POLLER_INTERVAL"); v != "" {
 		if d, err := time.ParseDuration(v); err == nil {
 			interval = d
 		}
 	}
 	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure}} //nolint:gosec // lab opt-in
+	pollerMu.Lock()
+	pollerURL = strings.TrimRight(u, "/")
+	pollerMu.Unlock()
 	return &NetraPoller{
 		NetraURL:  strings.TrimRight(u, "/"),
-		APIKey:    firstEnv("KAVACH_NETRA_API_KEY", "NETRA_API_KEY"),
+		APIKey:    firstEnv("KAVACH_NETRA_API_KEY", "KAVACH_NETRA_POLLER_API_KEY", "NETRA_API_KEY"),
 		KavachURL: strings.TrimRight(firstEnv("KAVACH_URL", "http://127.0.0.1:8099"), "/"),
 		KavachTok: firstEnv("KAVACH_TOKEN", "ZYVOR_EDR_TOKEN"),
 		Insecure:  insecure,
@@ -71,14 +97,32 @@ func (p *NetraPoller) Run(ctx context.Context) {
 	log.Printf("netra poller → %s every %s", p.NetraURL, p.Interval)
 	t := time.NewTicker(p.Interval)
 	defer t.Stop()
-	_ = p.tick(ctx)
+	if err := p.tick(ctx); err != nil {
+		pollerMu.Lock()
+		pollerLastEr = err.Error()
+		pollerMu.Unlock()
+		log.Printf("netra poller: %v", err)
+	} else {
+		pollerMu.Lock()
+		pollerLastOK = time.Now().UTC()
+		pollerLastEr = ""
+		pollerMu.Unlock()
+	}
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-t.C:
 			if err := p.tick(ctx); err != nil {
+				pollerMu.Lock()
+				pollerLastEr = err.Error()
+				pollerMu.Unlock()
 				log.Printf("netra poller: %v", err)
+			} else {
+				pollerMu.Lock()
+				pollerLastOK = time.Now().UTC()
+				pollerLastEr = ""
+				pollerMu.Unlock()
 			}
 		}
 	}

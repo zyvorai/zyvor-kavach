@@ -26,6 +26,7 @@ type Event struct {
 	PPID         int       `json:"ppid"`
 	UID          int       `json:"uid"`
 	Executable   string    `json:"executable"`
+	ParentExe    string    `json:"parent_exe,omitempty"`
 	Command      string    `json:"command"`
 }
 type Finding struct {
@@ -37,10 +38,12 @@ type Finding struct {
 	Severity    string    `json:"severity"`
 	Description string    `json:"description"`
 	Evidence    Event     `json:"evidence"`
+	Tags        []string  `json:"tags,omitempty"`
+	Destination string    `json:"destination,omitempty"`
 }
 type Process struct {
-	PID, PPID, UID  int
-	Exe, Cmd, Start string
+	PID, PPID, UID        int
+	Exe, Cmd, Start, PExe string
 }
 type Scanner struct {
 	Root string
@@ -77,7 +80,7 @@ func (s *Scanner) Scan(now time.Time) []Event {
 		if _, ok := s.seen[key]; ok {
 			continue
 		}
-		events = append(events, Event{Time: now.UTC(), Host: s.Host, PID: pid, PPID: p.PPID, UID: p.UID, Executable: p.Exe, Command: p.Cmd, ProcessStart: p.Start})
+		events = append(events, Event{Time: now.UTC(), Host: s.Host, PID: pid, PPID: p.PPID, UID: p.UID, Executable: p.Exe, ParentExe: p.PExe, Command: p.Cmd, ProcessStart: p.Start})
 	}
 	s.seen = current
 	return events
@@ -100,7 +103,7 @@ func (s *Scanner) ScanPID(pid int, now time.Time) (Event, bool) {
 	if already {
 		return Event{}, false
 	}
-	return Event{Time: now.UTC(), Host: s.Host, PID: pid, PPID: p.PPID, UID: p.UID, Executable: p.Exe, Command: p.Cmd, ProcessStart: p.Start}, true
+	return Event{Time: now.UTC(), Host: s.Host, PID: pid, PPID: p.PPID, UID: p.UID, Executable: p.Exe, ParentExe: p.PExe, Command: p.Cmd, ProcessStart: p.Start}, true
 }
 func readProcess(root string, pid int) (Process, error) {
 	dir := filepath.Join(root, strconv.Itoa(pid))
@@ -145,7 +148,11 @@ func readProcess(root string, pid int) (Process, error) {
 		}
 		f.Close()
 	}
-	return Process{PID: pid, PPID: ppid, UID: uid, Exe: exe, Cmd: cmd, Start: fields[19]}, nil
+	parentExe := ""
+	if ppid > 0 {
+		parentExe, _ = os.Readlink(filepath.Join(root, strconv.Itoa(ppid), "exe"))
+	}
+	return Process{PID: pid, PPID: ppid, UID: uid, Exe: exe, Cmd: cmd, Start: fields[19], PExe: parentExe}, nil
 }
 func Detect(e Event) []Finding {
 	cmd := strings.ToLower(e.Command)
@@ -281,7 +288,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	incidents.Register(mux, token)
 	siem := NewSIEMExporterFromEnv()
 	DefaultSIEM = siem
-	siem.RegisterRoutes(mux, token)
+	siem.RegisterRoutes(mux, token, store)
 	RegisterAIRoutes(mux, token, store)
 	mux.HandleFunc("GET /v1/sensor", func(w http.ResponseWriter, r *http.Request) {
 		got := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
@@ -290,7 +297,12 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"backend": string(ProbeSensor()), "product": "kavach"})
+		json.NewEncoder(w).Encode(map[string]any{
+			"backend": string(ProbeSensor()),
+			"product": "kavach",
+			"netra":   NetraPollerStatus(),
+			"siem":    siem.Status(),
+		})
 	})
 	if registry != nil {
 		mux.HandleFunc("GET /v1/fleet", func(w http.ResponseWriter, r *http.Request) {
@@ -329,8 +341,28 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 		if !validSession(r, token) && !authorized(w, r) {
 			return
 		}
+		sev := strings.ToLower(r.URL.Query().Get("severity"))
+		rule := strings.ToLower(r.URL.Query().Get("rule"))
+		host := strings.ToLower(r.URL.Query().Get("host"))
+		out := store.List()
+		if sev != "" || rule != "" || host != "" {
+			filtered := out[:0]
+			for _, f := range out {
+				if sev != "" && strings.ToLower(f.Severity) != sev {
+					continue
+				}
+				if rule != "" && !strings.Contains(strings.ToLower(f.Rule), rule) {
+					continue
+				}
+				if host != "" && !strings.Contains(strings.ToLower(f.Host), host) {
+					continue
+				}
+				filtered = append(filtered, f)
+			}
+			out = filtered
+		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(store.List())
+		json.NewEncoder(w).Encode(out)
 	})
 	mux.HandleFunc("POST /v1/events", func(w http.ResponseWriter, r *http.Request) {
 		if registry == nil && !authorized(w, r) {

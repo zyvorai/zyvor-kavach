@@ -1,0 +1,239 @@
+openapi: 3.0.3
+info:
+  title: Kavach API
+  version: "1.0"
+  description: Brief stub of live Kavach controller endpoints. Bearer auth unless noted.
+servers:
+  - url: https://127.0.0.1:8099
+    description: Local / NodePort HTTPS
+security:
+  - bearerAuth: []
+paths:
+  /healthz:
+    get:
+      summary: Liveness probe
+      security: []
+      responses:
+        "200":
+          description: ok
+  /v1/session:
+    post:
+      summary: Create console session cookie
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token: { type: string }
+      responses:
+        "200":
+          description: Session cookie set
+  /v1/summary:
+    get:
+      summary: Finding counts by severity / host
+      responses:
+        "200":
+          description: Summary JSON
+  /v1/findings:
+    get:
+      summary: List findings
+      parameters:
+        - name: severity
+          in: query
+          schema: { type: string }
+        - name: rule
+          in: query
+          schema: { type: string }
+        - name: host
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Finding array
+  /v1/recent-events:
+    get:
+      summary: Recent process and network events
+      responses:
+        "200":
+          description: process / network buckets
+  /v1/incidents:
+    get:
+      summary: Findings with workflow state
+      responses:
+        "200":
+          description: Incident list
+  /v1/incidents/transition:
+    post:
+      summary: Transition incident status
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                finding_id: { type: string }
+                status: { type: string, enum: [open, investigating, resolved, false_positive] }
+                note: { type: string }
+                actor: { type: string }
+      responses:
+        "200":
+          description: Updated workflow
+  /v1/fleet:
+    get:
+      summary: Fleet / agent status
+      responses:
+        "200":
+          description: Agent status array
+  /v1/agents:
+    get:
+      summary: List enrolled agents (admin)
+      responses:
+        "200":
+          description: Agent status array
+  /v1/agents/enroll:
+    post:
+      summary: Enroll host (admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                host: { type: string }
+      responses:
+        "200":
+          description: host + agent token
+  /v1/agents/revoke:
+    post:
+      summary: Revoke host credentials (admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                host: { type: string }
+      responses:
+        "204":
+          description: Revoked
+  /v1/agents/heartbeat:
+    post:
+      summary: Agent heartbeat
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                host: { type: string }
+                sensor: { type: string }
+                queued: { type: integer }
+      responses:
+        "204":
+          description: Accepted
+  /v1/events:
+    post:
+      summary: Ingest process event
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Event"
+      responses:
+        "200":
+          description: findings count
+  /v1/network-events:
+    post:
+      summary: Ingest Netra network event
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NetworkEvent"
+      responses:
+        "200":
+          description: correlations count
+  /v1/file-events:
+    post:
+      summary: Ingest file-activity event
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                host: { type: string }
+                time: { type: string, format: date-time }
+                path: { type: string }
+                operation: { type: string }
+                pid: { type: integer }
+      responses:
+        "200":
+          description: findings count
+  /v1/siem/status:
+    get:
+      summary: SIEM exporter status
+      responses:
+        "200":
+          description: Status JSON
+  /v1/siem/export:
+    get:
+      summary: NDJSON / ECS findings export
+      responses:
+        "200":
+          description: application/x-ndjson
+  /v1/ai/score:
+    get:
+      summary: Assistive score for one finding
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Score object
+  /v1/ai/scores:
+    get:
+      summary: Assistive scores for all findings
+      responses:
+        "200":
+          description: Score array
+  /v1/sensor:
+    get:
+      summary: Sensor / Netra / SIEM probe status
+      responses:
+        "200":
+          description: Status JSON
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    Event:
+      type: object
+      required: [time, host, pid, executable, command]
+      properties:
+        time: { type: string, format: date-time }
+        host: { type: string }
+        pid: { type: integer }
+        ppid: { type: integer }
+        uid: { type: integer }
+        executable: { type: string }
+        command: { type: string }
+        process_start: { type: string }
+    NetworkEvent:
+      type: object
+      required: [time, host, pid]
+      properties:
+        time: { type: string, format: date-time }
+        host: { type: string }
+        pid: { type: integer }
+        destination: { type: string }
+        verdict: { type: string }
+        process_start: { type: string }
+        source: { type: string }

@@ -139,7 +139,15 @@ func correlates(e Event, n NetworkEvent) bool {
 	return e.Host == n.Host && e.PID == n.PID && (e.ProcessStart == "" || n.ProcessStart == "" || e.ProcessStart == n.ProcessStart) && d >= -5*time.Minute && d <= 5*time.Minute && strings.EqualFold(n.Verdict, "deny")
 }
 func correlationFinding(e Event, n NetworkEvent) Finding {
-	return Finding{ID: "netra:" + eventID(e) + ":" + networkID(n), Time: e.Time, Host: e.Host, PID: e.PID, Rule: "netra-denied-process", Severity: "medium", Description: "XDR: process correlated with a denied Netra network flow", Evidence: e}
+	desc := "XDR: process correlated with a denied Netra network flow"
+	if n.Destination != "" {
+		desc += " → " + n.Destination
+	}
+	return Finding{
+		ID: "netra:" + eventID(e) + ":" + networkID(n), Time: e.Time, Host: e.Host, PID: e.PID,
+		Rule: "netra-denied-process", Severity: "medium", Description: desc, Evidence: e,
+		Tags: []string{"xdr", "multi-signal", "netra"}, Destination: n.Destination,
+	}
 }
 func (s *Store) IngestNetwork(n NetworkEvent) ([]Finding, error) {
 	s.mu.Lock()

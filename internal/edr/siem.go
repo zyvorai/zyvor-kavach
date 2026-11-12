@@ -12,6 +12,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -19,42 +20,80 @@ import (
 type SIEMConfig struct {
 	WebhookURL string
 	SyslogAddr string // host:port UDP
+	Headers    map[string]string
 	Enabled    bool
 }
 
 type SIEMExporter struct {
-	cfg    SIEMConfig
-	client *http.Client
-	mu     sync.Mutex
+	cfg      SIEMConfig
+	client   *http.Client
+	mu       sync.Mutex
+	okCount  atomic.Uint64
+	errCount atomic.Uint64
+	lastErr  string
+	lastOK   time.Time
 }
 
 // DefaultSIEM is set by the server process for finding export side-effects.
 var DefaultSIEM *SIEMExporter
 
+func firstNonEmpty(vals ...string) string {
+	for _, v := range vals {
+		if strings.TrimSpace(v) != "" {
+			return v
+		}
+	}
+	return ""
+}
+
+func parseHeaderKV(raw string) map[string]string {
+	out := map[string]string{}
+	for _, part := range strings.Split(raw, ",") {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		k, v, ok := strings.Cut(part, "=")
+		if !ok {
+			continue
+		}
+		out[strings.TrimSpace(k)] = strings.TrimSpace(v)
+	}
+	return out
+}
+
 func NewSIEMExporterFromEnv() *SIEMExporter {
 	cfg := SIEMConfig{
-		WebhookURL: os.Getenv("KAVACH_SIEM_WEBHOOK"),
-		SyslogAddr: os.Getenv("KAVACH_SIEM_SYSLOG"),
+		WebhookURL: firstNonEmpty(os.Getenv("KAVACH_SIEM_WEBHOOK"), os.Getenv("KAVACH_SIEM_WEBHOOK_URL")),
+		SyslogAddr: firstNonEmpty(os.Getenv("KAVACH_SIEM_SYSLOG"), os.Getenv("KAVACH_SIEM_SYSLOG_ADDR")),
+		Headers:    parseHeaderKV(os.Getenv("KAVACH_SIEM_HEADERS")),
 	}
-	cfg.Enabled = cfg.WebhookURL != "" || cfg.SyslogAddr != ""
+	if os.Getenv("KAVACH_SIEM_ENABLED") == "true" || os.Getenv("KAVACH_SIEM_ENABLED") == "1" {
+		cfg.Enabled = cfg.WebhookURL != "" || cfg.SyslogAddr != ""
+	} else {
+		cfg.Enabled = cfg.WebhookURL != "" || cfg.SyslogAddr != ""
+	}
 	return &SIEMExporter{cfg: cfg, client: &http.Client{Timeout: 5 * time.Second}}
 }
 
 // ECSEvent is a minimal Elastic Common Schema flavored document.
 type ECSEvent struct {
-	Timestamp   time.Time `json:"@timestamp"`
-	Message     string    `json:"message"`
-	EventKind   string    `json:"event.kind"`
-	EventCat    []string  `json:"event.category"`
-	Severity    string    `json:"event.severity_label"`
-	RuleID      string    `json:"rule.id"`
-	HostName    string    `json:"host.name"`
-	ProcessPID  int       `json:"process.pid,omitempty"`
-	Observer    string    `json:"observer.product"`
-	Tags        []string  `json:"tags,omitempty"`
+	Timestamp  time.Time `json:"@timestamp"`
+	Message    string    `json:"message"`
+	EventKind  string    `json:"event.kind"`
+	EventCat   []string  `json:"event.category"`
+	Severity   string    `json:"event.severity_label"`
+	RuleID     string    `json:"rule.id"`
+	HostName   string    `json:"host.name"`
+	ProcessPID int       `json:"process.pid,omitempty"`
+	Observer   string    `json:"observer.product"`
+	Tags       []string  `json:"tags,omitempty"`
+	FindingID  string    `json:"kavach.finding_id,omitempty"`
 }
 
 func FindingToECS(f Finding) ECSEvent {
+	tags := []string{"kavach", "zyvor"}
+	tags = append(tags, f.Tags...)
 	return ECSEvent{
 		Timestamp:  f.Time,
 		Message:    f.Description,
@@ -65,8 +104,25 @@ func FindingToECS(f Finding) ECSEvent {
 		HostName:   f.Host,
 		ProcessPID: f.PID,
 		Observer:   "kavach",
-		Tags:       []string{"kavach", "zyvor"},
+		Tags:       tags,
+		FindingID:  f.ID,
 	}
+}
+
+func (s *SIEMExporter) noteOK() {
+	s.okCount.Add(1)
+	s.mu.Lock()
+	s.lastOK = time.Now().UTC()
+	s.lastErr = ""
+	s.mu.Unlock()
+}
+
+func (s *SIEMExporter) noteErr(err error) {
+	s.errCount.Add(1)
+	s.mu.Lock()
+	s.lastErr = err.Error()
+	s.mu.Unlock()
+	log.Printf("siem: %v", err)
 }
 
 func (s *SIEMExporter) ExportFinding(f Finding) {
@@ -89,30 +145,62 @@ func (s *SIEMExporter) ExportFinding(f Finding) {
 func (s *SIEMExporter) postWebhook(b []byte) {
 	req, err := http.NewRequest(http.MethodPost, s.cfg.WebhookURL, bytes.NewReader(b))
 	if err != nil {
+		s.noteErr(err)
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
+	for k, v := range s.cfg.Headers {
+		req.Header.Set(k, v)
+	}
 	resp, err := s.client.Do(req)
 	if err != nil {
-		log.Printf("siem webhook: %v", err)
+		s.noteErr(err)
 		return
 	}
 	resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		s.noteErr(fmt.Errorf("webhook HTTP %d", resp.StatusCode))
+		return
+	}
+	s.noteOK()
 }
 
 func (s *SIEMExporter) sendSyslog(f Finding, jsonBody []byte) {
 	conn, err := net.DialTimeout("udp", s.cfg.SyslogAddr, 2*time.Second)
 	if err != nil {
-		log.Printf("siem syslog: %v", err)
+		s.noteErr(err)
 		return
 	}
 	defer conn.Close()
-	// RFC5424-ish
 	msg := fmt.Sprintf("<134>1 %s kavach - - - %s", f.Time.UTC().Format(time.RFC3339), string(jsonBody))
-	_, _ = conn.Write([]byte(msg))
+	if _, err := conn.Write([]byte(msg)); err != nil {
+		s.noteErr(err)
+		return
+	}
+	s.noteOK()
 }
 
-func (s *SIEMExporter) RegisterRoutes(mux *http.ServeMux, token string) {
+func (s *SIEMExporter) Status() map[string]any {
+	if s == nil {
+		return map[string]any{"enabled": false}
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := map[string]any{
+		"enabled":     s.cfg.Enabled,
+		"webhook_set": s.cfg.WebhookURL != "",
+		"syslog_set":  s.cfg.SyslogAddr != "",
+		"ok_count":    s.okCount.Load(),
+		"err_count":   s.errCount.Load(),
+		"last_error":  s.lastErr,
+	}
+	if !s.lastOK.IsZero() {
+		out["last_ok"] = s.lastOK.Format(time.RFC3339)
+	}
+	return out
+}
+
+func (s *SIEMExporter) RegisterRoutes(mux *http.ServeMux, token string, store *Store) {
 	mux.HandleFunc("GET /v1/siem/status", func(w http.ResponseWriter, r *http.Request) {
 		got := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 		if subtle.ConstantTimeCompare([]byte(got), []byte(token)) != 1 && !validSession(r, token) {
@@ -120,20 +208,25 @@ func (s *SIEMExporter) RegisterRoutes(mux *http.ServeMux, token string) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{
-			"enabled":     s != nil && s.cfg.Enabled,
-			"webhook_set": s != nil && s.cfg.WebhookURL != "",
-			"syslog_set":  s != nil && s.cfg.SyslogAddr != "",
-		})
+		json.NewEncoder(w).Encode(s.Status())
 	})
 	mux.HandleFunc("GET /v1/siem/export", func(w http.ResponseWriter, r *http.Request) {
 		got := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-		if subtle.ConstantTimeCompare([]byte(got), []byte(token)) != 1 {
+		if subtle.ConstantTimeCompare([]byte(got), []byte(token)) != 1 && !validSession(r, token) {
 			http.Error(w, "unauthorized", 401)
 			return
 		}
-		// Caller passes findings via store; this endpoint documents ECS shape.
 		w.Header().Set("Content-Type", "application/x-ndjson")
-		w.Write([]byte(""))
+		if store == nil {
+			return
+		}
+		for _, f := range store.List() {
+			b, err := json.Marshal(FindingToECS(f))
+			if err != nil {
+				continue
+			}
+			w.Write(b)
+			w.Write([]byte("\n"))
+		}
 	})
 }

@@ -122,7 +122,7 @@ button {
 }
 button:hover { background: var(--hover-fill); }
 button:active { transform: scale(0.98); }
-button:focus-visible, .input-field:focus-visible, .navlinks button:focus-visible, .brand:focus-visible, .icon-btn:focus-visible {
+button:focus-visible, .input-field:focus-visible, .navlinks button:focus-visible, .brand:focus-visible, .icon-btn:focus-visible, .select-field:focus-visible {
   outline: 2px solid var(--apple-blue);
   outline-offset: 2px;
 }
@@ -140,7 +140,7 @@ button.secondary {
 }
 button.secondary:hover { background: var(--surface-hover); }
 button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-.input-field {
+.input-field, .select-field {
   width: 100%;
   min-height: var(--hit-min);
   padding: 10px 14px;
@@ -152,8 +152,16 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   border-radius: var(--radius-pill);
   transition: border-color 0.2s var(--ease-apple), box-shadow 0.2s var(--ease-apple);
 }
+.select-field {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-tertiary) 50%), linear-gradient(135deg, var(--text-tertiary) 50%, transparent 50%);
+  background-position: calc(100% - 18px) calc(50% - 3px), calc(100% - 12px) calc(50% - 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 32px;
+}
 .input-field::placeholder { color: var(--text-faint); }
-.input-field:focus-visible {
+.input-field:focus-visible, .select-field:focus-visible {
   outline: none;
   border-color: var(--apple-blue);
   box-shadow: var(--focus-ring);
@@ -308,7 +316,7 @@ main {
   100% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .page, .login-story, .apple-metric-band b { animation: none !important; }
+  .page, .login-story, .apple-metric-band b, .drawer { animation: none !important; }
   .live-dot { animation: none !important; }
 }
 
@@ -493,6 +501,16 @@ main {
   background: var(--surface-1);
   box-shadow: var(--shadow-1);
 }
+.table-wrap + .table-wrap { margin-top: 16px; }
+.table-caption {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  letter-spacing: -0.01em;
+}
+.table-caption--spaced { margin-top: 20px; }
+.integration-card .export-row { margin-top: 12px; }
 .table-wrap table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .table-wrap th {
   padding: 12px 16px;
@@ -514,7 +532,11 @@ main {
 }
 .table-wrap tr:last-child td { border-bottom: 0; }
 .table-wrap tbody tr:hover { background: var(--surface-hover); }
+.table-wrap tbody tr.row-clickable { cursor: pointer; }
+.table-wrap tbody tr.row-deny { background: var(--danger-bg); }
+.table-wrap tbody tr.row-deny:hover { background: var(--danger-bg); filter: brightness(0.98); }
 .mono { font-family: var(--font-mono); font-size: 12px; }
+.cell-stack { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 
 .list-empty {
   display: flex;
@@ -562,7 +584,7 @@ main {
   color: var(--text-secondary);
   text-transform: lowercase;
 }
-.tag.high { background: var(--danger-bg); color: var(--danger); }
+.tag.high, .tag.critical { background: var(--danger-bg); color: var(--danger); }
 .tag.medium { background: var(--warning-bg); color: var(--warning-text); }
 .tag.low { background: var(--info-bg); color: var(--apple-link); }
 .tag.open, .tag.investigating { background: var(--info-bg); color: var(--apple-link); }
@@ -570,6 +592,8 @@ main {
 .tag.false_positive { background: var(--fill-tertiary); color: var(--text-secondary); }
 .tag.online { background: var(--success-bg); color: var(--success-text); }
 .tag.offline, .tag.stale, .tag.pending { background: var(--warning-bg); color: var(--warning-text); }
+.tag.xdr { background: var(--info-bg); color: var(--apple-link); }
+.tag.deny { background: var(--danger-bg); color: var(--danger); }
 
 .login-story {
   min-height: calc(100vh - 40px);
@@ -668,6 +692,189 @@ main {
 .kv dt { color: var(--text-secondary); }
 .kv dd { margin: 0; font-weight: 500; }
 
+.work-panel {
+  margin: 0 0 16px;
+  padding: 20px 22px;
+  border: 1px solid var(--hairline-1);
+  border-radius: var(--radius-xl);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-1);
+}
+.work-panel h3 {
+  margin: 0 0 4px;
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.work-panel .hint {
+  margin: 0 0 14px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+.work-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 14px;
+  align-items: end;
+}
+.work-grid label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.work-grid .field { min-width: 0; }
+.work-grid .field--wide { grid-column: 1 / -1; }
+.work-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-top: 14px;
+}
+.work-msg {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  min-height: 1.2em;
+}
+.work-msg.is-error { color: var(--danger); }
+.work-msg.is-ok { color: var(--success-text); }
+
+.token-box {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--hairline-1);
+  border-radius: var(--radius-md);
+  background: var(--fill-tertiary);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+}
+.token-box .mono {
+  flex: 1 1 220px;
+  word-break: break-all;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+.token-box .hint {
+  flex: 1 1 100%;
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(0, 0, 0, 0.28);
+  border: 0;
+  padding: 0;
+  border-radius: 0;
+  min-height: 0;
+}
+.drawer-backdrop:hover { background: rgba(0, 0, 0, 0.28); }
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 90;
+  width: min(420px, 100vw);
+  height: 100%;
+  background: var(--surface-1);
+  border-left: 1px solid var(--hairline);
+  box-shadow: var(--shadow-2);
+  display: flex;
+  flex-direction: column;
+  animation: drawerIn 0.28s var(--ease-apple);
+}
+@keyframes drawerIn {
+  from { transform: translateX(12px); opacity: 0.6; }
+  to { transform: none; opacity: 1; }
+}
+.drawer-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 20px 12px;
+  border-bottom: 1px solid var(--hairline-1);
+}
+.drawer-head h2 {
+  margin: 0;
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.drawer-head .sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.drawer-close {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+.drawer-body {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 16px 20px 28px;
+}
+.drawer-section {
+  margin-top: 18px;
+}
+.drawer-section:first-child { margin-top: 0; }
+.drawer-section h3 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  letter-spacing: -0.01em;
+}
+.evidence-kv {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 8px 10px;
+  font-size: 13px;
+}
+.evidence-kv dt { color: var(--text-secondary); }
+.evidence-kv dd { margin: 0; overflow-wrap: anywhere; }
+.factor-list {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.factor-list li {
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--fill-tertiary);
+}
+.score-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.score-line .score-num {
+  font-family: var(--font-display);
+  font-size: var(--fs-figure);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
 footer {
   text-align: center;
   padding: 24px 16px 48px;
@@ -681,6 +888,7 @@ footer {
   .apple-metric-band > div:last-child { border-bottom: 0; }
   .chapter { grid-template-columns: 1fr; align-items: start; }
   .integration-grid { grid-template-columns: 1fr; }
+  .work-grid { grid-template-columns: 1fr; }
   .navlinks { justify-content: flex-start; }
   .table-wrap th, .table-wrap td { padding: 12px 10px; }
 }
@@ -721,6 +929,7 @@ footer {
       <div class="navlinks" role="tablist" aria-label="Sections">
         <button type="button" data-page="overview" class="active" role="tab" aria-selected="true">Overview</button>
         <button type="button" data-page="detect" role="tab" aria-selected="false">Detect</button>
+        <button type="button" data-page="timeline" role="tab" aria-selected="false">Timeline</button>
         <button type="button" data-page="incidents" role="tab" aria-selected="false">Incidents</button>
         <button type="button" data-page="fleet" role="tab" aria-selected="false">Fleet</button>
         <button type="button" data-page="integrations" role="tab" aria-selected="false">Integrations</button>
@@ -788,8 +997,38 @@ footer {
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Severity</th><th>Rule</th><th>Host / PID</th><th>Description</th><th>Time (UTC)</th></tr></thead>
+          <thead>
+            <tr id="findings-head">
+              <th>Severity</th>
+              <th>Rule</th>
+              <th>Host / PID</th>
+              <th>Description</th>
+              <th>Time (UTC)</th>
+            </tr>
+          </thead>
           <tbody id="findings-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="page-timeline" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Timeline</p>
+        <h1>Recent events</h1>
+        <p class="lede">Latest process and network signals observed by this controller.</p>
+      </header>
+      <p class="table-caption">Process</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Time (UTC)</th><th>Host</th><th>PID</th><th>Executable</th><th>Command</th></tr></thead>
+          <tbody id="timeline-process-rows"></tbody>
+        </table>
+      </div>
+      <p class="table-caption table-caption--spaced">Network</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Time (UTC)</th><th>Host</th><th>PID</th><th>Destination</th><th>Verdict</th></tr></thead>
+          <tbody id="timeline-network-rows"></tbody>
         </table>
       </div>
     </section>
@@ -798,8 +1037,34 @@ footer {
       <header class="page-hero">
         <p class="apple-eyebrow">Incidents</p>
         <h1>Workflow</h1>
-        <p class="lede">Analyst state for each finding. Mutations require the API token — not this console.</p>
+        <p class="lede">Analyst state for each finding. Transition from this console with your session.</p>
       </header>
+      <div class="work-panel" id="incident-work">
+        <h3>Work</h3>
+        <p class="hint">Select a finding, set status, and transition. Actor defaults to console.</p>
+        <div class="work-grid">
+          <div class="field field--wide">
+            <label for="incident-finding">Finding</label>
+            <select class="select-field" id="incident-finding" aria-label="Finding ID"></select>
+          </div>
+          <div class="field">
+            <label for="incident-status">Status</label>
+            <select class="select-field" id="incident-status" aria-label="Incident status">
+              <option value="investigating">investigating</option>
+              <option value="resolved">resolved</option>
+              <option value="false_positive">false_positive</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="incident-note">Note</label>
+            <input class="input-field" id="incident-note" type="text" placeholder="Optional note" autocomplete="off">
+          </div>
+        </div>
+        <div class="work-actions">
+          <button type="button" class="primary" id="incident-transition">Transition</button>
+        </div>
+        <p class="work-msg" id="incident-work-msg" role="status"></p>
+      </div>
       <div class="toolbar-pill">
         <input class="input-field" id="incident-filter" type="search" placeholder="Filter incidents" aria-label="Filter incidents" autocomplete="off">
       </div>
@@ -817,12 +1082,31 @@ footer {
         <h1>Agents</h1>
         <p class="lede">Online means a heartbeat within the last 90 seconds.</p>
       </header>
+      <div class="work-panel" id="fleet-enroll-panel">
+        <h3>Enroll</h3>
+        <p class="hint">Issue a one-time host token. Copy it now — it is shown once.</p>
+        <div class="work-grid">
+          <div class="field field--wide">
+            <label for="enroll-host">Host</label>
+            <input class="input-field" id="enroll-host" type="text" placeholder="hostname" autocomplete="off">
+          </div>
+        </div>
+        <div class="work-actions">
+          <button type="button" class="primary" id="enroll-btn">Enroll</button>
+        </div>
+        <div class="token-box" id="enroll-token-box" hidden>
+          <span class="mono" id="enroll-token"></span>
+          <button type="button" class="secondary" id="enroll-copy">Copy</button>
+          <p class="hint">One-time enrollment token for this host.</p>
+        </div>
+        <p class="work-msg" id="enroll-msg" role="status"></p>
+      </div>
       <div class="toolbar-pill">
         <input class="input-field" id="fleet-filter" type="search" placeholder="Filter agents" aria-label="Filter agents" autocomplete="off">
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Host</th><th>State</th><th>Sensor</th><th>Queued</th><th>Last seen</th></tr></thead>
+          <thead><tr><th>Host</th><th>State</th><th>Sensor</th><th>Queued</th><th>Last seen</th><th></th></tr></thead>
           <tbody id="fleet-rows"></tbody>
         </table>
       </div>
@@ -842,8 +1126,13 @@ footer {
             <dt>Enabled</dt><dd id="siem-enabled">—</dd>
             <dt>Webhook</dt><dd id="siem-webhook">—</dd>
             <dt>Syslog</dt><dd id="siem-syslog">—</dd>
+            <dt>OK</dt><dd id="siem-ok">—</dd>
+            <dt>Errors</dt><dd id="siem-err">—</dd>
           </dl>
           <div class="status-row" id="siem-tags"></div>
+          <div class="status-row export-row">
+            <a class="apple-text-link" id="siem-export" href="/v1/siem/export">Download export</a>
+          </div>
         </article>
         <article class="integration-card">
           <h3>Sensor</h3>
@@ -853,19 +1142,72 @@ footer {
             <dt>Backend</dt><dd id="sensor-backend">—</dd>
           </dl>
         </article>
+        <article class="integration-card">
+          <h3>Netra poller</h3>
+          <p>Optional network XDR feed from a live Netra controller.</p>
+          <dl class="kv">
+            <dt>Configured</dt><dd id="netra-configured">—</dd>
+            <dt>URL</dt><dd id="netra-url">—</dd>
+            <dt>Last OK</dt><dd id="netra-last-ok">—</dd>
+            <dt>Last error</dt><dd id="netra-last-err">—</dd>
+          </dl>
+          <div class="status-row" id="netra-tags"></div>
+        </article>
       </div>
     </section>
   </main>
   <footer>© ZYVOR · Kavach · Security without compromise.</footer>
 </div>
 
+<div id="drawer-root" hidden>
+  <button type="button" class="drawer-backdrop" id="drawer-backdrop" aria-label="Close finding drawer"></button>
+  <aside class="drawer" id="finding-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+    <div class="drawer-head">
+      <div>
+        <h2 id="drawer-title">Finding</h2>
+        <p class="sub" id="drawer-sub"></p>
+      </div>
+      <button type="button" class="drawer-close" id="drawer-close" aria-label="Close">×</button>
+    </div>
+    <div class="drawer-body">
+      <div class="drawer-section">
+        <h3>Evidence</h3>
+        <dl class="evidence-kv">
+          <dt>exe</dt><dd id="ev-exe">—</dd>
+          <dt>parent_exe</dt><dd id="ev-parent">—</dd>
+          <dt>cmdline</dt><dd id="ev-cmdline">—</dd>
+          <dt>uid</dt><dd id="ev-uid">—</dd>
+          <dt>pid</dt><dd id="ev-pid">—</dd>
+          <dt>tags</dt><dd id="ev-tags">—</dd>
+          <dt>destination</dt><dd id="ev-dest">—</dd>
+        </dl>
+      </div>
+      <div class="drawer-section">
+        <h3>AI score</h3>
+        <div class="score-line">
+          <span class="score-num" id="ai-score-num">—</span>
+          <span id="ai-score-level" class="tag">—</span>
+        </div>
+        <ul class="factor-list" id="ai-factors"></ul>
+        <p class="work-msg" id="ai-score-msg"></p>
+      </div>
+      <div class="drawer-section">
+        <button type="button" class="apple-text-link" id="drawer-to-incident">Use in Incidents Work</button>
+      </div>
+    </div>
+  </aside>
+</div>
+
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'incidents', 'fleet', 'integrations'];
+  const pages = ['overview', 'detect', 'timeline', 'incidents', 'fleet', 'integrations'];
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
-  let cache = { findings: [], incidents: [], fleet: [] };
+  let cache = { findings: [], incidents: [], fleet: [], process: [], network: [] };
+  let scoresById = {};
+  let scoresAvailable = false;
+  let selectedFindingId = '';
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const iconSun = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
@@ -890,8 +1232,20 @@ footer {
     return node;
   }
 
-  function tableRow(parent, cells) {
+  function tableRow(parent, cells, opts) {
     const tr = document.createElement('tr');
+    if (opts && opts.className) tr.className = opts.className;
+    if (opts && opts.onClick) {
+      tr.classList.add('row-clickable');
+      tr.addEventListener('click', opts.onClick);
+      tr.tabIndex = 0;
+      tr.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          opts.onClick(e);
+        }
+      });
+    }
     for (const cell of cells) {
       const td = document.createElement('td');
       if (cell instanceof Node) td.appendChild(cell);
@@ -899,6 +1253,7 @@ footer {
       tr.appendChild(td);
     }
     parent.appendChild(tr);
+    return tr;
   }
 
   function listEmpty(tbody, cols, title, sentence, actionLabel, actionFn) {
@@ -1009,14 +1364,115 @@ footer {
     return String(hay).toLowerCase().includes(q);
   }
 
+  function hasXdr(f) {
+    const tags = Array.isArray(f.tags) ? f.tags : [];
+    if (tags.some((t) => String(t).toLowerCase() === 'xdr')) return true;
+    return String(f.rule || '') === 'netra-denied-process';
+  }
+
+  function scorePayload(entry) {
+    if (!entry) return null;
+    if (entry.score && typeof entry.score === 'object') return entry.score;
+    if (typeof entry.score === 'number') return entry;
+    return entry;
+  }
+
+  function findingsCols() {
+    return scoresAvailable ? 6 : 5;
+  }
+
+  function syncFindingsHead() {
+    const head = $('findings-head');
+    head.replaceChildren();
+    const labels = ['Severity', 'Rule', 'Host / PID', 'Description', 'Time (UTC)'];
+    if (scoresAvailable) labels.splice(1, 0, 'Risk');
+    for (const label of labels) head.appendChild(el('th', label));
+  }
+
+  function setEvidenceText(id, value) {
+    const node = $(id);
+    if (!node) return;
+    const text = value == null || value === '' ? '—' : String(value);
+    node.textContent = text;
+  }
+
+  function closeDrawer() {
+    $('drawer-root').hidden = true;
+  }
+
+  function openDrawer(finding) {
+    if (!finding) return;
+    selectedFindingId = finding.id || '';
+    const ev = finding.evidence || {};
+    $('drawer-title').textContent = finding.rule || 'Finding';
+    $('drawer-sub').textContent = [finding.host || '', finding.id || ''].filter(Boolean).join(' · ');
+    setEvidenceText('ev-exe', ev.executable || ev.exe);
+    setEvidenceText('ev-parent', ev.parent_exe);
+    setEvidenceText('ev-cmdline', ev.command || ev.cmdline);
+    setEvidenceText('ev-uid', ev.uid != null ? ev.uid : '');
+    setEvidenceText('ev-pid', finding.pid != null ? finding.pid : ev.pid);
+    const tags = Array.isArray(finding.tags) ? finding.tags.join(', ') : '';
+    setEvidenceText('ev-tags', tags);
+    setEvidenceText('ev-dest', finding.destination);
+    $('ai-score-num').textContent = '…';
+    $('ai-score-level').textContent = 'loading';
+    $('ai-score-level').className = 'tag';
+    $('ai-factors').replaceChildren();
+    $('ai-score-msg').textContent = '';
+    $('drawer-root').hidden = false;
+    syncIncidentFindingSelect();
+    loadAIScore(finding.id);
+  }
+
+  async function loadAIScore(id) {
+    if (!id) {
+      $('ai-score-num').textContent = '—';
+      $('ai-score-level').textContent = '—';
+      $('ai-score-msg').textContent = 'No finding id';
+      return;
+    }
+    try {
+      const data = await request('/v1/ai/score?id=' + encodeURIComponent(id));
+      const score = scorePayload(data) || data || {};
+      $('ai-score-num').textContent = score.score != null ? String(score.score) : '—';
+      const level = String(score.level || '—').toLowerCase();
+      $('ai-score-level').textContent = level;
+      $('ai-score-level').className = 'tag ' + level;
+      const factors = Array.isArray(score.factors) ? score.factors : [];
+      const list = $('ai-factors');
+      list.replaceChildren();
+      for (const factor of factors) list.appendChild(el('li', factor));
+      if (score.llm_note) {
+        $('ai-score-msg').textContent = score.llm_note;
+      } else {
+        $('ai-score-msg').textContent = score.assistive ? 'Assistive heuristic score' : '';
+      }
+      if (data) {
+        scoresById[id] = data;
+        if (!scoresAvailable) {
+          scoresAvailable = true;
+          syncFindingsHead();
+          renderFindings(cache.findings);
+        }
+      }
+    } catch (e) {
+      $('ai-score-num').textContent = '—';
+      $('ai-score-level').textContent = 'unavailable';
+      $('ai-score-level').className = 'tag';
+      $('ai-score-msg').textContent = e.message || 'Score unavailable';
+    }
+  }
+
   function renderFindings(findings) {
     cache.findings = Array.isArray(findings) ? findings : [];
+    syncFindingsHead();
+    syncIncidentFindingSelect();
     const q = ($('detect-filter').value || '').trim().toLowerCase();
     const tbody = $('findings-rows');
-    const filtered = cache.findings.filter((f) => matchFilter([f.severity, f.rule, f.host, f.pid, f.description].join(' '), q));
+    const filtered = cache.findings.filter((f) => matchFilter([f.severity, f.rule, f.host, f.pid, f.description, (f.tags || []).join(' ')].join(' '), q));
     if (!filtered.length) {
       listEmpty(
-        tbody, 5,
+        tbody, findingsCols(),
         cache.findings.length ? 'No matches' : 'No findings yet',
         cache.findings.length ? 'Try a different filter.' : 'When agents report process activity that matches a rule, findings appear here.',
         cache.findings.length ? '' : 'View fleet',
@@ -1026,13 +1482,90 @@ footer {
     }
     tbody.replaceChildren();
     for (const f of filtered.slice().reverse().slice(0, 200)) {
-      tableRow(tbody, [
+      const ruleCell = document.createElement('div');
+      ruleCell.className = 'cell-stack';
+      ruleCell.appendChild(el('span', f.rule || '—'));
+      if (hasXdr(f)) ruleCell.appendChild(el('span', 'xdr', 'tag xdr'));
+
+      const cells = [
         severityTag(f.severity),
-        f.rule || '—',
+        ruleCell,
         (f.host || '—') + ' / ' + (f.pid ?? '—'),
         f.description || '',
         fmtTime(f.time),
-      ]);
+      ];
+      if (scoresAvailable) {
+        const raw = scoresById[f.id];
+        const score = scorePayload(raw);
+        const risk = document.createElement('div');
+        risk.className = 'cell-stack';
+        if (score && score.score != null) {
+          risk.appendChild(el('span', String(score.score), 'mono'));
+          if (score.level) risk.appendChild(el('span', String(score.level).toLowerCase(), 'tag ' + String(score.level).toLowerCase()));
+        } else {
+          risk.appendChild(el('span', '—', 'mono'));
+        }
+        cells.splice(1, 0, risk);
+      }
+      tableRow(tbody, cells, { onClick: () => openDrawer(f) });
+    }
+  }
+
+  function syncIncidentFindingSelect() {
+    const sel = $('incident-finding');
+    if (!sel) return;
+    const prev = selectedFindingId || sel.value;
+    sel.replaceChildren();
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = cache.findings.length ? 'Select finding…' : 'No findings';
+    sel.appendChild(placeholder);
+    for (const f of cache.findings.slice().reverse()) {
+      const opt = document.createElement('option');
+      opt.value = f.id || '';
+      opt.textContent = (f.rule || f.id || 'finding') + ' · ' + (f.host || '') + (f.id ? ' · ' + f.id : '');
+      sel.appendChild(opt);
+    }
+    if (prev && [...sel.options].some((o) => o.value === prev)) sel.value = prev;
+  }
+
+  function renderTimeline(processEvents, networkEvents) {
+    cache.process = Array.isArray(processEvents) ? processEvents : [];
+    cache.network = Array.isArray(networkEvents) ? networkEvents : [];
+
+    const pBody = $('timeline-process-rows');
+    if (!cache.process.length) {
+      listEmpty(pBody, 5, 'No process events', 'Recent process activity will appear here as agents report.', '', null);
+    } else {
+      pBody.replaceChildren();
+      for (const e of cache.process.slice().reverse().slice(0, 200)) {
+        tableRow(pBody, [
+          fmtTime(e.time),
+          e.host || '—',
+          e.pid ?? '—',
+          el('span', e.executable || '—', 'mono'),
+          el('span', e.command || '', 'mono'),
+        ]);
+      }
+    }
+
+    const nBody = $('timeline-network-rows');
+    if (!cache.network.length) {
+      listEmpty(nBody, 5, 'No network events', 'Netra-correlated flows will appear when the poller or bridge is active.', '', null);
+    } else {
+      nBody.replaceChildren();
+      for (const e of cache.network.slice().reverse().slice(0, 200)) {
+        const verdict = String(e.verdict || '').toLowerCase();
+        const deny = verdict === 'deny';
+        const verdictNode = el('span', verdict || '—', 'tag ' + (deny ? 'deny' : (verdict || '')));
+        tableRow(nBody, [
+          fmtTime(e.time),
+          e.host || '—',
+          e.pid ?? '—',
+          el('span', e.destination || '—', 'mono'),
+          verdictNode,
+        ], { className: deny ? 'row-deny' : '' });
+      }
     }
   }
 
@@ -1043,7 +1576,7 @@ footer {
     const filtered = cache.incidents.filter((item) => {
       const f = item.finding || {};
       const w = item.workflow || {};
-      return matchFilter([w.status, f.rule, f.host, w.actor, w.note].join(' '), q);
+      return matchFilter([w.status, f.rule, f.host, w.actor, w.note, f.id].join(' '), q);
     });
     if (!filtered.length) {
       listEmpty(
@@ -1067,7 +1600,14 @@ footer {
         f.host || '—',
         note,
         w.time ? fmtTime(w.time) : '—',
-      ]);
+      ], {
+        onClick: () => {
+          if (f.id) {
+            selectedFindingId = f.id;
+            syncIncidentFindingSelect();
+          }
+        },
+      });
     }
   }
 
@@ -1082,9 +1622,9 @@ footer {
     const filtered = cache.fleet.filter((a) => matchFilter([a.host, a.state, a.sensor].join(' '), q));
     if (!filtered.length) {
       listEmpty(
-        tbody, 5,
+        tbody, 6,
         cache.fleet.length ? 'No matches' : 'No enrolled agents',
-        cache.fleet.length ? 'Try a different filter.' : 'Enroll a host with the admin token, then run the agent with its host-scoped credential.',
+        cache.fleet.length ? 'Try a different filter.' : 'Enroll a host above, then run the agent with its host-scoped credential.',
         '',
         null
       );
@@ -1093,12 +1633,21 @@ footer {
     tbody.replaceChildren();
     for (const a of filtered) {
       const state = String(a.state || '').toLowerCase();
+      const revoke = document.createElement('button');
+      revoke.type = 'button';
+      revoke.className = 'apple-text-link';
+      revoke.textContent = 'Revoke';
+      revoke.addEventListener('click', (e) => {
+        e.stopPropagation();
+        revokeHost(a.host);
+      });
       tableRow(tbody, [
         a.host || '—',
         el('span', state || '—', 'tag ' + state),
         a.sensor || '—',
         a.queued ?? 0,
         fmtLocal(a.last_seen),
+        revoke,
       ]);
     }
     return online;
@@ -1124,19 +1673,145 @@ footer {
     $('siem-enabled').textContent = on ? 'Yes' : 'No';
     $('siem-webhook').textContent = siem && siem.webhook_set ? 'Configured' : 'Not set';
     $('siem-syslog').textContent = siem && siem.syslog_set ? 'Configured' : 'Not set';
+    $('siem-ok').textContent = siem && siem.ok_count != null ? String(siem.ok_count) : '0';
+    $('siem-err').textContent = siem && siem.err_count != null ? String(siem.err_count) : '0';
     const tags = $('siem-tags');
     tags.replaceChildren();
     tags.appendChild(el('span', on ? 'export armed' : 'idle', 'tag ' + (on ? 'online' : 'offline')));
     if (siem && siem.webhook_set) tags.appendChild(el('span', 'webhook', 'tag low'));
     if (siem && siem.syslog_set) tags.appendChild(el('span', 'syslog', 'tag low'));
+    if (siem && Number(siem.err_count) > 0) tags.appendChild(el('span', 'errors', 'tag high'));
+
     $('sensor-product').textContent = (sensor && sensor.product) || 'kavach';
     $('sensor-backend').textContent = (sensor && sensor.backend) || '—';
+
+    const netra = (sensor && sensor.netra) || {};
+    const configured = !!netra.configured;
+    $('netra-configured').textContent = configured ? 'Yes' : 'No';
+    $('netra-url').textContent = netra.url || '—';
+    $('netra-last-ok').textContent = netra.last_ok ? fmtTime(netra.last_ok) : '—';
+    $('netra-last-err').textContent = netra.last_error || '—';
+    const ntags = $('netra-tags');
+    ntags.replaceChildren();
+    ntags.appendChild(el('span', configured ? 'configured' : 'idle', 'tag ' + (configured ? 'online' : 'offline')));
+    if (netra.last_error) ntags.appendChild(el('span', 'error', 'tag high'));
+    else if (netra.last_ok) ntags.appendChild(el('span', 'ok', 'tag online'));
+  }
+
+  async function loadScores() {
+    try {
+      const rows = await request('/v1/ai/scores');
+      scoresById = {};
+      if (Array.isArray(rows) && rows.length) {
+        for (const row of rows) {
+          if (row && row.finding_id) scoresById[row.finding_id] = row;
+        }
+        scoresAvailable = Object.keys(scoresById).length > 0;
+      } else {
+        scoresAvailable = false;
+      }
+    } catch (_) {
+      scoresAvailable = false;
+      scoresById = {};
+    }
+  }
+
+  async function transitionIncident() {
+    const msg = $('incident-work-msg');
+    msg.className = 'work-msg';
+    msg.textContent = '';
+    const findingId = $('incident-finding').value || selectedFindingId;
+    const status = $('incident-status').value;
+    const note = ($('incident-note').value || '').trim();
+    if (!findingId) {
+      msg.className = 'work-msg is-error';
+      msg.textContent = 'Select a finding_id';
+      return;
+    }
+    const btn = $('incident-transition');
+    btn.disabled = true;
+    try {
+      const body = { finding_id: findingId, status: status };
+      if (note) body.note = note;
+      await request('/v1/incidents/transition', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      msg.className = 'work-msg is-ok';
+      msg.textContent = 'Transitioned to ' + status;
+      $('incident-note').value = '';
+      const incidents = await request('/v1/incidents');
+      renderIncidents(Array.isArray(incidents) ? incidents : []);
+    } catch (e) {
+      msg.className = 'work-msg is-error';
+      msg.textContent = e.message || 'Transition failed';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function enrollAgent() {
+    const msg = $('enroll-msg');
+    msg.className = 'work-msg';
+    msg.textContent = '';
+    const host = ($('enroll-host').value || '').trim();
+    if (!host) {
+      msg.className = 'work-msg is-error';
+      msg.textContent = 'Enter a host';
+      return;
+    }
+    const btn = $('enroll-btn');
+    btn.disabled = true;
+    try {
+      const out = await request('/v1/agents/enroll', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ host: host }),
+      });
+      const token = out && out.token ? String(out.token) : '';
+      $('enroll-token').textContent = token;
+      $('enroll-token-box').hidden = !token;
+      msg.className = 'work-msg is-ok';
+      msg.textContent = token ? 'Enrolled — copy the token now' : 'Enrolled';
+      const fleet = await request('/v1/fleet');
+      const online = renderFleet(Array.isArray(fleet) ? fleet : []);
+      setOverviewStatus(online, Array.isArray(fleet) ? fleet.length : 0);
+      countUp($('m-online'), online);
+    } catch (e) {
+      msg.className = 'work-msg is-error';
+      msg.textContent = e.message || 'Enroll failed';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function revokeHost(host) {
+    if (!host) return;
+    try {
+      await request('/v1/agents/revoke', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ host: host }),
+      });
+      const fleet = await request('/v1/fleet');
+      const online = renderFleet(Array.isArray(fleet) ? fleet : []);
+      setOverviewStatus(online, Array.isArray(fleet) ? fleet.length : 0);
+      countUp($('m-online'), online);
+      $('enroll-msg').className = 'work-msg is-ok';
+      $('enroll-msg').textContent = 'Revoked ' + host;
+    } catch (e) {
+      $('enroll-msg').className = 'work-msg is-error';
+      $('enroll-msg').textContent = e.message || 'Revoke failed';
+    }
   }
 
   async function load() {
-    skeletonRows($('findings-rows'), 5, 4);
+    skeletonRows($('findings-rows'), findingsCols(), 4);
     skeletonRows($('incident-rows'), 6, 3);
-    skeletonRows($('fleet-rows'), 5, 3);
+    skeletonRows($('fleet-rows'), 6, 3);
+    skeletonRows($('timeline-process-rows'), 5, 3);
+    skeletonRows($('timeline-network-rows'), 5, 3);
     try {
       const [summary, fleet] = await Promise.all([
         request('/v1/summary'),
@@ -1152,11 +1827,19 @@ footer {
       countUp($('m-online'), online);
 
       const findings = await request('/v1/findings');
+      await loadScores();
       renderFindings(Array.isArray(findings) ? findings : []);
       $('detect-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
 
       const incidents = await request('/v1/incidents');
       renderIncidents(Array.isArray(incidents) ? incidents : []);
+
+      try {
+        const recent = await request('/v1/recent-events');
+        renderTimeline(recent && recent.process, recent && recent.network);
+      } catch (_) {
+        renderTimeline([], []);
+      }
 
       const [siem, sensor] = await Promise.all([
         request('/v1/siem/status'),
@@ -1167,6 +1850,7 @@ footer {
       if (e.message === 'HTTP 401') {
         $('app').hidden = true;
         $('login').hidden = false;
+        closeDrawer();
       } else {
         const err = $('error');
         if (err) err.textContent = e.message || 'Load failed';
@@ -1194,6 +1878,33 @@ footer {
   $('detect-filter').addEventListener('input', () => renderFindings(cache.findings));
   $('incident-filter').addEventListener('input', () => renderIncidents(cache.incidents));
   $('fleet-filter').addEventListener('input', () => renderFleet(cache.fleet));
+  $('incident-transition').addEventListener('click', transitionIncident);
+  $('incident-finding').addEventListener('change', () => {
+    selectedFindingId = $('incident-finding').value || '';
+  });
+  $('enroll-btn').addEventListener('click', enrollAgent);
+  $('enroll-copy').addEventListener('click', async () => {
+    const token = $('enroll-token').textContent || '';
+    if (!token) return;
+    try {
+      await navigator.clipboard.writeText(token);
+      $('enroll-msg').className = 'work-msg is-ok';
+      $('enroll-msg').textContent = 'Copied';
+    } catch (_) {
+      $('enroll-msg').className = 'work-msg is-error';
+      $('enroll-msg').textContent = 'Copy failed';
+    }
+  });
+  $('drawer-close').addEventListener('click', closeDrawer);
+  $('drawer-backdrop').addEventListener('click', closeDrawer);
+  $('drawer-to-incident').addEventListener('click', () => {
+    syncIncidentFindingSelect();
+    closeDrawer();
+    showPage('incidents');
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !$('drawer-root').hidden) closeDrawer();
+  });
 
   $('loginform').addEventListener('submit', async (e) => {
     e.preventDefault();

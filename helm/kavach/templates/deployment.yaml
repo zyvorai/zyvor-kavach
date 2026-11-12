@@ -87,12 +87,18 @@ spec:
         {{- if .Values.netra.poller.enabled }}
         - name: KAVACH_NETRA_POLLER_ENABLED
           value: "true"
-        - name: KAVACH_NETRA_POLLER_URL
+        - name: KAVACH_NETRA_URL
           value: {{ required "netra.poller.url is required when netra.poller.enabled=true" .Values.netra.poller.url | quote }}
+        - name: KAVACH_NETRA_POLLER_URL
+          value: {{ .Values.netra.poller.url | quote }}
         {{- if .Values.netra.poller.apiKey }}
+        - name: KAVACH_NETRA_API_KEY
+          value: {{ .Values.netra.poller.apiKey | quote }}
         - name: KAVACH_NETRA_POLLER_API_KEY
           value: {{ .Values.netra.poller.apiKey | quote }}
         {{- end }}
+        - name: KAVACH_NETRA_TLS_INSECURE
+          value: {{ .Values.netra.poller.insecureSkipVerify | quote }}
         - name: KAVACH_NETRA_POLLER_INSECURE_SKIP_VERIFY
           value: {{ .Values.netra.poller.insecureSkipVerify | quote }}
         {{- end }}
@@ -104,6 +110,12 @@ spec:
         - name: KAVACH_SIEM_FORMAT
           value: {{ .Values.siem.format | quote }}
         {{- if .Values.siem.existingSecret }}
+        - name: KAVACH_SIEM_WEBHOOK
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.siem.existingSecret | quote }}
+              key: webhook-url
+              optional: true
         - name: KAVACH_SIEM_WEBHOOK_URL
           valueFrom:
             secretKeyRef:
@@ -117,6 +129,8 @@ spec:
               key: headers
               optional: true
         {{- else if .Values.siem.webhookURL }}
+        - name: KAVACH_SIEM_WEBHOOK
+          value: {{ .Values.siem.webhookURL | quote }}
         - name: KAVACH_SIEM_WEBHOOK_URL
           value: {{ .Values.siem.webhookURL | quote }}
         {{- end }}

@@ -52,12 +52,25 @@ Honest about what ships today:
 
 No automatic containment, process kill, or malware prevention is claimed.
 
+### Lab demo
+
+Against a running server (admin token required):
+
+```bash
+export KAVACH_URL=https://127.0.0.1:8099
+export KAVACH_TOKEN='…'
+./scripts/demo-lab.sh
+```
+
+API surface: [docs/openapi.yaml](docs/openapi.yaml).
+
 ## Docs
 
 - [Architecture](docs/architecture.md)
 - [Agent mTLS](docs/agent-mtls.md)
 - [Envoy Gateway](docs/envoy-gateway.md)
 - [Remote deploy](docs/deploy-remote.md)
+- [OpenAPI stub](docs/openapi.yaml)
 - Site: https://zyvorai.github.io/zyvor-kavach/
 
 ## License

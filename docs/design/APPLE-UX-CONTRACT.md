@@ -14,7 +14,7 @@ needs attention.
 |---|---|---|---|
 | **Story** | Login, Overview | Very low | Eyebrow, display, lede, one primary CTA; hairline metric band; chapter rows |
 | **Browse** | Detect, Incidents, Fleet | Medium | Page hero + glass toolbar + hairline `table-wrap` |
-| **Work** | Integrations cards; API-only mutations | High | Card panels, tokens only |
+| **Work** | Incident transitions, fleet enroll/revoke, finding drawer | High | Work panels + drawer; session may mutate |
 
 ## Tokens
 
