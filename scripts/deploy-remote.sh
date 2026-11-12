@@ -351,6 +351,8 @@ HELM_SET=(
   --set image.pullPolicy=IfNotPresent
   --set service.type=NodePort
   --set service.port="\${NODE_PORT}"
+  # agent disabled until dedicated image
+  --set agent.enabled=false \
   --set service.nodePort="\${NODE_PORT}"
 )
 
