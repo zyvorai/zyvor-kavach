@@ -67,14 +67,10 @@ func defaultIntelIndicators() []IntelIndicator {
 }
 
 func defaultOverWatch() []OverWatchAlert {
-	now := time.Now().UTC()
-	return []OverWatchAlert{
-		{ID: "ow-1", Time: now.Add(-2 * time.Hour), Severity: "high", Host: "demo-host", Title: "Suspicious living-off-the-land chain", Summary: "OverWatch seed: interactive shell spawned after curl download on demo-host.", ActorHint: "Fancy Demo Bear", TechniqueID: "T1059", Status: "open", Source: "overwatch"},
-		{ID: "ow-2", Time: now.Add(-30 * time.Minute), Severity: "critical", Host: "demo-host", Title: "Possible ransomware prep", Summary: "OverWatch seed: recovery-disable patterns observed in lab telemetry.", ActorHint: "Conti-like Demo", TechniqueID: "T1490", Status: "open", Source: "overwatch"},
-	}
+	return []OverWatchAlert{}
 }
 
-func RegisterOverWatch(mux *http.ServeMux, token string) {
+func RegisterOverWatch(mux *http.ServeMux, token string, store *Store) {
 	mux.HandleFunc("GET /v1/overwatch/alerts", func(w http.ResponseWriter, r *http.Request) {
 		if !requireAuth(w, r, token) {
 			return
@@ -82,6 +78,19 @@ func RegisterOverWatch(mux *http.ServeMux, token string) {
 		owMu.Lock()
 		out := append([]OverWatchAlert{}, owAlerts...)
 		owMu.Unlock()
+		// Derive hunting alerts from high/critical findings when ledger is quiet.
+		if store != nil {
+			for _, f := range store.List() {
+				if f.Severity != "high" && f.Severity != "critical" {
+					continue
+				}
+				out = append(out, OverWatchAlert{
+					ID: "ow-der-" + shortID(f.ID), Time: f.Time, Severity: f.Severity, Host: f.Host,
+					Title: "Derived hunt: " + f.Rule, Summary: f.Description,
+					TechniqueID: MapDetection(f).TechniqueID, Status: "open", Source: "derived-findings",
+				})
+			}
+		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(out)
 	})

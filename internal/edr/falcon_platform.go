@@ -68,7 +68,7 @@ func RegisterFalconPlatform(mux *http.ServeMux, token string, store *Store, regi
 	RegisterFirewall(mux, token)
 	RegisterDiscover(mux, token, store, registry)
 	RegisterSpotlight(mux, token, store, registry)
-	RegisterOverWatch(mux, token)
+	RegisterOverWatch(mux, token, store)
 	RegisterIntel(mux, token)
 	RegisterIdentity(mux, token, store)
 	RegisterFusion(mux, token, store)

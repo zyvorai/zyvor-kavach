@@ -3,6 +3,7 @@ package edr
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"sync"
@@ -66,11 +67,7 @@ var (
 )
 
 func defaultIdentityEvents() []IdentityEvent {
-	now := time.Now().UTC()
-	return []IdentityEvent{
-		{ID: "id-1", Time: now.Add(-45 * time.Minute), User: "admin", Host: "demo-host", Action: "failed_login", SourceIP: "198.51.100.10", Severity: "medium", Rule: "identity-password-spray", Detail: "Multiple failed logins (seed)"},
-		{ID: "id-2", Time: now.Add(-20 * time.Minute), User: "svc-backup", Host: "demo-host", Action: "unusual_auth", SourceIP: "203.0.113.9", Severity: "high", Rule: "identity-impossible-travel", Detail: "Auth from unusual geo (seed)"},
-	}
+	return []IdentityEvent{}
 }
 
 func defaultPlaybooks() []Playbook {
@@ -89,7 +86,17 @@ func RegisterIdentity(mux *http.ServeMux, token string, store *Store) {
 		idMu.Lock()
 		out := append([]IdentityEvent{}, idEvents...)
 		idMu.Unlock()
-		_ = store
+		if len(out) == 0 && store != nil {
+			for _, f := range store.List() {
+				if f.Evidence.UID == 0 || strings.Contains(strings.ToLower(f.Rule), "ssh") || strings.Contains(strings.ToLower(f.Rule), "credential") {
+					out = append(out, IdentityEvent{
+						ID: "id-der-" + shortID(f.ID), Time: f.Time, User: fmt.Sprintf("uid:%d", f.Evidence.UID),
+						Host: f.Host, Action: "process_as_identity", Severity: f.Severity,
+						Rule: "identity-from-finding", Detail: f.Description,
+					})
+				}
+			}
+		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(out)
 	})

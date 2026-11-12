@@ -46,6 +46,7 @@ func (d *DomainInventory) Append(domain string, row map[string]any) map[string]a
 	if len(d.rows[domain]) > 2000 {
 		d.rows[domain] = d.rows[domain][len(d.rows[domain])-2000:]
 	}
+	d.persistAsync()
 	return row
 }
 
@@ -72,6 +73,7 @@ func (d *DomainInventory) ReplaceHost(domain, host string, rows []map[string]any
 		kept = append(kept, r)
 	}
 	d.rows[domain] = kept
+	d.persistAsync()
 }
 
 func mergeLive(domain string, derived []map[string]any) []map[string]any {
@@ -190,22 +192,40 @@ func deriveEmail(store *Store) []map[string]any {
 	out := []map[string]any{}
 	for _, f := range store.List() {
 		blob := strings.ToLower(f.Rule + " " + f.Description + " " + f.Evidence.Command)
-		if strings.Contains(blob, "phish") || strings.Contains(blob, "bec") || strings.Contains(blob, "mail") {
+		if strings.Contains(blob, "phish") || strings.Contains(blob, "bec") || strings.Contains(blob, "mail") ||
+			strings.Contains(blob, "download-execute") || strings.Contains(blob, "curl") {
+			typ := "suspicious_mail_signal"
+			if strings.Contains(blob, "download") || strings.Contains(blob, "curl") {
+				typ = "malicious_attachment_signal"
+			}
 			out = append(out, map[string]any{
-				"id": "em-" + shortID(f.ID), "type": "suspicious_mail_signal",
+				"id": "em-" + shortID(f.ID), "type": typ,
 				"subject": f.Description, "from": f.Host, "severity": f.Severity,
 				"source": "derived-findings",
 			})
 		}
 	}
+	owMu.Lock()
+	for _, a := range owAlerts {
+		blob := strings.ToLower(a.Title + " " + a.Summary)
+		if strings.Contains(blob, "phish") || strings.Contains(blob, "mail") || strings.Contains(blob, "bec") {
+			out = append(out, map[string]any{
+				"id": "em-ow-" + a.ID, "type": "overwatch_mail", "subject": a.Title,
+				"from": a.Host, "severity": a.Severity, "source": "overwatch",
+			})
+		}
+	}
+	owMu.Unlock()
 	return out
 }
 
 func deriveDLP(store *Store) []map[string]any {
 	out := []map[string]any{}
 	for _, f := range store.List() {
-		if strings.Contains(strings.ToLower(f.Rule), "file") || strings.Contains(strings.ToLower(f.Description), "usb") ||
-			strings.Contains(strings.ToLower(f.Rule), "ransomware") || strings.Contains(strings.ToLower(f.Rule), "mass-file") {
+		low := strings.ToLower(f.Rule + " " + f.Description)
+		if strings.Contains(low, "file") || strings.Contains(low, "usb") ||
+			strings.Contains(low, "ransomware") || strings.Contains(low, "mass-file") ||
+			strings.Contains(low, "download") || strings.Contains(low, "exfil") {
 			out = append(out, map[string]any{
 				"id": "dlp-" + shortID(f.ID), "host": f.Host, "channel": "endpoint",
 				"label": f.Rule, "action": "observed", "severity": f.Severity, "source": "derived-findings",
@@ -216,15 +236,23 @@ func deriveDLP(store *Store) []map[string]any {
 		label := "file_change"
 		sev := "low"
 		p := strings.ToLower(fe.Path)
-		if strings.Contains(p, "secret") || strings.Contains(p, ".pem") || strings.Contains(p, "id_rsa") || strings.Contains(p, "passwd") {
+		if strings.Contains(p, "secret") || strings.Contains(p, ".pem") || strings.Contains(p, "id_rsa") || strings.Contains(p, "passwd") || strings.Contains(p, "/etc/") {
 			label = "sensitive_path"
 			sev = "high"
 		}
 		out = append(out, map[string]any{
-			"id": "dlp-f-" + shortID(fe.ID), "host": fe.Host, "channel": "filesystem",
+			"id": "dlp-f-" + shortID(fileID(fe)), "host": fe.Host, "channel": "filesystem",
 			"label": label, "path": fe.Path, "action": fe.Operation, "severity": sev, "source": "derived-files",
 		})
 	}
+	deviceMu.Lock()
+	for _, d := range deviceInv {
+		out = append(out, map[string]any{
+			"id": "dlp-usb-" + fmt.Sprint(d["id"]), "host": d["host"], "channel": "usb",
+			"label": "removable_media", "action": d["action"], "severity": "medium", "source": "device-control",
+		})
+	}
+	deviceMu.Unlock()
 	return out
 }
 
@@ -256,18 +284,34 @@ func deriveDNS(store *Store) []map[string]any {
 		if strings.EqualFold(n.Verdict, "deny") {
 			verdict = "malicious"
 		}
-		if port == "53" || port == "853" || strings.Contains(strings.ToLower(h), "dns") {
+		interesting := port == "53" || port == "853" || strings.Contains(strings.ToLower(h), "dns") ||
+			strings.EqualFold(n.Verdict, "deny") || strings.Contains(h, ".")
+		if interesting && h != "" {
+			typ := "A"
+			if port == "853" {
+				typ = "DoH"
+			}
 			out = append(out, map[string]any{
-				"query": h, "type": "A", "verdict": verdict, "host": n.Host,
+				"query": h, "type": typ, "verdict": verdict, "host": n.Host,
 				"destination": n.Destination, "source": "derived-network", "id": "dns-" + shortID(networkID(n)),
 			})
 		}
-		// IOC domain hits in destinations
-		for _, ioc := range MatchIOCs(h) {
+		for _, ioc := range MatchIOCs(h + " " + n.Destination) {
+			if ioc.Type == "domain" || ioc.Type == "ipv4" {
+				out = append(out, map[string]any{
+					"query": ioc.Value, "type": ioc.Type, "verdict": "malicious", "host": n.Host,
+					"source": "ioc", "id": "dns-ioc-" + ioc.ID,
+				})
+			}
+		}
+	}
+	// Command-line DNS/C2 hints from findings
+	for _, f := range store.List() {
+		for _, ioc := range MatchIOCs(f.Evidence.Command + " " + f.Description) {
 			if ioc.Type == "domain" {
 				out = append(out, map[string]any{
-					"query": ioc.Value, "type": "A", "verdict": "malicious", "host": n.Host,
-					"source": "ioc", "id": "dns-ioc-" + ioc.ID,
+					"query": ioc.Value, "type": "A", "verdict": "malicious", "host": f.Host,
+					"source": "finding-ioc", "id": "dns-f-" + shortID(f.ID),
 				})
 			}
 		}
@@ -462,15 +506,25 @@ func deriveITDR() []map[string]any {
 			u = "unknown"
 		}
 		byUser[u]++
-		if strings.Contains(strings.ToLower(e.Rule), "mfa") || strings.Contains(strings.ToLower(e.Detail), "mfa") {
-			out = append(out, map[string]any{
-				"user": u, "type": "mfa_signal", "severity": e.Severity, "pushes": 1,
-				"source": "identity", "id": "itdr-" + e.ID,
-			})
+		typ := "identity_anomaly"
+		low := strings.ToLower(e.Rule + " " + e.Detail + " " + e.Action)
+		switch {
+		case strings.Contains(low, "mfa"):
+			typ = "mfa_signal"
+		case strings.Contains(low, "spray") || strings.Contains(low, "failed_login"):
+			typ = "password_spray"
+		case strings.Contains(low, "travel") || strings.Contains(low, "unusual"):
+			typ = "impossible_travel"
+		case strings.Contains(low, "token") || strings.Contains(low, "replay"):
+			typ = "token_replay_suspect"
 		}
+		out = append(out, map[string]any{
+			"user": u, "type": typ, "severity": e.Severity, "pushes": 1,
+			"host": e.Host, "source": "identity", "id": "itdr-" + e.ID, "detail": e.Detail,
+		})
 	}
 	for u, n := range byUser {
-		if n >= 5 {
+		if n >= 3 {
 			out = append(out, map[string]any{
 				"user": u, "type": "mfa_fatigue", "pushes": n, "severity": "high",
 				"window_min": 60, "source": "derived-identity", "id": "itdr-fatigue-" + u,
@@ -478,6 +532,27 @@ func deriveITDR() []map[string]any {
 		}
 	}
 	return mergeLive("itdr", out)
+}
+
+func deriveITDRFromStore(store *Store) []map[string]any {
+	out := deriveITDR()
+	if store == nil {
+		return out
+	}
+	for _, f := range store.List() {
+		low := strings.ToLower(f.Rule + " " + f.Description + " " + f.Evidence.Command)
+		if !(strings.Contains(low, "credential") || strings.Contains(low, "mimikatz") ||
+			strings.Contains(low, "sudo") || strings.Contains(low, "ssh") || strings.Contains(low, "root-history") ||
+			(f.Evidence.UID == 0 && (f.Severity == "high" || f.Severity == "critical"))) {
+			continue
+		}
+		out = append(out, map[string]any{
+			"user": fmt.Sprintf("uid:%d", f.Evidence.UID), "type": "privileged_abuse_signal",
+			"severity": f.Severity, "host": f.Host, "pushes": 1,
+			"source": "derived-findings", "id": "itdr-f-" + shortID(f.ID), "detail": f.Description,
+		})
+	}
+	return out
 }
 
 func deriveRollback(store *Store, id string) map[string]any {

@@ -248,16 +248,36 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 		for _, f := range store.List() {
 			managed[f.Host] = true
 		}
-		devices := []map[string]any{
-			{"ip": "10.0.0.1", "hostname": "gateway", "type": "router", "managed": false, "risk": "medium"},
-			{"ip": "10.0.0.50", "hostname": "printer-finance", "type": "iot", "managed": false, "risk": "low"},
-			{"ip": "10.0.0.66", "hostname": "unknown-laptop", "type": "endpoint", "managed": false, "risk": "high"},
-		}
+		devices := []map[string]any{}
 		for h := range managed {
-			devices = append(devices, map[string]any{"hostname": h, "type": "endpoint", "managed": true, "risk": "low"})
+			devices = append(devices, map[string]any{"hostname": h, "type": "endpoint", "managed": true, "risk": "low", "source": "fleet"})
+		}
+		// Unmanaged peers inferred from network destinations not in fleet.
+		store.mu.Lock()
+		nets := append([]NetworkEvent{}, store.networkEvents...)
+		store.mu.Unlock()
+		seen := map[string]struct{}{}
+		unmanaged := 0
+		for _, n := range nets {
+			h := destHost(n.Destination)
+			if h == "" || managed[h] {
+				continue
+			}
+			if _, ok := seen[h]; ok {
+				continue
+			}
+			seen[h] = struct{}{}
+			unmanaged++
+			devices = append(devices, map[string]any{
+				"hostname": h, "ip": h, "type": "network-peer", "managed": false,
+				"risk": "medium", "source": "derived-network",
+			})
+		}
+		for _, row := range Live.List("network-discovery") {
+			devices = append(devices, row)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{"devices": devices, "unmanaged": 3, "note": "Passive discovery seed + managed hosts"})
+		_ = json.NewEncoder(w).Encode(map[string]any{"devices": devices, "unmanaged": unmanaged, "note": "Managed fleet + derived network peers"})
 	})
 
 	registerJSONList(mux, token, "GET /v1/deception", func() any {
@@ -492,9 +512,6 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 		worldMu.Lock()
 		out := append([]map[string]any{}, itsmTickets...)
 		worldMu.Unlock()
-		if len(out) == 0 {
-			out = []map[string]any{{"id": "INC001", "system": "jira", "title": "Seed: review OverWatch alert", "status": "open"}}
-		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(out)
 	})
@@ -687,7 +704,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(deriveITDR())
+		_ = json.NewEncoder(w).Encode(deriveITDRFromStore(store))
 	})
 }
 

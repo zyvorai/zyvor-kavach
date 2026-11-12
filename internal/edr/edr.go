@@ -339,6 +339,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	siem.RegisterRoutes(mux, token, store)
 	RegisterAIRoutes(mux, token, store)
 	RegisterInventoryIngest(mux, token)
+	BootstrapLivePlatform(store, registry, store.path)
 	RegisterFalconPlatform(mux, token, store, registry)
 	mux.HandleFunc("GET /v1/sensor", func(w http.ResponseWriter, r *http.Request) {
 		got := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")

@@ -166,6 +166,64 @@ func CollectBrowserExtensions(host string) []map[string]any {
 	return out
 }
 
+// CollectFIMSnapshot records metadata for critical paths (observe-only).
+func CollectFIMSnapshot(host string) []map[string]any {
+	paths := []string{
+		"/etc/passwd", "/etc/shadow", "/etc/ssh/sshd_config", "/etc/hosts",
+		"/etc/crontab", "/etc/sudoers",
+	}
+	out := []map[string]any{}
+	for _, p := range paths {
+		st, err := os.Stat(p)
+		if err != nil {
+			continue
+		}
+		sev := "medium"
+		if strings.Contains(p, "shadow") || strings.Contains(p, "sshd") || strings.Contains(p, "sudoers") {
+			sev = "high"
+		}
+		out = append(out, map[string]any{
+			"path": p, "host": host, "change": "observed", "severity": sev,
+			"mtime": st.ModTime().UTC(), "size": st.Size(), "source": "agent",
+		})
+	}
+	return out
+}
+
+// CollectTLSCerts inventories local certificate files (metadata only).
+func CollectTLSCerts(host string) []map[string]any {
+	out := []map[string]any{}
+	roots := []string{"/etc/ssl/certs", "/etc/pki/tls/certs", "/run/tls", "/etc/kavach/tls"}
+	for _, root := range roots {
+		entries, err := os.ReadDir(root)
+		if err != nil {
+			continue
+		}
+		for _, e := range entries {
+			name := e.Name()
+			if e.IsDir() || !(strings.HasSuffix(name, ".crt") || strings.HasSuffix(name, ".pem") || strings.HasSuffix(name, ".cert")) {
+				continue
+			}
+			info, err := e.Info()
+			if err != nil {
+				continue
+			}
+			risk := "low"
+			if strings.Contains(strings.ToLower(name), "self") || info.Size() < 200 {
+				risk = "medium"
+			}
+			out = append(out, map[string]any{
+				"host": host, "path": filepath.Join(root, name), "not_after": "",
+				"issuer": "file", "risk": risk, "source": "agent", "size": info.Size(),
+			})
+			if len(out) >= 100 {
+				return out
+			}
+		}
+	}
+	return out
+}
+
 // CollectPackages returns a lightweight SBOM from package managers.
 func CollectPackages(host string) []map[string]any {
 	out := []map[string]any{}
@@ -249,6 +307,8 @@ func RunHostCollectors(ctx context.Context, endpoint, token, host string, client
 		_ = postInventory(ctx, endpoint, token, "firewall", host, CollectFirewall(host), true, client)
 		_ = postInventory(ctx, endpoint, token, "browser", host, CollectBrowserExtensions(host), true, client)
 		_ = postInventory(ctx, endpoint, token, "sbom", host, CollectPackages(host), true, client)
+		_ = postInventory(ctx, endpoint, token, "tls", host, CollectTLSCerts(host), true, client)
+		_ = postInventory(ctx, endpoint, token, "fim", host, CollectFIMSnapshot(host), true, client)
 	}
 	run()
 	t := time.NewTicker(5 * time.Minute)

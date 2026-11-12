@@ -138,7 +138,10 @@ func (p *NetraPoller) Run(ctx context.Context) {
 
 func (p *NetraPoller) tick(ctx context.Context) error {
 	// Prefer a lightweight findings/drops style endpoint; fall back to health-gated stub.
-	paths := []string{"/api/v1/drops", "/v1/drops", "/api/v1/findings"}
+	paths := []string{
+		"/api/v1/drops", "/v1/drops", "/api/v1/findings", "/v1/findings",
+		"/api/v1/network-events", "/v1/network-events", "/api/v1/events",
+	}
 	var body []byte
 	var lastErr error
 	for _, path := range paths {

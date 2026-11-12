@@ -3,6 +3,7 @@ package edr
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -46,12 +47,7 @@ var (
 )
 
 func defaultVulns() []Vulnerability {
-	now := time.Now().UTC()
-	return []Vulnerability{
-		{ID: "vuln-1", CVE: "CVE-2024-3400", Severity: "critical", Host: "demo-host", Product: "openssl", Exploited: true, ExPRTScore: 9.8, Description: "Example critical library CVE (seed)", DetectedAt: now},
-		{ID: "vuln-2", CVE: "CVE-2023-38545", Severity: "high", Host: "demo-host", Product: "curl", Exploited: true, ExPRTScore: 8.1, Description: "Example SOCKS5 heap overflow (seed)", DetectedAt: now},
-		{ID: "vuln-3", CVE: "CVE-2024-6387", Severity: "medium", Host: "demo-host", Product: "openssh", Exploited: false, ExPRTScore: 6.5, Description: "Example OpenSSH race (seed)", DetectedAt: now},
-	}
+	return []Vulnerability{}
 }
 
 func RegisterDiscover(mux *http.ServeMux, token string, store *Store, registry *CredentialRegistry) {
@@ -92,9 +88,6 @@ func RegisterDiscover(mux *http.ServeMux, token string, store *Store, registry *
 		for _, a := range assets {
 			out = append(out, *a)
 		}
-		if len(out) == 0 {
-			out = append(out, Asset{Hostname: "demo-host", Platform: "linux", Sensor: "kavach", Online: false, Unmanaged: false, Tags: []string{"seed"}})
-		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(out)
 	})
@@ -123,15 +116,22 @@ func RegisterDiscover(mux *http.ServeMux, token string, store *Store, registry *
 			seen[key] = AppInventory{Name: name, Host: e.Host, Path: e.Executable, Category: cat}
 		}
 		store.mu.Unlock()
+		// Merge SBOM components as apps when process table is quiet.
+		for _, row := range Live.List("sbom") {
+			comp, _ := row["component"].(string)
+			host, _ := row["host"].(string)
+			if comp == "" {
+				continue
+			}
+			key := host + ":" + comp
+			if _, ok := seen[key]; ok {
+				continue
+			}
+			seen[key] = AppInventory{Name: comp, Host: host, Path: fmt.Sprint(row["version"]), Category: "package"}
+		}
 		out := make([]AppInventory, 0, len(seen))
 		for _, a := range seen {
 			out = append(out, a)
-		}
-		if len(out) == 0 {
-			out = []AppInventory{
-				{Name: "sshd", Host: "demo-host", Path: "/usr/sbin/sshd", Category: "network"},
-				{Name: "bash", Host: "demo-host", Path: "/bin/bash", Category: "shell"},
-			}
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(out)

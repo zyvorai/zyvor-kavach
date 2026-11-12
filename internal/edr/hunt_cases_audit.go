@@ -61,8 +61,9 @@ var (
 		{ID: "conn-siem", Name: "SIEM Webhook", Category: "siem", Status: "optional"},
 		{ID: "conn-syslog", Name: "Syslog", Category: "siem", Status: "optional"},
 		{ID: "conn-llm", Name: "Charlotte LLM", Category: "ai", Status: "optional"},
-		{ID: "conn-okta", Name: "Identity (Okta/Entra)", Category: "identity", Status: "preview"},
-		{ID: "conn-cloud", Name: "Cloud CSPM", Category: "cloud", Status: "preview"},
+		{ID: "conn-okta", Name: "Identity (Okta/Entra)", Category: "identity", Status: "available"},
+		{ID: "conn-cloud", Name: "Cloud CSPM", Category: "cloud", Status: "available"},
+		{ID: "conn-inventory", Name: "Generic Inventory Ingest", Category: "inventory", Status: "available", Endpoint: "/v1/inventory"},
 	}
 )
 
@@ -399,11 +400,7 @@ var (
 )
 
 func defaultDeviceInventory() []map[string]any {
-	now := time.Now().UTC()
-	return []map[string]any{
-		{"id": "usb-1", "host": "demo-host", "vendor": "Generic", "product": "USB Storage", "serial": "SEED001", "action": "observed", "time": now},
-		{"id": "usb-2", "host": "demo-host", "vendor": "YubiKey", "product": "OTP+FIDO", "serial": "SEED002", "action": "allowed", "time": now},
-	}
+	return []map[string]any{}
 }
 
 func RegisterDeviceControl(mux *http.ServeMux, token string, store *Store) {
