@@ -613,6 +613,22 @@ func evParseHistory(lines []string, _ *evCtx, st *evStat) []evItem {
 // ---- Windows: CSV processes, tasklist table, schtasks ----
 
 func evReadCSV(text string, st *evStat) [][]string {
+	// WMIC /format:csv does not quote anything: a header without quotes selects plain comma splitting.
+	for _, l := range strings.Split(text, "\n") {
+		if strings.TrimSpace(l) == "" {
+			continue
+		}
+		if !strings.Contains(l, `"`) {
+			var out [][]string
+			for _, l := range strings.Split(text, "\n") {
+				if strings.TrimSpace(l) != "" && len(out) < evMaxLines {
+					out = append(out, strings.Split(strings.TrimRight(l, "\r"), ","))
+				}
+			}
+			return out
+		}
+		break
+	}
 	r := csv.NewReader(strings.NewReader(text))
 	r.FieldsPerRecord = -1
 	r.LazyQuotes = true
@@ -1000,7 +1016,8 @@ var (
 func evSniff(lines []string) string {
 	var s []string
 	for _, l := range lines {
-		if !evBlank(l) {
+		t := strings.TrimSpace(l)
+		if t != "" && !strings.HasPrefix(t, "total ") && !(strings.HasSuffix(t, ":") && !strings.ContainsAny(t, " \t")) {
 			s = append(s, l)
 		}
 		if len(s) >= 25 {
@@ -1023,7 +1040,7 @@ func evSniff(lines []string) string {
 		if i > 4 {
 			break
 		}
-		u := strings.ToUpper(l)
+		u := strings.TrimSpace(strings.ToUpper(l))
 		f := strings.Fields(u)
 		switch {
 		case strings.HasPrefix(u, "COMMAND") && strings.Contains(u, " FD ") && strings.Contains(u, "NAME"):
