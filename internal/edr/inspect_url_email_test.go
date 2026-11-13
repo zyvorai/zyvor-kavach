@@ -202,7 +202,7 @@ func TestEmailHeaderTricks(t *testing.T) {
 		{"reply-to", append(baseHeaders("A <a@sender.example>"), "Reply-To: a.sender@gmail.com"), "email-replyto-mismatch"},
 		{"return-path", append(baseHeaders("A <a@sender.example>"), "Return-Path: <bounce@other.example>"), "email-returnpath-mismatch"},
 		{"sender", append(baseHeaders("A <a@sender.example>"), "Sender: z@third.example"), "email-sender-mismatch"},
-		{"msgid", append(baseHeaders("A <a@other.example>")), "email-messageid-mismatch"},
+		{"msgid", baseHeaders("A <a@other.example>"), "email-messageid-mismatch"},
 		{"dmarc", append(baseHeaders("A <a@sender.example>"), "Authentication-Results: mx.corp.example; spf=fail; dkim=none; dmarc=fail header.from=sender.example"), "email-dmarc-fail"},
 		{"spf", append(baseHeaders("A <a@sender.example>"), "Authentication-Results: mx.corp.example; spf=softfail"), "email-spf-softfail"},
 		{"dkim", append(baseHeaders("A <a@sender.example>"), "Authentication-Results: mx.corp.example; dkim=fail"), "email-dkim-fail"},
