@@ -61,6 +61,9 @@ func buildServer(c *client, allowMutations bool) (*mcpserver.Server, error) {
 	if err := registerContentCustomTools(srv, c); err != nil {
 		return nil, err
 	}
+	if err := registerAdversaryTools(srv, c); err != nil {
+		return nil, err
+	}
 	if allowMutations {
 		if err := registerMutateTools(srv, c); err != nil {
 			return nil, err

@@ -195,5 +195,10 @@ func allCLICommands() []cliCommand {
 		{Name: "content-list", Args: []string{"content", "list", "--severity", "high"}},
 		{Name: "content-show", Args: []string{"content", "show", "demo"}, Optional: true},
 		{Name: "content-coverage", Args: []string{"content", "coverage"}},
+
+		// adversary.go: public-reporting threat actor profiles.
+		{Name: "adversary-list", Args: []string{"adversary", "list"}},
+		{Name: "adversary-show", Args: []string{"adversary", "show", "apt29"}, Optional: true},
+		{Name: "adversary-coverage", Args: []string{"adversary", "coverage"}},
 	}
 }

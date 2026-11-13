@@ -906,6 +906,27 @@ paths:
       summary: Content coverage counts by tactic, technique, os, batch, severity and event type; techniques covered (pending_telemetry is always empty now that registry, dns, auth and module rules are evaluated)
       security: [{bearerAuth: []}]
       responses: {'200': {description: OK}}
+  /v1/adversaries:
+    get:
+      summary: List embedded public threat-actor and ransomware profiles (attribution from public reporting, not detection); filter by kind, technique, q
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: kind, in: query, schema: {type: string, enum: [nation-state, cybercrime, ransomware]}}
+        - {name: technique, in: query, schema: {type: string}}
+        - {name: q, in: query, schema: {type: string}}
+      responses: {'200': {description: "{mode, note, count, adversaries[]}"}, '401': {description: Unauthorized}}
+  /v1/adversaries/coverage:
+    get:
+      summary: All adversaries ranked by Kavach content coverage (by_coverage) and by observed ATT&CK hits (by_observed_hits)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: "{mode, note, count, by_coverage[], by_observed_hits[]}"}, '401': {description: Unauthorized}}
+  /v1/adversaries/{id}:
+    get:
+      summary: One adversary profile plus per-technique coverage (exact, related or gap, covering rule ids, hits), coverage percent and gaps
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: "{mode, note, profile, coverage}"}, '401': {description: Unauthorized}, '404': {description: Not found}}
   /v1/content/custom:
     get:
       summary: List customer-authored content rules (source=custom); add tests=1 for samples
