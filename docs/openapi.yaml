@@ -1102,6 +1102,39 @@ paths:
       summary: Open high/critical incidents against the 6-hour CERT-In window (informational)
       security: [{bearerAuth: []}]
       responses: {'200': {description: OK}}
+  /v1/regulatory/regimes:
+    get:
+      summary: Regional incident/breach reporting regimes catalog (informational, not legal advice; Kavach does not file reports). Each entry has a verified flag; unverified rules say UNVERIFIED in notes
+      security: [{bearerAuth: []}]
+      parameters:
+        - { name: jurisdiction, in: query, schema: { type: string } }
+        - { name: verified, in: query, schema: { type: string, enum: ["true", "false"] } }
+      responses: {'200': {description: count and regimes}}
+  /v1/regulatory/clocks:
+    get:
+      summary: Time remaining or overdue per regime stage for open high/critical findings, measured from first detection like the CERT-In clock. Defaults to the saved profile (informational, not legal advice; Kavach does not file reports)
+      security: [{bearerAuth: []}]
+      parameters:
+        - { name: regime, in: query, description: Comma-separated regime ids, schema: { type: string } }
+      responses: {'200': {description: per-regime stage clocks}, '400': {description: Unknown regime id}}
+  /v1/regulatory/profile:
+    get:
+      summary: Regimes the operator selected as applicable
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: profile}}
+    put:
+      summary: Save the applicable regimes (persisted in <store>.regulatory.json; admin or session)
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [regimes]
+              properties:
+                regimes: { type: array, items: { type: string } }
+      responses: {'200': {description: saved}, '400': {description: Invalid body or unknown regime id}}
   /v1/governance/inventory:
     get:
       summary: Data inventory by class (location, record counts read from disk, oldest/newest, approximate bytes)

@@ -497,6 +497,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	RegisterIntelFeeds(mux, token, store)
 	alertDispatcher := RegisterAlerts(mux, token, store)
 	RegisterComplianceEvidence(mux, token, store, registry, incidents, alertDispatcher)
+	RegisterRegulatory(mux, token, store, incidents)
 	RegisterComplianceScoreFull(mux, token, store, registry, incidents, alertDispatcher)
 	RegisterExport(mux, token, store, registry)
 	RegisterSIEMExport(mux, token, store)

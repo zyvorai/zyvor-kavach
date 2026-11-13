@@ -8,6 +8,7 @@ All files sit next to the findings store path (`<store>` below), are written ato
 | `<store>.tuning.json` | Tuning history (applied and reverted exclusions are re-derived from it at startup) and digest definitions with schedule state |
 | `<store>.alerts.json` | Alert rules (deliveries are in-memory and de-duplicated per finding) |
 | `<store>.workspace.json` | Saved searches, notes and the hash-chained analyst journal (alert-rule changes are journaled here) |
+| `<store>.regulatory.json` | Regulatory profile: the regime ids the operator selected as applicable (`PUT /v1/regulatory/profile`), with update time and actor. Ids are validated against the embedded catalog on write; see `docs/regional-reporting.md` |
 | `<store>.deception.json` | Deception canaries and trips |
 | `<store>.customcontent.json` | Customer-authored detection content rules (full rule JSON including samples; see `docs/custom-content.md`). Every rule is re-validated at startup; rules that no longer pass are skipped |
 | `<store>.rulelifecycle.json` | Rule lifecycle states (draft/testing/production/retired), the hash-chained rule change history (custom rule edits and lifecycle changes; capped at 5000 entries) and up to 500 shadow findings from rules in `testing`. Lifecycle only affects reporting and ordering, plus the shadow recording; see `docs/rule-health.md` |
