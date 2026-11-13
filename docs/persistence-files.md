@@ -8,6 +8,7 @@ All files sit next to the findings store path (`<store>` below), are written ato
 | `<store>.tuning.json` | Tuning history (applied and reverted exclusions are re-derived from it at startup) and digest definitions with schedule state |
 | `<store>.alerts.json` | Alert rules (deliveries are in-memory and de-duplicated per finding) |
 | `<store>.certfeeds.json` | Cache of the opt-in worldwide CERT advisory feeds (`KAVACH_CERT_FEEDS`): up to 300 normalised advisories and the last fetch time per feed. Served from cache; a feed that fails keeps its previous items. See `docs/cert-feeds.md` |
+| `<store>.epss.json` | Cache of the opt-in FIRST EPSS feed (`KAVACH_EPSS_FEED=on`, default off): EPSS score and percentile only for CVEs matched on this install at the last refresh plus KEV CVEs (max 50,000), the model version, score date and fetch time. Served from cache; a failed refresh keeps the previous cache. See `docs/vuln-priority.md` |
 | `<store>.workspace.json` | Saved searches, notes and the hash-chained analyst journal (alert-rule changes are journaled here) |
 | `<store>.regulatory.json` | Regulatory profile: the regime ids the operator selected as applicable (`PUT /v1/regulatory/profile`), with update time and actor. Ids are validated against the embedded catalog on write; see `docs/regional-reporting.md` |
 | `<store>.deception.json` | Deception canaries and trips |
