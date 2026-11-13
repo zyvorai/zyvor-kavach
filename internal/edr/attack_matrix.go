@@ -17,6 +17,8 @@ type ATTACKTechnique struct {
 	ID      string   `json:"id"`
 	Name    string   `json:"name"`
 	Rules   []string `json:"rules"`
+	// CustomRules is the subset of Rules authored by the customer (source=custom).
+	CustomRules []string `json:"custom_rules,omitempty"`
 	Hits    int      `json:"hits"`
 	Covered bool     `json:"covered"`
 }
@@ -66,6 +68,9 @@ func BuildATTACKMatrix(findings []Finding) map[string]any {
 		// Index, not pointer: appending to t.Techniques can move earlier elements, and a stale
 		// pointer would silently drop rules added to an existing technique.
 		t.Techniques[i].Rules = append(t.Techniques[i].Rules, r)
+		if contentIsCustom(r) {
+			t.Techniques[i].CustomRules = append(t.Techniques[i].CustomRules, r)
+		}
 		t.Covered = true
 	}
 	// Slices are final now; take stable pointers for hit counting.

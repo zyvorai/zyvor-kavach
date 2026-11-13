@@ -906,6 +906,62 @@ paths:
       summary: Content coverage counts by tactic, technique, os, batch, severity and event type; techniques covered (pending_telemetry is always empty now that registry, dns, auth and module rules are evaluated)
       security: [{bearerAuth: []}]
       responses: {'200': {description: OK}}
+  /v1/content/custom:
+    get:
+      summary: List customer-authored content rules (source=custom); add tests=1 for samples
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: tests, in: query, schema: {type: string, enum: ['1']}}
+      responses: {'200': {description: "{mode, source, count, rules[]}"}, '401': {description: Unauthorized}}
+    post:
+      summary: Create or update a custom rule. Same schema and harness checks as embedded packs (own positive/negative samples, benign-baseline guard); never overrides an embedded id
+      security: [{bearerAuth: []}]
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object, description: "A content rule (see docs/content-framework.md); unknown fields rejected"}
+      responses: {'200': {description: Saved}, '400': {description: Validation error naming the rule and check}, '409': {description: Id collides with an embedded rule}}
+  /v1/content/custom/{id}:
+    delete:
+      summary: Delete a custom rule (embedded rules cannot be deleted)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Deleted}, '400': {description: Embedded rule}, '404': {description: Not found}}
+  /v1/content/custom/{id}/dryrun:
+    post:
+      summary: Evaluate a custom rule against supplied events and return the matches; nothing is recorded as a finding
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object, description: "{events: [lab events] (1..1000)}"}
+      responses: {'200': {description: "{rule, evaluated, matched, matches[], findings_recorded: 0}"}, '404': {description: Not found}}
+  /v1/content/export:
+    post:
+      summary: Export rules as a JSON pack (read-only). Filter by source (custom default, embedded, all), ids, tactic, technique, os, batch, q, event_type
+      security: [{bearerAuth: []}]
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object, description: "Optional filter object; empty body exports all custom rules"}
+      responses: {'200': {description: "{pack: export, rules[]} including samples"}}
+  /v1/content/import:
+    post:
+      summary: Import a rule pack, or Sigma-subset rules with format=sigma. Per-rule results; rules that fail the harness or use unsupported Sigma constructs are reported, not guessed
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: validate_only, in: query, schema: {type: boolean}, description: Run every check but store nothing}
+        - {name: format, in: query, schema: {type: string, enum: [kavach, sigma]}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object, description: "kavach: {pack, rules[]}. sigma: one rule object / array (JSON) or YAML documents separated by ---"}
+          application/yaml:
+            schema: {type: string}
+      responses: {'200': {description: "{imported, valid, rejected, unsupported, results[{id,status,errors,unsupported}]}"}, '400': {description: Bad body or no rule accepted}}
   /v1/lab/rules:
     get:
       summary: List detection-lab rules (sandbox only; never promoted to live detection)

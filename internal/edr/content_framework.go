@@ -80,6 +80,7 @@ type ContentRule struct {
 	Batch            string        `json:"batch,omitempty"`
 	Tests            *ContentTests `json:"tests,omitempty"`
 	PendingTelemetry bool          `json:"pending_telemetry"` // computed at load; ignored in pack input
+	Source           string        `json:"source,omitempty"`  // "custom" for customer-authored rules (content_custom.go); empty = embedded
 
 	node *LabNode    // compiled matcher (shared with the detection lab)
 	pre  []preClause // required-literal prefilter derived from node (see content_prefilter.go)
