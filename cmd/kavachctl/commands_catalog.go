@@ -202,5 +202,10 @@ func allCLICommands() []cliCommand {
 		{Name: "rules-health", Args: []string{"rules", "health"}},
 		{Name: "rules-lifecycle", Args: []string{"rules", "lifecycle", "demo"}, Optional: true},
 		{Name: "rules-history", Args: []string{"rules", "history", "demo"}, Optional: true},
+
+		// adversary.go: public-reporting threat actor profiles.
+		{Name: "adversary-list", Args: []string{"adversary", "list"}},
+		{Name: "adversary-show", Args: []string{"adversary", "show", "apt29"}, Optional: true},
+		{Name: "adversary-coverage", Args: []string{"adversary", "coverage"}},
 	}
 }
