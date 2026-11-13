@@ -81,7 +81,7 @@ func scoreControl(c evControl, s evSignals) ScoredControl {
 		parts = append(parts, "partial: "+strings.Join(partial, ", "))
 	}
 	if len(missing) > 0 {
-		parts = append(parts, "no evidence: "+strings.Join(missing, ", "))
+		parts = append(parts, "no evidence observed: "+strings.Join(missing, ", "))
 	}
 	r.Reason = strings.Join(parts, "; ")
 	return r
