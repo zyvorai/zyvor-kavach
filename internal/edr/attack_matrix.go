@@ -17,6 +17,8 @@ type ATTACKTechnique struct {
 	ID      string   `json:"id"`
 	Name    string   `json:"name"`
 	Rules   []string `json:"rules"`
+	// CustomRules is the subset of Rules authored by the customer (source=custom).
+	CustomRules []string `json:"custom_rules,omitempty"`
 	Hits    int      `json:"hits"`
 	Covered bool     `json:"covered"`
 }
@@ -37,29 +39,41 @@ func BuildATTACKMatrix(findings []Finding) map[string]any {
 		idx[name] = t
 		order = append(order, t)
 	}
-	rules := make([]string, 0, len(ruleMITRE))
-	for r := range ruleMITRE {
+	all := make(map[string]struct{ Tactic, Technique, ID string }, len(ruleMITRE))
+	for r, m := range ruleMITRE {
+		all[r] = m
+	}
+	for r, m := range contentMITREAll() { // live content-pack rules count toward coverage
+		all[r] = m
+	}
+	rules := make([]string, 0, len(all))
+	for r := range all {
 		rules = append(rules, r)
 	}
 	sort.Strings(rules)
+	techIdx := map[string]int{}
 	for _, r := range rules {
-		m := ruleMITRE[r]
+		m := all[r]
 		t := idx[m.Tactic]
 		if t == nil {
 			continue
 		}
 		key := m.Tactic + "|" + m.ID
-		x := tech[key]
-		if x == nil {
+		i, seen := techIdx[key]
+		if !seen {
 			t.Techniques = append(t.Techniques, ATTACKTechnique{ID: m.ID, Name: m.Technique, Covered: true})
-			x = &t.Techniques[len(t.Techniques)-1]
-			tech[key] = x
+			i = len(t.Techniques) - 1
+			techIdx[key] = i
 		}
-		x.Rules = append(x.Rules, r)
+		// Index, not pointer: appending to t.Techniques can move earlier elements, and a stale
+		// pointer would silently drop rules added to an existing technique.
+		t.Techniques[i].Rules = append(t.Techniques[i].Rules, r)
+		if contentIsCustom(r) {
+			t.Techniques[i].CustomRules = append(t.Techniques[i].CustomRules, r)
+		}
 		t.Covered = true
 	}
-	// Slice growth can move elements; rebuild pointers after construction.
-	tech = map[string]*ATTACKTechnique{}
+	// Slices are final now; take stable pointers for hit counting.
 	for _, t := range order {
 		for i := range t.Techniques {
 			tech[t.Tactic+"|"+t.Techniques[i].ID] = &t.Techniques[i]
@@ -67,7 +81,7 @@ func BuildATTACKMatrix(findings []Finding) map[string]any {
 	}
 	total := 0
 	for _, f := range findings {
-		m, ok := ruleMITRE[f.Rule]
+		m, ok := all[f.Rule]
 		if !ok {
 			continue
 		}

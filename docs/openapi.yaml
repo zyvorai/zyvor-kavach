@@ -37,6 +37,30 @@ paths:
       responses:
         "200":
           description: Summary JSON
+  /v1/guidance:
+    get:
+      summary: Advisory remediation/explainer catalogue (observation-only; nothing is applied). Filter kind=rule|technique, q=text
+      parameters:
+        - { name: kind, in: query, schema: { type: string, enum: [rule, technique] } }
+        - { name: q, in: query, schema: { type: string } }
+      responses:
+        "200": { description: count and entries }
+  /v1/guidance/{id}:
+    get:
+      summary: One guidance entry by rule name or ATT&CK technique id
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: guidance entry }
+        "404": { description: not found }
+  /v1/findings/{id}/guidance:
+    get:
+      summary: Guidance for a finding, resolved by rule then by ATT&CK technique
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: finding id, rule and guidance entry }
+        "404": { description: finding or guidance not found }
   /v1/findings:
     get:
       summary: List findings
@@ -87,6 +111,36 @@ paths:
       responses:
         "200":
           description: Agent status array
+  /v1/fleet/health:
+    get:
+      summary: Fleet health diagnostics and coverage score (read-only)
+      responses:
+        "200":
+          description: Per-agent health, score 0-100 and factors
+  /v1/fleet/health/{host}:
+    get:
+      summary: Single-host health diagnostic with recommendations
+      parameters:
+        - { name: host, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Diagnostic
+        "404":
+          description: Host not enrolled and not seen in data
+  /v1/fleet/coverage-gaps:
+    get:
+      summary: Shadow hosts, agents without data, agents on polling sensor
+      responses:
+        "200":
+          description: Coverage gaps
+  /v1/fleet/stale:
+    get:
+      summary: Agents with no heartbeat within the cutoff
+      parameters:
+        - { name: minutes, in: query, schema: { type: integer, default: 15, minimum: 1, maximum: 10080 } }
+      responses:
+        "200":
+          description: Stale and never-seen agents
   /v1/agents:
     get:
       summary: List enrolled agents (admin)
@@ -156,6 +210,47 @@ paths:
       responses:
         "200":
           description: correlations count
+  /v1/events/summary:
+    get:
+      summary: Telemetry counts per type and host (registry, dns, auth, module)
+      responses:
+        "200": { description: counts }
+  /v1/events/registry:
+    get:
+      summary: Recent registry events (query host, limit)
+      responses:
+        "200": { description: events }
+    post:
+      summary: Ingest registry event(s); object or array up to 500
+      responses:
+        "200": { description: accepted count plus findings and not_evaluated (content-rule detections) }
+  /v1/events/dns:
+    get:
+      summary: Recent DNS events (query host, limit)
+      responses:
+        "200": { description: events }
+    post:
+      summary: Ingest DNS event(s); object or array up to 500
+      responses:
+        "200": { description: accepted count plus findings and not_evaluated (content-rule detections) }
+  /v1/events/auth:
+    get:
+      summary: Recent authentication events (query host, limit)
+      responses:
+        "200": { description: events }
+    post:
+      summary: Ingest auth event(s); object or array up to 500
+      responses:
+        "200": { description: accepted count plus findings and not_evaluated (content-rule detections) }
+  /v1/events/module:
+    get:
+      summary: Recent module-load events (query host, limit)
+      responses:
+        "200": { description: events }
+    post:
+      summary: Ingest module event(s); object or array up to 500
+      responses:
+        "200": { description: accepted count plus findings and not_evaluated (content-rule detections) }
   /v1/file-events:
     post:
       summary: Ingest file-activity event
@@ -390,6 +485,31 @@ paths:
       summary: Identity entities with risk
       security: [{bearerAuth: []}]
       responses: {'200': {description: Entities}}
+  /v1/identity/itdr/summary:
+    get:
+      summary: ITDR summary
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/identity/itdr/indicators:
+    get:
+      summary: ITDR indicators (credential dumping, kerberoasting, pass-the-hash, impossible travel, odd-hour login, privileged usage)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/identity/itdr/risk:
+    get:
+      summary: ITDR per-user risk scores
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/identity/itdr/privileged:
+    get:
+      summary: ITDR privileged accounts
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/identity/itdr/timeline:
+    get:
+      summary: ITDR user timeline (query user)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
   /v1/ueba:
     get:
       summary: UEBA entity scores
@@ -421,15 +541,87 @@ paths:
         content:
           application/json:
             schema: {type: object}
+  /v1/incidents/correlated:
+    get:
+      summary: Auto-correlated incidents (same host or shared technique within a window)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: window, in: query, schema: {type: string, example: 1h}}
+      responses: {'200': {description: Incident array}}
   /v1/cases:
     get:
-      summary: Case management
+      summary: List cases (filters status, assignee) with SLA clocks
       security: [{bearerAuth: []}]
       responses: {'200': {description: Cases}}
     post:
-      summary: Create case
+      summary: Create case (optionally seeded from incident_id)
       security: [{bearerAuth: []}]
+      responses: {'201': {description: Created}}
+  /v1/cases/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: string}}
+    get:
+      summary: Case detail with timeline and comments
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Case}, '404': {description: Not found}}
+    patch:
+      summary: Update status/severity/assignee/tags, link findings, close with resolution
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Updated}, '400': {description: Invalid}}
+  /v1/cases/{id}/comments:
+    post:
+      summary: Add analyst comment
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses: {'201': {description: Created}}
+  /v1/cases/{id}/export:
+    get:
+      summary: Markdown case report
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: text/markdown}}
       responses: {'200': {description: Created}}
+  /v1/hunts/packs:
+    get:
+      summary: Built-in ATT&CK-mapped hunt packs
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Packs}}
+  /v1/hunts/packs/{id}/run:
+    post:
+      summary: Run one hunt pack
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}]
+      responses: {'200': {description: Result counts}}
+  /v1/hunts/run-all:
+    post:
+      summary: Run all hunt packs
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Results}}
+  /v1/hunts/schedules:
+    get:
+      summary: List scheduled hunts
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Schedules}}
+    post:
+      summary: Create scheduled hunt
+      security: [{bearerAuth: []}]
+      responses: {'201': {description: Created}}
+    delete:
+      summary: Delete scheduled hunt (query id)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Deleted}}
+  /v1/hunts/history:
+    get:
+      summary: Hunt hit history
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: History}}
+  /v1/devices/removable:
+    get:
+      summary: USB/removable media and new-device observation summary
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Summary}}
   /v1/hunt/query:
     post:
       summary: FQL-lite threat hunt
@@ -450,6 +642,18 @@ paths:
       summary: SOC summary report
       security: [{bearerAuth: []}]
       responses: {'200': {description: Summary}}
+  /v1/reports/templates:
+    get:
+      summary: List report templates
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Templates}}
+  /v1/reports/templates/{id}/render:
+    get:
+      summary: Render a report template to markdown
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Markdown}, '404': {description: Unknown template}}
   /v1/connectors:
     get:
       summary: Connector registry
@@ -679,16 +883,578 @@ paths:
       summary: MITRE ATT&CK coverage matrix and observed hits (observe-only)
       security: [{bearerAuth: []}]
       responses: {'200': {description: OK}}
-  /v1/compliance/score:
+  /v1/content/rules:
     get:
-      summary: Overall compliance grade across CIS/NIST/SOC2/ISO
+      summary: List data-driven detection content rules (observe-only; samples omitted, see detail)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: tactic, in: query, schema: {type: string}, description: ATT&CK tactic name, case-insensitive}
+        - {name: os, in: query, schema: {type: string, enum: [linux, macos, windows, any]}, description: Returns rules for that OS plus os=any rules}
+        - {name: batch, in: query, schema: {type: string}}
+        - {name: technique, in: query, schema: {type: string}, description: "ATT&CK id; T1059 also matches T1059.004"}
+        - {name: q, in: query, schema: {type: string}, description: Substring over id, name, description and tags}
+      responses: {'200': {description: "{mode, count, rules[]}"}, '401': {description: Unauthorized}}
+  /v1/content/rules/{id}:
+    get:
+      summary: One content rule including match tree and positive/negative test samples
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: OK}, '404': {description: Not found}}
+  /v1/content/coverage:
+    get:
+      summary: Content coverage counts by tactic, technique, os, batch, severity and event type; techniques covered (pending_telemetry is always empty now that registry, dns, auth and module rules are evaluated)
       security: [{bearerAuth: []}]
       responses: {'200': {description: OK}}
+  /v1/search:
+    get:
+      summary: Global search across findings, hosts, content rules, hunt packs, queries, guidance, ATT&CK techniques, CVEs, IOCs, cases and saved searches. Plain substring match (no regex); results scored exact id > prefix > substring, each with a console route hint
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: q, in: query, required: true, description: "At least 2 characters; truncated at 128", schema: {type: string}}
+        - {name: types, in: query, description: "Comma-separated filter", schema: {type: string, example: "finding,host,rule,huntpack,query,guidance,technique,cve,ioc,case,saved"}}
+        - {name: limit, in: query, description: "Default 20, max 100", schema: {type: integer}}
+      responses: {'200': {description: "{query, count, results[{type,id,title,subtitle,score,route}]}"}, '400': {description: Bad q or unknown type}, '401': {description: Unauthorized}}
+  /v1/adversaries:
+    get:
+      summary: List embedded public threat-actor and ransomware profiles (attribution from public reporting, not detection); filter by kind, technique, q
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: kind, in: query, schema: {type: string, enum: [nation-state, cybercrime, ransomware]}}
+        - {name: technique, in: query, schema: {type: string}}
+        - {name: q, in: query, schema: {type: string}}
+      responses: {'200': {description: "{mode, note, count, adversaries[]}"}, '401': {description: Unauthorized}}
+  /v1/adversaries/coverage:
+    get:
+      summary: All adversaries ranked by Kavach content coverage (by_coverage) and by observed ATT&CK hits (by_observed_hits)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: "{mode, note, count, by_coverage[], by_observed_hits[]}"}, '401': {description: Unauthorized}}
+  /v1/adversaries/{id}:
+    get:
+      summary: One adversary profile plus per-technique coverage (exact, related or gap, covering rule ids, hits), coverage percent and gaps
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: "{mode, note, profile, coverage}"}, '401': {description: Unauthorized}, '404': {description: Not found}}
+  /v1/content/custom:
+    get:
+      summary: List customer-authored content rules (source=custom); add tests=1 for samples
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: tests, in: query, schema: {type: string, enum: ['1']}}
+      responses: {'200': {description: "{mode, source, count, rules[]}"}, '401': {description: Unauthorized}}
+    post:
+      summary: Create or update a custom rule. Same schema and harness checks as embedded packs (own positive/negative samples, benign-baseline guard); never overrides an embedded id
+      security: [{bearerAuth: []}]
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object, description: "A content rule (see docs/content-framework.md); unknown fields rejected"}
+      responses: {'200': {description: Saved}, '400': {description: Validation error naming the rule and check}, '409': {description: Id collides with an embedded rule}}
+  /v1/content/custom/{id}:
+    delete:
+      summary: Delete a custom rule (embedded rules cannot be deleted)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Deleted}, '400': {description: Embedded rule}, '404': {description: Not found}}
+  /v1/content/custom/{id}/dryrun:
+    post:
+      summary: Evaluate a custom rule against supplied events and return the matches; nothing is recorded as a finding
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object, description: "{events: [lab events] (1..1000)}"}
+      responses: {'200': {description: "{rule, evaluated, matched, matches[], findings_recorded: 0}"}, '404': {description: Not found}}
+  /v1/rules/health:
+    get:
+      summary: Per-rule health computed from stored findings (hits 24h/7d/30d, distinct hosts, last fired, trend, share, noisy score, silent). Ordered by lifecycle state then noisy score
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: state, in: query, schema: {type: string, enum: [draft, testing, production, retired]}}
+        - {name: source, in: query, schema: {type: string, enum: [custom, embedded, builtin]}}
+        - {name: silent, in: query, schema: {type: string, enum: ['1']}}
+        - {name: noisy, in: query, schema: {type: string, enum: ['1']}}
+        - {name: limit, in: query, schema: {type: integer}}
+      responses: {'200': {description: "{mode, count, noisy_threshold, rules[]}"}, '401': {description: Unauthorized}}
+  /v1/rules/health/{id}:
+    get:
+      summary: Health of one rule plus recent finding ids
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: "{health, recent_finding_ids[]}"}, '404': {description: Unknown rule}}
+  /v1/rules/lifecycle/{id}:
+    get:
+      summary: Lifecycle state of a rule (default production when never set)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: "{lifecycle, explicit, states[]}"}}
+    put:
+      summary: Set a rule's lifecycle state. Affects reporting/ordering only, except testing, which records hits as shadow findings outside the main findings list. Journaled in the rule history
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object, required: [state], properties: {state: {type: string, enum: [draft, testing, production, retired]}, note: {type: string}}}
+      responses: {'200': {description: Saved}, '400': {description: Bad state}, '404': {description: Unknown rule}}
+  /v1/rules/history/{id}:
+    get:
+      summary: Hash-chained change history for a rule (custom rule create/update/delete, lifecycle changes) with chain verification
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: "{rule, count, chain_ok, broken_at_seq, entries[]}"}}
+  /v1/content/export:
+    post:
+      summary: Export rules as a JSON pack (read-only). Filter by source (custom default, embedded, all), ids, tactic, technique, os, batch, q, event_type
+      security: [{bearerAuth: []}]
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object, description: "Optional filter object; empty body exports all custom rules"}
+      responses: {'200': {description: "{pack: export, rules[]} including samples"}}
+  /v1/content/import:
+    post:
+      summary: Import a rule pack, or Sigma-subset rules with format=sigma. Per-rule results; rules that fail the harness or use unsupported Sigma constructs are reported, not guessed
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: validate_only, in: query, schema: {type: boolean}, description: Run every check but store nothing}
+        - {name: format, in: query, schema: {type: string, enum: [kavach, sigma]}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object, description: "kavach: {pack, rules[]}. sigma: one rule object / array (JSON) or YAML documents separated by ---"}
+          application/yaml:
+            schema: {type: string}
+      responses: {'200': {description: "{imported, valid, rejected, unsupported, results[{id,status,errors,unsupported}]}"}, '400': {description: Bad body or no rule accepted}}
+  /v1/lab/rules:
+    get:
+      summary: List detection-lab rules (sandbox only; never promoted to live detection)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK, mode sandbox}}
+    post:
+      summary: Create or update (upsert by id) a lab rule; validated, max 200 rules, mode always sandbox
+      security: [{bearerAuth: []}]
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object, description: "id, name, technique (T1059[.004]), enabled, condition {field,op,value|values | all|any|not}, threshold {count, within_seconds, group_by}"}
+      responses: {'200': {description: Saved}, '400': {description: Validation error naming the field}, '409': {description: Rule cap reached}}
+    delete:
+      summary: Delete a lab rule
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: query, required: true, schema: {type: string}}
+      responses: {'200': {description: Deleted}, '404': {description: Not found}}
+  /v1/lab/rules/validate:
+    post:
+      summary: Validate a lab rule (operators equals|contains|startswith|endswith|regex(RE2, max 256 chars)|in)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Valid}, '400': {description: Invalid, error names the bad field}}
+  /v1/lab/rules/test:
+    post:
+      summary: Run a rule (inline `rule` or `rule_id`) against up to 1000 sample `events`; returns per-event match and condition trace
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}, '400': {description: Bad rule or events}, '413': {description: Body too large}}
+  /v1/lab/rules/backtest:
+    post:
+      summary: Replay a rule over stored events and findings (cap 50000); hit count, sample (max 20), top hosts, hits per day, noise per host per day
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}, '400': {description: Bad rule}, '404': {description: Unknown rule_id}}
+  /v1/compliance/score:
+    get:
+      summary: Compliance score across every framework in the control catalog (observe-only, not certification)
+      description: >
+        Per-framework scores computed from observable controls only (met=100, partial by signal share, unmet=0).
+        Controls Kavach cannot evidence are reported as not_observable and excluded from scores, never counted as met.
+        Legacy fields overall, grade, frameworks[].framework/score/grade/failing, mode and source are retained;
+        frameworks[] additionally carries id, name, controls_total, observable, met, partial, unmet, not_observable.
+        With ?framework=, the response adds controls[] with id, framework, title, status (met|partial|unmet|not_observable),
+        score (null when not_observable) and reason.
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: framework, in: query, description: Framework id from the evidence catalog; adds per-control rows, schema: {type: string, enum: [cis-v8, nist-csf-2, soc2, iso27001, rbi, cert-in, dpdp, pci-dss-4, hipaa, nist-800-53, nis2, dora, gdpr-32, uk-cyber-essentials, au-essential-eight, au-ism, sg-ccop, sg-mas-trm, jp-meti-nisc, sa-nca-ecc, ae-ia, br-lgpd, za-popia, us-cmmc-l2, us-fedramp-moderate, ca-cccs, kr-ismsp, hk-hkma]}}
+      responses: {'200': {description: OK}, '400': {description: Unknown framework}}
+  /v1/compliance/controls:
+    get:
+      summary: Control-level compliance status with live evidence counts (observe-only, not certification)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: framework, in: query, schema: {type: string, enum: [cis-v8, nist-csf-2, soc2, iso27001, rbi, cert-in, dpdp, pci-dss-4, hipaa, nist-800-53, nis2, dora, gdpr-32, uk-cyber-essentials, au-essential-eight, au-ism, sg-ccop, sg-mas-trm, jp-meti-nisc, sa-nca-ecc, ae-ia, br-lgpd, za-popia, us-cmmc-l2, us-fedramp-moderate, ca-cccs, kr-ismsp, hk-hkma]}}
+      responses: {'200': {description: OK}, '400': {description: Unknown framework}}
+  /v1/compliance/evidence:
+    get:
+      summary: Auditor-ready evidence pack (JSON or printable escaped HTML) with scope and limitations
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: framework, in: query, schema: {type: string, enum: [cis-v8, nist-csf-2, soc2, iso27001, rbi, cert-in, dpdp, pci-dss-4, hipaa, nist-800-53, nis2, dora, gdpr-32, uk-cyber-essentials, au-essential-eight, au-ism, sg-ccop, sg-mas-trm, jp-meti-nisc, sa-nca-ecc, ae-ia, br-lgpd, za-popia, us-cmmc-l2, us-fedramp-moderate, ca-cccs, kr-ismsp, hk-hkma]}}
+        - {name: format, in: query, schema: {type: string, enum: [json, html]}}
+      responses: {'200': {description: OK}, '400': {description: Bad framework or format}}
+  /v1/compliance/cert-in-clock:
+    get:
+      summary: Open high/critical incidents against the 6-hour CERT-In window (informational)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/regulatory/regimes:
+    get:
+      summary: Regional incident/breach reporting regimes catalog (informational, not legal advice; Kavach does not file reports). Each entry has a verified flag; unverified rules say UNVERIFIED in notes
+      security: [{bearerAuth: []}]
+      parameters:
+        - { name: jurisdiction, in: query, schema: { type: string } }
+        - { name: verified, in: query, schema: { type: string, enum: ["true", "false"] } }
+      responses: {'200': {description: count and regimes}}
+  /v1/regulatory/clocks:
+    get:
+      summary: Time remaining or overdue per regime stage for open high/critical findings, measured from first detection like the CERT-In clock. Defaults to the saved profile (informational, not legal advice; Kavach does not file reports)
+      security: [{bearerAuth: []}]
+      parameters:
+        - { name: regime, in: query, description: Comma-separated regime ids, schema: { type: string } }
+      responses: {'200': {description: per-regime stage clocks}, '400': {description: Unknown regime id}}
+  /v1/regulatory/profile:
+    get:
+      summary: Regimes the operator selected as applicable
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: profile}}
+    put:
+      summary: Save the applicable regimes (persisted in <store>.regulatory.json; admin or session)
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [regimes]
+              properties:
+                regimes: { type: array, items: { type: string } }
+      responses: {'200': {description: saved}, '400': {description: Invalid body or unknown regime id}}
+  /v1/governance/inventory:
+    get:
+      summary: Data inventory by class (location, record counts read from disk, oldest/newest, approximate bytes)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Inventory}}
+  /v1/governance/retention:
+    get:
+      summary: Per-class max-age policy in days (default unlimited)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Policy}}
+    post:
+      summary: 'Set policy {"days":{"findings":30}}; min 1, null = unlimited; classes findings, process_events, network_events, file_events (admin or session)'
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Saved}, '400': {description: Invalid}}
+  /v1/governance/retention/preview:
+    post:
+      summary: Dry-run purge counts using the saved policy (or an optional body override)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Would-purge counts}}
+  /v1/governance/retention/apply:
+    post:
+      summary: 'Purge per policy; admin token only, body {"confirm":"purge"} required; audit line written'
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Purged counts}, '400': {description: Missing confirm}, '403': {description: Not admin}}
+  /v1/governance/redaction:
+    get:
+      summary: Redaction rule list and export toggle
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Rules}}
+    post:
+      summary: 'Toggle redaction of /v1/export/findings {"enabled":true} (admin or session)'
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Saved}}
+  /v1/governance/redact/preview:
+    post:
+      summary: 'Redact sample text {"text":"..."} (max 16KB) and report matches per rule'
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Redacted text}}
+  /v1/governance/subject:
+    get:
+      summary: DSAR triage; counts and ids (max 200) of findings/notes mentioning q (3-128 chars)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: q, in: query, required: true, schema: {type: string}}
+      responses: {'200': {description: Counts and ids}}
+  /v1/export/findings:
+    get:
+      summary: Download findings (csv, json, ndjson) or SIEM formats (ocsf, ecs, cef, leef, splunk-hec; see docs/siem-export.md); filters severity, host, rule, since (RFC3339); max 50000 rows legacy, limit up to 10000 for SIEM formats
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: format, in: query, schema: {type: string, enum: [csv, json, ndjson, ocsf, ecs, cef, leef, splunk-hec]}}
+        - {name: kind, in: query, description: "SIEM formats only: findings (default) or events", schema: {type: string, enum: [findings, events]}}
+        - {name: limit, in: query, description: "SIEM formats only, 1..10000, default 1000", schema: {type: integer}}
+        - {name: cursor, in: query, description: "SIEM formats only. Opaque token from the X-Kavach-Next-Cursor response header; resumes strictly after the last record with no duplicates. Overrides since.", schema: {type: string}}
+        - {name: severity, in: query, schema: {type: string}}
+        - {name: host, in: query, schema: {type: string}}
+        - {name: rule, in: query, schema: {type: string}}
+        - {name: since, in: query, schema: {type: string, format: date-time}}
+      responses: {'200': {description: Attachment}, '400': {description: Bad filter}}
+  /v1/export/iocs:
+    get:
+      summary: STIX 2.1 bundle of the enabled IOC store (pull-based)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: format, in: query, schema: {type: string, enum: [stix]}}
+      responses: {'200': {description: "application/stix+json;version=2.1 bundle"}, '400': {description: Bad format}}
+  /v1/export/attack-layer:
+    get:
+      summary: ATT&CK Navigator layer (v4.5) of detection coverage and observed hits
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Navigator layer JSON}}
+  /v1/export/report:
+    get:
+      summary: Executive posture report (self-contained HTML or JSON)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: format, in: query, schema: {type: string, enum: [html, json]}}
+      responses: {'200': {description: OK}}
+  /v1/risk/hosts:
+    get:
+      summary: Per-host risk 0-100 with time decay, top rules, last seen and rank
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/risk/summary:
+    get:
+      summary: Fleet risk index and host counts by risk band
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/prevalence/executables:
+    get:
+      summary: Fleet prevalence of executables by normalised command shape (distinct hosts, first/last seen, uids, parents)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: min_hosts, in: query, schema: {type: integer, minimum: 1}}
+        - {name: max_hosts, in: query, schema: {type: integer, minimum: 0}}
+        - {name: limit, in: query, schema: {type: integer, maximum: 1000}}
+      responses: {'200': {description: OK}}
+  /v1/prevalence/rare:
+    get:
+      summary: Executables seen in the window on one host (or under a fleet fraction) with rarity score and findings flag
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: hours, in: query, schema: {type: integer, maximum: 720}}
+        - {name: fraction, in: query, schema: {type: number, minimum: 0, maximum: 1}}
+      responses: {'200': {description: OK}}
+  /v1/prevalence/first-seen:
+    get:
+      summary: Executables and network destinations never seen on a host before the window
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: host, in: query, required: true, schema: {type: string}}
+        - {name: hours, in: query, schema: {type: integer, maximum: 720}}
+      responses: {'200': {description: OK}, '400': {description: host required}}
+  /v1/graph/blast-radius:
+    get:
+      summary: Bounded host graph (depth max 3, 500 nodes) linked by shared destinations, rare executables and finding co-occurrence, with ranked likely-also-affected hosts
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: host, in: query, required: true, schema: {type: string}}
+        - {name: hours, in: query, schema: {type: integer, maximum: 720}}
+        - {name: depth, in: query, schema: {type: integer, minimum: 1, maximum: 3}}
+      responses: {'200': {description: OK}, '400': {description: host required}}
+  /v1/trends:
+    get:
+      summary: Finding counts per bucket by severity, delta vs previous period, top rules
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: days, in: query, schema: {type: integer, enum: [7, 14, 30]}}
+        - {name: bucket, in: query, schema: {type: string, enum: [hour, day]}}
+      responses: {'200': {description: OK}, '400': {description: bad parameter}}
   /v1/stream:
     get:
       summary: Server-Sent Events of new detections (event "finding")
       security: [{bearerAuth: []}]
       responses: {'200': {description: text/event-stream}}
+  /v1/alerts/rules:
+    get:
+      summary: List alert rules
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: Create an alert rule (webhook or slack destination; https only, private IPs rejected)
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                min_severity: {type: string, enum: [low, medium, high, critical], default: high}
+                rule_contains: {type: string}
+                host_contains: {type: string}
+                type: {type: string, enum: [webhook, slack], default: webhook}
+                url: {type: string}
+      responses: {'201': {description: Created}, '400': {description: Invalid rule}}
+    delete:
+      summary: Delete an alert rule by ?id=
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: query, required: true, schema: {type: string}}
+      responses: {'204': {description: Deleted}, '404': {description: Not found}}
+  /v1/posture/assets:
+    get:
+      summary: List asset criticality records
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: Upsert an asset (criticality 1-5, owner, tags)
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [host, criticality]
+              properties:
+                host: {type: string}
+                criticality: {type: integer, minimum: 1, maximum: 5}
+                owner: {type: string}
+                tags: {type: array, items: {type: string}}
+      responses: {'201': {description: Saved}, '400': {description: Invalid}}
+    delete:
+      summary: Delete an asset by ?host=
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: host, in: query, required: true, schema: {type: string}}
+      responses: {'204': {description: Deleted}, '404': {description: Not found}}
+  /v1/posture/vuln-priority:
+    get:
+      summary: Vulnerabilities ranked by an auditable score with per-factor breakdown
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: limit, in: query, schema: {type: integer, maximum: 500}}
+      responses: {'200': {description: OK}}
+  /v1/posture/baseline:
+    post:
+      summary: Snapshot SBOM/FIM/persistence baseline for ?host= (all hosts if omitted)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: host, in: query, schema: {type: string}}
+      responses: {'200': {description: OK}, '400': {description: Baseline host limit reached}}
+  /v1/posture/drift:
+    get:
+      summary: Added/removed/changed items since baseline with severity hints
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: host, in: query, required: true, schema: {type: string}}
+      responses: {'200': {description: OK}, '400': {description: host required}}
+  /v1/posture/summary:
+    get:
+      summary: One-screen posture rollup
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/alerts/deliveries:
+    get:
+      summary: Last 100 notification delivery results
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/intel/feeds:
+    get:
+      summary: List threat-intel feeds
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: Add a threat-intel feed (https only, private addresses rejected, redirects not followed)
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, url, format]
+              properties:
+                name: {type: string, maxLength: 64}
+                url: {type: string}
+                format: {type: string, enum: [csv, plain, stix-lite-json]}
+                interval: {type: integer, minimum: 15, default: 60, description: minutes}
+                tlp: {type: string, enum: [clear, white, green, amber, amber+strict, red]}
+                ttl_days: {type: integer, default: 30}
+                enabled: {type: boolean, default: true}
+      responses: {'201': {description: Created}, '400': {description: Invalid feed}, '409': {description: Name exists}}
+    delete:
+      summary: Delete a feed by ?id= and remove only its indicators
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: query, required: true, schema: {type: string}}
+      responses: {'204': {description: Deleted}, '404': {description: Not found}}
+  /v1/intel/feeds/status:
+    get:
+      summary: Per-feed last fetch time, status, added/expired/active counts and errors
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/intel/feeds/refresh:
+    post:
+      summary: Fetch one feed now (?id=)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: query, required: true, schema: {type: string}}
+      responses: {'200': {description: Feed status}, '404': {description: Not found}, '409': {description: Feed disabled}}
+  /v1/saved-searches:
+    get:
+      summary: List saved searches
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: Save a search (name, scope detections|findings|hosts, query; max 100)
+      security: [{bearerAuth: []}]
+      responses: {'201': {description: Created}, '400': {description: Invalid or limit reached}}
+    delete:
+      summary: Delete a saved search by id query parameter
+      security: [{bearerAuth: []}]
+      responses: {'204': {description: Deleted}, '404': {description: Not found}}
+  /v1/queries/library:
+    get:
+      summary: Curated ready-made queries (filters tactic, tag, q); languages fql-lite, kql-lite, console-filter
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/queries/library/{id}:
+    get:
+      summary: One library query
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}]
+      responses: {'200': {description: OK}, '404': {description: Not found}}
+  /v1/queries/library/{id}/save:
+    post:
+      summary: Copy a library query into the caller's saved searches (journaled)
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}]
+      responses: {'201': {description: Created}, '400': {description: Limit reached}, '404': {description: Not found}}
+  /v1/notes:
+    get:
+      summary: List notes for a finding (finding_id query parameter)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: Add a note (text max 2000 chars, max 200 per finding)
+      security: [{bearerAuth: []}]
+      responses: {'201': {description: Created}, '400': {description: Invalid or limit reached}}
+    delete:
+      summary: Delete a note by id query parameter
+      security: [{bearerAuth: []}]
+      responses: {'204': {description: Deleted}, '404': {description: Not found}}
+  /v1/journal:
+    get:
+      summary: Hash-chained activity journal
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: Record an alert_rule.create or alert_rule.delete entry in the chain
+      security: [{bearerAuth: []}]
+      responses: {'201': {description: Created}, '400': {description: Invalid action}}
+  /v1/journal/verify:
+    get:
+      summary: Re-walk the journal chain and report the first broken link
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: "valid, entries, first_broken_seq, reason"}}
   /metrics:
     get:
       summary: Prometheus text metrics
@@ -711,6 +1477,42 @@ paths:
     get:
       summary: v1 deception
       security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/deception/canaries:
+    get:
+      summary: List canary tripwires
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: Create canary (kind credential, document-beacon or dns-name)
+      security: [{bearerAuth: []}]
+      responses: {'201': {description: Created}}
+  /v1/deception/canaries/{id}:
+    delete:
+      summary: Delete canary
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}]
+      responses: {'200': {description: OK}, '404': {description: Not found}}
+  /v1/deception/trip:
+    post:
+      summary: Agent-reported canary touch (host, path, optional canary_id)
+      security: [{bearerAuth: []}]
+      responses: {'202': {description: Recorded}}
+  /v1/deception/trips:
+    get:
+      summary: Recent canary trips
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /c/{id}:
+    get:
+      summary: Public canary tripwire (identical 200 for any id)
+      security: []
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: Public canary tripwire (identical 200 for any id)
+      security: []
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}]
       responses: {'200': {description: OK}}
   /v1/deception/trigger:
     post:
@@ -929,6 +1731,70 @@ paths:
         content:
           application/json:
             schema: {type: object}
+  /v1/vulns/feeds/status:
+    get:
+      summary: Vulnerability feed status (last refresh, counts, errors, source)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/vulns/feeds/refresh:
+    post:
+      summary: Refresh KEV/OSV feeds now (409 when KAVACH_VULN_FEED is unset)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}, '409': {description: Feeds disabled}}
+  /v1/advisories:
+    get:
+      summary: Normalised worldwide CERT advisories from the opt-in feed cache (KAVACH_CERT_FEEDS); advisories whose CVEs match the local software inventory are flagged matched with the affected hosts. Empty when feeds are disabled
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: source, in: query, description: "Comma-separated feed ids", schema: {type: string, example: "cisa,cert-eu"}}
+        - {name: cve, in: query, description: "Only advisories mentioning this CVE", schema: {type: string}}
+        - {name: since, in: query, description: "RFC 3339 or YYYY-MM-DD", schema: {type: string}}
+        - {name: q, in: query, description: "Substring in title, id or CVEs", schema: {type: string}}
+        - {name: matched, in: query, description: "true = only inventory-matched advisories", schema: {type: boolean}}
+        - {name: limit, in: query, description: "Default 100, max 500", schema: {type: integer}}
+      responses: {'200': {description: "{count, total, enabled_feeds, last_refresh, feed_errors, note, advisories[{source,id,title,published,url,cves[],severity,matched,matched_cves,matched_hosts}]}"}, '400': {description: Bad cve, since or limit}, '401': {description: Unauthorized}}
+  /v1/advisories/feeds/status:
+    get:
+      summary: CERT advisory feed status (enabled and available feed ids, per-feed counts, last refresh, errors)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}, '401': {description: Unauthorized}}
+  /v1/advisories/feeds/refresh:
+    post:
+      summary: Refresh CERT advisory feeds now (409 when KAVACH_CERT_FEEDS is unset). Plain GETs to allowlisted hosts only; no host or inventory data is sent
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}, '401': {description: Unauthorized}, '409': {description: Feeds disabled}}
+  /v1/vulns/software:
+    get:
+      summary: Vulnerability management software
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/vulns/advisories:
+    get:
+      summary: Vulnerability management advisories
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/vulns/findings:
+    get:
+      summary: Vulnerability management findings
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/vulns/exposure:
+    get:
+      summary: Vulnerability management exposure
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/vulns/top:
+    get:
+      summary: Vulnerability management top
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/sbom/{host}:
+    get:
+      summary: CycloneDX-style SBOM for a host
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: host, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: OK}}
   /v1/world/modules:
     get:
       summary: v1 world modules
@@ -954,6 +1820,96 @@ paths:
       summary: zyvor-mark.svg
       security: [{bearerAuth: []}]
       responses: {'200': {description: OK}}
+  /v1/soc/metrics:
+    get:
+      summary: SOC MTTA/MTTR, backlog by severity and age, false-positive rate by rule, noisy rules, SLA breaches (days)
+      security: [{bearerAuth: []}]
+      parameters: [{name: days, in: query, schema: {type: integer, default: 30}}]
+      responses: {'200': {description: OK}}
+  /v1/storyline/host:
+    get:
+      summary: Kill-chain timeline for one host with ATT&CK tactic, phase and burst splitting (gap over 15 min)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: host, in: query, required: true, schema: {type: string}}
+        - {name: hours, in: query, schema: {type: integer, default: 24}}
+      responses: {'200': {description: OK}, '400': {description: host required}}
+  /v1/soc/shift-report:
+    get:
+      summary: Shift handoff JSON with counts, risk hosts, unresolved criticals and recommended questions
+      security: [{bearerAuth: []}]
+      parameters: [{name: hours, in: query, schema: {type: integer, default: 12}}]
+      responses: {'200': {description: OK}}
+  /v1/tuning/suggestions:
+    get:
+      summary: Advisory rule-tuning suggestions with evidence, impact percent, risk and a proposed exclusion (never critical rules)
+      security: [{bearerAuth: []}]
+      parameters: [{name: days, in: query, schema: {type: integer, default: 14}}]
+      responses: {'200': {description: OK}}
+  /v1/tuning/apply:
+    post:
+      summary: Human-applied tuning exclusion (admin); body rule, pattern, reason; records who/when
+      security: [{bearerAuth: []}]
+      responses: {'201': {description: Created}, '400': {description: broad or invalid pattern}, '422': {description: would suppress critical findings}}
+  /v1/tuning/history:
+    get:
+      summary: Applied and reverted tuning exclusions
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/tuning/revert:
+    post:
+      summary: Revert a tuning exclusion (admin)
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: query, required: true, schema: {type: string}}]
+      responses: {'200': {description: OK}, '404': {description: not found}, '409': {description: already reverted}}
+  /v1/digests:
+    get:
+      summary: List scheduled digests (destination URL redacted to host)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+    post:
+      summary: Create a digest (name, schedule daily|weekly, hour_utc, content shift-report|soc-metrics|top-risks, type webhook|slack, url); URL validated like alert rules
+      security: [{bearerAuth: []}]
+      responses: {'201': {description: Created}, '400': {description: invalid or disallowed destination}}
+    delete:
+      summary: Delete a digest
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: query, required: true, schema: {type: string}}]
+      responses: {'204': {description: Deleted}, '404': {description: not found}}
+  /v1/digests/send-now:
+    post:
+      summary: Send a digest immediately (admin); aggregates and ids only, HMAC-signed for webhooks
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: query, required: true, schema: {type: string}}]
+      responses: {'200': {description: Delivery result}, '404': {description: not found}}
+  /v1/digests/deliveries:
+    get:
+      summary: Recent digest delivery results
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}}
+  /v1/ransomware/risk:
+    get:
+      summary: Per-host ransomware early-warning scores (report-only)
+      responses:
+        "200": { description: Hosts with score, level and timeline }
+  /v1/ransomware/host/{host}:
+    get:
+      summary: Ransomware risk and timeline for one host (report-only)
+      parameters:
+        - { name: host, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Host risk }
+  /v1/containers/risk:
+    get:
+      summary: Container/Kubernetes posture risk per host (report-only)
+      responses:
+        "200": { description: Privileged, host mount, exec, root, image drift indicators }
+  /v1/lateral/edges:
+    get:
+      summary: Lateral-movement edges (rdp/ssh/smb/winrm) between hosts
+      responses:
+        "200": { description: Edge list with counts }
+
 components:
   securitySchemes:
     bearerAuth:

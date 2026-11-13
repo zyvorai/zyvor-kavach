@@ -362,6 +362,25 @@ if [[ ! -d helm/kavach ]]; then
   exit 1
 fi
 
+# Stable TLS cert: mint a self-signed cert once and keep it in a Secret, so a
+# redeploy does not change the cert (browsers keep their exception). Delete the
+# Secret to rotate. Skipped for Envoy Gateway mode (it manages its own Secret).
+TLS_STATIC_SECRET="kavach-tls-static"
+if [[ "\$ENVOY_GATEWAY" != "1" ]]; then
+  kubectl create namespace kavach-system >/dev/null 2>&1 || true
+  if ! kubectl -n kavach-system get secret "\$TLS_STATIC_SECRET" >/dev/null 2>&1; then
+    log "creating persistent TLS secret \$TLS_STATIC_SECRET (self-signed, 10y, SAN includes \${HOST_IP})"
+    tls_tmp="\$(mktemp -d)"
+    openssl req -x509 -nodes -days 3650 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 \\
+      -keyout "\$tls_tmp/tls.key" -out "\$tls_tmp/tls.crt" \\
+      -subj "/CN=kavach/O=Zyvor AI Labs" \\
+      -addext "subjectAltName=DNS:kavach,DNS:kavach.kavach-system.svc,DNS:localhost,IP:127.0.0.1,IP:\${HOST_IP}"
+    kubectl -n kavach-system create secret tls "\$TLS_STATIC_SECRET" \\
+      --cert="\$tls_tmp/tls.crt" --key="\$tls_tmp/tls.key"
+    rm -rf "\$tls_tmp"
+  fi
+fi
+
 HELM_SET=(
   --set "auth.token=\${ADMIN_TOKEN}"
   --set tls.enabled=true
@@ -373,6 +392,10 @@ HELM_SET=(
   --set service.port="\${NODE_PORT}"
   --set service.nodePort="\${NODE_PORT}"
 )
+
+if [[ "\$ENVOY_GATEWAY" != "1" ]]; then
+  HELM_SET+=(--set "tls.existingSecret=\$TLS_STATIC_SECRET")
+fi
 
 if [[ "\$ENVOY_GATEWAY" == "1" ]]; then
   log "Envoy Gateway opt-in (preferred Gateway API front door; class eg)"

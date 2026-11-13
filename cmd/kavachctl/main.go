@@ -8,6 +8,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -15,9 +16,11 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -38,6 +41,39 @@ func run(args []string) error {
 		return nil
 	}
 	ensureConfig()
+	if handled, err := ccDispatch(args, os.Stdout); handled {
+		return err
+	}
+	if handled, err := rhDispatch(args, os.Stdout); handled {
+		return err
+	}
+	if handled, err := regDispatch(args, os.Stdout); handled {
+		return err
+	}
+	if handled, err := om2Dispatch(args, os.Stdout); handled {
+		return err
+	}
+	if handled, err := omDispatch(args, os.Stdout); handled {
+		return err
+	}
+	if handled, err := ocDispatch(args, os.Stdout); handled {
+		return err
+	}
+	if handled, err := gsDispatch(args, os.Stdout); handled {
+		return err
+	}
+	if handled, err := cfDispatch(args, os.Stdout); handled {
+		return err
+	}
+	if handled, err := advDispatch(args, os.Stdout); handled {
+		return err
+	}
+	if handled, err := inspectDispatch(args, os.Stdout); handled {
+		return err
+	}
+	if handled, err := mlDispatch(args, os.Stdout); handled {
+		return err
+	}
 
 	switch args[0] {
 	case "status":
@@ -47,9 +83,9 @@ func run(args []string) error {
 		return nil
 
 	case "findings":
-		return getQuery("/v1/findings", pickFlags(args[1:], "severity", "rule", "host"))
+		return listCmd(os.Stdout, "/v1/findings", args[1:], "severity", "rule", "host")
 	case "detections":
-		return getQuery("/v1/detections", pickFlags(args[1:], "severity", "status", "host"))
+		return listCmd(os.Stdout, "/v1/detections", args[1:], "severity", "status", "host")
 	case "incidents":
 		return request("GET", "/v1/incidents", nil)
 	case "timeline":
@@ -94,7 +130,16 @@ func run(args []string) error {
 		return request("GET", "/v1/air/investigations", nil)
 
 	case "intel":
+		if len(args) > 1 && args[1] == "feeds" {
+			return intelFeedsCmd(os.Stdout, args[2:])
+		}
 		return intelCmd(args[1:])
+	case "lab":
+		return labCmd(os.Stdout, args[1:])
+	case "soc":
+		return socCmd(os.Stdout, args[1:])
+	case "posture":
+		return postureCmd(os.Stdout, args[1:])
 	case "identity":
 		return identityCmd(args[1:])
 	case "ueba":
@@ -126,11 +171,36 @@ func run(args []string) error {
 		return request("GET", "/v1/exposure", nil)
 	case "compliance":
 		if len(args) > 1 && args[1] == "score" {
-			return request("GET", "/v1/compliance/score", nil)
+			return complianceScoreCmd(os.Stdout, args[2:])
+		}
+		if len(args) > 1 && (args[1] == "controls" || args[1] == "evidence" || args[1] == "cert-in-clock") {
+			return complianceExtraCmd(os.Stdout, args[1:])
 		}
 		return request("GET", "/v1/compliance", nil)
 	case "attack", "mitre":
-		return request("GET", "/v1/attack/matrix", nil)
+		return attackCmd(os.Stdout, args[1:])
+	case "watch", "tail":
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+		defer stop()
+		return watchCmd(ctx, os.Stdout, args[1:])
+	case "risk":
+		return riskCmd(os.Stdout, args[1:])
+	case "trends":
+		return trendsCmd(os.Stdout, args[1:])
+	case "export":
+		return exportCmdSIEM(os.Stdout, args[1:])
+	case "notes":
+		return notesCmd(os.Stdout, args[1:])
+	case "saved-searches", "searches":
+		return savedSearchesCmd(os.Stdout, args[1:])
+	case "alerts":
+		return alertsCmd(os.Stdout, args[1:])
+	case "journal":
+		return journalCmd(os.Stdout, args[1:])
+	case "doctor":
+		return doctorCmd(os.Stdout)
+	case "completion":
+		return completionCmd(os.Stdout, args[1:])
 	case "metrics":
 		return request("GET", "/metrics", nil)
 	case "zero-trust":

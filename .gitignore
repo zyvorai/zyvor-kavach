@@ -1,3 +1,9 @@
 data/
 *.test
 bin/
+
+# built binaries at the repo root
+/kavach
+/kavachctl
+/kavach-mcp
+/netra-bridge

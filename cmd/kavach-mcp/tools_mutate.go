@@ -130,6 +130,15 @@ func registerMutateTools(srv *mcpserver.Server, c *client) error {
 			"replace": map[string]any{"type": "boolean", "description": "Replace host rows"},
 			"items":   map[string]any{"type": "array", "items": map[string]any{"type": "object"}},
 		}, "domain"), bodyFields: true},
+		{name: "kavach_note_add", method: "POST", path: "/v1/notes", description: "Add an analyst note to a finding (journaled; observation only).", schema: objSchema(map[string]any{
+			"finding_id": strProp("Finding ID"),
+			"text":       strProp("Note text (max 2000 chars)"),
+		}, "finding_id", "text"), bodyFields: true},
+		{name: "kavach_saved_search_add", method: "POST", path: "/v1/saved-searches", description: "Save an analyst search (journaled; observation only).", schema: objSchema(map[string]any{
+			"name":  strProp("Name (max 80 chars)"),
+			"query": strProp("Search query"),
+			"scope": enumProp("Search scope", "detections", "findings", "hosts"),
+		}, "name", "scope"), bodyFields: true},
 	}
 	for _, t := range tools {
 		if err := registerEndpointTool(srv, c, t); err != nil {

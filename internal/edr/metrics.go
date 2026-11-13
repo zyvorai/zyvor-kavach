@@ -80,6 +80,7 @@ func (m *Metrics) Write(w http.ResponseWriter, store *Store, registry *Credentia
 	var b strings.Builder
 	b.WriteString("# HELP kavach_uptime_seconds Seconds since server start.\n# TYPE kavach_uptime_seconds gauge\n")
 	fmt.Fprintf(&b, "kavach_uptime_seconds %.0f\n", time.Since(m.started).Seconds())
+	b.WriteString(TelemetryMetrics())
 	b.WriteString("# HELP kavach_http_inflight In-flight HTTP requests.\n# TYPE kavach_http_inflight gauge\n")
 	fmt.Fprintf(&b, "kavach_http_inflight %d\n", m.inflight.Load())
 
@@ -101,6 +102,9 @@ func (m *Metrics) Write(w http.ResponseWriter, store *Store, registry *Credentia
 		fmt.Fprintf(&b, "kavach_findings{severity=%q} %d\n", k, sev[k])
 	}
 	fmt.Fprintf(&b, "# HELP kavach_findings_total Total findings.\n# TYPE kavach_findings_total gauge\nkavach_findings_total %d\n", total)
+
+	b.WriteString(riskGauges(store, time.Now()))
+	b.WriteString(fleetHGauges(store, registry, time.Now()))
 
 	online, all := 0, 0
 	if registry != nil {

@@ -234,6 +234,7 @@ func Detect(e Event) []Finding {
 		q, _ := rule["query"].(string)
 		add("custom-"+name, sev, "Custom detection rule matched: "+name+" ("+q+")", "custom-rule")
 	}
+	result = append(result, contentProcessFindings(e)...) // data-driven content packs; no-op when none loaded
 	return FilterExcluded(result)
 }
 
@@ -329,6 +330,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	mux := http.NewServeMux()
 	registerDashboard(mux, token, store)
 	RegisterFileRoutes(mux, token, store, registry)
+	RegisterTelemetryRoutes(mux, token, store, registry)
 	incidents, incidentErr := NewIncidentStore(store)
 	if incidentErr != nil {
 		panic(incidentErr)
@@ -487,8 +489,38 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	metrics := NewMetrics()
 	RegisterHealth(mux, store)
 	RegisterATTACK(mux, token, store)
-	RegisterComplianceScore(mux, token, store, registry)
+	RegisterAdversaries(mux, token, store)
 	RegisterStream(mux, token, store)
+	RegisterRiskTrends(mux, token, store)
+	RegisterFleetHealth(mux, token, store, registry)
+	RegisterPrevalenceGraph(mux, token, store)
+	RegisterIntelFeeds(mux, token, store)
+	alertDispatcher := RegisterAlerts(mux, token, store)
+	RegisterComplianceEvidence(mux, token, store, registry, incidents, alertDispatcher)
+	RegisterRegulatory(mux, token, store, incidents)
+	RegisterComplianceScoreFull(mux, token, store, registry, incidents, alertDispatcher)
+	RegisterExport(mux, token, store, registry)
+	RegisterSIEMExport(mux, token, store)
+	analystWS := RegisterAnalystWorkspace(mux, token, store)
+	alertDispatcher.ws = analystWS
+	RegisterCaseManagement(mux, token, store, analystWS)
+	RegisterDetectionLab(mux, token, store)
+	RegisterCustomContent(mux, token, store)
+	RegisterRuleHealth(mux, token, store)
+	RegisterMLNet(mux, token, store)
+	RegisterSOCOps(mux, token, store)
+	RegisterTuningDigest(mux, token, store, alertDispatcher)
+	RegisterPosturePlus(mux, token, store)
+	SetVulnCachePath(store.path + ".vulncache.json")
+	RegisterVulnMgmt(mux, token)
+	RegisterCertFeeds(mux, token, store)
+	RegisterDeceptionTokens(mux, token, store)
+	RegisterDataGovernance(mux, token, store, registry)
+	RegisterHuntPacks(mux, token, store)
+	RegisterQueryLibrary(mux, token, analystWS)
+	RegisterGlobalSearch(mux, token, store, analystWS)
+	RegisterInspect(mux, token)
+	RegisterMLBehaviour(mux, token, store)
 	mux.HandleFunc("GET /metrics", func(w http.ResponseWriter, r *http.Request) {
 		if !requireAuth(w, r, token) {
 			return

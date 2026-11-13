@@ -56,7 +56,7 @@ var detectionMu sync.Mutex
 var detectionStates = map[string]detectionState{}
 
 func MapDetection(f Finding) Detection {
-	m, ok := ruleMITRE[f.Rule]
+	m, ok := mitreFor(f.Rule)
 	if !ok {
 		m = struct{ Tactic, Technique, ID string }{"Discovery", "System Information Discovery", "T1082"}
 	}
@@ -134,6 +134,7 @@ func RegisterDetections(mux *http.ServeMux, token string, store *Store) {
 		detectionMu.Lock()
 		detectionStates[body.ID] = detectionState{Status: body.Status, Assignee: body.Assignee}
 		detectionMu.Unlock()
+		recordDetectionTransition(body.ID, body.Status)
 		AppendAudit(token, "detections.triage", body.ID+" -> "+body.Status)
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(body)

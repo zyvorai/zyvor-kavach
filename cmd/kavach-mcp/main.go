@@ -37,14 +37,59 @@ func buildServer(c *client, allowMutations bool) (*mcpserver.Server, error) {
 	if err := registerReadTools(srv, c); err != nil {
 		return nil, err
 	}
+	if err := registerAnalystReadTools(srv, c); err != nil {
+		return nil, err
+	}
+	if err := registerOpsReadTools(srv, c); err != nil {
+		return nil, err
+	}
 	if err := registerPrompts(srv); err != nil {
 		return nil, err
 	}
 	if err := registerResources(srv, c); err != nil {
 		return nil, err
 	}
+	if err := registerMoreTools(srv, c, allowMutations); err != nil {
+		return nil, err
+	}
+	if err := registerMore2Tools(srv, c, allowMutations); err != nil {
+		return nil, err
+	}
+	if err := registerSIEMTools(srv, c); err != nil {
+		return nil, err
+	}
+	if err := registerContentTools(srv, c); err != nil {
+		return nil, err
+	}
+	if err := registerContentCustomTools(srv, c); err != nil {
+		return nil, err
+	}
+	if err := registerGlobalSearchTools(srv, c); err != nil {
+		return nil, err
+	}
+	if err := registerCertFeedTools(srv, c); err != nil {
+		return nil, err
+	}
+	if err := registerRuleHealthTools(srv, c); err != nil {
+		return nil, err
+	}
+	if err := registerRegulatoryTools(srv, c); err != nil {
+		return nil, err
+	}
+	if err := registerAdversaryTools(srv, c); err != nil {
+		return nil, err
+	}
+	if err := registerInspectTools(srv, c); err != nil {
+		return nil, err
+	}
+	if err := registerMLTools(srv, c); err != nil {
+		return nil, err
+	}
 	if allowMutations {
 		if err := registerMutateTools(srv, c); err != nil {
+			return nil, err
+		}
+		if err := registerOpsMutateTools(srv, c); err != nil {
 			return nil, err
 		}
 	}

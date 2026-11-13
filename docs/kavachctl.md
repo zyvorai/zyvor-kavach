@@ -68,3 +68,84 @@ kavachctl get /v1/summary
 ```
 
 Aliases: `finance`/`fin`/`banking`; `sectors`/`railways`/`govt`. Run `kavachctl --help` for the full command map.
+
+## Observe, watch, diagnose
+
+```bash
+kavachctl watch --severity high        # live tail of /v1/stream, colored, auto-reconnect (backoff 1s..30s)
+kavachctl attack                       # ATT&CK table: tactic, covered, hits  (--json for raw)
+kavachctl compliance score             # grade table per framework          (--json for raw)
+kavachctl findings -o table            # --output table|json|yaml (default json); also detections
+kavachctl doctor                       # KAVACH_URL/TOKEN, /livez, /readyz, auth, TLS hint
+source <(kavachctl completion zsh)     # also: bash, fish
+```
+
+`watch --severity` is a minimum (`high` shows high and critical); `--max-events N` exits after N events. A rejected token (401/403) stops `watch` instead of retrying. `doctor` exits non-zero if any check fails.
+
+## Risk, trends, export, notes, alerts, journal
+
+```bash
+kavachctl risk hosts                   # ranked hosts: risk 0-100, band, findings, top rules (--json)
+kavachctl risk summary                 # fleet risk index + host count per band
+kavachctl trends --days 14 --bucket day   # --days 7|14|30, --bucket hour|day; sparkline of totals + per-day table
+
+kavachctl export findings --format csv --severity high --since 2026-01-01T00:00:00Z --out findings.csv
+kavachctl export findings --format ndjson > findings.ndjson   # csv|json|ndjson; filters: --severity --host --rule --since
+kavachctl export report --format html --out report.html       # html|json
+
+kavachctl notes list --finding F-123
+kavachctl notes add --finding F-123 "isolated by the owner, benign"
+kavachctl notes rm note-ab12
+
+kavachctl saved-searches list
+kavachctl saved-searches add --name "hot hosts" --scope findings --query "severity:high"
+kavachctl saved-searches rm ss-ab12
+
+kavachctl alerts rules list            # destination URLs are masked (path and query hidden)
+kavachctl alerts rules add --url https://hooks.example.com/x --type webhook --min-severity high \
+    --rule-contains ssh --host-contains prod
+kavachctl alerts rules rm alr-ab12
+kavachctl alerts deliveries            # recent delivery attempts and outcomes
+
+kavachctl journal                      # tamper-evident activity journal
+kavachctl journal verify               # checks the hash chain; exits non-zero if broken
+```
+
+`export` streams the response straight to the file or stdout. With `--out`, an existing file is never overwritten unless you pass `--force`, and no file is created if the server returns an error. Server error messages (for example `days must be 7, 14 or 30`) are shown verbatim with the HTTP status. Adding or removing an alert rule also records `alert_rule.create` / `alert_rule.delete` in the journal. Writes (`notes add|rm`, `saved-searches add|rm`, `alerts rules add|rm`) need an admin token.
+
+## Intel feeds, detection lab, SOC, posture, compliance evidence
+
+```bash
+kavachctl intel feeds list                  # URL path and query are masked
+kavachctl intel feeds add --name abuse --url https://feeds.example.com/ioc.csv --format csv \
+    --interval 60 --ttl-days 7 --tlp green  # format: csv|plain|stix-lite-json
+kavachctl intel feeds status
+kavachctl intel feeds refresh abuse         # feed ID or name
+kavachctl intel feeds rm abuse
+
+kavachctl lab rules list
+kavachctl lab rules add rule.json           # FILE, or - for stdin
+kavachctl lab validate rule.json
+kavachctl lab test rule.json --events events.json
+cat rule.json | kavachctl lab backtest --rule -   # hits, noise/host/day, hits-per-day sparkline, sample hits
+kavachctl lab backtest --id lab-1
+kavachctl lab rules rm lab-1
+
+kavachctl soc metrics --days 30             # MTTA/MTTR, backlog by age, SLA breaches, noisy rules
+kavachctl soc shift-report --hours 12 --out shift.txt   # never overwrites without --force
+kavachctl soc storyline web-01 --hours 24   # nested under soc: top-level `storyline` is the id/host endpoint
+
+kavachctl posture summary
+kavachctl posture vulns --limit 20 --explain   # --explain prints the per-factor score breakdown
+kavachctl posture assets add --host db-01 --criticality 5 --owner dba --tags pci,db
+kavachctl posture assets list
+kavachctl posture baseline db-01            # omit HOST to baseline every observed host
+kavachctl posture drift db-01
+kavachctl posture assets rm db-01
+
+kavachctl compliance controls --framework cis
+kavachctl compliance evidence --framework cis --format html --out evidence.html   # refuses to overwrite without --force
+kavachctl compliance cert-in-clock          # open high/critical findings with time remaining
+```
+
+All lab commands print a sandbox notice: lab rules never raise alerts or touch production detections. `compliance controls` and `evidence` are observe-only evidence, not a certification, and `cert-in-clock` is informational (Kavach files no reports). Existing `compliance` and `compliance score` are unchanged. Tables accept `--json` or `-o json|yaml`; server error messages are shown verbatim with the HTTP status. Writes need an admin token.

