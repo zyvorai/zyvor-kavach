@@ -1367,6 +1367,20 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 .tag.not_testable, .tag.untested, .tag.never_seen { background: var(--fill-tertiary); color: var(--text-secondary); }
 .cv-details { margin: 8px 0; }
 .cv-details summary { cursor: pointer; min-height: var(--hit-min); display: flex; align-items: center; font-weight: 600; }
+/* === kavach-seq hunt page === */
+.hs-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 860px) { .hs-grid { grid-template-columns: minmax(0, 1fr); } }
+.hs-query { width: 100%; box-sizing: border-box; font-family: var(--font-mono, ui-monospace, monospace); font-size: 13px; line-height: 1.5; resize: vertical; min-height: 120px; }
+.hs-query.is-bad { border-color: var(--danger); }
+.hs-caret { margin: 4px 0; padding: 6px 8px; overflow-x: auto; font-size: 12px; background: var(--danger-bg); color: var(--danger); border-radius: var(--radius-md); white-space: pre; }
+.hs-side { min-width: 0; }
+.hs-cat summary { cursor: pointer; min-height: var(--hit-min); display: flex; align-items: center; font-weight: 600; }
+.hs-cat ul { margin: 4px 0 8px; padding-left: 18px; font-size: 13px; }
+.hs-cat li { margin: 2px 0; overflow-wrap: anywhere; }
+.hs-absent { color: var(--text-secondary); }
+.hs-fields { margin: 4px 0; font-size: 12px; overflow-wrap: anywhere; color: var(--text-secondary); font-family: var(--font-mono, ui-monospace, monospace); white-space: pre-wrap; }
+.hs-match { margin: 8px 0; }
+.hs-tree { font-size: 12px; overflow-x: auto; white-space: pre; margin: 4px 0; }
 </style>
 </head>
 <body>
@@ -1462,6 +1476,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
             <button type="button" data-page="provenance" role="menuitem">Provenance</button>
             <button type="button" data-page="ransomware-behaviour" role="menuitem">Ransomware behaviour</button>
             <button type="button" data-page="ttp" role="menuitem">TTP similarity</button>
+            <button type="button" data-page="huntseq" role="menuitem">Sequence hunt</button>
             <button type="button" data-page="coverage" role="menuitem">Coverage</button>
           </div>
         </div>
@@ -3587,6 +3602,43 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       <div id="cv-blind-out"></div>
     </section>
     <!-- === end coverage page === -->
+    <!-- === kavach-seq hunt page === -->
+    <section id="page-huntseq" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Sequence hunt</p>
+        <h1>Hunt for ordered behaviour with kavach-seq.</h1>
+        <p class="lede">Write a sequence or single-event query over the telemetry Kavach actually stores. Fields that are not collected are rejected with a reason instead of silently matching nothing. Read-only.</p>
+      </header>
+      <div class="nx-note bh-caveat" id="hs-sem" role="note"><strong>Semantics and limits (always apply)</strong><ul><li>Loading the query semantics from the server.</li></ul></div>
+      <p class="work-msg" id="hs-msg" role="status"></p>
+      <div class="hs-grid">
+        <div class="hs-main">
+          <div class="toolbar-pill nx-filters bh-fields">
+            <label class="hint" for="hs-example">Example</label>
+            <select class="input-field" id="hs-example"><option value="">Choose an example…</option></select>
+          </div>
+          <p class="hint" id="hs-example-desc"></p>
+          <label class="hint" for="hs-query">Query</label>
+          <textarea class="input-field hs-query" id="hs-query" rows="9" spellcheck="false" autocomplete="off" aria-describedby="hs-err"></textarea>
+          <pre class="hs-caret" id="hs-caret" hidden></pre>
+          <p class="work-msg is-error" id="hs-err" role="alert"></p>
+          <div class="toolbar-pill nx-filters bh-fields">
+            <label class="hint" for="hs-since">Since</label>
+            <input class="input-field" id="hs-since" value="7d" placeholder="24h, 7d or RFC3339" size="14">
+            <label class="hint" for="hs-limit">Max matches</label>
+            <input class="input-field" id="hs-limit" type="number" min="1" value="50">
+            <button type="button" id="hs-run">Run</button>
+            <button type="button" class="secondary" id="hs-explain">Explain</button>
+          </div>
+          <div id="hs-out" aria-live="polite"></div>
+        </div>
+        <aside class="hs-side" aria-labelledby="hs-cat-title">
+          <h2 id="hs-cat-title">Field catalogue</h2>
+          <div id="hs-cat-out"></div>
+        </aside>
+      </div>
+    </section>
+    <!-- === end kavach-seq hunt page === -->
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
@@ -3657,8 +3709,8 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage', 'huntseq': 'Sequence hunt' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -3781,7 +3833,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -3841,6 +3893,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     if (current === 'provenance' && typeof loadProvenance === 'function') loadProvenance();
     if (current === 'ransomware-behaviour' && typeof loadRansomwareBehaviour === 'function') loadRansomwareBehaviour();
     if (current === 'ttp' && typeof loadTtp === 'function') loadTtp();
+    if (current === 'huntseq' && typeof loadHuntSeq === 'function') loadHuntSeq();
     if (current === 'coverage' && typeof loadCoverage === 'function') loadCoverage();
   }
 
@@ -7404,8 +7457,187 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   $('cv-custom').addEventListener('change', cvLoadValidation);
   /* === end coverage page === */
 
+  /* === kavach-seq hunt page === */
+  let hsExamples = [], hsLoaded = false;
+  function hsClearErr() {
+    $('hs-err').textContent = '';
+    $('hs-caret').hidden = true;
+    $('hs-query').classList.remove('is-bad');
+  }
+  // Offset of (line, col), both 1-based, in the textarea text.
+  function hsOffset(text, line, col) {
+    const lines = text.split('\n');
+    let off = 0;
+    for (let i = 0; i < Math.min(line - 1, lines.length); i++) off += lines[i].length + 1;
+    return Math.min(text.length, off + Math.max(0, col - 1));
+  }
+  function hsShowErr(r, text) {
+    const ta = $('hs-query');
+    const msg = r.error || 'The query was rejected.';
+    $('hs-err').textContent = msg + (r.line ? ' (line ' + r.line + ', col ' + r.col + ')' : '');
+    ta.classList.add('is-bad');
+    if (r.line) {
+      const src = text.split('\n')[r.line - 1] || '';
+      const c = $('hs-caret');
+      c.textContent = src + '\n' + ' '.repeat(Math.max(0, r.col - 1)) + '^ ' + msg;
+      c.hidden = false;
+      const off = hsOffset(text, r.line, r.col);
+      ta.focus();
+      try { ta.setSelectionRange(off, Math.min(text.length, off + 1)); } catch (_) {}
+    }
+  }
+  function hsProblems(box, list) {
+    if (!(list || []).length) return;
+    const p = el('div', '', 'work-panel');
+    p.appendChild(el('h3', 'Fields that are not collected'));
+    const tb = uiTable(p, ['Line:col', 'Category', 'Field', 'Reason']);
+    list.forEach((x) => tableRow(tb, [x.line + ':' + x.col, x.category, x.field, x.reason]));
+    box.appendChild(p);
+  }
+  function hsRunMeta(box, r) {
+    const flags = [];
+    if (r.truncated) flags.push(uiTag('truncated: more matches than the limit', 'partial'));
+    if (r.timed_out) flags.push(uiTag('timed out: results are incomplete', 'failed'));
+    if (r.scan_capped) flags.push(uiTag('scan capped: only the newest events were scanned', 'partial'));
+    if (flags.length) { const row = el('div', '', 'bh-chips'); flags.forEach((f) => row.appendChild(f)); box.appendChild(row); }
+  }
+  function hsRender(box, r) {
+    box.removeAttribute('aria-busy');
+    box.replaceChildren();
+    box.appendChild(el('h3', (r.count ?? 0) + ' match' + (r.count === 1 ? '' : 'es') + (r.kind ? ' (' + r.kind + ')' : '')));
+    uiMeta(box, ['Scanned: ' + (r.scanned ?? '?') + ' of ' + (r.scanned_total ?? '?') + ' events', 'Elapsed: ' + (r.elapsed_ms ?? '?') + ' ms']);
+    hsRunMeta(box, r);
+    if (r.semantics) uiNote(box, 'Semantics: ' + r.semantics);
+    if (!(r.matches || []).length) { box.appendChild(el('p', 'No events matched. Absence of a match is not proof that nothing happened: the scan is bounded by the time window and the in-memory event cap.', 'hint')); return; }
+    r.matches.forEach((m, i) => {
+      const p = el('div', '', 'work-panel hs-match');
+      p.appendChild(el('h3', 'Match ' + (i + 1) + (m.key ? ' · key ' + m.key : '') + (m.span_ms !== undefined ? ' · span ' + m.span_ms + ' ms' : '')));
+      const tb = uiTable(p, ['Step', 'Category', 'Time', 'Event id', 'Fields']);
+      (m.events || []).forEach((e) => tableRow(tb, [e.step, e.category, fmtTime(e.time), e.id, el('div', JSON.stringify(e.fields || {}, null, 1), 'hs-fields')]));
+      box.appendChild(p);
+    });
+  }
+  function hsBody() {
+    const lim = parseInt($('hs-limit').value, 10);
+    const b = { query: $('hs-query').value, since: $('hs-since').value.trim() };
+    if (lim > 0) b.limit = lim;
+    return b;
+  }
+  async function hsRun() {
+    const b = hsBody();
+    hsClearErr();
+    setMsg('hs-msg', '', false);
+    if (!b.query.trim()) { $('hs-err').textContent = 'Enter a query first.'; $('hs-query').focus(); return; }
+    const box = $('hs-out');
+    uiLoading(box, 'Running…');
+    $('hs-run').disabled = true;
+    try {
+      const r = await uiFetchAny('/v1/hunt/seq', pgJSON(b));
+      if (r.status === 400 && r.body) {
+        box.removeAttribute('aria-busy'); box.replaceChildren();
+        if ((r.body.problems || []).length) {
+          $('hs-err').textContent = r.body.error || 'The query uses fields that are not collected.';
+          hsProblems(box, r.body.problems);
+          const f = r.body.problems[0];
+          hsShowErr({ error: f.reason, line: f.line, col: f.col }, b.query);
+        } else hsShowErr(r.body, b.query);
+        return;
+      }
+      if (!r.ok) throw new Error((r.body && r.body.error) || 'HTTP ' + r.status);
+      hsRender(box, r.body || {});
+    } catch (e) { uiError(box, 'hunt results', e, hsRun); }
+    finally { $('hs-run').disabled = false; }
+  }
+  function hsTree(n, depth) {
+    if (!n) return '';
+    const pad = '  '.repeat(depth);
+    let s = pad + n.op + (n.field ? ' ' + n.field : '') + (n.values ? ' ' + JSON.stringify(n.values) : '') + '\n';
+    (n.args || []).forEach((c) => { s += hsTree(c, depth + 1); });
+    return s;
+  }
+  async function hsExplain() {
+    const b = hsBody();
+    hsClearErr();
+    if (!b.query.trim()) { $('hs-err').textContent = 'Enter a query first.'; $('hs-query').focus(); return; }
+    const box = $('hs-out');
+    uiLoading(box, 'Explaining…');
+    try {
+      const r = await pgApi('/v1/hunt/seq/explain', pgJSON(b));
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      if (r.ok === false && r.error) { hsShowErr(r, b.query); }
+      box.appendChild(el('h3', 'Explain' + (r.kind ? ' (' + r.kind + ')' : '')));
+      if (r.ok === false && r.error) { box.appendChild(el('p', 'The query did not parse. No data was scanned.', 'hint')); return; }
+      hsProblems(box, r.unavailable_fields);
+      if (r.tree) {
+        const t = r.tree;
+        const p = el('div', '', 'work-panel');
+        p.appendChild(el('h3', 'Parsed structure'));
+        if (t.by) uiMeta(p, ['Joined by: ' + t.by.join(', '), t.maxspan ? 'Max span: ' + t.maxspan : '']);
+        (t.steps || []).forEach((s, i) => { p.appendChild(el('p', 'Step ' + (i + 1) + ': ' + s.category, 'hint')); p.appendChild(el('pre', hsTree(s.where, 0), 'hs-tree')); });
+        if (t.until) { p.appendChild(el('p', 'Until: ' + t.until.category, 'hint')); p.appendChild(el('pre', hsTree(t.until.where, 0), 'hs-tree')); }
+        box.appendChild(p);
+      }
+      if (r.step_match_counts) {
+        uiMeta(box, ['Events matching each step: ' + r.step_match_counts.join(', '), 'Would produce a match: ' + (r.has_match ? 'yes' : 'no'), 'Scanned: ' + (r.scanned ?? '?') + ' of ' + (r.scanned_total ?? '?')]);
+        hsRunMeta(box, r);
+      }
+      if (r.semantics) uiNote(box, 'Semantics: ' + r.semantics);
+    } catch (e) { uiError(box, 'the explanation', e, hsExplain); }
+  }
+  function hsRenderCatalogue(r) {
+    const box = $('hs-cat-out');
+    box.removeAttribute('aria-busy');
+    box.replaceChildren();
+    const lim = r.limits || {};
+    const bullets = (r.notes || []).slice();
+    if (r.operators) Object.keys(r.operators).forEach((k) => bullets.push('Operators (' + k + '): ' + r.operators[k]));
+    if (r.join_keys) bullets.push('Join keys: ' + r.join_keys.join(', '));
+    bhCaveat($('hs-sem'), 'Semantics and limits (always apply)', bullets.concat(Object.keys(lim).map((k) => k.replace(/_/g, ' ') + ': ' + lim[k])));
+    (r.categories || []).forEach((c) => {
+      const d = document.createElement('details');
+      d.className = 'hs-cat';
+      d.appendChild(el('summary', c.category));
+      d.appendChild(el('p', c.source, 'hint'));
+      const ul = document.createElement('ul');
+      (c.fields || []).forEach((f) => ul.appendChild(el('li', f.name + ' (' + f.type + (f.optional ? ', optional' : '') + (f.joinable ? ', joinable' : '') + ')' + (f.note ? ': ' + f.note : ''))));
+      d.appendChild(ul);
+      if ((c.absent || []).length) {
+        d.appendChild(el('p', 'Not collected', 'hint'));
+        const au = document.createElement('ul');
+        c.absent.forEach((a) => au.appendChild(el('li', a.name + ': ' + a.reason, 'hs-absent')));
+        d.appendChild(au);
+      }
+      box.appendChild(d);
+    });
+    if (!(r.categories || []).length) box.appendChild(el('p', 'The server returned no catalogue.', 'hint'));
+  }
+  function hsLoad() {
+    const cat = $('hs-cat-out');
+    uiLoading(cat, 'Loading fields…');
+    pgApi('/v1/hunt/seq/fields').then(hsRenderCatalogue).catch((e) => uiError(cat, 'the field catalogue', e, hsLoad));
+    pgApi('/v1/hunt/seq/examples').then((r) => {
+      hsExamples = (r && r.examples) || [];
+      const sel = $('hs-example');
+      sel.replaceChildren();
+      const o0 = el('option', hsExamples.length ? 'Choose an example…' : 'No examples available'); o0.value = ''; sel.appendChild(o0);
+      hsExamples.forEach((x, i) => { const o = el('option', x.name + (x.noisy ? ' (noisy)' : '')); o.value = String(i); sel.appendChild(o); });
+    }).catch((e) => setMsg('hs-msg', 'Could not load examples: ' + e.message, true));
+  }
+  function loadHuntSeq() { if (!hsLoaded) { hsLoaded = true; hsLoad(); } }
+  $('hs-example').addEventListener('change', () => {
+    const x = hsExamples[parseInt($('hs-example').value, 10)];
+    if (!x) { $('hs-example-desc').textContent = ''; return; }
+    $('hs-query').value = x.query;
+    $('hs-example-desc').textContent = [x.technique, x.tactic, x.description, x.noisy ? 'May fire on benign activity.' : ''].filter(Boolean).join(' · ');
+    hsClearErr();
+  });
+  $('hs-run').addEventListener('click', hsRun);
+  $('hs-explain').addEventListener('click', hsExplain);
+  $('hs-query').addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); hsRun(); } });
+  /* === end kavach-seq hunt page === */
+
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '/': 'search' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '.': 'huntseq', '/': 'search' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
