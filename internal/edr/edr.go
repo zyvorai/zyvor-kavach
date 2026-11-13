@@ -507,6 +507,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	RegisterDetectionLab(mux, token, store)
 	RegisterCustomContent(mux, token, store)
 	RegisterRuleHealth(mux, token, store)
+	RegisterMLNet(mux, token, store)
 	RegisterSOCOps(mux, token, store)
 	RegisterTuningDigest(mux, token, store, alertDispatcher)
 	RegisterPosturePlus(mux, token, store)
