@@ -9,6 +9,7 @@ All files sit next to the findings store path (`<store>` below), are written ato
 | `<store>.alerts.json` | Alert rules (deliveries are in-memory and de-duplicated per finding) |
 | `<store>.workspace.json` | Saved searches, notes and the hash-chained analyst journal (alert-rule changes are journaled here) |
 | `<store>.deception.json` | Deception canaries and trips |
+| `<store>.customcontent.json` | Customer-authored detection content rules (full rule JSON including samples; see `docs/custom-content.md`). Every rule is re-validated at startup; rules that no longer pass are skipped |
 | credential registry file | Agent enrollment and last heartbeat; fleet health is derived from it, so stale detection survives restarts |
 
 Backup: copy these files while the server is stopped, or at any time (writes are atomic renames).
