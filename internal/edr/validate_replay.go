@@ -163,6 +163,7 @@ func ReplayScenario(sc ValScenario, o ValOptions) ValResult {
 	reg := valRegistry(o)
 	res := ValResult{ID: sc.ID, Name: sc.Name, Kind: sc.Kind, Benign: sc.Benign, Steps: len(sc.Steps), Fired: []ValFired{}}
 	detector := &FileDetections{} // private, fresh rate window
+	authBurst := &AuthBurstDetector{}
 	var procs []Event
 	var nets []NetworkEvent
 	pidCounter := 4000
@@ -239,7 +240,11 @@ func ReplayScenario(sc ValScenario, o ValOptions) ValResult {
 			if s.Type == "dns" {
 				base.Destination = te.Query
 			}
-			record(i, contentEvaluateWith(reg, s.Type, contentTelemetryEvent(s.Type, te), base))
+			fs := contentEvaluateWith(reg, s.Type, contentTelemetryEvent(s.Type, te), base)
+			if s.Type == "auth" {
+				fs = append(fs, authBurst.Observe(te)...)
+			}
+			record(i, fs)
 		}
 	}
 	sort.SliceStable(res.Fired, func(a, b int) bool { return res.Fired[a].Step < res.Fired[b].Step })

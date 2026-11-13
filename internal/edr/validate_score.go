@@ -11,7 +11,7 @@ import (
 // valDetectedFloor is the regression gate: the share of non-benign scenarios whose expectations were
 // all Detected must not fall below this. Raise it when detection improves; lowering it needs a reason
 // recorded in docs/research-validation-lab.md.
-const valDetectedFloor = 0.60
+const valDetectedFloor = 0.93
 
 // valFalsePositiveCeiling is the number of benign controls allowed to fire at medium or above.
 const valFalsePositiveCeiling = 0

@@ -465,6 +465,7 @@ func (s *Store) IngestTelemetry(typ string, evs []TelemetryEvent, budget time.Du
 		return 0, 0, nil
 	}
 	findings, skipped := contentTelemetryBatch(typ, evs, budget)
+	findings = append(findings, authBurstFindings(typ, evs)...)
 	if len(findings) == 0 {
 		return 0, skipped, nil
 	}
