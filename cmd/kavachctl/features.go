@@ -536,7 +536,7 @@ func topLevelCommands() []string {
 		"ueba", "watchlists", "ioc", "ioa", "exclusions", "rules", "overwatch", "dns", "modules", "world",
 		"discover", "spotlight", "exposure", "compliance", "attack", "metrics", "zero-trust", "sbom", "fim",
 		"persistence", "firewall", "browser", "casb", "cnapp", "ot", "ai", "audit", "report", "siem", "fusion",
-		"connectors", "cloud", "mobile", "risk", "trends", "export", "notes", "saved-searches", "alerts", "journal", "get", "watch", "doctor", "completion", "lab", "soc", "posture", "inspect", "ml", "help",
+		"connectors", "cloud", "mobile", "risk", "trends", "export", "notes", "saved-searches", "alerts", "journal", "get", "watch", "doctor", "completion", "lab", "soc", "posture", "inspect", "ml", "prov", "ransom", "ttp", "help",
 	}
 }
 
