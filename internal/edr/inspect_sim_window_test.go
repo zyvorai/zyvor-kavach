@@ -24,7 +24,7 @@ func TestSimilarityAnalyzerIsWindowed(t *testing.T) {
 		t.Fatal("similarity analyzer not registered")
 	}
 	withAnalyzers(t, *sim)
-	big := make([]byte, InspectMaxBytes)
+	big := make([]byte, scaleN(InspectMaxBytes, SimAnalyzerWindow+4<<20)) // race: 12 MiB, still beyond the 8 MiB window
 	for i := range big {
 		big[i] = byte((i*131 + i>>7) & 0xff)
 	}
