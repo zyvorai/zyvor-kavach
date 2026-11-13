@@ -238,6 +238,7 @@ func (e *mlEngine) baseline(host string, store *Store, now time.Time) map[string
 func RegisterMLBehaviour(mux *http.ServeMux, token string, store *Store) {
 	eng := newMLEngine(store)
 	go eng.run()
+	MLRarityProvider = eng.rarity // feeds the lineage model into /v1/ml/priority
 	mux.HandleFunc("GET /v1/ml/status", func(w http.ResponseWriter, r *http.Request) {
 		if !requireAuth(w, r, token) {
 			return
