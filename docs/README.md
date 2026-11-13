@@ -4,6 +4,7 @@ Start here if you cloned the repo and want the full story.
 
 | Doc | Audience |
 |-----|----------|
+| [index.md](index.md) | Every doc by area plus the generated feature inventory |
 | [README](https://github.com/zyvorai/zyvor-kavach/blob/main/README.md) | Everyone — awesome overview |
 | [tutorial.md](tutorial.md) | First-time operators |
 | [architecture.md](architecture.md) | Engineers / reviewers |
