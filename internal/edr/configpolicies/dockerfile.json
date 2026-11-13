@@ -152,7 +152,7 @@
    "check": {
     "key_regex": "^df\\.env\\..*(passw(or)?d|secret|token|api_?key|access_?key|private_?key|credential)",
     "op": "not_regex",
-    "value": "^[^$\\s]"
+    "value": "^[^$/\\s]"
    },
    "on_absent": "pass",
    "absence_note": "No secret-like ENV names.",
@@ -181,7 +181,7 @@
    "check": {
     "key_regex": "^df\\.arg\\..*(passw(or)?d|secret|token|api_?key|access_?key|private_?key|credential)",
     "op": "not_regex",
-    "value": "^[^$\\s]"
+    "value": "^[^$/\\s]"
    },
    "on_absent": "pass",
    "absence_note": "No secret-like ARG names with defaults.",

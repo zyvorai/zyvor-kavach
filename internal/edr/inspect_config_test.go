@@ -220,11 +220,21 @@ func TestConfigEvidenceRedactsSecrets(t *testing.T) {
 		}
 	}
 	t.Fatal("policy not evaluated")
+}
+
+func TestConfigK8sEnvEvidenceRedacted(t *testing.T) {
 	k := assess(t, "", "apiVersion: v1\nkind: Pod\nspec:\n  containers:\n  - name: a\n    image: a:1\n    env:\n    - name: API_TOKEN\n      value: tok-123456\n")
+	hit := false
 	for _, r := range k.Results {
+		if r.PolicyID == "k8s-env-secret" && r.Status == CfgFail {
+			hit = true
+		}
 		if strings.Contains(strings.Join(r.Evidence, " "), "tok-123456") {
 			t.Fatal("secret leaked from k8s env")
 		}
+	}
+	if !hit {
+		t.Fatal("k8s-env-secret should fail")
 	}
 }
 
@@ -267,6 +277,15 @@ func TestConfigNewKindHTTP(t *testing.T) {
 	}
 	if !found {
 		t.Fatal("config analyzer not listed for kind config")
+	}
+}
+
+func TestConfigSecretFileReferencesAreNotSecrets(t *testing.T) {
+	a := assess(t, "Dockerfile", "FROM alpine:3.20\nENV DB_PASSWORD_FILE=/run/secrets/db\nUSER app\n")
+	for _, id := range failIDs(a) {
+		if id == "dockerfile-env-secret" {
+			t.Fatal("a *_FILE path was reported as a literal secret")
+		}
 	}
 }
 

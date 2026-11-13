@@ -750,7 +750,7 @@
    "check": {
     "key": "container.env_literal",
     "op": "not_regex",
-    "value": "(?i)^[^=]*(passw(or)?d|secret|token|api_?key|access_?key|private_?key|credential)[^=]*=.+"
+    "value": "(?i)^[^=]*(passw(or)?d|secret|token|api_?key|access_?key|private_?key|credential)[^=]*=[^/$\\s]"
    },
    "on_absent": "pass",
    "absence_note": "No literal env values.",

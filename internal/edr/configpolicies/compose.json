@@ -317,13 +317,13 @@
       {
        "key": "service.environment[]",
        "op": "regex",
-       "value": "(?i)^[^=]*(passw(or)?d|secret|token|api_?key|access_?key|private_?key|credential)[^=]*=[^$\\s]",
+       "value": "(?i)^[^=]*(passw(or)?d|secret|token|api_?key|access_?key|private_?key|credential)[^=]*=[^$/\\s]",
        "occ": "any"
       },
       {
        "key_regex": "^service\\.environment\\.[^.]*(passw(or)?d|secret|token|api_?key|access_?key|private_?key|credential)",
        "op": "regex",
-       "value": "^[^$\\s]",
+       "value": "^[^$/\\s]",
        "occ": "any"
       }
      ]
