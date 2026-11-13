@@ -526,6 +526,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	RegisterInspectSimilar(mux, token)
 	RegisterMLBehaviour(mux, token, store)
 	RegisterRansomDetect(mux, token, store)
+	RegisterCompetitive(mux, token)
 	mux.HandleFunc("GET /metrics", func(w http.ResponseWriter, r *http.Request) {
 		if !requireAuth(w, r, token) {
 			return

@@ -1,0 +1,1689 @@
+{
+ "last_researched": "2026-11-13",
+ "note": "Competitor cells come from public documentation (pages listed in sources, fetched on the access date) and may be out of date or incomplete. A 'Not documented' cell means not found on the pages read, not that the capability is absent. Kavach cells come from reading this repository. Response/containment is out of scope for Kavach by design.",
+ "status_values": [
+  "Has",
+  "Partial",
+  "Not documented",
+  "Out of scope by design"
+ ],
+ "products": [
+  {
+   "id": "crowdstrike",
+   "name": "CrowdStrike Falcon"
+  },
+  {
+   "id": "sentinelone",
+   "name": "SentinelOne Singularity"
+  },
+  {
+   "id": "defender_xdr",
+   "name": "Microsoft Defender XDR"
+  },
+  {
+   "id": "elastic",
+   "name": "Elastic Security"
+  },
+  {
+   "id": "wazuh",
+   "name": "Wazuh"
+  },
+  {
+   "id": "velociraptor",
+   "name": "Velociraptor"
+  },
+  {
+   "id": "osquery_fleet",
+   "name": "osquery + Fleet"
+  },
+  {
+   "id": "sysmon",
+   "name": "Sysmon / Sysinternals"
+  },
+  {
+   "id": "cortex_xdr",
+   "name": "Cortex XDR"
+  },
+  {
+   "id": "trend_v1",
+   "name": "Trend Vision One"
+  },
+  {
+   "id": "kavach",
+   "name": "Kavach"
+  }
+ ],
+ "areas": [
+  {
+   "id": "telemetry",
+   "name": "Telemetry collection"
+  },
+  {
+   "id": "detection",
+   "name": "Detection engineering"
+  },
+  {
+   "id": "hunting",
+   "name": "Hunting / query languages"
+  },
+  {
+   "id": "response",
+   "name": "Response / containment"
+  },
+  {
+   "id": "vuln",
+   "name": "Vulnerability / exposure"
+  },
+  {
+   "id": "identity",
+   "name": "Identity"
+  },
+  {
+   "id": "cloud",
+   "name": "Cloud"
+  },
+  {
+   "id": "siem",
+   "name": "Data lake / SIEM integration"
+  },
+  {
+   "id": "cases",
+   "name": "Case management"
+  },
+  {
+   "id": "reporting",
+   "name": "Reporting"
+  },
+  {
+   "id": "api",
+   "name": "APIs and automation"
+  },
+  {
+   "id": "deploy",
+   "name": "Deployment and agent footprint"
+  },
+  {
+   "id": "license",
+   "name": "Licensing model"
+  }
+ ],
+ "matrix": {
+  "telemetry": {
+   "crowdstrike": {
+    "status": "Has",
+    "verified": true,
+    "note": "Single lightweight sensor collecting cross-domain telemetry.",
+    "sources": [
+     "S1"
+    ]
+   },
+   "sentinelone": {
+    "status": "Partial",
+    "verified": false,
+    "note": "Datasheet snippets mention EDR visibility of benign and malicious data; primary page not readable.",
+    "sources": [
+     "S3"
+    ]
+   },
+   "defender_xdr": {
+    "status": "Has",
+    "verified": true,
+    "note": "Signals from endpoint, identity, email, cloud apps and more, joined in one suite.",
+    "sources": [
+     "S4"
+    ]
+   },
+   "elastic": {
+    "status": "Has",
+    "verified": true,
+    "note": "Elastic Agent collects OS events, network activity and user behaviour in ECS; 400+ integrations.",
+    "sources": [
+     "S6",
+     "S8"
+    ]
+   },
+   "wazuh": {
+    "status": "Has",
+    "verified": true,
+    "note": "Agent plus syslog log collection, FIM, agentless monitoring, cloud event monitoring.",
+    "sources": [
+     "S9"
+    ]
+   },
+   "velociraptor": {
+    "status": "Has",
+    "verified": true,
+    "note": "Volatile and event data via ETW and eBPF event sources; offline collectors.",
+    "sources": [
+     "S12"
+    ]
+   },
+   "osquery_fleet": {
+    "status": "Partial",
+    "verified": true,
+    "note": "SQL view of OS state (processes, sockets, etc.) on Linux, macOS, Windows; event tables not covered on page read.",
+    "sources": [
+     "S16"
+    ]
+   },
+   "sysmon": {
+    "status": "Has",
+    "verified": true,
+    "note": "Event IDs 1-29 incl. process create with hashes, network, image/driver load, remote thread, process access, file create/delete, registry, pipes, WMI, DNS, clipboard, process tampering (Windows; Linux port exists).",
+    "sources": [
+     "S17"
+    ]
+   },
+   "cortex_xdr": {
+    "status": "Has",
+    "verified": true,
+    "note": "Endpoint, network, cloud, identity and email via one sensor.",
+    "sources": [
+     "S18"
+    ]
+   },
+   "trend_v1": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Telemetry sources not described on page read.",
+    "sources": []
+   },
+   "kavach": {
+    "status": "Partial",
+    "verified": true,
+    "note": "Process exec (internal/edr/edr.go Event: pid, ppid, uid, executable, parent_exe, command; no hashes/user name/cwd), network (ingest.go NetworkEvent: pid + destination only), file (file_events.go: path, operation, size; writer not attributable), registry/dns/auth/module via POST /v1/events/{type} (docs/telemetry-types.md), eBPF /v1/ebpf/events.",
+    "sources": []
+   }
+  },
+  "detection": {
+   "crowdstrike": {
+    "status": "Has",
+    "verified": true,
+    "note": "AI-driven real-time detection documented; rule-authoring surface not described on pages read.",
+    "sources": [
+     "S1"
+    ]
+   },
+   "sentinelone": {
+    "status": "Partial",
+    "verified": false,
+    "note": "Storyline event-chain grouping described in secondary snippets.",
+    "sources": [
+     "S3"
+    ]
+   },
+   "defender_xdr": {
+    "status": "Has",
+    "verified": true,
+    "note": "Custom detection rules built from hunting queries; correlated multi-workload alerts.",
+    "sources": [
+     "S4",
+     "S5"
+    ]
+   },
+   "elastic": {
+    "status": "Has",
+    "verified": true,
+    "note": "Over 1,300 open detection rules; rule types incl. correlation, ML anomaly, ES|QL; exceptions and suppression; MITRE coverage view.",
+    "sources": [
+     "S6",
+     "S7"
+    ]
+   },
+   "wazuh": {
+    "status": "Has",
+    "verified": true,
+    "note": "Decoders and rules with threat-intel matching on the server.",
+    "sources": [
+     "S9"
+    ]
+   },
+   "velociraptor": {
+    "status": "Has",
+    "verified": true,
+    "note": "Real-time event queries with Sigma rules.",
+    "sources": [
+     "S12"
+    ]
+   },
+   "osquery_fleet": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "sysmon": {
+    "status": "Not documented",
+    "verified": true,
+    "note": "States it does not analyse events; no detection content.",
+    "sources": [
+     "S17"
+    ]
+   },
+   "cortex_xdr": {
+    "status": "Has",
+    "verified": true,
+    "note": "Behavioural analytics, customisable BIOCs, IOCs and correlation rules.",
+    "sources": [
+     "S18"
+    ]
+   },
+   "trend_v1": {
+    "status": "Has",
+    "verified": true,
+    "note": "AI-driven detection, endpoint correlation, network intrusion detection.",
+    "sources": [
+     "S19"
+    ]
+   },
+   "kavach": {
+    "status": "Has",
+    "verified": true,
+    "note": "Content rules + Sigma (/v1/content/rules, /v1/sigma, /v1/yara), custom content, lab validate/test/backtest (/v1/lab/rules/*), rule lifecycle and health (/v1/rules/lifecycle, /v1/rules/health), ATT&CK matrix (/v1/attack/matrix), ML behaviour/beacon.",
+    "sources": []
+   }
+  },
+  "hunting": {
+   "crowdstrike": {
+    "status": "Partial",
+    "verified": true,
+    "note": "Threat hunting and intelligence documented; query language not named on pages read.",
+    "sources": [
+     "S1",
+     "S2"
+    ]
+   },
+   "sentinelone": {
+    "status": "Partial",
+    "verified": false,
+    "note": "Deep Visibility hunting with a 14-day retention tier appears on one datasheet snippet.",
+    "sources": [
+     "S3"
+    ]
+   },
+   "defender_xdr": {
+    "status": "Has",
+    "verified": true,
+    "note": "Advanced hunting with KQL, guided and advanced modes; 30 days native data, 100k-row result cap.",
+    "sources": [
+     "S5"
+    ]
+   },
+   "elastic": {
+    "status": "Partial",
+    "verified": true,
+    "note": "ES|QL rule type and a piped query language referenced; hunting languages not enumerated on pages read.",
+    "sources": [
+     "S6",
+     "S7"
+    ]
+   },
+   "wazuh": {
+    "status": "Partial",
+    "verified": true,
+    "note": "Dashboards for threat hunting over indexed alerts; no dedicated query language described.",
+    "sources": [
+     "S9"
+    ]
+   },
+   "velociraptor": {
+    "status": "Has",
+    "verified": true,
+    "note": "VQL with artifacts and fleet-wide hunts.",
+    "sources": [
+     "S12",
+     "S13"
+    ]
+   },
+   "osquery_fleet": {
+    "status": "Has",
+    "verified": true,
+    "note": "SQL queries, interactive and scheduled via daemon.",
+    "sources": [
+     "S16"
+    ]
+   },
+   "sysmon": {
+    "status": "Not documented",
+    "verified": true,
+    "note": "None; relies on downstream tools.",
+    "sources": [
+     "S17"
+    ]
+   },
+   "cortex_xdr": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "XQL not covered on page read; UNVERIFIED.",
+    "sources": []
+   },
+   "trend_v1": {
+    "status": "Partial",
+    "verified": true,
+    "note": "AI-driven hunting mentioned; no query language described.",
+    "sources": [
+     "S19"
+    ]
+   },
+   "kavach": {
+    "status": "Partial",
+    "verified": true,
+    "note": "Hunt packs, schedules, saved searches, query library, global search (/v1/hunts/*, /v1/queries/library, /v1/search); fixed filter queries, no general-purpose query language.",
+    "sources": []
+   }
+  },
+  "response": {
+   "crowdstrike": {
+    "status": "Has",
+    "verified": true,
+    "note": "SOAR, managed response, and agent-driven actions documented.",
+    "sources": [
+     "S1"
+    ]
+   },
+   "sentinelone": {
+    "status": "Partial",
+    "verified": false,
+    "note": "RemoteOps remote investigation, forensics and scripted response described in snippets.",
+    "sources": [
+     "S3"
+    ]
+   },
+   "defender_xdr": {
+    "status": "Has",
+    "verified": true,
+    "note": "Automatic attack disruption, automated investigation and remediation.",
+    "sources": [
+     "S4"
+    ]
+   },
+   "elastic": {
+    "status": "Has",
+    "verified": true,
+    "note": "Kill, suspend, isolate response actions and workflow orchestration documented.",
+    "sources": [
+     "S6",
+     "S8"
+    ]
+   },
+   "wazuh": {
+    "status": "Has",
+    "verified": true,
+    "note": "Active Response runs scripts on rule match, stateless or stateful.",
+    "sources": [
+     "S10"
+    ]
+   },
+   "velociraptor": {
+    "status": "Has",
+    "verified": true,
+    "note": "Remediation and quarantine of endpoints mentioned.",
+    "sources": [
+     "S12"
+    ]
+   },
+   "osquery_fleet": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not documented on pages read (Fleet MDM/patching exists; no endpoint containment documented).",
+    "sources": []
+   },
+   "sysmon": {
+    "status": "Partial",
+    "verified": true,
+    "note": "Blocks executable creation and file shredding (IDs 27, 28); no general response.",
+    "sources": [
+     "S17"
+    ]
+   },
+   "cortex_xdr": {
+    "status": "Has",
+    "verified": true,
+    "note": "Root-cause mapping and AI-agent response; managed response services.",
+    "sources": [
+     "S18"
+    ]
+   },
+   "trend_v1": {
+    "status": "Has",
+    "verified": true,
+    "note": "Endpoint response, identity-risk mitigation, automated workflows.",
+    "sources": [
+     "S19"
+    ]
+   },
+   "kavach": {
+    "status": "Out of scope by design",
+    "verified": true,
+    "note": "By design. /v1/containment, /v1/rtr/sessions, /v1/prevention/policies only record requests (host_rtr.go ContainmentRequest.Status 'recorded (never enforced)', Enforced field).",
+    "sources": []
+   }
+  },
+  "vuln": {
+   "crowdstrike": {
+    "status": "Has",
+    "verified": true,
+    "note": "Exposure Management and AI-assisted vulnerability management listed.",
+    "sources": [
+     "S1"
+    ]
+   },
+   "sentinelone": {
+    "status": "Has",
+    "verified": false,
+    "note": "Vulnerability management using existing agents, with exploitability signals such as EPSS and KEV, per its Ranger Insights page snippet.",
+    "sources": [
+     "S3"
+    ]
+   },
+   "defender_xdr": {
+    "status": "Has",
+    "verified": true,
+    "note": "Vulnerability Management and Security Exposure Management in the suite.",
+    "sources": [
+     "S4"
+    ]
+   },
+   "elastic": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "wazuh": {
+    "status": "Has",
+    "verified": true,
+    "note": "Inventory-based vulnerability detection against a CTI repository, online or offline copy.",
+    "sources": [
+     "S11"
+    ]
+   },
+   "velociraptor": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "osquery_fleet": {
+    "status": "Partial",
+    "verified": true,
+    "note": "Fleet monitors high-impact vulnerabilities via policies; no full feature described on page read.",
+    "sources": [
+     "S15"
+    ]
+   },
+   "sysmon": {
+    "status": "Not documented",
+    "verified": true,
+    "note": "Not a documented function of Sysmon.",
+    "sources": [
+     "S17"
+    ]
+   },
+   "cortex_xdr": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Exposure Management mentioned only as separate; UNVERIFIED.",
+    "sources": []
+   },
+   "trend_v1": {
+    "status": "Has",
+    "verified": true,
+    "note": "Cyber Risk Exposure Management.",
+    "sources": [
+     "S19"
+    ]
+   },
+   "kavach": {
+    "status": "Partial",
+    "verified": true,
+    "note": "/v1/vulns/feeds, /v1/spotlight/vulnerabilities, /v1/sbom/{host}, /v1/exposure (vuln_mgmt.go, vuln_feeds.go); inventory depth depends on collected software data.",
+    "sources": []
+   }
+  },
+  "identity": {
+   "crowdstrike": {
+    "status": "Has",
+    "verified": true,
+    "note": "Identity security module listed.",
+    "sources": [
+     "S1"
+    ]
+   },
+   "sentinelone": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "UNVERIFIED: primary pages blocked (HTTP 429); not confirmed.",
+    "sources": []
+   },
+   "defender_xdr": {
+    "status": "Has",
+    "verified": true,
+    "note": "Defender for Identity and Entra ID Protection.",
+    "sources": [
+     "S4"
+    ]
+   },
+   "elastic": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "wazuh": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "velociraptor": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "osquery_fleet": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "sysmon": {
+    "status": "Not documented",
+    "verified": true,
+    "note": "Not a documented function of Sysmon.",
+    "sources": [
+     "S17"
+    ]
+   },
+   "cortex_xdr": {
+    "status": "Partial",
+    "verified": true,
+    "note": "Identity listed as a data source only.",
+    "sources": [
+     "S18"
+    ]
+   },
+   "trend_v1": {
+    "status": "Has",
+    "verified": true,
+    "note": "Identity Security module.",
+    "sources": [
+     "S19"
+    ]
+   },
+   "kavach": {
+    "status": "Partial",
+    "verified": true,
+    "note": "/v1/identity/events (ingest) and /v1/identity/entities, /v1/ueba, /v1/itdr/*, /v1/lateral (identity_ueba_fusion.go, itdr.go); no native directory collector.",
+    "sources": []
+   }
+  },
+  "cloud": {
+   "crowdstrike": {
+    "status": "Has",
+    "verified": true,
+    "note": "CNAPP, agent and agentless, listed.",
+    "sources": [
+     "S1"
+    ]
+   },
+   "sentinelone": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "UNVERIFIED: primary pages blocked (HTTP 429); not confirmed.",
+    "sources": []
+   },
+   "defender_xdr": {
+    "status": "Has",
+    "verified": true,
+    "note": "Defender for Cloud and Defender for Cloud Apps.",
+    "sources": [
+     "S4"
+    ]
+   },
+   "elastic": {
+    "status": "Partial",
+    "verified": true,
+    "note": "Cloud deployment options documented; cloud-workload protection not described on pages read.",
+    "sources": [
+     "S6"
+    ]
+   },
+   "wazuh": {
+    "status": "Has",
+    "verified": true,
+    "note": "AWS, Azure, Google Cloud, GitHub and Office 365 monitoring listed in docs navigation.",
+    "sources": [
+     "S9"
+    ]
+   },
+   "velociraptor": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "osquery_fleet": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "sysmon": {
+    "status": "Not documented",
+    "verified": true,
+    "note": "Not a documented function of Sysmon.",
+    "sources": [
+     "S17"
+    ]
+   },
+   "cortex_xdr": {
+    "status": "Has",
+    "verified": true,
+    "note": "Cloud security in same sensor.",
+    "sources": [
+     "S18"
+    ]
+   },
+   "trend_v1": {
+    "status": "Has",
+    "verified": true,
+    "note": "Cloud Security module.",
+    "sources": [
+     "S19"
+    ]
+   },
+   "kavach": {
+    "status": "Partial",
+    "verified": true,
+    "note": "/v1/cloud/posture, /v1/cnapp/*, /v1/containers are ledger/derived endpoints (mergeLive in world_platform.go, hunt_cases_audit.go); no native cloud-API collector evidenced.",
+    "sources": []
+   }
+  },
+  "siem": {
+   "crowdstrike": {
+    "status": "Has",
+    "verified": true,
+    "note": "Next-Gen SIEM with data pipeline and federated search listed.",
+    "sources": [
+     "S1",
+     "S2"
+    ]
+   },
+   "sentinelone": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "UNVERIFIED: primary pages blocked (HTTP 429); not confirmed.",
+    "sources": []
+   },
+   "defender_xdr": {
+    "status": "Has",
+    "verified": true,
+    "note": "Microsoft Sentinel onboarding extends hunting and retention; streaming APIs for export.",
+    "sources": [
+     "S5"
+    ]
+   },
+   "elastic": {
+    "status": "Has",
+    "verified": true,
+    "note": "SIEM with ECS and OCSF support; self-managed, air-gapped and cloud.",
+    "sources": [
+     "S6"
+    ]
+   },
+   "wazuh": {
+    "status": "Partial",
+    "verified": true,
+    "note": "Own indexer and dashboard; third-party SIEM export not described on page read.",
+    "sources": [
+     "S9"
+    ]
+   },
+   "velociraptor": {
+    "status": "Partial",
+    "verified": true,
+    "note": "Exports to Splunk, Elastic, Timesketch and archives; no own SIEM.",
+    "sources": [
+     "S12"
+    ]
+   },
+   "osquery_fleet": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "sysmon": {
+    "status": "Partial",
+    "verified": true,
+    "note": "Writes to Windows event log for collection by WEC or SIEM agents.",
+    "sources": [
+     "S17"
+    ]
+   },
+   "cortex_xdr": {
+    "status": "Has",
+    "verified": true,
+    "note": "Unified data lake; forwarding to Google SecOps.",
+    "sources": [
+     "S18"
+    ]
+   },
+   "trend_v1": {
+    "status": "Partial",
+    "verified": true,
+    "note": "Agentic SIEM listed; data lake not mentioned.",
+    "sources": [
+     "S19"
+    ]
+   },
+   "kavach": {
+    "status": "Has",
+    "verified": true,
+    "note": "/v1/siem/export (findings or events; CEF, LEEF, OCSF, ECS, STIX, Navigator layer per docs/siem-export.md), checkpointed polling, /v1/export; no own data lake.",
+    "sources": []
+   }
+  },
+  "cases": {
+   "crowdstrike": {
+    "status": "Partial",
+    "verified": true,
+    "note": "Incident management listed without workflow detail.",
+    "sources": [
+     "S2"
+    ]
+   },
+   "sentinelone": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "UNVERIFIED: primary pages blocked (HTTP 429); not confirmed.",
+    "sources": []
+   },
+   "defender_xdr": {
+    "status": "Has",
+    "verified": true,
+    "note": "Combined incidents queue grouping alerts, assets and actions.",
+    "sources": [
+     "S4"
+    ]
+   },
+   "elastic": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Cases not covered on the detection-engine page read; not confirmed either way.",
+    "sources": []
+   },
+   "wazuh": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "velociraptor": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "osquery_fleet": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "sysmon": {
+    "status": "Not documented",
+    "verified": true,
+    "note": "Not a documented function of Sysmon.",
+    "sources": [
+     "S17"
+    ]
+   },
+   "cortex_xdr": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Admin guide fetch failed (S20); UNVERIFIED.",
+    "sources": []
+   },
+   "trend_v1": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "kavach": {
+    "status": "Has",
+    "verified": true,
+    "note": "/v1/cases, /v1/notes, /v1/journal, /v1/itsm/tickets, /v1/incidents (cases.go, analyst_workspace.go).",
+    "sources": []
+   }
+  },
+  "reporting": {
+   "crowdstrike": {
+    "status": "Partial",
+    "verified": true,
+    "note": "Live dashboards documented; dedicated reporting not described.",
+    "sources": [
+     "S2"
+    ]
+   },
+   "sentinelone": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "UNVERIFIED: primary pages blocked (HTTP 429); not confirmed.",
+    "sources": []
+   },
+   "defender_xdr": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "elastic": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "wazuh": {
+    "status": "Partial",
+    "verified": true,
+    "note": "Prebuilt compliance and SCA dashboards documented.",
+    "sources": [
+     "S9"
+    ]
+   },
+   "velociraptor": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "osquery_fleet": {
+    "status": "Partial",
+    "verified": true,
+    "note": "Built-in report and 400+ CIS policy library in Fleet.",
+    "sources": [
+     "S15"
+    ]
+   },
+   "sysmon": {
+    "status": "Not documented",
+    "verified": true,
+    "note": "Not a documented function of Sysmon.",
+    "sources": [
+     "S17"
+    ]
+   },
+   "cortex_xdr": {
+    "status": "Partial",
+    "verified": true,
+    "note": "Managed-service reports only on page read.",
+    "sources": [
+     "S18"
+    ]
+   },
+   "trend_v1": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "kavach": {
+    "status": "Has",
+    "verified": true,
+    "note": "/v1/reports/templates and render, /v1/digests, /v1/compliance/*, /v1/regulatory/*, /v1/trends (report_templates.go, compliance_*.go).",
+    "sources": []
+   }
+  },
+  "api": {
+   "crowdstrike": {
+    "status": "Partial",
+    "verified": true,
+    "note": "No-code workflow automation and agentic SOAR listed; public API not described on pages read.",
+    "sources": [
+     "S1",
+     "S2"
+    ]
+   },
+   "sentinelone": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "UNVERIFIED: primary pages blocked (HTTP 429); not confirmed.",
+    "sources": []
+   },
+   "defender_xdr": {
+    "status": "Has",
+    "verified": true,
+    "note": "Advanced hunting API and streaming API referenced.",
+    "sources": [
+     "S5"
+    ]
+   },
+   "elastic": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "wazuh": {
+    "status": "Partial",
+    "verified": true,
+    "note": "Server API referenced; no detail on page read.",
+    "sources": [
+     "S9"
+    ]
+   },
+   "velociraptor": {
+    "status": "Has",
+    "verified": true,
+    "note": "gRPC API usable from Python, Go, Java and shell.",
+    "sources": [
+     "S12"
+    ]
+   },
+   "osquery_fleet": {
+    "status": "Has",
+    "verified": true,
+    "note": "Fleet REST API, webhooks, MCP server, fleetctl, YAML GitOps.",
+    "sources": [
+     "S14"
+    ]
+   },
+   "sysmon": {
+    "status": "Not documented",
+    "verified": true,
+    "note": "Command-line install/config only.",
+    "sources": [
+     "S17"
+    ]
+   },
+   "cortex_xdr": {
+    "status": "Has",
+    "verified": true,
+    "note": "REST API returning alerts and incidents as JSON.",
+    "sources": [
+     "S18"
+    ]
+   },
+   "trend_v1": {
+    "status": "Partial",
+    "verified": true,
+    "note": "Integrations marketplace and automated workflows; no API described.",
+    "sources": [
+     "S19"
+    ]
+   },
+   "kavach": {
+    "status": "Has",
+    "verified": true,
+    "note": "REST under /v1/* with docs/openapi.yaml, kavachctl CLI (cmd/kavachctl), MCP server (cmd/kavach-mcp), webhooks/connectors (/v1/connectors), playbooks (/v1/fusion/playbooks, /v1/hyperautomation).",
+    "sources": []
+   }
+  },
+  "deploy": {
+   "crowdstrike": {
+    "status": "Has",
+    "verified": true,
+    "note": "One agent for security and IT; footprint figures not documented on pages read.",
+    "sources": [
+     "S1"
+    ]
+   },
+   "sentinelone": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "UNVERIFIED: primary pages blocked (HTTP 429); not confirmed.",
+    "sources": []
+   },
+   "defender_xdr": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "elastic": {
+    "status": "Has",
+    "verified": true,
+    "note": "Cloud serverless, hosted, self-managed, on-prem and air-gapped options.",
+    "sources": [
+     "S6"
+    ]
+   },
+   "wazuh": {
+    "status": "Has",
+    "verified": true,
+    "note": "Agent for Linux, Windows, macOS, Solaris, AIX, HP-UX; clustered server; footprint figures not documented.",
+    "sources": [
+     "S9"
+    ]
+   },
+   "velociraptor": {
+    "status": "Has",
+    "verified": true,
+    "note": "Client/server or offline collector; CPU limits to restrain footprint.",
+    "sources": [
+     "S12"
+    ]
+   },
+   "osquery_fleet": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Footprint not documented on pages read.",
+    "sources": []
+   },
+   "sysmon": {
+    "status": "Has",
+    "verified": true,
+    "note": "Service plus boot-start driver, XML config with include/exclude filtering; Windows 11 and Server 2019+.",
+    "sources": [
+     "S17"
+    ]
+   },
+   "cortex_xdr": {
+    "status": "Has",
+    "verified": true,
+    "note": "Single lightweight sensor (no footprint figures).",
+    "sources": [
+     "S18"
+    ]
+   },
+   "trend_v1": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "kavach": {
+    "status": "Partial",
+    "verified": true,
+    "note": "Go controller plus agent collectors (agent_collectors.go), eBPF on Linux (ebpf_linux.go, docs/ebpf.md), per-host credentials and mTLS (docs/agent-mtls.md); no measured footprint numbers in repo.",
+    "sources": []
+   }
+  },
+  "license": {
+   "crowdstrike": {
+    "status": "Has",
+    "verified": true,
+    "note": "Commercial; per-endpoint tiers (Go, Pro, Enterprise) and a Flex model listed.",
+    "sources": [
+     "S1"
+    ]
+   },
+   "sentinelone": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "UNVERIFIED: primary pages blocked (HTTP 429); not confirmed.",
+    "sources": []
+   },
+   "defender_xdr": {
+    "status": "Partial",
+    "verified": false,
+    "note": "Commercial; licensing prerequisites page exists but was not read.",
+    "sources": [
+     "S4"
+    ]
+   },
+   "elastic": {
+    "status": "Has",
+    "verified": true,
+    "note": "Open detection rules and a free tier for core endpoint protection; subscriptions add XDR and automated response.",
+    "sources": [
+     "S6",
+     "S8"
+    ]
+   },
+   "wazuh": {
+    "status": "Partial",
+    "verified": false,
+    "note": "Presented as open source; exact license not stated on page read.",
+    "sources": [
+     "S9"
+    ]
+   },
+   "velociraptor": {
+    "status": "Has",
+    "verified": true,
+    "note": "Described as an open-source platform.",
+    "sources": [
+     "S12"
+    ]
+   },
+   "osquery_fleet": {
+    "status": "Has",
+    "verified": true,
+    "note": "Fleet mostly MIT with paid license-key features (Premium); osquery license not named on README read.",
+    "sources": [
+     "S15",
+     "S16"
+    ]
+   },
+   "sysmon": {
+    "status": "Partial",
+    "verified": true,
+    "note": "Free Sysinternals download with accepted EULA; no source license stated.",
+    "sources": [
+     "S17"
+    ]
+   },
+   "cortex_xdr": {
+    "status": "Not documented",
+    "verified": false,
+    "note": "Not found in the public pages fetched for this study; not confirmed either way.",
+    "sources": []
+   },
+   "trend_v1": {
+    "status": "Has",
+    "verified": true,
+    "note": "Commercial; Flex credit licence across 30+ solutions.",
+    "sources": [
+     "S19"
+    ]
+   },
+   "kavach": {
+    "status": "Has",
+    "verified": true,
+    "note": "Source header LicenseRef-Zyvor-Production-1.0 (commercial/proprietary reference, not an open-source licence).",
+    "sources": []
+   }
+  }
+ },
+ "backlog": [
+  {
+   "id": 1,
+   "title": "File hashing on exec and file events",
+   "what": "Record SHA-256/MD5 of executed images and written files in events.",
+   "competitors": "Sysmon (S17)",
+   "why": "Hash pivots enable IOC matching and prevalence without relying on paths.",
+   "data_needed": "Agent-side hashing of image and file content",
+   "telemetry_sufficient": "Insufficient: exec has path only, file has path/op/size only",
+   "effort": "M",
+   "risk": "Hash cost on busy hosts; privacy of file reads",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 2,
+   "title": "Process GUID / start-time keyed lineage",
+   "what": "Stable process identity across all event types for reliable trees.",
+   "competitors": "Sysmon (S17)",
+   "why": "Pid reuse breaks storylines and joins.",
+   "data_needed": "Process start time on every event; network has optional process_start",
+   "telemetry_sufficient": "Partial: process_start exists but is optional",
+   "effort": "S",
+   "risk": "Low",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 3,
+   "title": "Process terminate events",
+   "what": "Capture exits with exit time.",
+   "competitors": "Sysmon ID 5 (S17)",
+   "why": "Gives lifetime of short-lived processes; supports burst detection.",
+   "data_needed": "Exit hook (netlink/eBPF)",
+   "telemetry_sufficient": "Insufficient: exec only",
+   "effort": "S",
+   "risk": "Event volume",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 4,
+   "title": "Image/DLL/module load coverage across platforms",
+   "what": "Native module load collection with signer and hash (ingest endpoint exists).",
+   "competitors": "Sysmon ID 6/7 (S17)",
+   "why": "Detects sideloading and rogue drivers.",
+   "data_needed": "Native collector emitting module events; hash and signature",
+   "telemetry_sufficient": "Partial: /v1/events/module accepts events but no native collector evidenced",
+   "effort": "M",
+   "risk": "High volume",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 5,
+   "title": "Process-to-process access and remote thread events",
+   "what": "Cross-process memory access and injection telemetry.",
+   "competitors": "Sysmon ID 8/10 (S17)",
+   "why": "Credential dumping and injection visibility.",
+   "data_needed": "Kernel/ETW/eBPF source",
+   "telemetry_sufficient": "Insufficient: no such event type",
+   "effort": "L",
+   "risk": "High volume, platform-specific",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 6,
+   "title": "Named pipe and WMI subscription events",
+   "what": "Pipe create/connect and WMI filter/consumer events.",
+   "competitors": "Sysmon IDs 17-21 (S17)",
+   "why": "Lateral-movement and persistence tradecraft.",
+   "data_needed": "Windows ETW collector",
+   "telemetry_sufficient": "Insufficient",
+   "effort": "L",
+   "risk": "Windows-only effort",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 7,
+   "title": "Network events with ports, protocol, direction, bytes",
+   "what": "Enrich network events beyond destination string with ports, protocol, bytes, resolved name.",
+   "competitors": "Sysmon ID 3 (S17)",
+   "why": "Needed for beaconing, exfil volume and service identification.",
+   "data_needed": "Socket-level collector",
+   "telemetry_sufficient": "Insufficient: destination only",
+   "effort": "M",
+   "risk": "Moderate volume",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 8,
+   "title": "File writer attribution",
+   "what": "Attach the writing process to file events.",
+   "competitors": "Sysmon ID 11 (S17)",
+   "why": "File changes without an actor are hard to triage.",
+   "data_needed": "fanotify/eBPF/ETW file hook; the current scanner cannot identify the writer",
+   "telemetry_sufficient": "Insufficient: file path/op/size only",
+   "effort": "L",
+   "risk": "Overhead, privileges",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 9,
+   "title": "Alternate data stream / mark-of-the-web events",
+   "what": "Detect downloaded-file provenance streams on Windows.",
+   "competitors": "Sysmon ID 15 (S17)",
+   "why": "Phishing-delivery triage.",
+   "data_needed": "Windows collector",
+   "telemetry_sufficient": "Insufficient",
+   "effort": "M",
+   "risk": "Windows-only",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 10,
+   "title": "File-create-time tampering detection",
+   "what": "Report timestomping.",
+   "competitors": "Sysmon ID 2 (S17)",
+   "why": "Anti-forensics indicator.",
+   "data_needed": "File metadata hook",
+   "telemetry_sufficient": "Insufficient",
+   "effort": "M",
+   "risk": "Noisy",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 11,
+   "title": "Clipboard and process-tampering events",
+   "what": "Hollowing/herpaderp and clipboard-change events.",
+   "competitors": "Sysmon IDs 24/25 (S17)",
+   "why": "Evasion visibility.",
+   "data_needed": "Kernel collector",
+   "telemetry_sufficient": "Insufficient",
+   "effort": "L",
+   "risk": "Privacy (clipboard), noise",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 12,
+   "title": "General query language over events",
+   "what": "KQL/ES|QL/VQL-style expression language with joins and time windows for hunts.",
+   "competitors": "Defender XDR KQL (S5), Elastic ES|QL (S6, S7), Velociraptor VQL (S12, S13), osquery SQL (S16)",
+   "why": "Analysts can pivot without new code releases.",
+   "data_needed": "Existing event store; parser and limits",
+   "telemetry_sufficient": "Yes",
+   "effort": "L",
+   "risk": "Resource exhaustion; needs quotas",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 13,
+   "title": "Fleet-wide read-only live query",
+   "what": "On-demand collection of OS state (processes, sockets, users) across hosts.",
+   "competitors": "osquery/Fleet (S16), Velociraptor hunts (S12)",
+   "why": "Answers 'is X present' quickly during incidents.",
+   "data_needed": "Agent read-only collector set; allow-list of tables",
+   "telemetry_sufficient": "Insufficient: no remote read channel beyond recorded RTR",
+   "effort": "L",
+   "risk": "Remote execution surface is sensitive",
+   "conflicts_with_observation_only": "Partially: remote collection resembles RTR; must be fixed read-only tables"
+  },
+  {
+   "id": 14,
+   "title": "Promote saved hunt to scheduled detection",
+   "what": "Turn a saved hunt into an automatically running rule.",
+   "competitors": "Defender custom detections (S4, S5)",
+   "why": "Closes the hunt-to-detection loop.",
+   "data_needed": "Saved searches (exist) plus rule scheduler",
+   "telemetry_sufficient": "Yes",
+   "effort": "M",
+   "risk": "Low",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 15,
+   "title": "Hunt retention and quota controls",
+   "what": "Documented retention window, row and time quotas on hunts.",
+   "competitors": "Defender XDR (S5)",
+   "why": "Predictable analyst experience and DoS protection.",
+   "data_needed": "Config and counters",
+   "telemetry_sufficient": "Yes",
+   "effort": "S",
+   "risk": "Low",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 16,
+   "title": "Offline evidence collector package",
+   "what": "Portable read-only triage collector producing an archive for later ingest.",
+   "competitors": "Velociraptor offline collectors (S12)",
+   "why": "Covers hosts without a live agent.",
+   "data_needed": "New collector binary; archive importer",
+   "telemetry_sufficient": "Insufficient: new collector",
+   "effort": "L",
+   "risk": "Collection depth must stay observational",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 17,
+   "title": "Sigma coverage and rule-pack versioning",
+   "what": "Report which Sigma rules map to available telemetry and track upstream versions.",
+   "competitors": "Velociraptor Sigma (S12), Elastic open rules (S6)",
+   "why": "Defenders trust content they can audit.",
+   "data_needed": "Existing content framework",
+   "telemetry_sufficient": "Yes",
+   "effort": "S",
+   "risk": "Low",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 18,
+   "title": "ATT&CK coverage gaps caused by missing telemetry",
+   "what": "Show technique gaps due to absent telemetry, not only absent rules.",
+   "competitors": "Elastic MITRE coverage page (S7)",
+   "why": "Directs collector investment.",
+   "data_needed": "/v1/attack/matrix plus telemetry inventory",
+   "telemetry_sufficient": "Yes",
+   "effort": "S",
+   "risk": "Low",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 19,
+   "title": "Rule exceptions with expiry and alert suppression",
+   "what": "Time-boxed exceptions and snooze with audit.",
+   "competitors": "Elastic (S7)",
+   "why": "Reduces fatigue without losing history.",
+   "data_needed": "Exclusions (exist) plus expiry fields",
+   "telemetry_sufficient": "Yes",
+   "effort": "S",
+   "risk": "Hidden blind spots if expiry ignored",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 20,
+   "title": "Alert grouping into attack chains",
+   "what": "Cluster related alerts into one attack narrative.",
+   "competitors": "Elastic Attack Discovery (S6, S8), Defender incidents (S4), SentinelOne Storyline (S3, secondary)",
+   "why": "Fewer, richer cases.",
+   "data_needed": "Findings plus provenance graph (exists)",
+   "telemetry_sufficient": "Yes",
+   "effort": "M",
+   "risk": "Mis-grouping",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 21,
+   "title": "Native cloud audit-log collectors",
+   "what": "Pull AWS, Azure, GCP, GitHub and M365 audit logs.",
+   "competitors": "Wazuh (S9), Defender for Cloud (S4), CrowdStrike (S1)",
+   "why": "Cloud attacks leave no host telemetry.",
+   "data_needed": "Read-only API credentials and poller",
+   "telemetry_sufficient": "Insufficient: cloud endpoints are ledgers",
+   "effort": "L",
+   "risk": "Credential handling, cost",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 22,
+   "title": "Agentless syslog device monitoring",
+   "what": "Receive syslog from network gear and appliances.",
+   "competitors": "Wazuh (S9)",
+   "why": "Covers devices that cannot run agents.",
+   "data_needed": "Syslog listener and parsers",
+   "telemetry_sufficient": "Insufficient: no listener",
+   "effort": "M",
+   "risk": "Parser maintenance",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 23,
+   "title": "Security configuration assessment policies",
+   "what": "Benchmark checks with pass/fail evidence.",
+   "competitors": "Wazuh SCA (S9), Fleet CIS policies (S15)",
+   "why": "Hardening drift is a common root cause.",
+   "data_needed": "Read-only config collection; policy format",
+   "telemetry_sufficient": "Insufficient",
+   "effort": "M",
+   "risk": "Content licensing",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 24,
+   "title": "Offline vulnerability repository matching",
+   "what": "Match installed packages to a local copy of a vulnerability repository.",
+   "competitors": "Wazuh (S11)",
+   "why": "Air-gapped customers get exposure data.",
+   "data_needed": "Package inventory from agents; local feed copy",
+   "telemetry_sufficient": "Partial: SBOM and feeds exist",
+   "effort": "M",
+   "risk": "Feed freshness",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 25,
+   "title": "Exploit-likelihood prioritisation (EPSS, KEV)",
+   "what": "Rank vulnerabilities by exploit signals.",
+   "competitors": "SentinelOne Ranger Insights (S3, secondary)",
+   "why": "Better prioritisation than CVSS alone.",
+   "data_needed": "Public EPSS/KEV feeds",
+   "telemetry_sufficient": "Yes",
+   "effort": "S",
+   "risk": "Low",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 26,
+   "title": "Directory and identity provider log ingestion",
+   "what": "Ingest AD and Entra sign-in and directory logs.",
+   "competitors": "Defender for Identity/Entra (S4), Trend Identity (S19)",
+   "why": "Identity is a main attack path.",
+   "data_needed": "Connectors for directory logs",
+   "telemetry_sufficient": "Partial: identity events accepted, no native collector",
+   "effort": "L",
+   "risk": "PII",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 27,
+   "title": "Measured agent footprint and coverage SLOs",
+   "what": "Publish measured CPU/memory per agent and coverage.",
+   "competitors": "Velociraptor CPU limits (S12)",
+   "why": "Defenders need evidence of low impact.",
+   "data_needed": "Agent self-metrics",
+   "telemetry_sufficient": "Yes",
+   "effort": "S",
+   "risk": "Low",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 28,
+   "title": "Continuous raw event streaming to customer lake",
+   "what": "Extend SIEM export to a continuous raw event stream.",
+   "competitors": "Defender streaming API (S5), Elastic ECS/OCSF (S6)",
+   "why": "Longer retention in the customer's own lake.",
+   "data_needed": "Existing exporter; streaming sink",
+   "telemetry_sufficient": "Yes",
+   "effort": "M",
+   "risk": "Volume, redaction",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 29,
+   "title": "Case templates, SLA timers and assignment",
+   "what": "Case workflow beyond notes and tickets.",
+   "competitors": "Defender incidents (S4), CrowdStrike incident management (S2)",
+   "why": "SOC process consistency.",
+   "data_needed": "Case schema extension",
+   "telemetry_sufficient": "Yes",
+   "effort": "M",
+   "risk": "Low",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 30,
+   "title": "Scheduled report exports",
+   "what": "PDF/CSV scheduled reports to stakeholders.",
+   "competitors": "Wazuh dashboards (S9), Fleet reports (S15)",
+   "why": "Evidence for auditors.",
+   "data_needed": "Existing templates; scheduler",
+   "telemetry_sufficient": "Yes",
+   "effort": "S",
+   "risk": "Low",
+   "conflicts_with_observation_only": "No"
+  },
+  {
+   "id": 31,
+   "title": "Automatic attack disruption / host isolation",
+   "what": "Auto-containment of hosts, accounts or mail.",
+   "competitors": "Defender (S4), CrowdStrike (S1), Elastic (S8), Wazuh AR (S10), Velociraptor (S12)",
+   "why": "Speeds containment.",
+   "data_needed": "Enforcement channel to hosts",
+   "telemetry_sufficient": "n/a",
+   "effort": "L",
+   "risk": "Not applicable",
+   "conflicts_with_observation_only": "YES: contradicts the product boundary; listed only to document the deliberate gap"
+  }
+ ],
+ "sources": [
+  {
+   "id": "S1",
+   "title": "CrowdStrike Falcon platform page",
+   "url": "https://www.crowdstrike.com/en-us/platform/",
+   "accessed": "2026-11-13"
+  },
+  {
+   "id": "S2",
+   "title": "CrowdStrike Next-Gen SIEM page",
+   "url": "https://www.crowdstrike.com/en-us/platform/next-gen-siem/",
+   "accessed": "2026-11-13"
+  },
+  {
+   "id": "S3",
+   "title": "SentinelOne: official platform pages returned HTTP 429 on fetch; web-search snippets of Ranger Insights, RemoteOps and datasheets used (secondary)",
+   "url": "https://www.sentinelone.com/platform/singularity-ranger-insights",
+   "accessed": "2026-11-13"
+  },
+  {
+   "id": "S4",
+   "title": "Microsoft Defender XDR overview (Microsoft Learn)",
+   "url": "https://learn.microsoft.com/en-us/defender-xdr/microsoft-365-defender",
+   "accessed": "2026-11-13"
+  },
+  {
+   "id": "S5",
+   "title": "Microsoft Defender advanced hunting overview",
+   "url": "https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-overview",
+   "accessed": "2026-11-13"
+  },
+  {
+   "id": "S6",
+   "title": "Elastic Security page",
+   "url": "https://www.elastic.co/security",
+   "accessed": "2026-11-13"
+  },
+  {
+   "id": "S7",
+   "title": "Elastic Security detection engine overview",
+   "url": "https://www.elastic.co/guide/en/security/current/detection-engine-overview.html",
+   "accessed": "2026-11-13"
+  },
+  {
+   "id": "S8",
+   "title": "Elastic endpoint security page",
+   "url": "https://www.elastic.co/security/endpoint-security",
+   "accessed": "2026-11-13"
+  },
+  {
+   "id": "S9",
+   "title": "Wazuh components (docs)",
+   "url": "https://documentation.wazuh.com/current/getting-started/components/index.html",
+   "accessed": "2026-11-13"
+  },
+  {
+   "id": "S10",
+   "title": "Wazuh Active Response (docs)",
+   "url": "https://documentation.wazuh.com/current/user-manual/capabilities/active-response/index.html",
+   "accessed": "2026-11-13"
+  },
+  {
+   "id": "S11",
+   "title": "Wazuh vulnerability detection (docs)",
+   "url": "https://documentation.wazuh.com/current/user-manual/capabilities/vulnerability-detection/index.html",
+   "accessed": "2026-11-13"
+  },
+  {
+   "id": "S12",
+   "title": "Velociraptor overview (docs)",
+   "url": "https://docs.velociraptor.app/docs/overview/",
+   "accessed": "2026-11-13"
+  },
+  {
+   "id": "S13",
+   "title": "Velociraptor VQL (docs)",
+   "url": "https://docs.velociraptor.app/docs/vql/",
+   "accessed": "2026-11-13"
+  },
+  {
+   "id": "S14",
+   "title": "Fleet: why Fleet (docs)",
+   "url": "https://fleetdm.com/docs/get-started/why-fleet",
+   "accessed": "2026-11-13"
+  },
+  {
+   "id": "S15",
+   "title": "Fleet FAQ (docs)",
+   "url": "https://fleetdm.com/docs/get-started/faq",
+   "accessed": "2026-11-13"
+  },
+  {
+   "id": "S16",
+   "title": "osquery README",
+   "url": "https://raw.githubusercontent.com/osquery/osquery/master/README.md",
+   "accessed": "2026-11-13"
+  },
+  {
+   "id": "S17",
+   "title": "Sysmon (Microsoft Learn, Sysinternals)",
+   "url": "https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon",
+   "accessed": "2026-11-13"
+  },
+  {
+   "id": "S18",
+   "title": "Cortex XDR product page (Palo Alto Networks)",
+   "url": "https://www.paloaltonetworks.com/cortex/cortex-xdr",
+   "accessed": "2026-11-13"
+  },
+  {
+   "id": "S19",
+   "title": "Trend Vision One platform page (redirected from trendmicro.com to trendaisecurity.com)",
+   "url": "https://www.trendaisecurity.com/en-us/platform",
+   "accessed": "2026-11-13"
+  },
+  {
+   "id": "S20",
+   "title": "Cortex XDR admin guide URL: returned Page Not Found on fetch (no evidence gained)",
+   "url": "https://cortex-docs.paloaltonetworks.com/r/Cortex-XDR/Cortex-XDR-Pro-Administrator-Guide/Cortex-XDR-Pro-Administrator-Guide",
+   "accessed": "2026-11-13"
+  }
+ ]
+}
