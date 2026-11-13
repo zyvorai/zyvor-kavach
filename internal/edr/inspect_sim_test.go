@@ -144,7 +144,7 @@ type simEval struct {
 // false-match rate on unrelated pairs for both digests, using synthetic data.
 func TestSimilarityEvaluation(t *testing.T) {
 	r := simRNG(2024)
-	const nBase = 24
+	nBase := scaleN(24, 10)
 	bases := make([][]byte, nBase)
 	bd := make([]SimDigests, nBase)
 	for i := range bases {
@@ -197,7 +197,7 @@ func TestSimilarityEvaluation(t *testing.T) {
 	// Unrelated pairs: random blobs, and text from a shared vocabulary.
 	for _, kind := range []string{"random-binary", "shared-vocab-text"} {
 		var ds []SimDigests
-		for i := 0; i < 60; i++ {
+		for i := 0; i < scaleN(60, 25); i++ {
 			sz := 24<<10 + r.IntN(200<<10)
 			if kind == "random-binary" {
 				ds = append(ds, ComputeDigests(simBlob(r, sz)))

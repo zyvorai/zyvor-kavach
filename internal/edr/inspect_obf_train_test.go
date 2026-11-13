@@ -153,6 +153,9 @@ func obfWeightsSource(m obfModelT) string {
 }
 
 func TestObfTrain(t *testing.T) {
+	if raceEnabled {
+		t.Skip("sequential, goroutine-free reproducibility check (~90 s under -race); runs in the non-race job")
+	}
 	data := obfFeaturize(obfGenerate(obfTrainSeed, obfPerLang))
 	m := obfTrainLogistic(data)
 	if os.Getenv("KAVACH_OBF_WRITE") != "" {
@@ -250,7 +253,7 @@ func TestObfEvaluation(t *testing.T) {
 	if len(obfTrained.W) == 0 {
 		t.Skip("model not trained")
 	}
-	samples := obfGenerate(obfEvalSeed, obfPerLang)
+	samples := obfGenerate(obfEvalSeed, scaleN(obfPerLang, 60))
 	data := obfFeaturize(samples)
 	var all obfCounts
 	byLang := map[string]*obfCounts{}
@@ -418,7 +421,7 @@ func TestObfAnalyzerEndToEnd(t *testing.T) {
 }
 
 func TestObfBudgetOverCorpus(t *testing.T) {
-	samples := obfGenerate(obfEvalSeed+1, 40)
+	samples := obfGenerate(obfEvalSeed+1, scaleN(40, 10))
 	maxW := 0
 	for _, s := range samples {
 		r := RunAnalyzers(context.Background(), InspectInput{Kind: s.Kind, Text: s.Text})

@@ -247,12 +247,16 @@ func TestMLSimilarityEvaluation(t *testing.T) {
 	}
 	// detection: variants of every exemplar, nearest-exemplar cosine at the documented threshold
 	var total, detected, attributed int
+	nth := 0
 	for _, r := range ContentRules() {
 		if r.EventType != "process" || r.Tests == nil {
 			continue
 		}
 		for _, p := range r.Tests.Positive {
 			if strings.TrimSpace(p.Command) == "" {
+				continue
+			}
+			if nth++; raceEnabled && nth%3 != 0 { // every third sample under -race; all of them otherwise
 				continue
 			}
 			for _, v := range mlVariants(p.Command) {

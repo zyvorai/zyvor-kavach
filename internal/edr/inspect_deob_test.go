@@ -237,7 +237,7 @@ func TestDeobNestedMultiLayer(t *testing.T) {
 }
 
 func TestDeobBombCapped(t *testing.T) {
-	bomb := deobDeflate(bytes.Repeat([]byte("A"), 64<<20)) // ~64KB compressed -> 64MB
+	bomb := deobDeflate(bytes.Repeat([]byte("A"), scaleN(64<<20, 8<<20))) // ~64KB compressed -> 64MB
 	enc := base64.StdEncoding.EncodeToString(bomb)
 	start := time.Now()
 	res := deobRun(context.Background(), "x="+enc)

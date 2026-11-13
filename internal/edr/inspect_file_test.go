@@ -260,7 +260,7 @@ func TestFilePDF(t *testing.T) {
 		t.Errorf("iocs %v", r.IOCs)
 	}
 	// Decompression bomb inside a PDF stream is capped, not expanded.
-	bomb := append([]byte("%PDF-1.7\nstream\n"), fileZl(make([]byte, 64<<20))...)
+	bomb := append([]byte("%PDF-1.7\nstream\n"), fileZl(make([]byte, scaleN(64<<20, 16<<20)))...)
 	bomb = append(bomb, "\nendstream"...)
 	start := time.Now()
 	r = fileRun(bomb)
@@ -304,7 +304,7 @@ func TestFileArchiveEncrypted(t *testing.T) {
 }
 
 func TestFileZipBombRatio(t *testing.T) {
-	z := fileBuildZip([]fileZent{{name: "zeros.bin", data: make([]byte, 40<<20)}})
+	z := fileBuildZip([]fileZent{{name: "zeros.bin", data: make([]byte, scaleN(40<<20, 24<<20))}})
 	if len(z) > 200<<10 {
 		t.Fatalf("fixture not compressed: %d", len(z))
 	}
@@ -315,7 +315,7 @@ func TestFileZipBombRatio(t *testing.T) {
 		t.Fatalf("errors=%v dur=%v limits=%v", r.Errors, time.Since(start), r.LimitsHit)
 	}
 	// gzip bomb: capped read, flagged.
-	g := fileGz(make([]byte, 64<<20))
+	g := fileGz(make([]byte, scaleN(64<<20, 24<<20)))
 	r = fileRun(g)
 	fileMustHave(t, r, "file-arch-bomb")
 }

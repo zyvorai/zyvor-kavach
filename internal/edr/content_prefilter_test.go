@@ -254,7 +254,7 @@ func BenchmarkContentEvaluate1000Regex3KB(b *testing.B) {
 // TestContentPrefilterSpeedup checks the prefilter is a large win on the non-matching workload and
 // logs the numbers (see the benchmark for stable figures).
 func TestContentPrefilterSpeedup(t *testing.T) {
-	rules := bulkRegexRules(t, 1000)
+	rules := bulkRegexRules(t, scaleN(1000, 300))
 	ev := bulkEvent()
 	if len(ev.Command) < 3000 {
 		t.Fatal("event too small")
