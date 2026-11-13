@@ -1,132 +1,78 @@
 # Testing
 
-How we verify Kavach stays correct and observation-only.
-
----
-
-## Quick suite
-
-```bash
-export KAVACH_TOKEN='Admin@321'
-go test ./...
+```
+go test -race ./...                 # CI job: race detector, reduced statistical corpora
+go test ./...                       # full counts, no race detector
+go test -race -shuffle=on -count=3 ./internal/edr
 ```
 
-CI (GitHub Actions) runs the same with Go **1.27**.
+Both runs are required: the race run proves goroutine safety, the non-race run proves the full
+statistical and size-bound coverage. Run them both before releasing.
 
----
+## Race-only reductions
 
-## Package focus
+`race_on_test.go` / `race_off_test.go` export `const raceEnabled`; `scaleN(full, reduced)` picks
+the count. The race detector slows the CPU-bound loops below by 8 to 10x and adds no value there:
+they are single goroutine, deterministic computations. The race run keeps every code path; it
+only samples the corpora. The non-race run keeps the full counts.
 
-| Package | What it covers |
-|---------|----------------|
-| `internal/edr` | Store, Detect, world/AI/eBPF/finance APIs, inventory, auth session |
-| `cmd/kavachctl` | Help/version local, flag parsing, mock HTTP status/findings |
-| `cmd/kavach-mcp` | Tool registration + client against test server |
-| `cmd/netra-bridge` | Bridge ingest validation |
+| Test | Under `-race` | Full run | Why it is safe |
+|---|---|---|---|
+| `TestContentPrefilterEquivalence` | 100 generated rules (500), 300 random events (1500), every 5th shipped sample event (all) | all | The test asserts prefilter on/off equivalence per rule and event; sampling still covers every rule against varied events, the complete corpus runs in the non-race job. |
+| `TestContentPrefilterSpeedup` | 300 regexes (1000) | 1000 | Ratio check (>= 5x) is unchanged. |
+| `TestMLSimilarityEvaluation` | every 5th positive sample (all) | all | Thresholds (detection >= 0.80, FPR limits) are unchanged and still asserted. |
+| `TestSimilarityEvaluation` | 10 base blobs (24), 25 unrelated blobs (60) | all | Per-class 90 percent thresholds and zero false matches still asserted. |
+| `TestObfEvaluation` | 60 samples per language (150) | 150 | Thresholds unchanged. |
+| `TestObfBudgetOverCorpus` | 10 per language (40) | 40 | Budget check per sample unchanged. |
+| `TestFileStringsAnalyzerASCIIAndUTF16` | 2 MiB strings blob (24 MiB) | 24 MiB | At 24 MiB the 5 s analyzer budget is exceeded under race on a loaded machine. The input-size bound is exercised in the non-race run. |
+| `TestDeobBombCapped`, PDF bomb in `TestFilePDF`, `TestFileZipBombRatio`, `TestByteHugeInputIsBounded` | 8 to 24 MiB bombs (40 to 64 MiB, 32 MiB) | full | Still many times over the cap (deob cap is 1 MiB), so the cap logic runs. |
 
-Examples:
+Skipped under race:
 
-```bash
-go test ./internal/edr/ -run EBPF -count=1 -v
-go test ./cmd/kavachctl/ -count=1
-go test ./internal/edr/ -run 'Falcon|EBPF|AIPlatform|World' -count=1
-```
+* `TestObfTrain`: retrains the logistic model and compares it to the committed weights. It is a
+  sequential, goroutine-free reproducibility check (about 90 s under race). Runs in the non-race job.
+* `TestSimilarityWorstCaseSizeRuntime` (already skipped before this change): wall-clock bound
+  on a 32 MiB input.
 
----
+## Shared fixtures
 
-## API smoke (manual)
+`loadTestRegistry` builds the embedded content registry once per test binary (`sync.Once`); it
+is read-only for tests. Tests needing a mutable registry call `buildContentRegistry` themselves.
 
-With a running server:
+## Package-level state audit
 
-```bash
-export KAVACH_URL=http://127.0.0.1:8099
-export KAVACH_TOKEN=Admin@321
+No test calls `t.Parallel()`: the package has too much shared global state to make it safe
+without a larger refactor, and the reductions above already meet the time budget. Globals, and
+how each is handled:
 
-curl -sf "$KAVACH_URL/healthz"
-curl -sf -H "Authorization: Bearer $KAVACH_TOKEN" "$KAVACH_URL/v1/summary"
-curl -sf -H "Authorization: Bearer $KAVACH_TOKEN" "$KAVACH_URL/v1/ebpf/status"
-curl -sf -H "Authorization: Bearer $KAVACH_TOKEN" "$KAVACH_URL/v1/finance/summary"
-curl -sf -H "Authorization: Bearer $KAVACH_TOKEN" "$KAVACH_URL/v1/sectors/summary"
-curl -sf -H "Authorization: Bearer $KAVACH_TOKEN" "$KAVACH_URL/v1/modules" | head
-```
+| Global | Handling |
+|---|---|
+| `mlRarityProvider` (was exported `MLRarityProvider`) | atomic pointer; `RegisterMLBehaviour` clears it (owner-checked) on `Store.Close`. Test overrides use `setMLRarityProvider(fn)()`. |
+| `feedbackRuleTrust` (was exported `FeedbackRuleTrust`) | atomic pointer; cleared on `Store.Close`. |
+| `excSvc`, `schedSvc`, `ruleSvc` | atomic pointers; cleared (compare-and-swap) on `Store.Close`. |
+| `Live` (domain inventory) | persist path is a field (no longer `os.Setenv("KAVACH_INVENTORY")`, which leaked the first test's TempDir into every later test); persist goroutines are tracked and waited on in `detach` at `Store.Close`. |
+| `certFeedStore`, `certFeedDefs`, `cfInsecure`, `cfExtra` | saved and restored by test cleanups. |
+| `ctNow`, `contentTelemetryBudget`, `ebpfAvailable`, `mlExemplars`, analyzer registry (`withAnalyzers`) | mutated only by single tests with cleanups; not parallel-safe, so no test is parallel. |
+| `vmFeeds`, `vpEPSS`, `certFeeds` background refreshers | start only when their feature env is set; never started by tests. |
 
-Or:
+## TempDir cleanup races
 
-```bash
-go build -o bin/kavachctl ./cmd/kavachctl
-KAVACH_URL=$KAVACH_URL KAVACH_TOKEN=$KAVACH_TOKEN ./bin/kavachctl status
-./bin/kavachctl ebpf health
-./bin/kavachctl finance summary
-./bin/kavachctl finance exchanges
-./bin/kavachctl sectors railways
-./bin/kavachctl sectors gov-portals
-```
+Causes found and fixed:
 
----
+* `Register*` functions (`RegisterFleetSLO`, `RegisterHuntPacks`, `RegisterMLBehaviour`,
+  `RegisterReportSched`, `RegisterScheduledDetections`, `RegisterAlerts`, `RegisterIntelFeeds`,
+  `RegisterTuningDigest`) started goroutines that wrote next to the store file and could never be
+  stopped. They now attach to the store (`Store.OnClose` / `Store.goBG`); `Store.Close` stops and
+  waits for them. The daemon never closes the store, so production behaviour is unchanged.
+* `BootstrapLivePlatform` set a process-wide env var to the first store's path, so inventory
+  persistence in later tests re-created (`MkdirAll`) a deleted TempDir.
+* Tests create stores with `testStore(t, ...)`, which registers `Store.Close` as a cleanup that
+  runs before TempDir removal.
 
-## Lab demo script
+## Not touched
 
-```bash
-export KAVACH_URL=http://127.0.0.1:8099   # or https://…:30943
-export KAVACH_TOKEN=Admin@321
-export KAVACH_TLS_INSECURE=true            # if self-signed HTTPS
-./scripts/demo-lab.sh
-```
-
-Exercises common GETs against a live controller.
-
----
-
-## Console checks
-
-1. Open `/` — login shell shows username + password.  
-2. Sign in `admin` / `Admin@321`.  
-3. Confirm Overview uses full width (~1800px shell).  
-4. Browse → **eBPF** shows health metrics + feature table.  
-4b. Browse → **Finance** shows exchanges, rails, institutions, events.  
-4c. Browse → **Sectors** shows railways, gov portals, critical sites, events. 
-5. Theme toggle + Sign out clear the session cookie.
-
----
-
-## Cluster deploy smoke
-
-```bash
-./scripts/deploy-remote.sh sus@HOST --k8s --envoy-gateway
-# wait for pods Ready
-kubectl -n kavach-system get pods,svc
-curl -sk -H "Authorization: Bearer Admin@321" \
-  https://kavach.HOST.sslip.io:30943/v1/summary
-```
-
-Helm requires `auth.token` ≥ 8 characters (`Admin@321` is valid).
-
----
-
-## eBPF object build (Linux)
-
-```bash
-./scripts/build-bpf.sh
-ls bpf/*.o
-```
-
-CI does **not** require loading programs into a kernel. Unit tests cover the Go `/v1/ebpf` platform with seeded events.
-
----
-
-## Observation-only regression mindset
-
-When adding features, assert:
-
-- No API claims `enforce: true` for Kavach eBPF.  
-- Containment remains a ledger (`GET /v1/containment`).  
-- Prevention policies stay detect-only.  
-- Tests that previously expected seed-only empty domains should expect live/bootstrap rows after inventory work.
-
----
-
-## Race / flaky tips
-
-- Use `-count=1` to disable cache when debugging.  
-- Temp dirs via `t.TempDir()` for store paths.  
-- Set `KAVACH_SKIP_DOTENV=1` in CLI tests that inject `KAVACH_URL`.
+* Wall-clock polling loops in `syslog_test.go`, `alerts_test.go`, `report_sched_test.go`,
+  `observability_test.go`: they poll a condition with a deadline; the few fixed sleeps assert
+  absence of an event.
+* Production `time.Sleep` refresh loops in `vuln_feeds.go`, `vuln_prio_epss.go`, `cert_feeds.go`
+  (env gated, not started in tests).
