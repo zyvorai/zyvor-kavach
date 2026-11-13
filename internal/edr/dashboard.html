@@ -2575,6 +2575,14 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
         </table></div>
       </div>
       <div class="table-wrap">
+        <h3 style="margin:0 0 12px;font-size:17px">Score by control</h3>
+        <p class="hint" id="ev-score-note">Observable controls only. not_observable controls need your own evidence and are excluded from the score.</p>
+        <table>
+          <thead><tr><th>Control</th><th>Title</th><th>Status</th><th>Score</th><th>Reason</th></tr></thead>
+          <tbody id="ev-score-rows"></tbody>
+        </table>
+      </div>
+      <div class="table-wrap">
         <h3 style="margin:0 0 12px;font-size:17px">Controls</h3>
         <table>
           <thead><tr><th>Control</th><th>Title</th><th>Status</th><th>Evidence</th></tr></thead>
@@ -5574,8 +5582,29 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
       void tr;
     });
   }
+  let evFwLoaded = false;
+  async function loadEvScore(fw) {
+    try {
+      const sc = await pgApi('/v1/compliance/score?framework=' + encodeURIComponent(fw));
+      if (!evFwLoaded && sc) {
+        const all = await pgApi('/v1/compliance/score');
+        const sel = $('ev-fw');
+        const have = new Set(Array.from(sel.options).map((o) => o.value));
+        ((all && all.frameworks) || []).forEach((f) => {
+          if (f.id && !have.has(f.id)) { const o = document.createElement('option'); o.value = f.id; o.textContent = f.name || f.id; sel.appendChild(o); }
+        });
+        evFwLoaded = true;
+      }
+      const tbody = $('ev-score-rows');
+      const list = (sc && sc.controls) || [];
+      if (!list.length) { listEmpty(tbody, 5, 'No controls', 'This framework has no scored controls.', '', null); return; }
+      tbody.replaceChildren();
+      list.forEach((c) => tableRow(tbody, [c.id, c.title, el('span', c.status, 'tag ' + c.status), c.score == null ? 'n/a' : String(c.score), c.reason || '']));
+    } catch (e) { setMsg('ev-msg', 'Could not load score: ' + e.message, true); }
+  }
   async function loadEvidence() {
     const fw = $('ev-fw').value;
+    loadEvScore(fw);
     $('ev-pack').href = '/v1/compliance/evidence?framework=' + encodeURIComponent(fw) + '&format=html';
     setMsg('ev-msg', '', false);
     try {

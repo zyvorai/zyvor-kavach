@@ -942,9 +942,18 @@ paths:
       responses: {'200': {description: OK}, '400': {description: Bad rule}, '404': {description: Unknown rule_id}}
   /v1/compliance/score:
     get:
-      summary: Overall compliance grade across CIS/NIST/SOC2/ISO
+      summary: Compliance score across every framework in the control catalog (observe-only, not certification)
+      description: >
+        Per-framework scores computed from observable controls only (met=100, partial by signal share, unmet=0).
+        Controls Kavach cannot evidence are reported as not_observable and excluded from scores, never counted as met.
+        Legacy fields overall, grade, frameworks[].framework/score/grade/failing, mode and source are retained;
+        frameworks[] additionally carries id, name, controls_total, observable, met, partial, unmet, not_observable.
+        With ?framework=, the response adds controls[] with id, framework, title, status (met|partial|unmet|not_observable),
+        score (null when not_observable) and reason.
       security: [{bearerAuth: []}]
-      responses: {'200': {description: OK}}
+      parameters:
+        - {name: framework, in: query, description: Framework id from the evidence catalog; adds per-control rows, schema: {type: string, enum: [cis-v8, nist-csf-2, soc2, iso27001, rbi, cert-in, dpdp, pci-dss-4, hipaa, nist-800-53]}}
+      responses: {'200': {description: OK}, '400': {description: Unknown framework}}
   /v1/compliance/controls:
     get:
       summary: Control-level compliance status with live evidence counts (observe-only, not certification)

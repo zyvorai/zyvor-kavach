@@ -489,7 +489,6 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	metrics := NewMetrics()
 	RegisterHealth(mux, store)
 	RegisterATTACK(mux, token, store)
-	RegisterComplianceScore(mux, token, store, registry)
 	RegisterStream(mux, token, store)
 	RegisterRiskTrends(mux, token, store)
 	RegisterFleetHealth(mux, token, store, registry)
@@ -497,6 +496,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	RegisterIntelFeeds(mux, token, store)
 	alertDispatcher := RegisterAlerts(mux, token, store)
 	RegisterComplianceEvidence(mux, token, store, registry, incidents, alertDispatcher)
+	RegisterComplianceScoreFull(mux, token, store, registry, incidents, alertDispatcher)
 	RegisterExport(mux, token, store, registry)
 	analystWS := RegisterAnalystWorkspace(mux, token, store)
 	alertDispatcher.ws = analystWS

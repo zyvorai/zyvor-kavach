@@ -274,7 +274,12 @@ func complianceScoreCmd(out io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
-	v, raw, err := fetchJSON("/v1/compliance/score")
+	path := "/v1/compliance/score"
+	_, ff := splitArgs(args, "framework")
+	if ff["framework"] != "" {
+		path += "?framework=" + url.QueryEscape(ff["framework"])
+	}
+	v, raw, err := fetchJSON(path)
 	if err != nil {
 		return err
 	}
@@ -286,6 +291,9 @@ func complianceScoreCmd(out io.Writer, args []string) error {
 		return nil
 	}
 	m, _ := v.(map[string]any)
+	if ff["framework"] != "" {
+		return printScoreControls(out, m, listOf(m, "controls"))
+	}
 	fmt.Fprintf(out, "Overall posture: %d (grade %s)  [%s]\n\n", intFrom(m, "overall"), strFrom(m, "grade"), strFrom(m, "mode"))
 	tw := tabwriter.NewWriter(out, 0, 2, 2, ' ', 0)
 	fmt.Fprintln(tw, "FRAMEWORK\tSCORE\tGRADE\tFAILING")
