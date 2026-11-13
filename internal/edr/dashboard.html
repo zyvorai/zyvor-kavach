@@ -1305,6 +1305,12 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 .rg-overdue td { color: var(--danger); }
 .rg-text-only { color: var(--text-secondary); font-style: italic; }
 
+/* === cert advisories page === */
+.table-wrap tr.ad-matched td { background: var(--warning-bg); }
+.ad-filters label, .nx-filters label.ad-check { display: inline-flex; align-items: center; gap: 6px; min-height: var(--hit-min); }
+.ad-feed-err { color: var(--danger); font-size: 13px; overflow-wrap: anywhere; }
+code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--fill-tertiary); border-radius: 5px; padding: 1px 6px; }
+
 /* Global search */
 .gs-bar { display: flex; gap: 8px; flex-wrap: wrap; }
 .gs-bar .input-field { flex: 1 1 260px; min-width: 0; }
@@ -1406,6 +1412,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
             <button type="button" data-page="rulehealth" role="menuitem">Rule health</button>
             <button type="button" data-page="export" role="menuitem">Export</button>
             <button type="button" data-page="search" role="menuitem">Search</button>
+            <button type="button" data-page="advisories" role="menuitem">CERT advisories</button>
             <button type="button" data-page="regulatory" role="menuitem">Regulatory clocks</button>
             <button type="button" data-page="models" role="menuitem">Models</button>
             <button type="button" data-page="inspector" role="menuitem">Inspector</button>
@@ -3394,6 +3401,36 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     </section>
     <!-- === end regulatory clocks page === -->
 
+    <!-- === cert advisories page === -->
+    <section id="page-advisories" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">CERT advisories</p>
+        <h1>Government advisories, matched to what you run.</h1>
+        <p class="lede">Advisories from national CERTs, highlighted when a CVE in them appears in your software inventory. Read only.</p>
+      </header>
+      <p class="work-msg" id="ad-msg" role="status"></p>
+
+      <div class="work-panel" id="ad-feed">
+        <h3>Feed status</h3>
+        <div id="ad-feed-out"><p class="hint">Loading feed status…</p></div>
+        <div class="px-actions"><button type="button" class="secondary" id="ad-refresh">Refresh feeds</button><span class="hint" id="ad-refresh-hint"></span></div>
+      </div>
+
+      <div class="toolbar-pill nx-filters">
+        <select class="select-field" id="ad-source" aria-label="Source"><option value="">All sources</option></select>
+        <input class="input-field" id="ad-cve" type="text" placeholder="CVE-YYYY-NNNN" aria-label="CVE" autocomplete="off" spellcheck="false" maxlength="32">
+        <input class="input-field" id="ad-since" type="text" placeholder="Since, YYYY-MM-DD" aria-label="Published since (YYYY-MM-DD or RFC 3339)" autocomplete="off" spellcheck="false">
+        <input class="input-field" id="ad-q" type="search" placeholder="Search title, id or CVE" aria-label="Text search" autocomplete="off">
+        <label class="hint ad-check"><input type="checkbox" id="ad-matched"> Matched only</label>
+        <button type="button" id="ad-apply">Apply</button>
+      </div>
+      <p class="hint" id="ad-count" role="status" aria-live="polite"></p>
+      <div class="table-wrap nx-scroll">
+        <table><thead><tr><th>Source</th><th>Advisory</th><th>Published</th><th>Severity</th><th>CVEs</th><th>Your exposure</th></tr></thead><tbody id="ad-rows"></tbody></table>
+      </div>
+    </section>
+    <!-- === end cert advisories page === -->
+
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
@@ -3464,8 +3501,8 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -3588,7 +3625,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -3641,6 +3678,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     if (current === 'rulehealth' && typeof loadRuleHealth === 'function') loadRuleHealth();
     if (current === 'export' && typeof loadExportPage === 'function') loadExportPage();
     if (current === 'search' && typeof loadSearchPage === 'function') loadSearchPage();
+    if (current === 'advisories' && typeof loadAdvisories === 'function') loadAdvisories();
     if (current === 'regulatory' && typeof loadRegulatory === 'function') loadRegulatory();
     if (current === 'models' && typeof loadModels === 'function') loadModels();
     if (current === 'inspector' && typeof loadInspector === 'function') loadInspector();
@@ -6502,8 +6540,90 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
   setInterval(() => { if (current === 'regulatory' && !document.hidden && appVisible()) document.querySelectorAll('#rg-clocks-out tr[data-rem]').forEach((tr) => { const rem = Number(tr.dataset.rem) - Math.round((Date.now() - rg.genAt) / 1000); tr.lastChild.textContent = uiFmtSecs(rem); tr.classList.toggle('rg-overdue', rem < 0); }); }, 30000);
   /* === end regulatory clocks page === */
 
+  /* === cert advisories page === */
+  let adFeedsOn = false, adSources = [];
+  async function adLoadFeeds() {
+    const box = $('ad-feed-out');
+    try {
+      const f = await pgApi('/v1/advisories/feeds/status');
+      const enabled = f.enabled || [];
+      adFeedsOn = enabled.length > 0;
+      box.replaceChildren();
+      if (!adFeedsOn) {
+        const n = el('p', '', 'nx-note');
+        n.appendChild(el('span', 'CERT advisory feeds are off. They are opt-in: set '));
+        n.appendChild(el('code', 'KAVACH_CERT_FEEDS', 'ad-env'));
+        n.appendChild(el('span', ' (for example cisa,ncsc-uk) on the server and restart it. Until then no network traffic is made and the list below stays empty.'));
+        box.appendChild(n);
+      }
+      if (f.note) box.appendChild(el('p', f.note, 'hint'));
+      uiMeta(box, ['Enabled: ' + (enabled.join(', ') || 'none'), 'Available: ' + ((f.available || []).join(', ') || 'none'), 'Last refresh: ' + (f.last_refresh && !String(f.last_refresh).startsWith('0001') ? fmtTime(f.last_refresh) : 'never')]);
+      if (enabled.length) {
+        const tb = uiTable(box, ['Feed', 'Advisories cached', 'Last fetched']);
+        enabled.forEach((id) => tableRow(tb, [id, (f.counts || {})[id] ?? 0, (f.fetched || {})[id] && !String((f.fetched || {})[id]).startsWith('0001') ? fmtTime(f.fetched[id]) : 'never']));
+      }
+      (f.feed_errors || []).forEach((e) => box.appendChild(el('p', String(e), 'ad-feed-err')));
+      adSources = f.available || [];
+      const sel = $('ad-source'), cur = sel.value;
+      while (sel.options.length > 1) sel.remove(1);
+      adSources.forEach((s) => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); });
+      sel.value = cur;
+      $('ad-refresh').disabled = !adFeedsOn;
+      $('ad-refresh-hint').textContent = adFeedsOn ? '' : 'Disabled: no feeds are enabled (KAVACH_CERT_FEEDS is not set).';
+    } catch (e) {
+      uiError(box, 'feed status', e, adLoadFeeds);
+      $('ad-refresh').disabled = true;
+    }
+  }
+  async function adLoad() {
+    const tb = $('ad-rows');
+    skeletonRows(tb, 6, 4);
+    const p = new URLSearchParams();
+    [['source', 'ad-source'], ['cve', 'ad-cve'], ['since', 'ad-since'], ['q', 'ad-q']].forEach(([k, id]) => { const v = $(id).value.trim(); if (v) p.set(k, v); });
+    if ($('ad-matched').checked) p.set('matched', 'true');
+    try {
+      const r = await pgApi('/v1/advisories' + (p.toString() ? '?' + p.toString() : ''));
+      const list = (r && r.advisories) || [];
+      $('ad-count').textContent = 'Showing ' + r.count + ' of ' + r.total + ' advisories' + (r.total > r.count ? ' (the server caps the list; narrow the filters)' : '') + '.';
+      const empty = adFeedsOn ? ['No advisories', 'Nothing matches these filters, or the feeds have not been refreshed yet.'] : ['No advisories', 'Feeds are off, so there is nothing to show. Set KAVACH_CERT_FEEDS on the server to opt in.'];
+      pxFill('ad-rows', 6, list, empty[0], empty[1], (b, a) => {
+        let title;
+        if (/^https:\/\//.test(a.url || '')) { title = el('a', a.title || a.id, 'ev-link'); title.href = a.url; title.target = '_blank'; title.rel = 'noopener noreferrer'; }
+        else title = el('span', a.title || a.id);
+        const t = el('div'); t.appendChild(title); t.appendChild(el('div', a.id, 'mono'));
+        const exp = el('div');
+        if (a.matched) {
+          exp.appendChild(uiTag('matches your inventory', 'medium'));
+          exp.appendChild(el('p', 'CVEs: ' + (a.matched_cves || []).join(', '), 'hint'));
+          exp.appendChild(el('p', 'Hosts: ' + (a.matched_hosts || []).join(', '), 'hint'));
+        } else exp.appendChild(el('span', 'no match'));
+        const tr = tableRow(b, [a.source, t, a.published ? fmtTime(a.published) : '-', a.severity || '-', (a.cves || []).join(', ') || '-', exp]);
+        if (a.matched) tr.classList.add('ad-matched');
+      });
+    } catch (e) { pxFail('ad-rows', 6, 'advisories', e); $('ad-count').textContent = ''; }
+  }
+  function loadAdvisories() { adLoadFeeds().then(adLoad); }
+  $('ad-apply').addEventListener('click', adLoad);
+  ['ad-cve', 'ad-since', 'ad-q'].forEach((id) => $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') adLoad(); }));
+  $('ad-source').addEventListener('change', adLoad);
+  $('ad-matched').addEventListener('change', adLoad);
+  $('ad-refresh').addEventListener('click', async () => {
+    if (!adFeedsOn) return;
+    $('ad-refresh').disabled = true;
+    setMsg('ad-msg', 'Refreshing feeds. This can take a while…', false);
+    try {
+      const res = await uiFetchAny('/v1/advisories/feeds/refresh', { method: 'POST' });
+      if (res.status === 409) setMsg('ad-msg', 'Feeds are disabled on the server: set KAVACH_CERT_FEEDS to opt in.', true);
+      else if (!res.ok) setMsg('ad-msg', 'Refresh failed: ' + ((res.body && res.body.error) || 'HTTP ' + res.status), true);
+      else setMsg('ad-msg', 'Feeds refreshed.', false);
+    } catch (e) { setMsg('ad-msg', 'Refresh failed: ' + e.message, true); }
+    await adLoadFeeds();
+    adLoad();
+  });
+  /* === end cert advisories page === */
+
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '/': 'search' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '/': 'search' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
