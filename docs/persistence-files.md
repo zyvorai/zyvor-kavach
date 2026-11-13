@@ -35,6 +35,7 @@ All files sit next to the findings store path (`<store>` below), are written ato
 | `<store>.retention.json` | Data-governance retention policy (days per class: findings, process_events, network_events, file_events; null = unlimited) |
 | `<store>.redaction.json` | Data-governance export redaction toggle (`{"enabled": bool}`) |
 | `<store>.governance.audit.jsonl` | Append-only JSON-lines audit of governance actions (retention.set, retention.apply, redaction.set) with actor and time |
+| `<store>.evidence.json` | Opt-in (`KAVACH_EVIDENCE_PERSIST=1`) metadata of offline evidence import cases (`docs/evidence-import.md`): up to 20 cases with id, labels, artefact inventory counts, totals and a findings summary (rule, severity, technique, artefact, line). Never holds raw artefact text, commands, paths, IOC values or the timeline; restored cases cannot be promoted. Safe to delete |
 | credential registry file | Agent enrollment and last heartbeat; fleet health is derived from it, so stale detection survives restarts |
 
 Backup: copy these files while the server is stopped, or at any time (JSON state files are written by atomic rename; the append-only `<store>`, `<store>.events` and `.governance.audit.jsonl` files and `<store>.hunts` are not).
