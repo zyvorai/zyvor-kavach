@@ -195,5 +195,10 @@ func allCLICommands() []cliCommand {
 		{Name: "content-list", Args: []string{"content", "list", "--severity", "high"}},
 		{Name: "content-show", Args: []string{"content", "show", "demo"}, Optional: true},
 		{Name: "content-coverage", Args: []string{"content", "coverage"}},
+
+		// rules_health.go: detection rule health and lifecycle.
+		{Name: "rules-health", Args: []string{"rules", "health"}},
+		{Name: "rules-lifecycle", Args: []string{"rules", "lifecycle", "demo"}, Optional: true},
+		{Name: "rules-history", Args: []string{"rules", "history", "demo"}, Optional: true},
 	}
 }
