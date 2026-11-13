@@ -1387,6 +1387,14 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 .tag.attend { background: var(--warning-bg); color: var(--warning-text); }
 .tag.track, .tag.track_star { background: var(--info-bg); color: var(--apple-link); }
 .tag.unknown { background: var(--fill-tertiary); color: var(--text-secondary); border: 1px dashed var(--text-tertiary); }
+/* === feedback page and drawer verdicts === */
+#fb-drawer .px-actions button[aria-pressed="true"] { background: var(--apple-blue); color: var(--on-accent, #fff); }
+.fb-range { position: relative; height: 8px; min-width: 90px; border-radius: 4px; background: var(--fill-tertiary); }
+.fb-range > span { position: absolute; top: 0; bottom: 0; background: var(--apple-blue); border-radius: 4px; min-width: 2px; }
+.tag.review { background: var(--warning-bg); color: var(--warning-text); }
+.tag.true_positive { background: var(--success-bg); color: var(--success-text); }
+.tag.false_positive, .tag.benign_expected { background: var(--fill-tertiary); color: var(--text-secondary); }
+.tag.needs_more_data { background: var(--info-bg); color: var(--apple-link); }
 </style>
 </head>
 <body>
@@ -1482,6 +1490,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
             <button type="button" data-page="provenance" role="menuitem">Provenance</button>
             <button type="button" data-page="ransomware-behaviour" role="menuitem">Ransomware behaviour</button>
             <button type="button" data-page="ttp" role="menuitem">TTP similarity</button>
+            <button type="button" data-page="feedback" role="menuitem">Feedback</button>
             <button type="button" data-page="vulnprio" role="menuitem">Vulnerability priority</button>
             <button type="button" data-page="huntseq" role="menuitem">Sequence hunt</button>
             <button type="button" data-page="coverage" role="menuitem">Coverage</button>
@@ -3672,6 +3681,32 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       <div id="vp-status-out"></div>
     </section>
     <!-- === end vulnerability priority page === -->
+    <!-- === feedback page === -->
+    <section id="page-feedback" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Feedback</p>
+        <h1>How analysts judged the findings, rule by rule.</h1>
+        <p class="lede">Verdicts are recorded from the finding drawer into a hash-chained log. Precision estimates carry an interval and are advice for a human to review; nothing here changes a rule.</p>
+      </header>
+      <div class="nx-note bh-caveat" id="fb-limits" role="note"><strong>Limitations (always apply)</strong><ul><li>Analysts label a biased subset of findings, so these rates are not fleet-wide precision. A review candidate is a prompt to look, never an action.</li></ul></div>
+      <p class="work-msg" id="fb-page-msg" role="status"></p>
+      <div class="toolbar-pill nx-filters bh-fields">
+        <label class="hint" for="fb-days">Recent window (days)</label>
+        <input class="input-field" id="fb-days" type="number" min="1" max="365" value="7">
+        <label class="hint" for="fb-minv">Minimum verdicts per rule</label>
+        <input class="input-field" id="fb-minv" type="number" min="1" max="1000" value="5">
+        <button type="button" id="fb-go">Reload</button>
+      </div>
+      <h2>Summary</h2>
+      <div id="fb-sum-out"></div>
+      <h2>Rule precision</h2>
+      <div id="fb-rules-out"></div>
+      <h2>Chain integrity</h2>
+      <div id="fb-chain-out"></div>
+      <h2>Recent verdicts</h2>
+      <div id="fb-recent-out"></div>
+    </section>
+    <!-- === end feedback page === -->
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
@@ -3732,6 +3767,20 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
         </div>
         <p class="work-msg" id="note-msg" role="status"></p>
       </div>
+      <div class="drawer-section" id="fb-drawer">
+        <h3>Analyst verdict</h3>
+        <p class="hint">Records your judgement of this finding in a tamper-evident log. It never changes rules, suppressions or hosts.</p>
+        <div class="px-actions" role="group" aria-label="Verdict">
+          <button type="button" class="secondary" data-fb-verdict="true_positive" aria-pressed="false">True positive</button>
+          <button type="button" class="secondary" data-fb-verdict="false_positive" aria-pressed="false">False positive</button>
+          <button type="button" class="secondary" data-fb-verdict="benign_expected" aria-pressed="false">Benign, expected</button>
+          <button type="button" class="secondary" data-fb-verdict="needs_more_data" aria-pressed="false">Needs data</button>
+        </div>
+        <label for="fb-note" class="hint">Optional note</label>
+        <textarea class="input-field" id="fb-note" maxlength="1000"></textarea>
+        <p class="work-msg" id="fb-msg" role="status"></p>
+        <div id="fb-history"></div>
+      </div>
       <div class="drawer-section">
         <button type="button" class="apple-text-link" id="drawer-to-incident">Use in Incidents Work</button>
       </div>
@@ -3742,8 +3791,8 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage', 'huntseq': 'Sequence hunt', 'vulnprio': 'Vulnerability priority' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage', 'huntseq': 'Sequence hunt', 'vulnprio': 'Vulnerability priority', 'feedback': 'Feedback' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -3866,7 +3915,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -3926,6 +3975,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     if (current === 'provenance' && typeof loadProvenance === 'function') loadProvenance();
     if (current === 'ransomware-behaviour' && typeof loadRansomwareBehaviour === 'function') loadRansomwareBehaviour();
     if (current === 'ttp' && typeof loadTtp === 'function') loadTtp();
+    if (current === 'feedback' && typeof loadFeedback === 'function') loadFeedback();
     if (current === 'vulnprio' && typeof loadVulnPrio === 'function') loadVulnPrio();
     if (current === 'huntseq' && typeof loadHuntSeq === 'function') loadHuntSeq();
     if (current === 'coverage' && typeof loadCoverage === 'function') loadCoverage();
@@ -4016,6 +4066,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     $('drawer-root').hidden = false;
     if (typeof loadNotes === 'function') loadNotes();
     syncIncidentFindingSelect();
+    if (typeof fbDrawerOpen === 'function') fbDrawerOpen(finding.id);
     loadAIScore(finding.id);
   }
 
@@ -7781,8 +7832,135 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   $('vp-detail').addEventListener('keydown', (e) => { if (e.key === 'Escape') $('vp-detail').hidden = true; });
   /* === end vulnerability priority page === */
 
+  /* === feedback page and drawer verdicts === */
+  const fbVerdictLabel = { true_positive: 'True positive', false_positive: 'False positive', benign_expected: 'Benign, expected', needs_more_data: 'Needs data' };
+  function fbPct(v) { return typeof v === 'number' ? (v * 100).toFixed(1) + '%' : 'unknown'; }
+  let fbDrawerId = '';
+  function fbDrawerHistory(id) {
+    const box = $('fb-history');
+    if (!id) { box.replaceChildren(); return; }
+    pgApi('/v1/feedback?finding_id=' + encodeURIComponent(id) + '&limit=20').then((r) => {
+      if (id !== fbDrawerId) return;
+      box.replaceChildren();
+      const es = (r && r.entries) || [];
+      if (!es.length) { box.appendChild(el('p', 'No verdicts recorded for this finding yet.', 'hint')); return; }
+      es.forEach((e) => box.appendChild(el('p', fmtTime(e.time) + ' · ' + (fbVerdictLabel[e.verdict] || e.verdict) + ' · ' + e.actor + (e.note ? ' · ' + e.note : ''), 'hint')));
+      const latest = es[0].verdict;
+      document.querySelectorAll('[data-fb-verdict]').forEach((b) => b.setAttribute('aria-pressed', b.getAttribute('data-fb-verdict') === latest ? 'true' : 'false'));
+    }).catch((e) => { if (id === fbDrawerId) { box.replaceChildren(el('p', 'Could not load verdict history: ' + e.message, 'hint')); } });
+  }
+  function fbDrawerOpen(id) {
+    fbDrawerId = id || '';
+    $('fb-note').value = '';
+    setMsg('fb-msg', '', false);
+    document.querySelectorAll('[data-fb-verdict]').forEach((b) => { b.setAttribute('aria-pressed', 'false'); b.disabled = !id; });
+    fbDrawerHistory(fbDrawerId);
+  }
+  async function fbSubmit(verdict) {
+    if (!fbDrawerId) return;
+    const id = fbDrawerId;
+    const btns = document.querySelectorAll('[data-fb-verdict]');
+    btns.forEach((b) => { b.disabled = true; });
+    setMsg('fb-msg', 'Recording verdict…', false);
+    try {
+      await pgApi('/v1/feedback', pgJSON({ finding_id: id, verdict: verdict, note: $('fb-note').value.trim() }));
+      setMsg('fb-msg', 'Recorded: ' + fbVerdictLabel[verdict] + '.', false);
+      $('fb-note').value = '';
+      fbDrawerHistory(id);
+    } catch (e) { setMsg('fb-msg', 'Could not record verdict: ' + e.message, true); }
+    finally { btns.forEach((b) => { b.disabled = false; }); }
+  }
+  document.querySelectorAll('[data-fb-verdict]').forEach((b) => b.addEventListener('click', () => fbSubmit(b.getAttribute('data-fb-verdict'))));
+
+  function fbInterval(lo, hi) {
+    const r = el('div', '', 'fb-range');
+    r.setAttribute('role', 'img');
+    r.setAttribute('aria-label', '95% interval ' + fbPct(lo) + ' to ' + fbPct(hi));
+    const s = document.createElement('span');
+    s.style.left = (Math.max(0, lo) * 100) + '%';
+    s.style.width = (Math.max(0.01, hi - lo) * 100) + '%';
+    r.appendChild(s);
+    return r;
+  }
+  function fbIntervalCell(lo, hi) {
+    const d = el('div', '');
+    d.appendChild(fbInterval(lo, hi));
+    d.appendChild(el('span', fbPct(lo) + ' to ' + fbPct(hi), 'hint'));
+    return d;
+  }
+  function fbLoadSummary() {
+    const box = $('fb-sum-out');
+    uiLoading(box);
+    const days = Math.max(1, Math.min(365, parseInt($('fb-days').value, 10) || 7));
+    return pgApi('/v1/feedback/summary?days=' + days).then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      if (r.note) bhCaveat($('fb-limits'), 'Limitations (always apply)', [r.note, 'A review candidate is a prompt for a human to look, never an action.']);
+      if (!r.entries_total) { uiEmpty(box, 'No verdicts yet', 'Open a finding and record a verdict to start the log.'); return; }
+      uiMeta(box, ['Verdict entries: ' + r.entries_total, 'Findings with a verdict: ' + r.findings_with_verdict,
+        'Recent findings (' + r.recent_days + 'd): ' + r.recent_findings + ', with a verdict: ' + r.recent_findings_covered,
+        'Coverage: ' + (r.verdict_coverage == null ? 'unknown (no recent findings)' : fbPct(r.verdict_coverage)),
+        'Mean time to first verdict: ' + (r.mean_seconds_to_first_verdict == null ? 'unknown' : uiFmtSecs(r.mean_seconds_to_first_verdict).replace(' left', ''))]);
+      const tb = uiTable(box, ['Verdict', 'All entries', 'Latest per analyst']);
+      Object.keys(fbVerdictLabel).forEach((k) => tableRow(tb, [uiTag(fbVerdictLabel[k], k), (r.counts_all_entries || {})[k] ?? 0, (r.counts_latest_per_actor || {})[k] ?? 0]));
+      [['Top false-positive rules', r.top_false_positive_rules], ['Top true-positive rules', r.top_true_positive_rules]].forEach((p) => {
+        if ((p[1] || []).length) uiMeta(box, [p[0] + ': ' + p[1].map((x) => x.rule + ' (' + x.count + ')').join(', ')]);
+      });
+    }).catch((e) => uiError(box, 'the feedback summary', e, fbLoadSummary));
+  }
+  function fbLoadRules() {
+    const box = $('fb-rules-out');
+    uiLoading(box);
+    const minv = Math.max(1, Math.min(1000, parseInt($('fb-minv').value, 10) || 5));
+    return pgApi('/v1/feedback/rules?min_verdicts=' + minv).then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      const m = r.method || {};
+      uiMeta(box, [m.observed ? 'Observed: ' + m.observed : '', m.interval ? 'Interval: ' + m.interval : '', m.shrunk ? 'Shrunk: ' + m.shrunk : '']);
+      if (m.review_meaning) uiNote(box, 'Review candidate: ' + m.review_meaning + ' (below ' + fbPct(m.review_below) + ').');
+      const ranked = r.ranked_by_shrunk_precision || [], few = r.not_enough_verdicts || [];
+      if (!ranked.length && !few.length) { uiEmpty(box, 'No rules have verdicts', 'Precision appears once findings from a rule are labelled.'); return; }
+      if (ranked.length) {
+        const tb = uiTable(box, ['Rule', 'Decided', 'True positives', 'Observed', '95% interval (Wilson)', 'Shrunk', 'Review']);
+        ranked.forEach((x) => tableRow(tb, [x.rule, x.decided_findings, x.true_positives ?? '—', fbPct(x.observed_precision),
+          fbIntervalCell(x.wilson95_low, x.wilson95_high),
+          fbPct(x.shrunk_precision), x.review_candidate ? uiTag('review candidate', 'review') : 'no']));
+      }
+      if (few.length) {
+        box.appendChild(el('h3', 'Not enough verdicts'));
+        const tb = uiTable(box, ['Rule', 'Decided', 'Contested', 'Undecided', 'Status', 'Note']);
+        few.forEach((x) => tableRow(tb, [x.rule, x.decided_findings, x.contested_findings, x.undecided_findings, uiTag('not_enough_verdicts', 'not_enough_data'), x.note || 'No point estimate until the minimum is reached.']));
+      }
+      if ((r.review_candidates || []).length) uiNote(box, 'Review candidates: ' + r.review_candidates.join(', '), true);
+    }).catch((e) => uiError(box, 'rule precision', e, fbLoadRules));
+  }
+  function fbLoadChain() {
+    const box = $('fb-chain-out');
+    uiLoading(box);
+    return pgApi('/v1/feedback/verify').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      const row = el('div', '', 'ui-row');
+      row.appendChild(uiTag(r.ok ? 'intact' : 'broken', r.ok ? 'verified' : 'failed'));
+      row.appendChild(el('span', r.entries + ' entries checked' + (r.ok ? '.' : '. First broken entry: seq ' + r.first_broken_seq + (r.reason ? ' (' + r.reason + ')' : '') + '.')));
+      box.appendChild(row);
+      if (!r.ok) uiNote(box, 'The hash chain does not verify. Treat the log as possibly altered and investigate before relying on these numbers.', true);
+    }).catch((e) => uiError(box, 'chain integrity', e, fbLoadChain));
+  }
+  function fbLoadRecent() {
+    const box = $('fb-recent-out');
+    uiLoading(box);
+    return pgApi('/v1/feedback?limit=25').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      const es = (r && r.entries) || [];
+      if (!es.length) { uiEmpty(box, 'No verdicts recorded', 'Verdicts appear here, newest first.'); return; }
+      const tb = uiTable(box, ['Time', 'Rule', 'Host', 'Verdict', 'Analyst', 'Note']);
+      es.forEach((e) => tableRow(tb, [fmtTime(e.time), e.rule, e.host, uiTag(fbVerdictLabel[e.verdict] || e.verdict, e.verdict), e.actor, e.note || '']));
+    }).catch((e) => uiError(box, 'recent verdicts', e, fbLoadRecent));
+  }
+  function loadFeedback() { fbLoadSummary(); fbLoadRules(); fbLoadChain(); fbLoadRecent(); }
+  $('fb-go').addEventListener('click', loadFeedback);
+  /* === end feedback page === */
+
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '.': 'huntseq', '\'': 'vulnprio', '/': 'search' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '.': 'huntseq', '\'': 'vulnprio', '`': 'feedback', '/': 'search' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
