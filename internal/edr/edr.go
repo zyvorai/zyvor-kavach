@@ -522,6 +522,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	RegisterVulnMgmt(mux, token)
 	RegisterVulnPriority(mux, token, store)
 	RegisterCertFeeds(mux, token, store)
+	RegisterSyslog(mux, token, store)
 	RegisterDeceptionTokens(mux, token, store)
 	RegisterDataGovernance(mux, token, store, registry)
 	RegisterHuntPacks(mux, token, store)
