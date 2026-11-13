@@ -22,8 +22,19 @@ All files sit next to the findings store path (`<store>` below), are written ato
 | `<store>.beacon_allowlist.json` | Optional, read-only: extra destinations the beacon detector (`GET /v1/ml/beacons`, `docs/local-models-net.md`) should ignore, on top of the built-in NTP, OS-update, CDN and OCSP list. Kavach never writes it; create it by hand to tune beacon noise |
 | `<store>.reportschedules.json` | Scheduled report definitions (template, params, frequency, retention, format, next/last run; max 100). Rendered reports live in the directory `<store>.reports/` as `<run_id>.md|json|csv` plus `<run_id>.meta.json` (template, params, generated_at, bytes, sha256, status), capped per schedule by retention, and globally at 500 reports / 64 MB. Pull-only via `GET /v1/reports/archive/{run_id}`; Kavach never emails or pushes reports. Deleting a schedule deletes its reports |
 | `<store>.fleetslo.json` | Fleet SLO targets and the bounded series (5-minute samples, max 72 h, 500 agents: heartbeat freshness flag and event count per sample), persisted at most every 10 minutes. Derived only from data agents already send |
+| `<store>` (the path itself) | The findings store: one JSON finding per line, appended; rewritten by the retention purge |
+| `<store>.events` | Append-only JSON-lines ledger of process, network and file events (retention purge rewrites it; contains full command lines and paths, so treat as personal data) |
+| `<store>.cases.json` | Incident cases (title, severity, status, assignee, comments, linked findings), written atomically |
+| `<store>.casetemplates.json` | Custom case templates, per-case workflow (checklist, applied template), chain-to-case links and a hash-chained journal of workflow actions |
+| `<store>.hunts` | Hunt-pack schedules, run history and sequence counter (written non-atomically; mode 0600; no `.json` suffix) |
+| `<store>.labrules.json` | Detection-lab rules (sandbox detection-as-code; shadow only, never promoted automatically) |
+| `<store>.posture.json` | Posture assets and baselines (`GET /v1/posture/*`) |
+| `<store>.vulncache.json` | Vulnerability feed cache: CISA KEV (CVE to date added, fetch time), OSV lookups per ecosystem/package/version, and matched advisories; 24 h TTL, opt-in network feeds. See `docs/vuln-feeds.md` |
+| `<store>.inventory.json` | Live inventory rows per domain so inventory APIs are not empty after restart. Location can be overridden with `KAVACH_INVENTORY` |
+| `<store>.retention.json` | Data-governance retention policy (days per class: findings, process_events, network_events, file_events; null = unlimited) |
+| `<store>.redaction.json` | Data-governance export redaction toggle (`{"enabled": bool}`) |
+| `<store>.governance.audit.jsonl` | Append-only JSON-lines audit of governance actions (retention.set, retention.apply, redaction.set) with actor and time |
 | credential registry file | Agent enrollment and last heartbeat; fleet health is derived from it, so stale detection survives restarts |
 
-Backup: copy these files while the server is stopped, or at any time (writes are atomic renames).
+Backup: copy these files while the server is stopped, or at any time (JSON state files are written by atomic rename; the append-only `<store>`, `<store>.events` and `.governance.audit.jsonl` files and `<store>.hunts` are not).
 
-- `<store>.casetemplates.json`: custom case templates, per-case workflow (checklist, applied template), chain-to-case links and a hash-chained journal of workflow actions.
