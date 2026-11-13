@@ -1400,6 +1400,10 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 .cw-check { display: flex; gap: 10px; align-items: flex-start; min-height: var(--hit-min); padding: 4px 0; overflow-wrap: anywhere; }
 .cw-check input { margin-top: 4px; }
 .tag.overdue-sla { background: var(--danger-bg); color: var(--danger); }
+/* === automation page === */
+.tag.draft, .tag.retired, .tag.expired { background: var(--fill-tertiary); color: var(--text-secondary); }
+.tag.testing { background: var(--warning-bg); color: var(--warning-text); }
+.tag.production { background: var(--success-bg); color: var(--success-text); }
 </style>
 </head>
 <body>
@@ -1495,6 +1499,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
             <button type="button" data-page="provenance" role="menuitem">Provenance</button>
             <button type="button" data-page="ransomware-behaviour" role="menuitem">Ransomware behaviour</button>
             <button type="button" data-page="ttp" role="menuitem">TTP similarity</button>
+            <button type="button" data-page="automation" role="menuitem">Automation</button>
             <button type="button" data-page="chains" role="menuitem">Attack chains</button>
             <button type="button" data-page="feedback" role="menuitem">Feedback</button>
             <button type="button" data-page="vulnprio" role="menuitem">Vulnerability priority</button>
@@ -3740,6 +3745,59 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       <div id="ch-tpl-out"></div>
     </section>
     <!-- === end attack chains page === -->
+    <!-- === automation page === -->
+    <section id="page-automation" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Automation</p>
+        <h1>Scheduled detections, hunt quotas and exceptions.</h1>
+        <p class="lede">Scheduled detections record findings; they never block, kill or contain anything. An exception suppresses reporting only: the matching findings are kept in a separate list and the underlying activity is untouched.</p>
+      </header>
+      <p class="work-msg" id="au-msg" role="status"></p>
+
+      <h2>Scheduled detections</h2>
+      <p class="hint" id="au-sched-sem"></p>
+      <div id="au-sched-out"></div>
+      <div class="work-panel" id="au-form" role="group" aria-labelledby="au-form-title">
+        <h3 id="au-form-title">New scheduled detection</h3>
+        <div class="work-grid">
+          <div class="field"><label for="au-name">Name</label><input class="input-field" id="au-name" maxlength="120" autocomplete="off"></div>
+          <div class="field"><label for="au-kind">Source</label><select class="select-field" id="au-kind"><option value="seq">kavach-seq query</option><option value="saved_search">Saved search</option></select></div>
+          <div class="field" id="au-f-ss"><label for="au-ss">Saved search id</label><input class="input-field" id="au-ss" autocomplete="off"></div>
+          <div class="field" id="au-f-since"><label for="au-since">Lookback (seq)</label><input class="input-field" id="au-since" value="24h" placeholder="24h, 7d"></div>
+          <div class="field"><label for="au-interval">Interval (seconds, 60 to 86400)</label><input class="input-field" id="au-interval" type="number" min="60" max="86400" value="3600"></div>
+          <div class="field"><label for="au-sev">Severity</label><select class="select-field" id="au-sev"><option value="info">Info</option><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select></div>
+          <div class="field"><label for="au-tech">Technique (optional)</label><input class="input-field" id="au-tech" placeholder="T1059.004" autocomplete="off"></div>
+          <div class="field"><label for="au-state">State</label><select class="select-field" id="au-state"><option value="draft">Draft</option><option value="testing">Testing (findings kept as shadow only)</option><option value="production">Production</option><option value="retired">Retired</option></select></div>
+        </div>
+        <div class="field" id="au-f-q"><label for="au-query">kavach-seq query</label><textarea class="input-field hs-query" id="au-query" rows="5" spellcheck="false"></textarea></div>
+        <div class="px-actions"><button type="button" id="au-save">Create detection</button><button type="button" class="secondary" id="au-cancel" hidden>Cancel edit</button></div>
+      </div>
+      <div id="au-run-out" aria-live="polite"></div>
+
+      <h2>Hunt quotas</h2>
+      <div id="au-lim-out"></div>
+
+      <h2>Exceptions</h2>
+      <div class="nx-note bh-caveat" role="note"><strong>What an exception does</strong><ul><li>It suppresses reporting only. Matching findings leave the main list and are kept in the suppressed list below.</li><li>Every exception must expire (at most 365 days). Creating or changing one needs the admin token.</li></ul></div>
+      <div id="au-exc-out"></div>
+      <div class="work-panel" role="group" aria-labelledby="au-exc-form-title">
+        <h3 id="au-exc-form-title">New exception</h3>
+        <div class="work-grid">
+          <div class="field"><label for="au-x-rule">Rule id or glob (required)</label><input class="input-field" id="au-x-rule" autocomplete="off"></div>
+          <div class="field"><label for="au-x-host">Host or glob (optional)</label><input class="input-field" id="au-x-host" autocomplete="off"></div>
+          <div class="field"><label for="au-x-path">Executable path glob (optional)</label><input class="input-field" id="au-x-path" autocomplete="off"></div>
+          <div class="field"><label for="au-x-owner">Owner</label><input class="input-field" id="au-x-owner" autocomplete="off"></div>
+          <div class="field"><label for="au-x-reason">Reason</label><input class="input-field" id="au-x-reason" autocomplete="off"></div>
+          <div class="field"><label for="au-x-exp">Expires (required)</label><input class="input-field" id="au-x-exp" type="datetime-local"></div>
+        </div>
+        <div class="px-actions"><button type="button" id="au-x-create">Create exception</button></div>
+      </div>
+      <h3>Suppressed findings</h3>
+      <div id="au-sup-out"></div>
+      <h3>Exception history</h3>
+      <div id="au-hist-out"></div>
+    </section>
+    <!-- === end automation page === -->
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
@@ -3824,8 +3882,8 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage', 'huntseq': 'Sequence hunt', 'vulnprio': 'Vulnerability priority', 'feedback': 'Feedback', 'chains': 'Attack chains' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage', 'huntseq': 'Sequence hunt', 'vulnprio': 'Vulnerability priority', 'feedback': 'Feedback', 'chains': 'Attack chains', 'automation': 'Automation' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -3948,7 +4006,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -4008,6 +4066,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     if (current === 'provenance' && typeof loadProvenance === 'function') loadProvenance();
     if (current === 'ransomware-behaviour' && typeof loadRansomwareBehaviour === 'function') loadRansomwareBehaviour();
     if (current === 'ttp' && typeof loadTtp === 'function') loadTtp();
+    if (current === 'automation' && typeof loadAutomation === 'function') loadAutomation();
     if (current === 'chains' && typeof loadChains === 'function') loadChains();
     if (current === 'feedback' && typeof loadFeedback === 'function') loadFeedback();
     if (current === 'vulnprio' && typeof loadVulnPrio === 'function') loadVulnPrio();
@@ -8157,8 +8216,208 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   }
   /* === end attack chains and case workflow === */
 
+  /* === automation page === */
+  let auEdit = '', auLimits = null;
+  function auKindSync() {
+    const seq = $('au-kind').value === 'seq';
+    $('au-f-ss').hidden = seq;
+    $('au-f-since').hidden = !seq;
+    $('au-f-q').hidden = !seq;
+  }
+  function auFormReset() {
+    auEdit = '';
+    $('au-form-title').textContent = 'New scheduled detection';
+    $('au-save').textContent = 'Create detection';
+    $('au-cancel').hidden = true;
+    ['au-name', 'au-ss', 'au-tech', 'au-query'].forEach((i) => { $(i).value = ''; });
+    $('au-since').value = '24h'; $('au-interval').value = '3600'; $('au-sev').value = 'medium'; $('au-state').value = 'draft'; $('au-kind').value = 'seq';
+    auKindSync();
+  }
+  function auFormLoad(d) {
+    auEdit = d.id;
+    $('au-form-title').textContent = 'Edit ' + d.id;
+    $('au-save').textContent = 'Save changes';
+    $('au-cancel').hidden = false;
+    $('au-name').value = d.name || '';
+    $('au-kind').value = (d.source && d.source.kind) || 'seq';
+    $('au-ss').value = (d.source && d.source.saved_search_id) || '';
+    $('au-query').value = (d.source && d.source.query) || '';
+    $('au-since').value = (d.source && d.source.since) || '24h';
+    $('au-interval').value = d.interval_sec;
+    $('au-sev').value = d.severity;
+    $('au-tech').value = d.technique || '';
+    $('au-state').value = d.state;
+    auKindSync();
+    $('au-name').focus();
+  }
+  async function auSave() {
+    const kind = $('au-kind').value;
+    const interval = parseInt($('au-interval').value, 10);
+    if (!$('au-name').value.trim()) { setMsg('au-msg', 'Name is required.', true); $('au-name').focus(); return; }
+    if (!(interval >= 60 && interval <= 86400)) { setMsg('au-msg', 'Interval must be 60 to 86400 seconds.', true); $('au-interval').focus(); return; }
+    const source = kind === 'seq' ? { kind: 'seq', query: $('au-query').value, since: $('au-since').value.trim() || '24h' } : { kind: 'saved_search', saved_search_id: $('au-ss').value.trim() };
+    if (kind === 'seq' && !source.query.trim()) { setMsg('au-msg', 'A kavach-seq query is required.', true); $('au-query').focus(); return; }
+    if (kind === 'saved_search' && !source.saved_search_id) { setMsg('au-msg', 'A saved search id is required.', true); $('au-ss').focus(); return; }
+    const body = { name: $('au-name').value.trim(), source: source, interval_sec: interval, severity: $('au-sev').value, technique: $('au-tech').value.trim(), state: $('au-state').value };
+    try {
+      await pgApi('/v1/detections/scheduled' + (auEdit ? '/' + encodeURIComponent(auEdit) : ''), { method: auEdit ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      setMsg('au-msg', auEdit ? 'Detection updated.' : 'Detection created.', false);
+      auFormReset();
+      auLoadSched();
+    } catch (e) { setMsg('au-msg', 'Could not save: ' + e.message, true); }
+  }
+  function auShowRun(res, dry, id) {
+    const box = $('au-run-out');
+    box.replaceChildren();
+    const r = res.run || {};
+    box.appendChild(el('h3', (dry ? 'Dry run of ' : 'Run of ') + id));
+    if (dry) uiNote(box, res.note || 'Dry run: nothing was recorded. "Would be reported" is what a real run would add.');
+    const flags = [];
+    if (r.truncated) flags.push(uiTag('truncated', 'partial'));
+    if (r.timed_out) flags.push(uiTag('timed out', 'failed'));
+    if (flags.length) { const row = el('div', '', 'bh-chips'); flags.forEach((f) => row.appendChild(f)); box.appendChild(row); }
+    uiMeta(box, ['Scanned: ' + r.scanned, 'Matched: ' + r.matched, (dry ? 'Would be reported: ' : 'Reported: ') + r.recorded, 'Shadow only: ' + r.shadow, 'Deduplicated: ' + r.deduped, 'Reporting suppressed by exceptions: ' + r.suppressed, 'Took ' + r.duration_ms + ' ms']);
+    if ((r.errors || []).length) uiNote(box, 'Errors: ' + r.errors.join('; '), true);
+  }
+  async function auRun(d, dry) {
+    const box = $('au-run-out');
+    uiLoading(box, dry ? 'Dry run…' : 'Running…');
+    try {
+      const res = await pgApi('/v1/detections/scheduled/' + encodeURIComponent(d.id) + (dry ? '/dryrun' : '/run'), { method: 'POST' });
+      auShowRun(res || {}, dry, d.id);
+      if (!dry) auLoadSched();
+    } catch (e) { uiError(box, dry ? 'the dry run' : 'the run', e, () => auRun(d, dry)); }
+  }
+  async function auHistory(d) {
+    const box = $('au-run-out');
+    uiLoading(box, 'Loading run history…');
+    try {
+      const r = await pgApi('/v1/detections/scheduled/' + encodeURIComponent(d.id) + '/history');
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      box.appendChild(el('h3', 'Run history for ' + d.id));
+      uiMeta(box, ['Retention: ' + (r.retention ?? '?') + ' runs per detection']);
+      if (!(r.history || []).length) { box.appendChild(el('p', 'No runs recorded yet.', 'hint')); return; }
+      const tb = uiTable(box, ['Time', 'Trigger', 'Scanned', 'Matched', 'Reported (or would be)', 'Shadow', 'Deduped', 'Suppressed', 'Flags']);
+      r.history.slice().reverse().forEach((x) => tableRow(tb, [fmtTime(x.time), x.trigger + (x.dry_run ? ' (dry run, nothing recorded)' : ''), x.scanned, x.matched, x.recorded, x.shadow, x.deduped, x.suppressed, [x.truncated ? 'truncated' : '', x.timed_out ? 'timed out' : '', (x.errors || []).join('; ')].filter(Boolean).join(', ') || '—']));
+    } catch (e) { uiError(box, 'run history', e, () => auHistory(d)); }
+  }
+  async function auDelete(d) {
+    try {
+      await pgApi('/v1/detections/scheduled/' + encodeURIComponent(d.id), { method: 'DELETE' });
+      setMsg('au-msg', d.id + ' deleted. Findings it already recorded are kept.', false);
+      auLoadSched();
+    } catch (e) { setMsg('au-msg', 'Could not delete: ' + e.message, true); }
+  }
+  function auLoadSched() {
+    const box = $('au-sched-out');
+    uiLoading(box);
+    return pgApi('/v1/detections/scheduled').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      $('au-sched-sem').textContent = r.semantics || '';
+      const ds = r.detections || [];
+      if (!ds.length) { uiEmpty(box, 'No scheduled detections', 'Create one below. Start in Draft or Testing so findings are not reported until you have checked a dry run.'); return; }
+      const tb = uiTable(box, ['ID', 'Name', 'Source', 'Every', 'Severity', 'State', 'Last run', 'Actions']);
+      ds.forEach((d) => {
+        const acts = el('div', '', 'px-actions');
+        acts.appendChild(pgBtn('Edit', 'secondary', () => auFormLoad(d), 'Edit ' + d.id));
+        acts.appendChild(pgBtn('Dry run', 'secondary', () => auRun(d, true), 'Dry run ' + d.id));
+        acts.appendChild(pxConfirm('Run now', 'Run now? This records real findings.', 'Run now', () => auRun(d, false)));
+        acts.appendChild(pgBtn('History', 'secondary', () => auHistory(d), 'Run history for ' + d.id));
+        acts.appendChild(pxConfirm('Delete', 'Delete ' + d.id + '? Recorded findings are kept.', 'Delete', () => auDelete(d)));
+        tableRow(tb, [d.id, d.name, d.source && d.source.kind === 'seq' ? 'seq: ' + d.source.query : 'saved search ' + ((d.source || {}).saved_search_id || ''), d.interval_sec + 's', d.severity, uiTag(d.state, d.state), pxTime(d.last_run), acts]);
+      });
+    }).catch((e) => uiError(box, 'scheduled detections', e, auLoadSched));
+  }
+  function auLoadLimits() {
+    const box = $('au-lim-out');
+    uiLoading(box);
+    return pgApi('/v1/hunts/limits').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      const l = r.limits || {}, u = r.usage || {};
+      uiMeta(box, ['Scheduled: ' + (u.scheduled_detections ?? '?') + ' of ' + (l.max_scheduled ?? '?'), 'Runs in the last hour: ' + (u.runs_last_hour ?? '?') + ' of ' + (l.max_runs_per_hour ?? '?'), 'Max matches per run: ' + (l.max_matches_per_run ?? '?'), 'History kept: ' + (l.history_retention ?? '?') + ' runs']);
+      if ((r.env || []).length) box.appendChild(el('p', 'Quotas are set by environment variables: ' + r.env.join(', ') + '.', 'hint'));
+      const refused = r.refused || {}, counts = refused.counts || {};
+      if (Object.keys(counts).length) uiMeta(box, ['Refused by quota: ' + Object.keys(counts).map((k) => k + ' ' + counts[k]).join(', ')]);
+      if ((refused.recent || []).length) {
+        const tb = uiTable(box, ['Time', 'What', 'Detection', 'Reason']);
+        refused.recent.forEach((x) => tableRow(tb, [fmtTime(x.time), x.what, x.id || '—', x.reason]));
+      } else box.appendChild(el('p', 'Nothing has been refused by a quota.', 'hint'));
+    }).catch((e) => uiError(box, 'hunt quotas', e, auLoadLimits));
+  }
+  async function auExpire(e) {
+    try {
+      await pgApi('/v1/exceptions/' + encodeURIComponent(e.id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expire: true }) });
+      setMsg('au-msg', e.id + ' expired. Reporting resumes.', false);
+      auLoadExceptions();
+    } catch (err) { setMsg('au-msg', 'Could not expire: ' + err.message, true); }
+  }
+  function auLoadExceptions() {
+    const box = $('au-exc-out');
+    uiLoading(box);
+    pgApi('/v1/exceptions').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      if (r.semantics) uiNote(box, r.semantics);
+      const ch = r.chain || {};
+      uiMeta(box, ['History chain: ' + (ch.ok ? 'intact' : 'BROKEN at seq ' + ch.broken_at_seq), (ch.entries ?? '?') + ' entries', 'Maximum lifetime: ' + (r.max_lifetime_days ?? '?') + ' days']);
+      const xs = r.exceptions || [];
+      if (!xs.length) { uiEmpty(box, 'No exceptions', 'Nothing is being suppressed. Every finding is reported.'); return; }
+      const tb = uiTable(box, ['ID', 'Rule', 'Host', 'Path', 'Owner', 'Reason', 'Expires', 'Status', 'Suppressed', 'Actions']);
+      xs.forEach((x) => tableRow(tb, [x.id, x.rule, x.host || 'any', x.path || 'any', x.owner, x.reason, fmtTime(x.expires), uiTag(x.status, x.status === 'active' ? 'production' : 'expired'), x.suppressed_count + ' findings (reporting only)', x.status === 'active' ? pxConfirm('Expire now', 'Expire ' + x.id + '? Reporting resumes.', 'Expire', () => auExpire(x)) : '—']));
+    }).catch((e) => uiError(box, 'exceptions', e, auLoadExceptions));
+  }
+  async function auCreateExc() {
+    const exp = $('au-x-exp').value;
+    const body = { rule: $('au-x-rule').value.trim(), host: $('au-x-host').value.trim(), path: $('au-x-path').value.trim(), owner: $('au-x-owner').value.trim(), reason: $('au-x-reason').value.trim() };
+    if (!body.rule) { setMsg('au-msg', 'Rule is required (a bare * is refused).', true); $('au-x-rule').focus(); return; }
+    if (!body.owner || !body.reason) { setMsg('au-msg', 'Owner and reason are required.', true); (body.owner ? $('au-x-reason') : $('au-x-owner')).focus(); return; }
+    if (!exp) { setMsg('au-msg', 'An expiry date is required.', true); $('au-x-exp').focus(); return; }
+    const t = new Date(exp);
+    if (isNaN(t.getTime()) || t.getTime() <= Date.now()) { setMsg('au-msg', 'Expiry must be in the future.', true); $('au-x-exp').focus(); return; }
+    body.expires = t.toISOString();
+    try {
+      const r = await pgApi('/v1/exceptions', pgJSON(body));
+      setMsg('au-msg', 'Exception ' + r.id + ' created. It suppresses reporting only.', false);
+      ['au-x-rule', 'au-x-host', 'au-x-path', 'au-x-owner', 'au-x-reason', 'au-x-exp'].forEach((i) => { $(i).value = ''; });
+      auLoadExceptions(); auLoadSuppressed(); auLoadHistory();
+    } catch (e) { setMsg('au-msg', 'Could not create exception: ' + e.message, true); }
+  }
+  function auLoadSuppressed() {
+    const box = $('au-sup-out');
+    uiLoading(box);
+    pgApi('/v1/exceptions/suppressed').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      uiMeta(box, ['Total suppressed: ' + (r.total_suppressed ?? 0), 'Retained: ' + (r.retained ?? 0) + ' of ' + (r.retained_max ?? '?')]);
+      const xs = r.suppressed || [];
+      if (!xs.length) { box.appendChild(el('p', 'No findings have been suppressed.', 'hint')); return; }
+      const tb = uiTable(box, ['Suppressed at', 'Exception', 'Rule', 'Host', 'Severity', 'Finding']);
+      xs.forEach((x) => tableRow(tb, [fmtTime(x.suppressed_at), x.exception_id, (x.finding || {}).rule, (x.finding || {}).host, (x.finding || {}).severity, (x.finding || {}).id]));
+    }).catch((e) => uiError(box, 'suppressed findings', e, auLoadSuppressed));
+  }
+  function auLoadHistory() {
+    const box = $('au-hist-out');
+    uiLoading(box);
+    pgApi('/v1/exceptions/history').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      const row = el('div', '', 'ui-row');
+      row.appendChild(uiTag(r.chain_ok ? 'chain intact' : 'chain broken', r.chain_ok ? 'verified' : 'failed'));
+      if (!r.chain_ok) row.appendChild(el('span', 'First broken entry: seq ' + r.broken_at_seq, 'hint'));
+      box.appendChild(row);
+      const hs = (r.history || []).slice().reverse();
+      if (!hs.length) { box.appendChild(el('p', 'No changes recorded yet.', 'hint')); return; }
+      const tb = uiTable(box, ['Seq', 'Time', 'Actor', 'Action', 'Target', 'Detail']);
+      hs.forEach((h) => tableRow(tb, [h.seq, fmtTime(h.time), h.actor, h.action, h.target, h.detail]));
+    }).catch((e) => uiError(box, 'exception history', e, auLoadHistory));
+  }
+  function loadAutomation() { auLoadSched(); auLoadLimits(); auLoadExceptions(); auLoadSuppressed(); auLoadHistory(); }
+  $('au-kind').addEventListener('change', auKindSync);
+  $('au-save').addEventListener('click', auSave);
+  $('au-cancel').addEventListener('click', auFormReset);
+  $('au-x-create').addEventListener('click', auCreateExc);
+  auKindSync();
+  /* === end automation page === */
+
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '.': 'huntseq', '\'': 'vulnprio', '`': 'feedback', '\\': 'chains', '/': 'search' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '.': 'huntseq', '\'': 'vulnprio', '`': 'feedback', '\\': 'chains', '!': 'automation', '/': 'search' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
