@@ -1410,6 +1410,10 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 .tag.breaching, .tag.silent { background: var(--danger-bg); color: var(--danger); }
 .tag.unknown, .tag.never_seen, .tag.never_reported { background: var(--fill-tertiary); color: var(--text-secondary); }
 .rp-nr { color: var(--text-tertiary); font-style: italic; }
+/* === content versions page === */
+.tag.added { background: var(--success-bg); color: var(--success-text); }
+.tag.removed { background: var(--danger-bg); color: var(--danger); }
+.tag.modified { background: var(--warning-bg); color: var(--warning-text); }
 </style>
 </head>
 <body>
@@ -1505,6 +1509,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
             <button type="button" data-page="provenance" role="menuitem">Provenance</button>
             <button type="button" data-page="ransomware-behaviour" role="menuitem">Ransomware behaviour</button>
             <button type="button" data-page="ttp" role="menuitem">TTP similarity</button>
+            <button type="button" data-page="versions" role="menuitem">Content versions</button>
             <button type="button" data-page="reports" role="menuitem">Reports and SLO</button>
             <button type="button" data-page="automation" role="menuitem">Automation</button>
             <button type="button" data-page="chains" role="menuitem">Attack chains</button>
@@ -3842,6 +3847,30 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       <div id="rp-slo-out"></div>
     </section>
     <!-- === end reports and fleet SLO page === -->
+    <!-- === content versions page === -->
+    <section id="page-versions" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Content versions</p>
+        <h1>What detection content changed between builds.</h1>
+        <p class="lede">A snapshot of the embedded detection content is recorded at startup when it differs from the last one. Compare two snapshots to see which rules were added, removed or changed. Read-only.</p>
+      </header>
+      <div class="nx-note bh-caveat" id="vr-note" role="note"><strong>Limitations (always apply)</strong><ul><li>Newest first. A snapshot is recorded at startup only when embedded content differs from the last one, so changes between restarts are not captured.</li></ul></div>
+      <p class="work-msg" id="vr-msg" role="status"></p>
+      <h2>Snapshots</h2>
+      <div id="vr-snap-out"></div>
+      <h2>Compare two snapshots</h2>
+      <div class="toolbar-pill nx-filters bh-fields">
+        <label class="hint" for="vr-from">From</label>
+        <select class="input-field" id="vr-from"></select>
+        <label class="hint" for="vr-to">To</label>
+        <select class="input-field" id="vr-to"></select>
+        <button type="button" id="vr-cmp">Compare</button>
+      </div>
+      <div id="vr-diff-out" aria-live="polite"></div>
+      <h2>Changelog</h2>
+      <div id="vr-log-out"></div>
+    </section>
+    <!-- === end content versions page === -->
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
@@ -3926,8 +3955,8 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation', 'reports'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage', 'huntseq': 'Sequence hunt', 'vulnprio': 'Vulnerability priority', 'feedback': 'Feedback', 'chains': 'Attack chains', 'automation': 'Automation', 'reports': 'Reports and SLO' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation', 'reports', 'versions'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage', 'huntseq': 'Sequence hunt', 'vulnprio': 'Vulnerability priority', 'feedback': 'Feedback', 'chains': 'Attack chains', 'automation': 'Automation', 'reports': 'Reports and SLO', 'versions': 'Content versions' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -4050,7 +4079,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation', 'reports']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation', 'reports', 'versions']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -4110,6 +4139,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     if (current === 'provenance' && typeof loadProvenance === 'function') loadProvenance();
     if (current === 'ransomware-behaviour' && typeof loadRansomwareBehaviour === 'function') loadRansomwareBehaviour();
     if (current === 'ttp' && typeof loadTtp === 'function') loadTtp();
+    if (current === 'versions' && typeof loadVersions === 'function') loadVersions();
     if (current === 'reports' && typeof loadReports === 'function') loadReports();
     if (current === 'automation' && typeof loadAutomation === 'function') loadAutomation();
     if (current === 'chains' && typeof loadChains === 'function') loadChains();
@@ -8629,8 +8659,80 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   rpFreqSync();
   /* === end reports and fleet SLO page === */
 
+  /* === content versions page === */
+  function vrShort(h) { return h ? String(h).slice(0, 12) : '—'; }
+  function vrChanges(box, title, list, cls) {
+    const d = document.createElement('details');
+    d.className = 'cv-details';
+    d.open = (list || []).length > 0 && (list || []).length <= 25;
+    d.appendChild(el('summary', title + ' (' + (list || []).length + ')'));
+    if (!(list || []).length) d.appendChild(el('p', 'None.', 'hint'));
+    else {
+      const tb = uiTable(d, ['Pack', 'Kind', 'Item', 'Fields changed', 'Severity or match affected']);
+      list.forEach((c) => tableRow(tb, [c.pack, c.kind, el('span', c.id), (c.fields_changed || []).join(', ') || '—', (c.highlights || []).length ? uiTag((c.highlights || []).join(', '), 'modified') : 'no']));
+    }
+    box.appendChild(d);
+  }
+  function vrFillSelects(snaps) {
+    const from = $('vr-from'), to = $('vr-to'), pf = from.value, pt = to.value;
+    [from, to].forEach((s) => s.replaceChildren());
+    snaps.forEach((s) => {
+      const label = '#' + s.seq + ' · ' + fmtTime(s.time) + (s.build ? ' · ' + s.build : '');
+      [from, to].forEach((sel) => { const o = el('option', label); o.value = String(s.seq); sel.appendChild(o); });
+    });
+    // newest first: default compare previous (index 1) to latest (index 0)
+    if (snaps.length) { to.value = pt || String(snaps[0].seq); from.value = pf || String((snaps[1] || snaps[0]).seq); }
+    $('vr-cmp').disabled = snaps.length < 1;
+  }
+  function vrLoadSnaps() {
+    const box = $('vr-snap-out');
+    uiLoading(box);
+    return pgApi('/v1/content/versions').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      if (r.note) bhCaveat($('vr-note'), 'Limitations (always apply)', [r.note, 'History is capped at ' + (r.history_cap ?? '?') + ' snapshots.']);
+      const sn = r.snapshots || [];
+      vrFillSelects(sn);
+      if (!sn.length) { uiEmpty(box, 'No snapshots recorded', 'A snapshot is recorded at startup. None exists yet on this install.'); return; }
+      const tb = uiTable(box, ['Snapshot', 'Time', 'Build', 'Hash', 'Items', 'By kind', 'Packs']);
+      sn.forEach((s) => tableRow(tb, ['#' + s.seq, fmtTime(s.time), s.build || 'unknown', vrShort(s.hash), s.total_items, Object.keys(s.items_by_kind || {}).map((k) => k + ' ' + s.items_by_kind[k]).join(', ') || '—', (s.packs || []).length]));
+    }).catch((e) => uiError(box, 'content snapshots', e, vrLoadSnaps));
+  }
+  function vrCompare() {
+    const box = $('vr-diff-out');
+    const from = $('vr-from').value, to = $('vr-to').value;
+    if (!from || !to) { setMsg('vr-msg', 'Choose two snapshots.', true); return; }
+    setMsg('vr-msg', '', false);
+    uiLoading(box, 'Comparing…');
+    pgApi('/v1/content/changes?from=' + encodeURIComponent(from) + '&to=' + encodeURIComponent(to)).then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      if (r.message && !r.diff) { box.appendChild(el('p', r.message, 'hint')); return; }
+      const d = r.diff || {};
+      box.appendChild(el('h3', 'Snapshot #' + d.from_seq + ' to #' + d.to_seq));
+      if (d.identical) { box.appendChild(el('p', 'These snapshots are identical. No content changed.', 'hint')); return; }
+      uiMeta(box, ['Added: ' + (d.added || []).length, 'Removed: ' + (d.removed || []).length, 'Modified: ' + (d.modified || []).length, 'Packs changed: ' + ((d.packs_changed || []).join(', ') || 'none')]);
+      vrChanges(box, 'Added', d.added);
+      vrChanges(box, 'Removed', d.removed);
+      vrChanges(box, 'Modified', d.modified);
+    }).catch((e) => uiError(box, 'the comparison', e, vrCompare));
+  }
+  function vrLoadLog() {
+    const box = $('vr-log-out');
+    uiLoading(box);
+    return pgApi('/v1/content/changelog').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      if (r.message) box.appendChild(el('p', r.message, 'hint'));
+      const es = r.changelog || [];
+      if (!es.length) { uiEmpty(box, 'No changelog', 'There are no snapshots to describe.'); return; }
+      const tb = uiTable(box, ['Snapshot', 'Time', 'Build', 'Summary', 'With severity or match change']);
+      es.forEach((e) => tableRow(tb, ['#' + e.seq, fmtTime(e.time), e.build || 'unknown', e.summary || '', e.modified_with_severity_or_match_change ?? '—']));
+    }).catch((e) => uiError(box, 'the changelog', e, vrLoadLog));
+  }
+  function loadVersions() { vrLoadSnaps().then(vrCompare); vrLoadLog(); }
+  $('vr-cmp').addEventListener('click', vrCompare);
+  /* === end content versions page === */
+
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '.': 'huntseq', '\'': 'vulnprio', '`': 'feedback', '\\': 'chains', '!': 'automation', '@': 'reports', '/': 'search' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '.': 'huntseq', '\'': 'vulnprio', '`': 'feedback', '\\': 'chains', '!': 'automation', '@': 'reports', '#': 'versions', '/': 'search' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
