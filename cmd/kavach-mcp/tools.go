@@ -38,6 +38,9 @@ func registerEndpointTool(srv *mcpserver.Server, c *client, t endpointTool) erro
 			path := t.path
 			for _, name := range t.pathParams {
 				v, _ := args[name].(string)
+				if v == "" && args[name] != nil {
+					v = fmt.Sprint(args[name])
+				}
 				path = strings.ReplaceAll(path, "{"+name+"}", url.PathEscape(v))
 				delete(args, name)
 			}
