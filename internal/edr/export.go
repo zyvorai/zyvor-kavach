@@ -58,6 +58,9 @@ func filterFindings(r *http.Request, all []Finding) ([]Finding, error) {
 }
 
 func exportFindings(w http.ResponseWriter, r *http.Request, store *Store) {
+	if siemExport(w, r, store) {
+		return
+	}
 	format := r.URL.Query().Get("format")
 	if format == "" {
 		format = "json"

@@ -176,7 +176,7 @@ func run(args []string) error {
 	case "trends":
 		return trendsCmd(os.Stdout, args[1:])
 	case "export":
-		return exportCmd(os.Stdout, args[1:])
+		return exportCmdSIEM(os.Stdout, args[1:])
 	case "notes":
 		return notesCmd(os.Stdout, args[1:])
 	case "saved-searches", "searches":

@@ -499,6 +499,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	RegisterComplianceEvidence(mux, token, store, registry, incidents, alertDispatcher)
 	RegisterComplianceScoreFull(mux, token, store, registry, incidents, alertDispatcher)
 	RegisterExport(mux, token, store, registry)
+	RegisterSIEMExport(mux, token, store)
 	analystWS := RegisterAnalystWorkspace(mux, token, store)
 	alertDispatcher.ws = analystWS
 	RegisterCaseManagement(mux, token, store, analystWS)

