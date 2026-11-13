@@ -1286,6 +1286,16 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 .in-ioc code { font-family: var(--font-mono); font-size: 12px; overflow-wrap: anywhere; min-width: 0; flex: 1 1 200px; }
 .in-pane textarea.lab-code { white-space: pre-wrap; }
 
+/* === models page === */
+.md-hist { width: 100%; max-width: 360px; height: auto; display: block; }
+.md-hist .md-bar { fill: var(--apple-blue); }
+.md-hist .md-axis { stroke: var(--hairline-1); }
+.md-hist text { fill: var(--text-tertiary); font-size: 10px; font-family: var(--font); }
+.md-card { margin: 0 0 16px; }
+.md-pane .toolbar-pill { margin: 0 0 12px; }
+.md-pane .nx-filters label { display: inline-flex; align-items: center; gap: 6px; min-height: var(--hit-min); }
+.md-method { margin: 0 0 12px; }
+
 /* Global search */
 .gs-bar { display: flex; gap: 8px; flex-wrap: wrap; }
 .gs-bar .input-field { flex: 1 1 260px; min-width: 0; }
@@ -1387,6 +1397,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
             <button type="button" data-page="rulehealth" role="menuitem">Rule health</button>
             <button type="button" data-page="export" role="menuitem">Export</button>
             <button type="button" data-page="search" role="menuitem">Search</button>
+            <button type="button" data-page="models" role="menuitem">Models</button>
             <button type="button" data-page="inspector" role="menuitem">Inspector</button>
           </div>
         </div>
@@ -3246,6 +3257,95 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     </section>
     <!-- === end inspector page === -->
 
+    <!-- === models page === -->
+    <section id="page-models" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Models</p>
+        <h1>Local behaviour models, shown honestly.</h1>
+        <p class="lede">Statistical models learned from this fleet's own events. They give hints and rankings, never verdicts. Where there is too little data the page says so instead of showing a score.</p>
+      </header>
+      <p class="work-msg" id="md-msg" role="status"></p>
+      <div class="nx-tabs" role="tablist" aria-label="Model sections" id="md-tabs">
+        <button type="button" role="tab" data-md-tab="status" aria-selected="true">Status</button>
+        <button type="button" role="tab" data-md-tab="lineage" aria-selected="false">Lineage</button>
+        <button type="button" role="tab" data-md-tab="similar" aria-selected="false">Similar</button>
+        <button type="button" role="tab" data-md-tab="baseline" aria-selected="false">Baseline</button>
+        <button type="button" role="tab" data-md-tab="beacons" aria-selected="false">Beacons</button>
+        <button type="button" role="tab" data-md-tab="synth" aria-selected="false">Draft rule</button>
+        <button type="button" role="tab" data-md-tab="priority" aria-selected="false">Priority</button>
+      </div>
+
+      <div id="md-pane-status" class="md-pane">
+        <div id="md-status-out"></div>
+        <div class="work-panel">
+          <h3>Administration</h3>
+          <p class="hint">These actions change the learned models for the whole console. They need an administrator or an active signed-in session.</p>
+          <div class="px-actions">
+            <button type="button" class="secondary" id="md-reset">Reset models</button>
+            <button type="button" class="secondary" id="md-replay">Rebuild from retained events</button>
+          </div>
+          <div class="nx-note nx-warn" id="md-confirm" hidden role="alertdialog" aria-labelledby="md-confirm-text">
+            <p id="md-confirm-text"></p>
+            <div class="px-actions"><button type="button" class="danger" id="md-confirm-yes">Confirm</button><button type="button" class="secondary" id="md-confirm-no">Cancel</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="md-pane-lineage" class="md-pane" hidden>
+        <div class="toolbar-pill nx-filters">
+          <input class="input-field" id="md-lin-host" type="text" placeholder="Host (empty for the whole fleet)" aria-label="Host filter" autocomplete="off">
+          <button type="button" id="md-lin-go">Load</button>
+        </div>
+        <div id="md-lineage-out"></div>
+      </div>
+
+      <div id="md-pane-similar" class="md-pane" hidden>
+        <div class="toolbar-pill nx-filters">
+          <input class="input-field" id="md-sim-q" type="text" placeholder="Command line to compare" aria-label="Command line" autocomplete="off" spellcheck="false" maxlength="2048">
+          <input class="input-field" id="md-sim-host" type="text" placeholder="Host (optional, compare with its history)" aria-label="Host for history comparison" autocomplete="off">
+          <button type="button" id="md-sim-go">Find similar</button>
+        </div>
+        <div id="md-similar-out"></div>
+      </div>
+
+      <div id="md-pane-baseline" class="md-pane" hidden>
+        <div class="toolbar-pill nx-filters">
+          <input class="input-field" id="md-base-host" type="text" placeholder="Host" aria-label="Host" autocomplete="off">
+          <button type="button" id="md-base-go">Load baseline</button>
+        </div>
+        <div id="md-baseline-out"></div>
+      </div>
+
+      <div id="md-pane-beacons" class="md-pane" hidden>
+        <div class="toolbar-pill nx-filters">
+          <input class="input-field" id="md-bc-host" type="text" placeholder="Host (optional)" aria-label="Host" autocomplete="off">
+          <input class="input-field" id="md-bc-score" type="number" min="0" max="100" placeholder="Minimum score" aria-label="Minimum score">
+          <label class="hint"><input type="checkbox" id="md-bc-private"> Exclude private destinations</label>
+          <button type="button" id="md-bc-go">Load</button>
+        </div>
+        <div id="md-beacons-out"></div>
+      </div>
+
+      <div id="md-pane-synth" class="md-pane" hidden>
+        <p class="nx-note nx-warn">Nothing is saved or enabled by this tool. It only proposes a draft rule for you to review.</p>
+        <div class="toolbar-pill nx-filters">
+          <select class="select-field" id="md-syn-kind" aria-label="Input type"><option value="finding_id">Finding id</option><option value="command">Command line</option></select>
+          <input class="input-field" id="md-syn-in" type="text" placeholder="Finding id or command" aria-label="Finding id or command" autocomplete="off" spellcheck="false">
+          <button type="button" id="md-syn-go">Propose rule</button>
+        </div>
+        <div id="md-synth-out"></div>
+      </div>
+
+      <div id="md-pane-priority" class="md-pane" hidden>
+        <div class="toolbar-pill nx-filters">
+          <input class="input-field" id="md-pri-id" type="text" placeholder="Finding id" aria-label="Finding id" autocomplete="off" spellcheck="false">
+          <button type="button" id="md-pri-go">Explain priority</button>
+        </div>
+        <div id="md-priority-out"></div>
+      </div>
+    </section>
+    <!-- === end models page === -->
+
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
@@ -3316,8 +3416,8 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -3440,7 +3540,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -3493,6 +3593,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     if (current === 'rulehealth' && typeof loadRuleHealth === 'function') loadRuleHealth();
     if (current === 'export' && typeof loadExportPage === 'function') loadExportPage();
     if (current === 'search' && typeof loadSearchPage === 'function') loadSearchPage();
+    if (current === 'models' && typeof loadModels === 'function') loadModels();
     if (current === 'inspector' && typeof loadInspector === 'function') loadInspector();
   }
 
@@ -5946,8 +6047,273 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
   });
   /* === end inspector page === */
 
+  /* === models page === */
+  const md = { loaded: {}, tab: 'status', pending: '' };
+  function mdMethod(box, r) {
+    const t = r && (r.method || [r.model, r.note].filter(Boolean).join('. '));
+    if (t) box.appendChild(el('p', 'Method: ' + t, 'nx-note md-method'));
+  }
+  function mdNum(v, d) { return typeof v === 'number' ? String(Math.round(v * Math.pow(10, d || 2)) / Math.pow(10, d || 2)) : '-'; }
+  function mdStatusTag(s) { return uiTag(s === 'ok' ? 'ok' : (s || 'unknown'), s === 'ok' ? 'ok' : 'not_enough_data'); }
+  async function mdGet(outId, path, render, retry) {
+    const box = $(outId);
+    uiLoading(box);
+    try {
+      const r = await pgApi(path);
+      box.removeAttribute('aria-busy');
+      box.replaceChildren();
+      render(box, r || {});
+    } catch (e) { uiError(box, 'this model', e, retry); }
+  }
+  function mdStatus() {
+    mdGet('md-status-out', '/v1/ml/status', (box, r) => {
+      mdMethod(box, r);
+      uiMeta(box, ['Events learned: ' + (r.learned_events ?? '-'), 'Last updated: ' + pxTime(r.updated)]);
+      const names = { lineage: 'Process lineage', command_similarity: 'Command similarity', baselines: 'Host baselines' };
+      const tb = uiTable(box, ['Model', 'State', 'Sample counts and thresholds']);
+      Object.keys(r.models || {}).forEach((k) => {
+        const m = r.models[k];
+        const rest = Object.keys(m).filter((x) => x !== 'status' && x !== 'ready').map((x) => x.replace(/_/g, ' ') + ' ' + m[x]).join(', ');
+        tableRow(tb, [names[k] || k, el('span', '', 'cell-stack'), rest]).children[1].replaceChildren(mdStatusTag(m.status), el('span', m.ready ? 'ready' : 'not ready'));
+      });
+      if (!Object.keys(r.models || {}).length) uiEmpty(box, 'No model status', 'The server returned no models.');
+      uiNote(box, 'not_enough_data means the model has not seen enough events to say anything. No score is shown for it.');
+    }, mdStatus);
+  }
+  function mdLineage() {
+    const host = $('md-lin-host').value.trim();
+    mdGet('md-lineage-out', '/v1/ml/lineage' + (host ? '?host=' + encodeURIComponent(host) : ''), (box, r) => {
+      mdMethod(box, r);
+      uiMeta(box, ['Scope: ' + r.scope + (r.host ? ' ' + r.host : ''), 'Samples: ' + r.sample_count + ' (needs ' + r.min_samples + ')', 'Fleet samples: ' + r.fleet_sample_count, 'Novel at or above ' + r.surprisal_threshold_bits + ' bits']);
+      if (r.status === 'not_enough_data') { uiNote(box, 'not_enough_data: only ' + r.sample_count + ' parent-to-child samples so far; at least ' + r.min_samples + ' are needed before surprisal is reported.', true); return; }
+      const tb = uiTable(box, ['Parent', 'Child', 'Count', 'Surprisal (bits)', 'Fleet surprisal (bits)', 'Novel', 'Parent seen']);
+      (r.transitions || []).forEach((x) => tableRow(tb, [x.parent, x.child, x.count, mdNum(x.surprisal_bits), mdNum(x.fleet_surprisal_bits), x.novel ? uiTag('novel', 'medium') : 'no', x.parent_seen ? 'yes' : 'no']));
+      if (!(r.transitions || []).length) uiEmpty(box, 'No transitions', 'No parent-to-child transitions have been learned.');
+    }, mdLineage);
+  }
+  function mdSimilar() {
+    const q = $('md-sim-q').value.trim();
+    if (!q) { setMsg('md-msg', 'Enter a command line.', true); $('md-sim-q').focus(); return; }
+    setMsg('md-msg', '', false);
+    const host = $('md-sim-host').value.trim();
+    mdGet('md-similar-out', '/v1/ml/similar?q=' + encodeURIComponent(q) + (host ? '&host=' + encodeURIComponent(host) : ''), (box, r) => {
+      mdMethod(box, r);
+      uiNote(box, 'A hint, not a verdict. Similarity to a known-bad example does not mean the command is malicious, and a low similarity does not mean it is safe.', true);
+      uiMeta(box, ['Method detail: ' + (r.ngram || '-'), 'Threshold: ' + r.threshold, 'Known-bad exemplars: ' + r.exemplar_count, 'Similar to known bad: ' + (r.similar_to_known_bad ? 'yes' : 'no')]);
+      const nb = r.exemplar_neighbours || [];
+      if (!nb.length) uiEmpty(box, 'No neighbours', 'No known-bad examples are available to compare against.');
+      else {
+        const tb = uiTable(box, ['Similarity', 'Rule', 'Name', 'Technique', 'Tactic']);
+        nb.forEach((x) => tableRow(tb, [mdNum(x.similarity, 3), x.rule_id || '-', x.rule_name || '-', x.technique || '-', x.tactic || '-']));
+      }
+      const h = r.history || {};
+      box.appendChild(el('h4', 'This host\'s own history'));
+      if (h.status === 'not_requested') box.appendChild(el('p', h.note || 'Enter a host to compare with its history.', 'hint'));
+      else if (h.status === 'not_enough_data') box.appendChild(el('p', 'not_enough_data: ' + h.host + ' has ' + h.sample_count + ' commands recorded; ' + h.min_samples + ' are needed.', 'hint'));
+      else box.appendChild(el('p', h.host + ': nearest similarities ' + (h.nearest_similarities || []).join(', ') + '. ' + (h.familiar ? 'This looks like a command the host has run before.' : 'This does not closely match anything the host has run before.'), 'hint'));
+    }, mdSimilar);
+  }
+  function mdBaseline() {
+    const host = $('md-base-host').value.trim();
+    if (!host) { setMsg('md-msg', 'Enter a host.', true); $('md-base-host').focus(); return; }
+    setMsg('md-msg', '', false);
+    mdGet('md-baseline-out', '/v1/ml/baseline?host=' + encodeURIComponent(host), (box, r) => {
+      mdMethod(box, r);
+      uiMeta(box, ['Host: ' + r.host, 'Anomaly threshold: z >= ' + r.z_threshold, 'Needs ' + r.min_closed_hours + ' closed hours and ' + r.min_slot_samples + ' samples per slot']);
+      if (r.status === 'not_enough_data') uiNote(box, 'not_enough_data: no baseline has been learned for this host yet.', true);
+      const ms = r.metrics || {};
+      if (Object.keys(ms).length) {
+        const tb = uiTable(box, ['Metric', 'State', 'Closed hours', 'Slot samples', 'Slot mean', 'Slot sd', 'Anomalous hours', 'Last closed hour', 'Current hour (partial)']);
+        Object.keys(ms).forEach((k) => {
+          const m = ms[k], lc = m.last_closed_hour, op = m.open_hour;
+          const z = (x) => !x ? '-' : (x.z !== undefined ? 'count ' + x.count + ', z ' + x.z + (x.anomalous ? ' (anomalous)' : '') : 'count ' + x.count + ', not_enough_data');
+          tableRow(tb, [k, mdStatusTag(m.status), m.closed_hours, m.slot_samples, m.status === 'ok' ? m.slot_mean : '-', m.status === 'ok' ? m.slot_sd : '-', m.anomalous_hours, z(lc), z(op)]);
+        });
+      }
+      const fs = r.first_seen_24h;
+      if (fs) {
+        box.appendChild(el('h4', 'First seen in the last 24 hours (from the prevalence graph)'));
+        uiMeta(box, ['New executables: ' + fs.new_executables, 'New destinations: ' + fs.new_destinations]);
+        const rows = [].concat((fs.top_new_executables || []).map((x) => JSON.stringify(x)), (fs.top_new_destinations || []).map((x) => JSON.stringify(x)));
+        if (rows.length) uiList(box, rows);
+      }
+    }, mdBaseline);
+  }
+  function mdHist(bins) {
+    const ns = 'http://www.w3.org/2000/svg';
+    const W = 240, H = 64;
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + (H + 14));
+    svg.setAttribute('class', 'md-hist');
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', 'Histogram of intervals between connections, ' + bins.length + ' bins');
+    const max = Math.max(1, ...bins.map((b) => b.count));
+    const bw = W / bins.length;
+    bins.forEach((b, i) => {
+      const h = Math.max(b.count ? 1 : 0, (b.count / max) * H);
+      const r = document.createElementNS(ns, 'rect');
+      r.setAttribute('class', 'md-bar');
+      r.setAttribute('x', String(i * bw + 0.5));
+      r.setAttribute('y', String(H - h));
+      r.setAttribute('width', String(Math.max(1, bw - 1)));
+      r.setAttribute('height', String(h));
+      const t = document.createElementNS(ns, 'title');
+      t.textContent = mdNum(b.lo_sec, 1) + 's to ' + mdNum(b.hi_sec, 1) + 's: ' + b.count;
+      r.appendChild(t);
+      svg.appendChild(r);
+    });
+    const ax = document.createElementNS(ns, 'line');
+    ax.setAttribute('class', 'md-axis');
+    ax.setAttribute('x1', '0'); ax.setAttribute('x2', String(W)); ax.setAttribute('y1', String(H)); ax.setAttribute('y2', String(H));
+    svg.appendChild(ax);
+    [[0, 'start', mdNum(bins[0].lo_sec, 1) + 's'], [W, 'end', mdNum(bins[bins.length - 1].hi_sec, 1) + 's']].forEach(([x, anchor, txt]) => {
+      const t = document.createElementNS(ns, 'text');
+      t.setAttribute('x', String(x)); t.setAttribute('y', String(H + 11)); t.setAttribute('text-anchor', anchor);
+      t.textContent = txt;
+      svg.appendChild(t);
+    });
+    return svg;
+  }
+  function mdBeacons() {
+    const p = new URLSearchParams();
+    const host = $('md-bc-host').value.trim(), sc = $('md-bc-score').value.trim();
+    if (host) p.set('host', host);
+    if (sc) p.set('min_score', sc);
+    if ($('md-bc-private').checked) p.set('exclude_private', '1');
+    mdGet('md-beacons-out', '/v1/ml/beacons' + (p.toString() ? '?' + p.toString() : ''), (box, r) => {
+      mdMethod(box, r);
+      uiMeta(box, ['Series scored: ' + r.series_scored, 'Too few events to score (not_enough_data): ' + r.not_enough_data, 'Excluded as benign periodic: ' + r.excluded_benign_periodic, 'Suspect at score ' + r.suspect_score + ', high at ' + r.high_score, 'Minimum events: ' + r.min_events]);
+      uiNote(box, 'A regular rhythm is a lead, not proof. Many legitimate agents and updaters connect on a timer.');
+      const list = r.suspects || [];
+      if (!list.length) { uiEmpty(box, 'No beacon candidates', 'Nothing met the filters. Series with too few events are counted above and are not scored.'); return; }
+      list.forEach((s) => {
+        const c = el('div', '', 'work-panel md-card');
+        const head = el('div', '', 'ui-row');
+        head.appendChild(el('h3', s.host + ' to ' + s.destination));
+        head.appendChild(uiTag(s.level, s.level === 'high' ? 'high' : (s.level === 'suspect' ? 'medium' : '')));
+        c.appendChild(head);
+        if (s.status === 'not_enough_data') {
+          c.appendChild(el('p', 'not_enough_data: ' + s.events + ' events; no score is given.', 'hint'));
+        } else {
+          uiMeta(c, ['Score ' + mdNum(s.score, 1) + ' / 100', 'Period ' + mdNum(s.period_sec, 1) + 's', 'Jitter ratio ' + mdNum(s.jitter_ratio, 3), 'Events ' + s.events, 'Mean ' + mdNum(s.mean_sec, 1) + 's', 'Median ' + mdNum(s.median_sec, 1) + 's', 'CV ' + mdNum(s.cv, 3), 'Burstiness ' + mdNum(s.burstiness, 3), 'Autocorrelation ' + mdNum(s.autocorr, 3), 'First ' + pxTime(s.first), 'Last ' + pxTime(s.last)]);
+          if ((s.factors || []).length) uiList(c, s.factors.map((f) => f.name + ' (value ' + mdNum(f.value, 2) + ', weight ' + f.weight + '): ' + f.note));
+        }
+        if ((s.histogram || []).length) { c.appendChild(el('h4', 'Interval histogram')); c.appendChild(mdHist(s.histogram)); }
+        box.appendChild(c);
+      });
+    }, mdBeacons);
+  }
+  async function mdSynth() {
+    const v = $('md-syn-in').value.trim();
+    const box = $('md-synth-out');
+    if (!v) { setMsg('md-msg', 'Enter a finding id or a command.', true); $('md-syn-in').focus(); return; }
+    setMsg('md-msg', '', false);
+    uiLoading(box, 'Building a draft rule…');
+    try {
+      const body = {}; body[$('md-syn-kind').value] = v;
+      const res = await uiFetchAny('/v1/ml/synthesize', pgJSON(body));
+      const r = res.body || {};
+      box.removeAttribute('aria-busy');
+      box.replaceChildren();
+      if (!res.ok && !r.rule) throw new Error(r.error || 'HTTP ' + res.status);
+      uiNote(box, 'Nothing has been saved or enabled. This is only a proposal; no rule exists until you save it yourself.', true);
+      mdMethod(box, r);
+      const val = r.validation || {};
+      const vp = el('div', '', 'work-panel');
+      vp.appendChild(el('h3', 'Validation'));
+      vp.appendChild(el('p', val.valid ? 'Valid: the draft passed the same checks as the custom content API.' : 'Not valid: ' + (val.error || 'unknown reason') + '. Do not save this draft as it stands.', val.valid ? 'work-msg is-ok' : 'work-msg is-error'));
+      if (val.harness) vp.appendChild(el('p', val.harness, 'hint'));
+      uiMeta(vp, ['Source event matches the draft: ' + (r.source_event_matches ? 'yes' : 'no'), 'Recommended initial lifecycle: ' + (r.recommended_initial_lifecycle || 'testing')]);
+      const bc = r.benign_check || {};
+      uiMeta(vp, ['Benign events checked: ' + bc.events_checked, 'Benign events the draft matches: ' + bc.events_matched, 'Sources: ' + Object.keys(bc.sources || {}).map((k) => k + ' ' + bc.sources[k]).join(', ')]);
+      box.appendChild(vp);
+      if (r.rule) {
+        const rp = el('div', '', 'work-panel');
+        rp.appendChild(el('h3', 'Proposed rule JSON'));
+        const json = JSON.stringify(r.rule, null, 2);
+        rp.appendChild(el('pre', json, 'px-pre nx-scroll'));
+        const act = el('div', '', 'px-actions');
+        act.appendChild(uiCopyBtn(json, 'Copy rule JSON', 'Copy rule JSON'));
+        rp.appendChild(act);
+        rp.appendChild(el('h4', 'To keep this rule'));
+        uiList(rp, ['Review the conditions and the benign check above; widen or tighten as needed.', 'Save it yourself through the custom content API: POST /v1/content/custom with the rule JSON as the body.', 'Set its lifecycle to testing first (PUT /v1/rules/lifecycle/<rule id> with {"state":"testing"}) and watch the Rule health page before promoting it.']);
+        box.appendChild(rp);
+      }
+      if ((r.conditions || []).length) {
+        box.appendChild(el('h4', 'Conditions'));
+        const tb = uiTable(box, ['Field', 'Pattern', 'Benign events matching this alone', 'Benign events checked']);
+        r.conditions.forEach((c) => tableRow(tb, [c.field, c.pattern, c.benign_hits_alone, c.benign_events]));
+      }
+      if ((r.next_steps || []).length) { box.appendChild(el('h4', 'Server notes')); uiList(box, r.next_steps); }
+    } catch (e) { uiError(box, 'a draft rule', e); }
+  }
+  function mdPriority() {
+    const id = $('md-pri-id').value.trim();
+    if (!id) { setMsg('md-msg', 'Enter a finding id.', true); $('md-pri-id').focus(); return; }
+    setMsg('md-msg', '', false);
+    mdGet('md-priority-out', '/v1/ml/priority?finding_id=' + encodeURIComponent(id), (box, r) => {
+      mdMethod(box, r);
+      const p = r.priority || {};
+      const row = el('div', '', 'ui-row');
+      row.appendChild(el('p', mdNum(p.score, 1) + ' / 100', 'px-score'));
+      row.appendChild(uiTag(p.level || 'unknown', p.level));
+      box.appendChild(row);
+      uiMeta(box, ['Finding: ' + p.finding_id, 'Host: ' + p.host, 'Rule: ' + p.rule, 'Severity: ' + p.severity, p.destination ? 'Destination: ' + p.destination : '', 'Factor coverage: ' + mdNum(p.coverage, 2) + ' of total weight']);
+      box.appendChild(el('h4', 'Factor breakdown'));
+      const tb = uiTable(box, ['Factor', 'Value (0 to 1)', 'Nominal weight', 'Note']);
+      (p.factors || []).forEach((f) => tableRow(tb, [f.name, mdNum(f.value, 3), f.weight, f.note]));
+      if (!(p.factors || []).length) uiEmpty(box, 'No factors', 'No factor could be computed for this finding.');
+      box.appendChild(el('h4', 'Omitted factors (no data, weights renormalised)'));
+      if ((p.omitted || []).length) uiList(box, p.omitted);
+      else box.appendChild(el('p', 'None. Every factor was present.', 'hint'));
+    }, mdPriority);
+  }
+  const mdLoaders = { status: mdStatus, lineage: mdLineage, beacons: mdBeacons };
+  const mdTabSel = uiTabs('md-tabs', 'data-md-tab', (t) => {
+    md.tab = t;
+    ['status', 'lineage', 'similar', 'baseline', 'beacons', 'synth', 'priority'].forEach((k) => { $('md-pane-' + k).hidden = k !== t; });
+    if (mdLoaders[t] && !md.loaded[t]) { md.loaded[t] = true; mdLoaders[t](); }
+  });
+  function loadModels() { md.loaded = {}; mdTabSel(md.tab, false); }
+  $('md-lin-go').addEventListener('click', mdLineage);
+  $('md-lin-host').addEventListener('keydown', (e) => { if (e.key === 'Enter') mdLineage(); });
+  $('md-sim-go').addEventListener('click', mdSimilar);
+  $('md-sim-q').addEventListener('keydown', (e) => { if (e.key === 'Enter') mdSimilar(); });
+  $('md-base-go').addEventListener('click', mdBaseline);
+  $('md-base-host').addEventListener('keydown', (e) => { if (e.key === 'Enter') mdBaseline(); });
+  $('md-bc-go').addEventListener('click', mdBeacons);
+  $('md-syn-go').addEventListener('click', mdSynth);
+  $('md-syn-in').addEventListener('keydown', (e) => { if (e.key === 'Enter') mdSynth(); });
+  $('md-pri-go').addEventListener('click', mdPriority);
+  $('md-pri-id').addEventListener('keydown', (e) => { if (e.key === 'Enter') mdPriority(); });
+  const mdActions = {
+    reset: { path: '/v1/ml/reset', text: 'Reset models? This erases everything the console has learned: process lineage, command history and per-host baselines. Until enough events are seen again every model reports not_enough_data, and lineage, similarity-to-history and baseline hints disappear. Findings, events and rules are not changed.' },
+    replay: { path: '/v1/ml/learn/replay', text: 'Rebuild from retained events? This first clears the learned models, then re-learns them only from the events still retained in the store. Anything learned from events that are no longer retained is lost, and models may report not_enough_data until the replay finishes. Findings and rules are not changed.' },
+  };
+  function mdAsk(kind) {
+    md.pending = kind;
+    $('md-confirm-text').textContent = mdActions[kind].text;
+    $('md-confirm').hidden = false;
+    $('md-confirm-no').focus();
+  }
+  $('md-reset').addEventListener('click', () => mdAsk('reset'));
+  $('md-replay').addEventListener('click', () => mdAsk('replay'));
+  $('md-confirm-no').addEventListener('click', () => { $('md-confirm').hidden = true; $(md.pending === 'reset' ? 'md-reset' : 'md-replay').focus(); });
+  $('md-confirm-yes').addEventListener('click', async () => {
+    const a = mdActions[md.pending];
+    $('md-confirm').hidden = true;
+    setMsg('md-msg', 'Working…', false);
+    try {
+      const r = await pgApi(a.path, { method: 'POST' });
+      setMsg('md-msg', (r && r.status === 'replayed' ? 'Rebuilt from retained events.' : 'Models reset.') + (r && r.method ? ' ' + r.method : ''), false);
+      md.loaded = {};
+      mdStatus();
+    } catch (e) { setMsg('md-msg', 'Action failed: ' + e.message, true); }
+  });
+  /* === end models page === */
+
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', '/': 'search' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '/': 'search' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
