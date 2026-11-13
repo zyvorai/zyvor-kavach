@@ -1381,6 +1381,12 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 .hs-fields { margin: 4px 0; font-size: 12px; overflow-wrap: anywhere; color: var(--text-secondary); font-family: var(--font-mono, ui-monospace, monospace); white-space: pre-wrap; }
 .hs-match { margin: 8px 0; }
 .hs-tree { font-size: 12px; overflow-x: auto; white-space: pre; margin: 4px 0; }
+/* === vulnerability priority page === */
+.vp-detail { margin-top: 12px; border-color: var(--apple-blue); }
+.tag.act { background: var(--danger-bg); color: var(--danger); }
+.tag.attend { background: var(--warning-bg); color: var(--warning-text); }
+.tag.track, .tag.track_star { background: var(--info-bg); color: var(--apple-link); }
+.tag.unknown { background: var(--fill-tertiary); color: var(--text-secondary); border: 1px dashed var(--text-tertiary); }
 </style>
 </head>
 <body>
@@ -1476,6 +1482,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
             <button type="button" data-page="provenance" role="menuitem">Provenance</button>
             <button type="button" data-page="ransomware-behaviour" role="menuitem">Ransomware behaviour</button>
             <button type="button" data-page="ttp" role="menuitem">TTP similarity</button>
+            <button type="button" data-page="vulnprio" role="menuitem">Vulnerability priority</button>
             <button type="button" data-page="huntseq" role="menuitem">Sequence hunt</button>
             <button type="button" data-page="coverage" role="menuitem">Coverage</button>
           </div>
@@ -3639,6 +3646,32 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       </div>
     </section>
     <!-- === end kavach-seq hunt page === -->
+    <!-- === vulnerability priority page === -->
+    <section id="page-vulnprio" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Vulnerability priority</p>
+        <h1>Which matched CVEs to look at first, and what we do not know.</h1>
+        <p class="lede">Ranked by an SSVC decision tree using the evidence Kavach has. Unknown inputs use documented defaults and are always marked. This is advice only: nothing is patched or changed.</p>
+      </header>
+      <div class="nx-note bh-caveat" id="vp-limits" role="note"><strong>Limitations (always apply)</strong><ul><li>Observation only. Unknown decision points use documented defaults, so treat outcomes with unknown inputs as a range.</li></ul></div>
+      <p class="work-msg" id="vp-msg" role="status"></p>
+      <div class="toolbar-pill nx-filters bh-fields">
+        <label class="hint" for="vp-host">Host</label>
+        <input class="input-field" id="vp-host" placeholder="All hosts" size="16">
+        <label class="hint" for="vp-limit">Show top</label>
+        <input class="input-field" id="vp-limit" type="number" min="1" max="500" value="50">
+        <button type="button" id="vp-go">Load ranking</button>
+      </div>
+      <div id="vp-list-out"></div>
+      <div class="work-panel vp-detail" id="vp-detail" role="region" aria-labelledby="vp-detail-title" tabindex="-1" hidden>
+        <div class="ui-row"><h3 id="vp-detail-title">CVE</h3><button type="button" class="secondary" id="vp-detail-close">Close</button></div>
+        <div id="vp-detail-out"></div>
+      </div>
+      <h2>EPSS feed status</h2>
+      <div class="px-actions"><button type="button" class="secondary" id="vp-refresh">Refresh EPSS now</button></div>
+      <div id="vp-status-out"></div>
+    </section>
+    <!-- === end vulnerability priority page === -->
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
@@ -3709,8 +3742,8 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage', 'huntseq': 'Sequence hunt' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage', 'huntseq': 'Sequence hunt', 'vulnprio': 'Vulnerability priority' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -3833,7 +3866,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -3893,6 +3926,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     if (current === 'provenance' && typeof loadProvenance === 'function') loadProvenance();
     if (current === 'ransomware-behaviour' && typeof loadRansomwareBehaviour === 'function') loadRansomwareBehaviour();
     if (current === 'ttp' && typeof loadTtp === 'function') loadTtp();
+    if (current === 'vulnprio' && typeof loadVulnPrio === 'function') loadVulnPrio();
     if (current === 'huntseq' && typeof loadHuntSeq === 'function') loadHuntSeq();
     if (current === 'coverage' && typeof loadCoverage === 'function') loadCoverage();
   }
@@ -7636,8 +7670,119 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   $('hs-query').addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); hsRun(); } });
   /* === end kavach-seq hunt page === */
 
+  /* === vulnerability priority page === */
+  function vpOutcomeTag(o) { return uiTag(o || 'unknown', String(o || 'unknown').toLowerCase().replace('*', '_star')); }
+  function vpPct(v) { return typeof v === 'number' ? (v * 100).toFixed(2) + '%' : 'unknown'; }
+  function vpFactors(parent, factors) {
+    const tb = uiTable(parent, ['Decision point', 'Value', 'Source', 'Evidence']);
+    (factors || []).forEach((f) => {
+      const v = el('span', '');
+      if (f.known === false || f.value === 'unknown') {
+        v.appendChild(uiTag('unknown', 'unknown'));
+        if (f.assumed_value) v.appendChild(document.createTextNode(' assumed ' + f.assumed_value));
+      } else v.appendChild(document.createTextNode(f.value));
+      tableRow(tb, [f.decision_point, v, f.source || '', f.evidence || '']);
+    });
+  }
+  function vpRange(item) {
+    const s = item.ssvc || {};
+    if (!s.outcome_depends_on_unknowns) return '';
+    return 'Outcome depends on unknowns: ' + (s.outcome_if_unknowns_favourable || '?') + ' (favourable) to ' + (s.outcome_if_unknowns_adverse || '?') + ' (adverse)';
+  }
+  function vpOpenDetail(cve) {
+    const p = $('vp-detail'), box = $('vp-detail-out');
+    p.hidden = false;
+    $('vp-detail-title').textContent = cve;
+    uiLoading(box);
+    p.focus();
+    pgApi('/v1/vulns/priority/' + encodeURIComponent(cve)).then((r) => {
+      box.removeAttribute('aria-busy');
+      box.replaceChildren();
+      uiMeta(box, ['Top outcome: ' + (r.top_outcome || 'unknown'), 'Hosts affected: ' + (r.hosts ?? '?'), 'Decision tree: ' + (r.tree_version || 'unknown')]);
+      (r.items || []).forEach((it) => {
+        const w = el('div', '', 'work-panel');
+        w.appendChild(el('h3', it.host + ' · ' + it.package + ' ' + it.version));
+        const row = el('div', '', 'ui-row');
+        row.appendChild(vpOutcomeTag(it.ssvc_outcome));
+        row.appendChild(el('span', 'EPSS ' + vpPct(it.epss) + (typeof it.epss_percentile === 'number' ? ' (percentile ' + vpPct(it.epss_percentile) + ')' : '') + ' · CVSS ' + (it.cvss || 'unknown') + ' · ' + (it.known_exploited ? 'known exploited (KEV)' : 'not in KEV'), 'hint'));
+        w.appendChild(row);
+        const rg = vpRange(it);
+        if (rg) uiNote(w, rg, true);
+        vpFactors(w, it.factors);
+        if ((it.explanation || []).length) uiList(w, it.explanation);
+        const u = (it.ssvc && it.ssvc.unknown_inputs) || [];
+        if (u.length) w.appendChild(el('p', 'Unknown inputs: ' + u.join(', '), 'hint'));
+        box.appendChild(w);
+      });
+      if (r.limitations) bhCaveat($('vp-limits'), 'Limitations (always apply)', r.limitations);
+    }).catch((e) => uiError(box, 'CVE detail', e, () => vpOpenDetail(cve)));
+  }
+  function vpLoadList() {
+    const box = $('vp-list-out');
+    const host = $('vp-host').value.trim(), lim = parseInt($('vp-limit').value, 10);
+    if (!(lim >= 1 && lim <= 500)) { setMsg('vp-msg', 'Show top must be 1 to 500.', true); $('vp-limit').focus(); return; }
+    setMsg('vp-msg', '', false);
+    $('vp-detail').hidden = true;
+    uiLoading(box, 'Loading ranking…');
+    pgApi('/v1/vulns/priority?limit=' + lim + (host ? '&host=' + encodeURIComponent(host) : '')).then((r) => {
+      box.removeAttribute('aria-busy');
+      box.replaceChildren();
+      if (r.limitations) bhCaveat($('vp-limits'), 'Limitations (always apply)', r.limitations);
+      uiMeta(box, ['Showing ' + (r.count ?? 0) + ' of ' + (r.total ?? 0), 'Decision tree: ' + (r.tree_version || 'unknown'), r.ranking ? 'Ranking: ' + r.ranking : '']);
+      if (!(r.items || []).length) { uiEmpty(box, 'No matched CVEs', 'No installed package matched an advisory. The advisory set may be a small sample; see the limitations above.'); return; }
+      const tb = uiTable(box, ['#', 'CVE', 'Host', 'Package', 'SSVC', 'EPSS', 'CVSS', 'KEV', 'Unknown inputs']);
+      r.items.forEach((it) => {
+        const u = ((it.ssvc || {}).unknown_inputs || []);
+        const cve = el('button', it.cve, 'secondary');
+        cve.type = 'button';
+        cve.setAttribute('aria-label', 'Show detail for ' + it.cve + ' on ' + it.host);
+        cve.addEventListener('click', () => vpOpenDetail(it.cve));
+        tableRow(tb, [it.rank, cve, it.host, it.package + ' ' + it.version, vpOutcomeTag(it.ssvc_outcome), vpPct(it.epss), it.cvss || 'unknown', it.known_exploited ? 'yes' : 'no', u.length ? uiTag(u.length + ' unknown', 'unknown') : 'none']);
+      });
+    }).catch((e) => uiError(box, 'the vulnerability ranking', e, vpLoadList));
+  }
+  function vpRenderStatus(box, st) {
+    box.removeAttribute('aria-busy');
+    box.replaceChildren();
+    const f = st.epss_feed || st;
+    uiNote(box, f.note || 'No note from the server.', !f.enabled);
+    uiMeta(box, ['Enabled: ' + (f.enabled ? 'yes (opt-in)' : 'no'), 'Source: ' + (f.source || 'none'), 'Cached CVEs: ' + (f.cached_cves ?? 0), f.model_version ? 'Model: ' + f.model_version : '', f.score_date ? 'Score date: ' + f.score_date : '', f.last_refresh && f.last_refresh.indexOf('0001-') !== 0 ? 'Last refresh: ' + fmtTime(f.last_refresh) : 'Never refreshed']);
+    if ((f.feed_errors || []).length) uiNote(box, 'Feed errors: ' + f.feed_errors.join('; '), true);
+    if (f.attribution) box.appendChild(el('p', f.attribution, 'hint'));
+    if (st.thresholds) uiMeta(box, Object.keys(st.thresholds).map((k) => k.replace(/_/g, ' ') + ': ' + st.thresholds[k]));
+  }
+  function vpLoadStatus() {
+    const box = $('vp-status-out');
+    uiLoading(box);
+    return pgApi('/v1/vulns/priority/status').then((st) => vpRenderStatus(box, st)).catch((e) => uiError(box, 'feed status', e, vpLoadStatus));
+  }
+  async function vpRefresh() {
+    const btn = $('vp-refresh');
+    btn.disabled = true;
+    setMsg('vp-msg', 'Refreshing EPSS from the public file…', false);
+    try {
+      const r = await uiFetchAny('/v1/vulns/priority/refresh', { method: 'POST' });
+      if (r.status === 409) {
+        setMsg('vp-msg', (r.body && r.body.error) || 'The EPSS feed is disabled (opt-in).', true);
+        if (r.body && r.body.status) vpRenderStatus($('vp-status-out'), { epss_feed: r.body.status });
+        return;
+      }
+      if (!r.ok) throw new Error((r.body && r.body.error) || 'HTTP ' + r.status);
+      setMsg('vp-msg', 'EPSS refreshed.', false);
+      vpRenderStatus($('vp-status-out'), { epss_feed: r.body });
+      vpLoadList();
+    } catch (e) { setMsg('vp-msg', 'Refresh failed: ' + e.message, true); }
+    finally { btn.disabled = false; }
+  }
+  function loadVulnPrio() { vpLoadStatus(); vpLoadList(); }
+  $('vp-go').addEventListener('click', vpLoadList);
+  $('vp-refresh').addEventListener('click', vpRefresh);
+  $('vp-detail-close').addEventListener('click', () => { $('vp-detail').hidden = true; });
+  $('vp-detail').addEventListener('keydown', (e) => { if (e.key === 'Escape') $('vp-detail').hidden = true; });
+  /* === end vulnerability priority page === */
+
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '.': 'huntseq', '/': 'search' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '.': 'huntseq', '\'': 'vulnprio', '/': 'search' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
