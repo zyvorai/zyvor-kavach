@@ -47,6 +47,9 @@ func run(args []string) error {
 	if handled, err := omDispatch(args, os.Stdout); handled {
 		return err
 	}
+	if handled, err := ocDispatch(args, os.Stdout); handled {
+		return err
+	}
 
 	switch args[0] {
 	case "status":
