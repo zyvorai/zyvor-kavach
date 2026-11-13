@@ -259,3 +259,22 @@ func TestInspectObfuscationFindingsShareOneBudget(t *testing.T) {
 		t.Fatalf("a real rule hit plus obfuscation should reach suspicious: score=%d level=%s", r.Score, r.Level)
 	}
 }
+
+func TestInspectConfigKindIsNotScored(t *testing.T) {
+	r := &InspectReport{Kind: InspectKindConfig, Findings: []InspectFinding{
+		{ID: "cfg-ssh-root-login", Title: "root login permitted", Severity: "high", Weight: 0},
+	}}
+	scoreInspectReport(r)
+	if r.Level != "not_scored" || r.Score != 0 {
+		t.Fatalf("a config assessment must not get a numeric verdict, got level=%q score=%d", r.Level, r.Score)
+	}
+	if len(r.Factors) != 1 {
+		t.Fatalf("the report should explain why it is not scored: %v", r.Factors)
+	}
+	// Other kinds are unaffected.
+	o := &InspectReport{Kind: InspectKindScript, Findings: []InspectFinding{{ID: "x", Title: "t", Weight: 50}}}
+	scoreInspectReport(o)
+	if o.Level == "not_scored" || o.Score != 50 {
+		t.Fatalf("non-config kinds must still be scored: %+v", o)
+	}
+}

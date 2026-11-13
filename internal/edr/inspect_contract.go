@@ -391,6 +391,15 @@ func isObfuscationOnlyFinding(id string) bool {
 // strongest findings' weights (capped at 100), a known IOC match adds 40, and
 // every contributing finding is listed in Factors. There is no hidden model.
 func scoreInspectReport(r *InspectReport) {
+	if r.Kind == InspectKindConfig {
+		// A configuration assessment reports pass/fail per policy, not "is this
+		// malicious". Its findings carry no weight, so a numeric verdict would
+		// read "clean" for a config that fails many policies, which is wrong.
+		// The results are in Meta["config-assess.summary"] and the findings.
+		r.Score, r.Level = 0, "not_scored"
+		r.Factors = []string{"configuration assessment: no verdict score; see the per-policy findings and meta config-assess.summary"}
+		return
+	}
 	fs := append([]InspectFinding(nil), r.Findings...)
 	sort.SliceStable(fs, func(i, j int) bool { return fs[i].Weight > fs[j].Weight })
 	score := 0
