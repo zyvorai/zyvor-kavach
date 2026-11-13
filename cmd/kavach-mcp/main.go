@@ -85,6 +85,18 @@ func buildServer(c *client, allowMutations bool) (*mcpserver.Server, error) {
 	if err := registerMLTools(srv, c); err != nil {
 		return nil, err
 	}
+	if err := registerProvTools(srv, c); err != nil {
+		return nil, err
+	}
+	if err := registerRansomTools(srv, c); err != nil {
+		return nil, err
+	}
+	if err := registerTTPTools(srv, c); err != nil {
+		return nil, err
+	}
+	if err := registerInspectSimilarTools(srv, c); err != nil {
+		return nil, err
+	}
 	if allowMutations {
 		if err := registerMutateTools(srv, c); err != nil {
 			return nil, err
