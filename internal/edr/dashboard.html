@@ -6153,6 +6153,34 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       d.appendChild(el('pre', JSON.stringify(rep.meta, null, 2), 'px-pre'));
       box.appendChild(d);
     }
+    inSimilar(box, rep);
+  }
+  function inSimilar(box, rep) {
+    const p = el('div', '', 'work-panel');
+    p.appendChild(el('h3', 'Similar submissions'));
+    p.appendChild(el('p', 'Nearest earlier reports by Kavach-native digests (not compatible with ssdeep or TLSH). A match never proves maliciousness, and no match never proves safety.', 'nx-note'));
+    const out = el('div', '', '');
+    p.appendChild(out);
+    box.appendChild(p);
+    if (!rep.sha256) { out.appendChild(el('p', 'This report has no sha256, so there is nothing to compare.', 'hint')); return; }
+    const run = () => {
+      uiLoading(out, 'Looking for similar reports…');
+      uiFetchAny('/v1/inspect/similar?sha256=' + encodeURIComponent(rep.sha256)).then((r) => {
+        out.removeAttribute('aria-busy');
+        out.replaceChildren();
+        if (r.status === 404) { out.appendChild(el('p', 'This sha256 is not in the digest index (the content may not have produced a digest, or it has aged out of the capped in-memory index). No comparison is possible.', 'hint')); return; }
+        if (!r.ok) { uiError(out, 'similar submissions', new Error('HTTP ' + r.status), run); return; }
+        const b = r.body || {};
+        const ms = b.matches || [];
+        const th = b.thresholds || {};
+        uiMeta(out, ['Candidates returned: ' + (b.count ?? ms.length), th.ctph_min_score !== undefined ? 'Similar if CTPH score >= ' + th.ctph_min_score : '', th.lsh_max_distance !== undefined ? 'or LSH distance <= ' + th.lsh_max_distance : '']);
+        if (!ms.length) { out.appendChild(el('p', 'No earlier submission is comparable. Only previously analyzed content can match.', 'hint')); return; }
+        const tb = uiTable(out, ['Report', 'Time', 'CTPH score (0-100)', 'LSH distance', 'Import / symbol hash', 'Similar', 'Basis', 'sha256']);
+        ms.forEach((m) => tableRow(tb, [m.name || m.report_id || '-', fmtTime(m.time), m.ctph_score >= 0 ? m.ctph_score : 'not comparable', m.lsh_distance >= 0 ? m.lsh_distance : 'not comparable', (m.imphash_match ? 'same imphash' : '') + (m.symhash_match ? (m.imphash_match ? ', ' : '') + 'same symhash' : '') || '-', m.similar ? uiTag('similar', 'suspicious') : 'below threshold', m.basis || '-', el('span', (m.sha256 || '').slice(0, 16) + '…', 'ui-hash')]));
+        if (b.note) out.appendChild(el('p', b.note, 'hint'));
+      }).catch((e) => uiError(out, 'similar submissions', e, run));
+    };
+    run();
   }
   function inSetBusy(b) {
     inBusy = b;
