@@ -275,7 +275,6 @@ type tuneService struct {
 	path  string
 	now   func() time.Time
 
-	wg         sync.WaitGroup
 	mu         sync.Mutex
 	st         tuneState
 	deliveries []DigestDelivery
@@ -459,9 +458,9 @@ func (s *tuneService) tick(ctx context.Context) {
 }
 
 func (s *tuneService) start(ctx context.Context, every time.Duration) {
-	s.wg.Add(1)
+	lc.bg.Add(1)
 	go func() {
-		defer s.wg.Done()
+		defer lc.bg.Done()
 		t := time.NewTicker(every)
 		defer t.Stop()
 		for {
@@ -494,9 +493,7 @@ func tuneActor(admin bool) string {
 // RegisterTuningDigest wires the tuning advisor and digest routes and starts the scheduler.
 func RegisterTuningDigest(mux *http.ServeMux, token string, store *Store, disp *Dispatcher) {
 	s := newTuneService(store, disp)
-	ctx, cancel := context.WithCancel(context.Background())
-	s.start(ctx, time.Minute)
-	store.OnClose(func() { cancel(); s.wg.Wait() })
+	s.start(LifecycleContext(), time.Minute)
 	s.routes(mux, token)
 }
 

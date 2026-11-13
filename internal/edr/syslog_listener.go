@@ -651,6 +651,7 @@ func RegisterSyslog(mux *http.ServeMux, token string, store *Store) {
 				syslogMu.Lock()
 				syslogActive = l
 				syslogMu.Unlock()
+				RegisterStopper("syslog", func(context.Context) error { StopSyslog(); return nil })
 				log.Printf("syslog: listening on %v, allowlist %v", l.Addrs(), cfg.AllowText)
 			}
 		}

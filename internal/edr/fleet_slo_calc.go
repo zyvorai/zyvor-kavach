@@ -1,6 +1,7 @@
 package edr
 
 import (
+	"context"
 	"encoding/json"
 	"math"
 	"os"
@@ -118,6 +119,7 @@ type sloEngine struct {
 	lastT  int64
 	lastP  time.Time
 	stop   chan struct{}
+	done   chan struct{}
 	once   sync.Once
 }
 
@@ -524,4 +526,22 @@ func (e *sloEngine) hasAgent(h string) bool {
 	defer e.mu.Unlock()
 	_, ok := e.series[h]
 	return ok
+}
+
+// Shutdown stops the sampler, waits for it, and persists the series.
+func (e *sloEngine) Shutdown(ctx context.Context) error {
+	e.once.Do(func() { close(e.stop) })
+	if e.done != nil {
+		select {
+		case <-e.done:
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if e.dirty {
+		e.persistLocked(time.Now())
+	}
+	return nil
 }

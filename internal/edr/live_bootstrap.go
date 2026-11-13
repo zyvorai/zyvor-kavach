@@ -2,6 +2,7 @@
 package edr
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"os"
@@ -37,16 +38,6 @@ func (d *DomainInventory) Save(path string) error {
 	return os.Rename(tmp, path)
 }
 
-// detach stops persisting to path (if it is still the active path) and waits for in-flight writes.
-func (d *DomainInventory) detach(path string) {
-	d.mu.Lock()
-	if d.path == path {
-		d.path = ""
-	}
-	d.mu.Unlock()
-	d.wg.Wait()
-}
-
 func (d *DomainInventory) Load(path string) error {
 	if path == "" {
 		return nil
@@ -77,9 +68,9 @@ func (d *DomainInventory) persistAsync() {
 	if path == "" {
 		return
 	}
-	d.wg.Add(1)
+	lc.bg.Add(1)
 	go func() {
-		defer d.wg.Done()
+		defer lc.bg.Done()
 		if err := d.Save(path); err != nil {
 			log.Printf("inventory persist: %v", err)
 		}
@@ -95,9 +86,14 @@ func BootstrapLivePlatform(store *Store, registry *CredentialRegistry, statePath
 		Live.mu.Lock()
 		Live.path = path
 		Live.mu.Unlock()
-		if store != nil {
-			store.OnClose(func() { Live.detach(path) })
-		}
+		RegisterStopper("live-inventory", func(context.Context) error {
+			Live.mu.Lock()
+			if Live.path == path {
+				Live.path = ""
+			}
+			Live.mu.Unlock()
+			return nil
+		})
 	}
 	if err := Live.Load(path); err != nil {
 		log.Printf("inventory load: %v", err)

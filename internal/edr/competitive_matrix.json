@@ -191,7 +191,7 @@
    "kavach": {
     "status": "Partial",
     "verified": true,
-    "note": "Process exec (internal/edr/edr.go Event: pid, ppid, uid, executable, parent_exe, command; no hashes/user name/cwd), network (ingest.go NetworkEvent: pid + destination only), file (file_events.go: path, operation, size; writer not attributable), registry/dns/auth/module via POST /v1/events/{type} (docs/telemetry-types.md), eBPF /v1/ebpf/events.",
+    "note": "Process exec (internal/edr/edr.go Event: pid, ppid, uid, executable, parent_exe, command; no hashes/user name/cwd), network (ingest.go NetworkEvent: pid + destination only), file (file_events.go: path, operation, size; writer not attributable), registry/dns/auth/module via POST /v1/events/{type} (docs/telemetry-types.md), eBPF /v1/ebpf/events. Plus opt-in syslog listener (docs/syslog-listener.md, /v1/syslog/*) for agentless devices.",
     "sources": []
    }
   },
@@ -279,7 +279,7 @@
    "kavach": {
     "status": "Has",
     "verified": true,
-    "note": "Content rules + Sigma (/v1/content/rules, /v1/sigma, /v1/yara), custom content, lab validate/test/backtest (/v1/lab/rules/*), rule lifecycle and health (/v1/rules/lifecycle, /v1/rules/health), ATT&CK matrix (/v1/attack/matrix), ML behaviour/beacon.",
+    "note": "Content rules + Sigma (/v1/content/rules, /v1/sigma, /v1/yara), custom content, lab validate/test/backtest (/v1/lab/rules/*), rule lifecycle and health (/v1/rules/lifecycle, /v1/rules/health), ATT&CK matrix (/v1/attack/matrix), ML behaviour/beacon. Also scheduled detections, rule exceptions with expiry (/v1/exceptions), attack chains (/v1/chains), detection validation lab (/v1/validate/*), blind-spot report (/v1/coverage/blindspots) and content version history (/v1/content/versions).",
     "sources": []
    }
   },
@@ -368,7 +368,7 @@
    "kavach": {
     "status": "Partial",
     "verified": true,
-    "note": "Hunt packs, schedules, saved searches, query library, global search (/v1/hunts/*, /v1/queries/library, /v1/search); fixed filter queries, no general-purpose query language.",
+    "note": "Hunt packs, schedules, saved searches, query library, global search (/v1/hunts/*, /v1/queries/library, /v1/search), plus kavach-seq, an EQL-inspired sequence query language (POST /v1/hunt/seq, hunt_eql_*.go) and scheduled detections (/v1/detections/scheduled) with quotas (/v1/hunts/limits). Own grammar: no aggregation, pipes or arbitrary joins; bounded scan and time budget.",
     "sources": []
    }
   },
@@ -537,7 +537,7 @@
    "kavach": {
     "status": "Partial",
     "verified": true,
-    "note": "/v1/vulns/feeds, /v1/spotlight/vulnerabilities, /v1/sbom/{host}, /v1/exposure (vuln_mgmt.go, vuln_feeds.go); inventory depth depends on collected software data.",
+    "note": "/v1/vulns/feeds, /v1/spotlight/vulnerabilities, /v1/sbom/{host}, /v1/exposure (vuln_mgmt.go, vuln_feeds.go); SSVC + EPSS + KEV prioritisation (/v1/vulns/priority, vuln_prio_*.go, EPSS opt-in); configuration assessment of submitted config text (/v1/inspect/config); inventory depth depends on collected software data and SSVC inputs are approximated.",
     "sources": []
    }
   },
@@ -856,7 +856,7 @@
    "kavach": {
     "status": "Has",
     "verified": true,
-    "note": "/v1/cases, /v1/notes, /v1/journal, /v1/itsm/tickets, /v1/incidents (cases.go, analyst_workspace.go).",
+    "note": "/v1/cases, /v1/notes, /v1/journal, /v1/itsm/tickets, /v1/incidents (cases.go, analyst_workspace.go). Plus case templates with checklists, SLA hours and assignment (/v1/case-templates, /v1/cases/{id}/workflow).",
     "sources": []
    }
   },
@@ -934,7 +934,7 @@
    "kavach": {
     "status": "Has",
     "verified": true,
-    "note": "/v1/reports/templates and render, /v1/digests, /v1/compliance/*, /v1/regulatory/*, /v1/trends (report_templates.go, compliance_*.go).",
+    "note": "/v1/reports/templates and render, /v1/digests, /v1/compliance/*, /v1/regulatory/*, /v1/trends (report_templates.go, compliance_*.go). Plus scheduled reports to markdown/JSON/CSV, pull-only (/v1/reports/scheduled, /v1/reports/archive/{run_id}).",
     "sources": []
    }
   },
@@ -1099,7 +1099,7 @@
    "kavach": {
     "status": "Partial",
     "verified": true,
-    "note": "Go controller plus agent collectors (agent_collectors.go), eBPF on Linux (ebpf_linux.go, docs/ebpf.md), per-host credentials and mTLS (docs/agent-mtls.md); no measured footprint numbers in repo.",
+    "note": "Go controller plus agent collectors (agent_collectors.go), eBPF on Linux (ebpf_linux.go, docs/ebpf.md), per-host credentials and mTLS (docs/agent-mtls.md); fleet SLOs for heartbeat/continuity/coverage (/v1/fleet/slo) but no measured agent CPU or memory numbers (listed as not reported).",
     "sources": []
    }
   },
@@ -1201,7 +1201,8 @@
    "telemetry_sufficient": "Insufficient: exec has path only, file has path/op/size only",
    "effort": "M",
    "risk": "Hash cost on busy hosts; privacy of file reads",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "open"
   },
   {
    "id": 2,
@@ -1213,7 +1214,8 @@
    "telemetry_sufficient": "Partial: process_start exists but is optional",
    "effort": "S",
    "risk": "Low",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "open"
   },
   {
    "id": 3,
@@ -1225,7 +1227,8 @@
    "telemetry_sufficient": "Insufficient: exec only",
    "effort": "S",
    "risk": "Event volume",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "open"
   },
   {
    "id": 4,
@@ -1237,7 +1240,8 @@
    "telemetry_sufficient": "Partial: /v1/events/module accepts events but no native collector evidenced",
    "effort": "M",
    "risk": "High volume",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "open"
   },
   {
    "id": 5,
@@ -1249,7 +1253,8 @@
    "telemetry_sufficient": "Insufficient: no such event type",
    "effort": "L",
    "risk": "High volume, platform-specific",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "open"
   },
   {
    "id": 6,
@@ -1261,7 +1266,8 @@
    "telemetry_sufficient": "Insufficient",
    "effort": "L",
    "risk": "Windows-only effort",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "open"
   },
   {
    "id": 7,
@@ -1273,7 +1279,8 @@
    "telemetry_sufficient": "Insufficient: destination only",
    "effort": "M",
    "risk": "Moderate volume",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "open"
   },
   {
    "id": 8,
@@ -1285,7 +1292,8 @@
    "telemetry_sufficient": "Insufficient: file path/op/size only",
    "effort": "L",
    "risk": "Overhead, privileges",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "open"
   },
   {
    "id": 9,
@@ -1297,7 +1305,8 @@
    "telemetry_sufficient": "Insufficient",
    "effort": "M",
    "risk": "Windows-only",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "open"
   },
   {
    "id": 10,
@@ -1309,7 +1318,8 @@
    "telemetry_sufficient": "Insufficient",
    "effort": "M",
    "risk": "Noisy",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "open"
   },
   {
    "id": 11,
@@ -1321,7 +1331,8 @@
    "telemetry_sufficient": "Insufficient",
    "effort": "L",
    "risk": "Privacy (clipboard), noise",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "open"
   },
   {
    "id": 12,
@@ -1333,7 +1344,9 @@
    "telemetry_sufficient": "Yes",
    "effort": "L",
    "risk": "Resource exhaustion; needs quotas",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "partial",
+   "evidence": "kavach-seq: POST /v1/hunt/seq (+ /explain, /fields, /examples); internal/edr/hunt_eql_*.go. EQL-inspired single-event and sequence queries (by join key host/pid, maxspan, until) over retained process/network/file/telemetry events. Limits: own grammar, no aggregation, pipes or cross-source joins beyond the join key; bounded query bytes, steps, matches, scanned events and time budget (GET /v1/hunt/seq/fields)."
   },
   {
    "id": 13,
@@ -1345,7 +1358,8 @@
    "telemetry_sufficient": "Insufficient: no remote read channel beyond recorded RTR",
    "effort": "L",
    "risk": "Remote execution surface is sensitive",
-   "conflicts_with_observation_only": "Partially: remote collection resembles RTR; must be fixed read-only tables"
+   "conflicts_with_observation_only": "Partially: remote collection resembles RTR; must be fixed read-only tables",
+   "status": "open"
   },
   {
    "id": 14,
@@ -1357,7 +1371,9 @@
    "telemetry_sufficient": "Yes",
    "effort": "M",
    "risk": "Low",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "implemented",
+   "evidence": "POST /v1/detections/scheduled (detect_sched_*.go): a saved search or kavach-seq query runs on a 1 minute to 24 h interval and records findings as hunt-<id>; testing state records shadow findings; dry run via POST .../{id}/dryrun. Observation only."
   },
   {
    "id": 15,
@@ -1369,7 +1385,9 @@
    "telemetry_sufficient": "Yes",
    "effort": "S",
    "risk": "Low",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "partial",
+   "evidence": "GET/PUT /v1/hunts/limits (detect_sched_http.go): quotas for scheduled detections (max scheduled, runs per hour, matches per run, history retention) with usage and a refusal log. kavach-seq has fixed scan/time/match caps. Ad-hoc saved-search hunts have no configurable retention window or quota."
   },
   {
    "id": 16,
@@ -1381,7 +1399,8 @@
    "telemetry_sufficient": "Insufficient: new collector",
    "effort": "L",
    "risk": "Collection depth must stay observational",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "open"
   },
   {
    "id": 17,
@@ -1393,7 +1412,9 @@
    "telemetry_sufficient": "Yes",
    "effort": "S",
    "risk": "Low",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "partial",
+   "evidence": "GET /v1/content/versions, /changes, /changelog (content_versions_*.go, <store>.contentversions.json): hash snapshots of embedded packs diffed per item, 50-snapshot history. Limits: custom rules are not included; Sigma rule to telemetry mapping is not a separate report (see /v1/content/coverage and /v1/coverage/blindspots)."
   },
   {
    "id": 18,
@@ -1405,7 +1426,9 @@
    "telemetry_sufficient": "Yes",
    "effort": "S",
    "risk": "Low",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "implemented",
+   "evidence": "GET /v1/coverage/blindspots and /v1/coverage/telemetry (blindspots_*.go): techniques whose telemetry category is absent or stale, computed live against rules and the validation lab; stores nothing. Caveat: a gap means no observed telemetry, not that the host cannot produce it."
   },
   {
    "id": 19,
@@ -1417,7 +1440,9 @@
    "telemetry_sufficient": "Yes",
    "effort": "S",
    "risk": "Hidden blind spots if expiry ignored",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "implemented",
+   "evidence": "POST/PUT/DELETE /v1/exceptions, GET /v1/exceptions/{history,suppressed} (exceptions_*.go): mandatory expiry (max 365 days), scoped by rule/host/path glob, suppressed findings listed and counted, hash-chained history. Suppresses reporting only; nothing is blocked."
   },
   {
    "id": 20,
@@ -1429,7 +1454,9 @@
    "telemetry_sufficient": "Yes",
    "effort": "M",
    "risk": "Mis-grouping",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "partial",
+   "evidence": "GET /v1/chains, /v1/chains/{id}, POST /v1/chains/{id}/case (chains_*.go): deterministic union-find over findings using kill-chain progression, host/uid and rule-family edges within a 30 minute window, bounded to 3000 findings. Heuristic grouping; chainLimitations are returned in the response. Complements GET /v1/prov/* provenance graph."
   },
   {
    "id": 21,
@@ -1441,7 +1468,8 @@
    "telemetry_sufficient": "Insufficient: cloud endpoints are ledgers",
    "effort": "L",
    "risk": "Credential handling, cost",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "open"
   },
   {
    "id": 22,
@@ -1453,7 +1481,9 @@
    "telemetry_sufficient": "Insufficient: no listener",
    "effort": "M",
    "risk": "Parser maintenance",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "partial",
+   "evidence": "Syslog listener UDP/TCP/TLS (syslog_listener.go, syslog_parse.go, docs/syslog-listener.md): opt-in via KAVACH_SYSLOG + CIDR allowlist; RFC 3164/5424, CEF, LEEF and common firewall/sshd/sudo formats map to telemetry events; GET /v1/syslog/status, /samples, POST /v1/syslog/parse. Limits: several vendor parsers are written from general knowledge (marked UNVERIFIED in the doc), auditd and Windows event forwarding are not parsed, hard rate/size/queue limits with counted drops."
   },
   {
    "id": 23,
@@ -1465,7 +1495,9 @@
    "telemetry_sufficient": "Insufficient",
    "effort": "M",
    "risk": "Content licensing",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "partial",
+   "evidence": "POST /v1/inspect/config (docs/config-assessment.md, configpolicies/*.json): 150 original-wording policies across sshd, sysctl, login.defs, PAM, sudoers, auditd, nginx, Apache, Kubernetes, Dockerfile, compose, Terraform, each with pass/fail/unknown and remediation advice. Limits: assesses configuration text an analyst submits; there is no fleet collection channel; Terraform is line-level only and YAML is a safe subset; results are not scored as malware."
   },
   {
    "id": 24,
@@ -1477,7 +1509,8 @@
    "telemetry_sufficient": "Partial: SBOM and feeds exist",
    "effort": "M",
    "risk": "Feed freshness",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "open"
   },
   {
    "id": 25,
@@ -1489,7 +1522,9 @@
    "telemetry_sufficient": "Yes",
    "effort": "S",
    "risk": "Low",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "partial",
+   "evidence": "GET /v1/vulns/priority, /priority/{cve}, /priority/status, POST /v1/vulns/priority/refresh (vuln_prio_*.go, docs/vuln-priority.md): SSVC decision tree plus EPSS (opt-in KAVACH_EPSS_FEED, cached in <store>.epss.json) and CISA KEV. Limits: SSVC context inputs are approximated from CVSS vectors and a 1-5 asset criticality, EPSS is global, the 0.10 threshold is untuned, and the embedded advisory set is a small sample unless a CVE file or feed is configured."
   },
   {
    "id": 26,
@@ -1501,7 +1536,8 @@
    "telemetry_sufficient": "Partial: identity events accepted, no native collector",
    "effort": "L",
    "risk": "PII",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "open"
   },
   {
    "id": 27,
@@ -1513,7 +1549,9 @@
    "telemetry_sufficient": "Yes",
    "effort": "S",
    "risk": "Low",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "partial",
+   "evidence": "GET/PUT /v1/fleet/slo, /definitions, /history (fleet_slo_*.go, <store>.fleetslo.json): heartbeat freshness, event continuity and sensor coverage SLOs with window compliance, derived only from what agents already send. Does NOT report agent CPU, memory, spool size or version: those are listed as not reported (sloNotReported)."
   },
   {
    "id": 28,
@@ -1525,7 +1563,8 @@
    "telemetry_sufficient": "Yes",
    "effort": "M",
    "risk": "Volume, redaction",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "open"
   },
   {
    "id": 29,
@@ -1537,7 +1576,9 @@
    "telemetry_sufficient": "Yes",
    "effort": "M",
    "risk": "Low",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "implemented",
+   "evidence": "GET/POST/PUT/DELETE /v1/case-templates, POST /v1/cases/{id}/apply-template, /assign, /checklist/{n}, GET /v1/cases/{id}/workflow, /v1/case-workflow/journal (case_templates_*.go): built-in and custom templates with checklists and per-severity SLA hours, assignment, hash-chained workflow journal. Free-text assignee, no user directory."
   },
   {
    "id": 30,
@@ -1549,7 +1590,9 @@
    "telemetry_sufficient": "Yes",
    "effort": "S",
    "risk": "Low",
-   "conflicts_with_observation_only": "No"
+   "conflicts_with_observation_only": "No",
+   "status": "partial",
+   "evidence": "GET/POST/PUT/DELETE /v1/reports/scheduled, POST .../{id}/run, GET .../{id}/runs, GET /v1/reports/archive/{run_id} (report_sched_*.go, <store>.reports/): templates rendered on a schedule to markdown, JSON or CSV with retention and sha256. Pull-only by design: nothing is emailed or pushed; no PDF output."
   },
   {
    "id": 31,
@@ -1561,7 +1604,8 @@
    "telemetry_sufficient": "n/a",
    "effort": "L",
    "risk": "Not applicable",
-   "conflicts_with_observation_only": "YES: contradicts the product boundary; listed only to document the deliberate gap"
+   "conflicts_with_observation_only": "YES: contradicts the product boundary; listed only to document the deliberate gap",
+   "status": "open"
   }
  ],
  "sources": [

@@ -2,6 +2,7 @@
 package edr
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -86,7 +87,8 @@ func fbTopRules(m map[string]int, n int) []fbCount {
 // other endpoint is a read. Nothing here edits rules, suppressions or hosts.
 func RegisterFeedback(mux *http.ServeMux, token string, store *Store) *feedbackSvc {
 	svc := newFeedbackSvc(store)
-	store.OnClose(setFeedbackRuleTrust(svc.ruleTrust))
+	clearTrust := setFeedbackRuleTrust(svc.ruleTrust)
+	RegisterStopper("feedback-trust-hook", func(context.Context) error { clearTrust(); return nil })
 
 	mux.HandleFunc("POST /v1/feedback", func(w http.ResponseWriter, r *http.Request) {
 		admin, ok := requireAdminOrSession(w, r, token)

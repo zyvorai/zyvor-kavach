@@ -655,6 +655,17 @@ paths:
         - {name: id, in: path, required: true, schema: {type: string}}
       responses: {'200': {description: Markdown}, '404': {description: Unknown template}}
   /v1/connectors:
+    post:
+      summary: "Register a connector definition (admin or session)"
+      x-auth: admin-or-session
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "Connector JSON"
+      responses:
+        "200": { description: "Registered connector" }
+        "400": { description: "Invalid" }
     get:
       summary: Connector registry
       security: [{bearerAuth: []}]
@@ -1651,6 +1662,17 @@ paths:
       security: [{bearerAuth: []}]
       responses: {'200': {description: OK}}
   /v1/rbac/roles:
+    post:
+      summary: "Add or update a role (admin or session)"
+      x-auth: admin-or-session
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "Role JSON"
+      responses:
+        "200": { description: "Role saved" }
+        "400": { description: "Invalid" }
     get:
       summary: v1 rbac roles
       security: [{bearerAuth: []}]
@@ -1910,6 +1932,1664 @@ paths:
       responses:
         "200": { description: Edge list with counts }
 
+  /v1/case-templates:
+    get:
+      summary: "List case templates (built-in and custom)"
+      responses:
+        "200": { description: "Template array; each has id, name, case_type, default_severity, checklist, sla_hours, default_tags, built_in" }
+    post:
+      summary: "Create a custom case template (admin token only)"
+      x-auth: admin-token
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "Template: name, case_type, default_severity, checklist[], sla_hours{severity:hours}, default_tags[]"
+      responses:
+        "201": { description: "Created template" }
+        "400": { description: "Validation failed or too many templates" }
+        "403": { description: "Not the admin token" }
+  /v1/case-templates/{id}:
+    get:
+      summary: "One case template"
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Template" }
+        "404": { description: "Not found" }
+    put:
+      summary: "Update a custom case template (admin token only; built-ins are read-only)"
+      x-auth: admin-token
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "Template fields as for POST"
+      responses:
+        "200": { description: "Updated template" }
+        "400": { description: "Validation failed" }
+        "403": { description: "Built-in template or not the admin token" }
+        "404": { description: "Not found" }
+    delete:
+      summary: "Delete a custom case template (admin token only; built-ins are read-only)"
+      x-auth: admin-token
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Deleted" }
+        "403": { description: "Built-in template or not the admin token" }
+        "404": { description: "Not found" }
+  /v1/cases/{id}/workflow:
+    get:
+      summary: "Workflow view of a case: applied template, checklist progress and SLA"
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Workflow view" }
+        "404": { description: "Case not found" }
+  /v1/cases/{id}/assign:
+    post:
+      summary: "Assign a case to an analyst (admin or session)"
+      x-auth: admin-or-session
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "{\"assignee\": \"<=80 chars\"}"
+      responses:
+        "200": { description: "Updated workflow view" }
+        "400": { description: "Assignee too long" }
+        "404": { description: "Case not found" }
+  /v1/cases/{id}/apply-template:
+    post:
+      summary: "Apply a template to a case, creating its checklist and SLA (admin or session)"
+      x-auth: admin-or-session
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "{\"template_id\": \"...\"}"
+      responses:
+        "200": { description: "Updated workflow view" }
+        "404": { description: "Template or case not found" }
+  /v1/cases/{id}/checklist/{n}:
+    post:
+      summary: "Tick or untick checklist step n (1-based; admin or session)"
+      x-auth: admin-or-session
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: n, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "{\"done\": true|false} (required)"
+      responses:
+        "200": { description: "Updated workflow view" }
+        "400": { description: "Invalid step number or done missing" }
+        "404": { description: "No such checklist step (apply a template first)" }
+  /v1/case-workflow/journal:
+    get:
+      summary: "Hash-chained journal of case workflow actions (newest 200) with chain verification"
+      responses:
+        "200": { description: "{intact, first_broken_seq, reason, entries[]}" }
+  /v1/chains:
+    get:
+      summary: "Correlated attack chains across findings, ranked by score"
+      parameters:
+        - { name: host, in: query, schema: { type: string }, description: "Restrict to one host" }
+        - { name: min_score, in: query, schema: { type: number }, description: "Minimum chain score" }
+        - { name: limit, in: query, schema: { type: integer }, description: "1-200, default 50" }
+      responses:
+        "200": { description: "{chains[], total, returned}" }
+  /v1/chains/{id}:
+    get:
+      summary: "One attack chain"
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Chain with linked case id if any" }
+        "404": { description: "Not found" }
+  /v1/chains/{id}/case:
+    post:
+      summary: "Open (or return the existing) case for a chain (admin or session)"
+      x-auth: admin-or-session
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "{created, case}" }
+        "404": { description: "Chain not found" }
+  /v1/content/versions:
+    get:
+      summary: "Embedded content snapshot history (newest first)"
+      parameters:
+        - { name: items, in: query, schema: { type: string }, description: "1 = include per-item hashes" }
+      responses:
+        "200": { description: "{mode, count, history_cap, snapshots[]}" }
+  /v1/content/changes:
+    get:
+      summary: "Diff between two content snapshots (default: previous vs latest)"
+      parameters:
+        - { name: from, in: query, schema: { type: string }, description: "Snapshot seq or ref" }
+        - { name: to, in: query, schema: { type: string }, description: "Snapshot seq or ref, default latest" }
+      responses:
+        "200": { description: "{from, to, diff{added, removed, modified}}" }
+        "404": { description: "Unknown from/to snapshot" }
+  /v1/content/changelog:
+    get:
+      summary: "Human-readable changelog entry per snapshot (newest first)"
+      responses:
+        "200": { description: "Changelog entries" }
+  /v1/coverage/telemetry:
+    get:
+      summary: "Per-category telemetry inventory (live, nothing stored)"
+      parameters:
+        - { name: stale_days, in: query, schema: { type: integer }, description: "1-3650; a category silent for longer is stale" }
+      responses:
+        "200": { description: "{mode, caveat, stale_after_hours, categories[]}" }
+  /v1/coverage/blindspots:
+    get:
+      summary: "Detection blind-spot report: telemetry gaps against rules, with optional validation run"
+      parameters:
+        - { name: stale_days, in: query, schema: { type: integer }, description: "1-3650" }
+        - { name: validation, in: query, schema: { type: string }, description: "0 = skip the built-in validation run" }
+      responses:
+        "200": { description: "Blind-spot report" }
+  /v1/detections/scheduled:
+    get:
+      summary: "List scheduled detections"
+      responses:
+        "200": { description: "{detections[], count, limits}" }
+    post:
+      summary: "Create a scheduled detection (admin or session)"
+      x-auth: admin-or-session
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "name, source (saved search or kavach-seq query), interval_sec (60-86400), severity, technique, state, max_matches, max_runtime_ms, dedup_window_sec"
+      responses:
+        "201": { description: "Created detection (201)" }
+        "400": { description: "Validation failed" }
+        "429": { description: "max_scheduled quota reached" }
+  /v1/detections/scheduled/{id}:
+    get:
+      summary: "One scheduled detection with running flag"
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "{detection, running, ...}" }
+        "404": { description: "Not found" }
+    put:
+      summary: "Update a scheduled detection (admin or session)"
+      x-auth: admin-or-session
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "Any subset of the POST fields"
+      responses:
+        "200": { description: "Updated detection" }
+        "400": { description: "Validation failed" }
+        "404": { description: "Not found" }
+    delete:
+      summary: "Delete a scheduled detection (admin or session); findings already recorded are kept"
+      x-auth: admin-or-session
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "{deleted, findings_already_recorded_kept}" }
+        "404": { description: "Not found" }
+  /v1/detections/scheduled/{id}/dryrun:
+    post:
+      summary: "Run now without recording anything (admin or session)"
+      x-auth: admin-or-session
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Run result; 'recorded' is what WOULD be reported" }
+        "404": { description: "Not found" }
+  /v1/detections/scheduled/{id}/run:
+    post:
+      summary: "Run now and record findings (admin or session)"
+      x-auth: admin-or-session
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Run result" }
+        "404": { description: "Not found" }
+        "429": { description: "max_runs_per_hour reached" }
+  /v1/detections/scheduled/{id}/history:
+    get:
+      summary: "Run history of a scheduled detection"
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "{id, history[], retention}" }
+        "404": { description: "Not found" }
+  /v1/hunts/limits:
+    get:
+      summary: "Hunt quotas, current usage and refusal log"
+      responses:
+        "200": { description: "{limits, usage, refused{counts, recent}, env[]}" }
+    put:
+      summary: "Change hunt quotas (admin token only)"
+      x-auth: admin-token
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "max_scheduled 1-500, max_runs_per_hour 1-3600, max_matches_per_run 1-1000, history_retention 1-500"
+      responses:
+        "200": { description: "Updated limits" }
+        "400": { description: "Value out of range" }
+        "403": { description: "Admin token required" }
+  /v1/exceptions:
+    get:
+      summary: "List rule exceptions (all have an expiry)"
+      parameters:
+        - { name: status, in: query, schema: { type: string }, description: "Filter by status, e.g. active or expired" }
+      responses:
+        "200": { description: "{exceptions[], count, ...}" }
+    post:
+      summary: "Create an exception (admin or session)"
+      x-auth: admin-or-session
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "rule, host, path, reason, owner, expires (RFC3339, max 365 days)"
+      responses:
+        "201": { description: "Created exception" }
+        "400": { description: "Invalid body, expiry or scope" }
+        "429": { description: "Too many active exceptions" }
+  /v1/exceptions/history:
+    get:
+      summary: "Hash-chained exception change history"
+      responses:
+        "200": { description: "{history[], chain_ok, broken_at_seq}" }
+  /v1/exceptions/suppressed:
+    get:
+      summary: "Findings suppressed by exceptions (reporting only; nothing is blocked)"
+      parameters:
+        - { name: exception, in: query, schema: { type: string }, description: "Exception id" }
+      responses:
+        "200": { description: "{suppressed[], counts, total_suppressed}" }
+  /v1/exceptions/{id}:
+    put:
+      summary: "Update an exception, or set expire_now (admin or session)"
+      x-auth: admin-or-session
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "Any subset of the POST fields plus expire_now"
+      responses:
+        "200": { description: "Updated exception" }
+        "400": { description: "Invalid body" }
+        "404": { description: "Not found" }
+    delete:
+      summary: "Delete an exception (admin or session); suppressed findings are kept"
+      x-auth: admin-or-session
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "{deleted, suppressed_findings_kept}" }
+        "404": { description: "Not found" }
+  /v1/reports/scheduled:
+    get:
+      summary: "List report schedules with limits and delivery note (pull-only)"
+      responses:
+        "200": { description: "{schedules[], templates_with_host_names, delivery, limits, redaction}" }
+    post:
+      summary: "Create a report schedule (admin or session)"
+      x-auth: admin-or-session
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "Schedule: template, params, frequency, retention, format"
+      responses:
+        "201": { description: "Created schedule (201)" }
+        "400": { description: "Validation failed" }
+  /v1/reports/scheduled/{id}:
+    put:
+      summary: "Update a report schedule (admin or session)"
+      x-auth: admin-or-session
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "Schedule fields"
+      responses:
+        "200": { description: "Updated schedule" }
+        "400": { description: "Validation failed" }
+        "404": { description: "Not found" }
+    delete:
+      summary: "Delete a schedule and its archived reports (admin or session)"
+      x-auth: admin-or-session
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "204": { description: "No content" }
+        "404": { description: "Not found" }
+  /v1/reports/scheduled/{id}/run:
+    post:
+      summary: "Render a schedule now (admin or session)"
+      x-auth: admin-or-session
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Run record" }
+        "404": { description: "Not found" }
+        "409": { description: "Run already in progress" }
+        "500": { description: "Render failed" }
+  /v1/reports/scheduled/{id}/runs:
+    get:
+      summary: "Runs of a schedule"
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "{schedule_id, runs[]}" }
+        "404": { description: "Schedule not found" }
+  /v1/reports/archive/{run_id}:
+    get:
+      summary: "Download a rendered report (md, json or csv; X-Kavach-Report-SHA256 header)"
+      parameters:
+        - { name: run_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Report bytes" }
+        "404": { description: "Report not found" }
+  /v1/regression/status:
+    get:
+      summary: "Detection regression tracking: runner state, last run, next run, history size"
+      responses:
+        "200": { description: "Status; mode observe-only" }
+  /v1/regression/history:
+    get:
+      summary: "Stored regression snapshots, newest first (capped at 90)"
+      parameters:
+        - { name: limit, in: query, schema: { type: integer } }
+      responses:
+        "200": { description: "Snapshots with per-tactic coverage, benign false positives and runtime" }
+  /v1/regression/diff:
+    get:
+      summary: "Diff between two regression snapshots (regressions, improvements, added/removed scenarios, likely causes)"
+      parameters:
+        - { name: from, in: query, schema: { type: string }, description: "seq or 'previous' (default previous)" }
+        - { name: to, in: query, schema: { type: string }, description: "seq or 'latest' (default latest)" }
+      responses:
+        "200": { description: "Diff; each regression carries a likely_cause hint" }
+        "404": { description: "Fewer than two snapshots" }
+  /v1/regression/trend:
+    get:
+      summary: "Measured coverage over time per tactic"
+      parameters:
+        - { name: window, in: query, schema: { type: string }, description: "7d, 30d or a Go duration" }
+      responses:
+        "200": { description: "Per-tactic series" }
+  /v1/regression/run:
+    post:
+      summary: "Run the validation scenarios now (admin or session); records a snapshot and may record a regression-detected finding"
+      x-auth: admin-or-session
+      responses:
+        "200": { description: "The new snapshot and its diff" }
+        "409": { description: "A run is already in progress" }
+  /v1/regression/config:
+    get:
+      summary: "Regression runner configuration"
+      responses:
+        "200": { description: "enabled, time (UTC HH:MM), max_runtime_sec, alert thresholds" }
+    put:
+      summary: "Update regression runner configuration (admin or session)"
+      x-auth: admin-or-session
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "enabled, time, max_runtime_sec (5..300), alert_min_regressions, alert_medium_at, alert_on_benign_fp"
+      responses:
+        "200": { description: "Updated configuration" }
+        "400": { description: "Invalid value" }
+  /v1/regression/gate:
+    get:
+      summary: "CI gate: pass/fail on measured coverage, regressions and benign false positives (HTTP 200 pass, 412 fail)"
+      parameters:
+        - { name: min_detected, in: query, schema: { type: number }, description: "Percent of claimed techniques measured Detected" }
+        - { name: max_regressions, in: query, schema: { type: integer } }
+        - { name: max_false_positives, in: query, schema: { type: integer } }
+      responses:
+        "200": { description: "Gate passed, with per-check detail" }
+        "400": { description: "Bad parameters" }
+        "412": { description: "Gate failed, or no run recorded yet (fails closed)" }
+  /v1/evidence/import:
+    post:
+      summary: "Import offline triage output (ps, ss/netstat, cron, schtasks, history, ...) as an isolated evidence case replayed through the detection engines (admin or session)"
+      x-auth: admin-or-session
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+          multipart/form-data:
+            schema: { type: object }
+        description: "JSON {case, host, collected_at, artefacts:[{name, format, content}]} or multipart with the same fields; max 64 artefacts, 4 MiB each, 32 MiB total"
+      responses:
+        "201": { description: "The new case: artefact inventory, would-fire findings, timeline, IOCs. Findings are NOT added to the live store" }
+        "400": { description: "No artefacts, too many artefacts, or invalid body" }
+        "413": { description: "Request larger than 32 MiB" }
+        "429": { description: "Too many imports in progress" }
+  /v1/evidence/cases:
+    get:
+      summary: "List evidence import cases (capped ring of 20)"
+      responses:
+        "200": { description: "Cases with counts, supported formats and a note" }
+  /v1/evidence/cases/{id}:
+    get:
+      summary: "One evidence case; ?download=1 exports it as JSON"
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: download, in: query, schema: { type: string } }
+      responses:
+        "200": { description: "The case" }
+        "404": { description: "Unknown case" }
+    delete:
+      summary: "Delete an evidence case (admin or session)"
+      x-auth: admin-or-session
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Deleted" }
+        "404": { description: "Unknown case" }
+  /v1/evidence/cases/{id}/promote:
+    post:
+      summary: "Promote a case's would-fire findings into the live store, tagged evidence-import (admin token only; once per case)"
+      x-auth: admin-token
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Findings ingested" }
+        "403": { description: "Needs the admin token" }
+        "404": { description: "Unknown case" }
+        "409": { description: "Already promoted" }
+  /v1/fleet/slo:
+    get:
+      summary: "Fleet SLO report (heartbeat freshness, continuity, coverage)"
+      responses:
+        "200": { description: "SLO report" }
+    put:
+      summary: "Set SLO targets (admin token only)"
+      x-auth: admin-token
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "heartbeat_fresh_minutes, heartbeat_target_pct, continuity_gap_minutes, continuity_target_pct, coverage_target_pct, window_hours"
+      responses:
+        "200": { description: "Updated config" }
+        "400": { description: "Invalid JSON or value" }
+        "403": { description: "Admin token required" }
+  /v1/fleet/slo/definitions:
+    get:
+      summary: "How each SLO is computed"
+      responses:
+        "200": { description: "SLO definitions" }
+  /v1/fleet/slo/history:
+    get:
+      summary: "SLO sample history"
+      parameters:
+        - { name: window, in: query, schema: { type: string }, description: "Duration 5m-72h, default 24h (e.g. 6h, 2d)" }
+        - { name: agent, in: query, schema: { type: string }, description: "Restrict to one agent" }
+      responses:
+        "200": { description: "SLO history series" }
+        "400": { description: "Bad window" }
+        "404": { description: "No SLO history for that agent" }
+  /v1/hunt/seq:
+    post:
+      summary: "Run a kavach-seq sequence/EQL-style hunt over retained events"
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "{\"query\": \"...\", \"since\": \"24h|7d|RFC3339\", \"limit\": n}"
+      responses:
+        "200": { description: "{query, kind, count, matches[], truncated, timed_out, scan_capped, scanned, elapsed_ms, semantics}" }
+        "400": { description: "Parse error (pos/line/col) or query uses unavailable fields" }
+  /v1/hunt/seq/fields:
+    get:
+      summary: "Field catalogue, operators and limits for kavach-seq"
+      responses:
+        "200": { description: "{categories, join_keys, operators, notes, limits}" }
+  /v1/hunt/seq/examples:
+    get:
+      summary: "Example kavach-seq queries"
+      responses:
+        "200": { description: "{count, examples[]}" }
+  /v1/hunt/seq/explain:
+    post:
+      summary: "Parse and explain a query without running it"
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "{\"query\": \"...\", \"since\": \"...\"}"
+      responses:
+        "200": { description: "{ok, kind, tree, unavailable_fields, semantics} (parse errors are returned with ok=false and pos/line/col)" }
+        "400": { description: "Invalid JSON or since" }
+  /v1/feedback:
+    post:
+      summary: "Record an analyst verdict on a finding (admin or session; hash-chained, nothing auto-applied)"
+      x-auth: admin-or-session
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "{\"finding_id\", \"verdict\": true_positive|false_positive|benign_expected|needs_more_data, \"note\"}"
+      responses:
+        "200": { description: "Recorded entry" }
+        "400": { description: "Bad JSON, verdict or note too long" }
+        "404": { description: "Unknown finding_id" }
+    get:
+      summary: "List feedback entries, newest first"
+      parameters:
+        - { name: limit, in: query, schema: { type: integer }, description: "1-1000, default 100" }
+        - { name: finding_id, in: query, schema: { type: string } }
+        - { name: rule, in: query, schema: { type: string } }
+        - { name: host, in: query, schema: { type: string } }
+      responses:
+        "200": { description: "{entries[]}" }
+  /v1/feedback/verify:
+    get:
+      summary: "Verify the feedback hash chain"
+      responses:
+        "200": { description: "Chain verification result" }
+  /v1/feedback/rules:
+    get:
+      summary: "Per-rule precision derived from feedback"
+      responses:
+        "200": { description: "Per-rule counts and precision" }
+  /v1/feedback/summary:
+    get:
+      summary: "Feedback summary"
+      responses:
+        "200": { description: "Summary counts" }
+  /v1/feedback/export:
+    post:
+      summary: "Export feedback as a labelled dataset download"
+      parameters:
+        - { name: redact, in: query, schema: { type: string }, description: "1 = pseudonymise hosts and drop notes" }
+      responses:
+        "200": { description: "Labelled dataset (Content-Disposition attachment kavach-feedback-labels.json)" }
+  /v1/inspect/file:
+    post:
+      summary: "Inspect a file (observe-only static analysis; nothing is executed)"
+      parameters:
+        - { name: name, in: query, schema: { type: string }, description: "Display file name" }
+      requestBody:
+        content:
+          application/octet-stream:
+            schema: { type: string }
+        description: "raw bytes (application/octet-stream); ?name= optional"
+      responses:
+        "200": { description: "Inspection report" }
+        "400": { description: "Empty input or invalid JSON" }
+        "413": { description: "Input larger than the inspect limit" }
+  /v1/inspect/script:
+    post:
+      summary: "Inspect a script (observe-only static analysis; nothing is executed)"
+      requestBody:
+        content:
+          text/plain:
+            schema: { type: string }
+        description: "raw text or {\"text\": ...}"
+      responses:
+        "200": { description: "Inspection report" }
+        "400": { description: "Empty input or invalid JSON" }
+        "413": { description: "Input larger than the inspect limit" }
+  /v1/inspect/cmdline:
+    post:
+      summary: "Inspect a cmdline (observe-only static analysis; nothing is executed)"
+      requestBody:
+        content:
+          text/plain:
+            schema: { type: string }
+        description: "raw text or {\"text\": ...}"
+      responses:
+        "200": { description: "Inspection report" }
+        "400": { description: "Empty input or invalid JSON" }
+        "413": { description: "Input larger than the inspect limit" }
+  /v1/inspect/domain:
+    post:
+      summary: "Inspect a domain (observe-only static analysis; nothing is executed)"
+      requestBody:
+        content:
+          text/plain:
+            schema: { type: string }
+        description: "raw text or {\"text\": ...} (one domain)"
+      responses:
+        "200": { description: "Inspection report" }
+        "400": { description: "Empty input or invalid JSON" }
+        "413": { description: "Input larger than the inspect limit" }
+  /v1/inspect/config:
+    post:
+      summary: "Inspect a config (observe-only static analysis; nothing is executed)"
+      requestBody:
+        content:
+          text/plain:
+            schema: { type: string }
+        description: "raw text or {\"text\": ...} (configuration file, parse-only)"
+      responses:
+        "200": { description: "Inspection report" }
+        "400": { description: "Empty input or invalid JSON" }
+        "413": { description: "Input larger than the inspect limit" }
+  /v1/inspect/lockfile:
+    post:
+      summary: "Inspect a dependency lockfile or package list (parse-only software composition analysis; matches components against locally loaded advisories, no network)"
+      requestBody:
+        content:
+          application/octet-stream:
+            schema: { type: string, format: binary }
+        description: "raw lockfile bytes (package-lock.json, yarn.lock, pnpm-lock.yaml, requirements.txt, Pipfile.lock, poetry.lock, Cargo.lock, go.mod, go.sum, Gemfile.lock, composer.lock, pom.xml, gradle lockfile, packages.lock.json, dpkg -l, rpm -qa, apk info -v); optional ?name= for format detection"
+      responses:
+        "200": { description: "Inspection report with sca-* findings and a CycloneDX SBOM in meta lockfile.sbom" }
+        "400": { description: "Empty input" }
+        "413": { description: "Input larger than the inspect limit" }
+  /v1/inspect/url:
+    post:
+      summary: "Inspect a URL (parse-only lexical analysis; never fetches or resolves anything)"
+      requestBody:
+        content:
+          text/plain:
+            schema: { type: string }
+        description: "the URL as raw text or {\"text\": ...}"
+      responses:
+        "200": { description: "Inspection report with url-* findings" }
+        "400": { description: "Empty input or invalid JSON" }
+        "413": { description: "Input larger than the inspect limit" }
+  /v1/inspect/email:
+    post:
+      summary: "Inspect a raw email (.eml): headers, reported SPF/DKIM/DMARC results, body URLs, attachments run through the file analyzers; DKIM is not recomputed"
+      requestBody:
+        content:
+          application/octet-stream:
+            schema: { type: string, format: binary }
+        description: "raw RFC 5322 message bytes"
+      responses:
+        "200": { description: "Inspection report with email-* findings" }
+        "400": { description: "Empty input" }
+        "413": { description: "Input larger than the inspect limit" }
+  /v1/inspect/reports:
+    get:
+      summary: "Recent inspection reports (no input bytes)"
+      parameters:
+        - { name: limit, in: query, schema: { type: integer }, description: "Max reports" }
+      responses:
+        "200": { description: "{count, reports[], mode}" }
+  /v1/inspect/analyzers:
+    get:
+      summary: "Registered analyzers and the input size limit"
+      responses:
+        "200": { description: "{analyzers[], max_bytes, mode}" }
+  /v1/inspect/similar:
+    get:
+      summary: "Similar previously-inspected files by fuzzy digest"
+      parameters:
+        - { name: sha256, in: query, schema: { type: string }, description: "Query by a known report sha256" }
+        - { name: digest, in: query, schema: { type: string }, description: "Or a kavach-ctph1:... / kavach-lsh1:... digest" }
+        - { name: limit, in: query, schema: { type: integer }, description: "1-50, default 10" }
+      responses:
+        "200": { description: "Similarity matches" }
+        "400": { description: "Malformed or unsupported digest" }
+        "404": { description: "Unknown sha256" }
+  /v1/ml/status:
+    get:
+      summary: "Local behaviour model status"
+      responses:
+        "200": { description: "Model status" }
+  /v1/ml/lineage:
+    get:
+      summary: "Process-lineage transition statistics"
+      parameters:
+        - { name: host, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer } }
+      responses:
+        "200": { description: "Lineage edges" }
+  /v1/ml/similar:
+    get:
+      summary: "Commands similar to a given command line"
+      parameters:
+        - { name: q, in: query, schema: { type: string }, description: "Command line, 1-2048 bytes (required)" }
+        - { name: host, in: query, schema: { type: string } }
+      responses:
+        "200": { description: "Similar commands" }
+        "400": { description: "q missing or too long" }
+  /v1/ml/baseline:
+    get:
+      summary: "Per-host hour-of-week activity baseline"
+      parameters:
+        - { name: host, in: query, schema: { type: string }, description: "required" }
+      responses:
+        "200": { description: "Baseline" }
+        "400": { description: "host required" }
+  /v1/ml/reset:
+    post:
+      summary: "Reset learned behaviour models (admin or session)"
+      x-auth: admin-or-session
+      responses:
+        "200": { description: "{method, status: reset}" }
+  /v1/ml/learn/replay:
+    post:
+      summary: "Rebuild models from the retained store (admin or session)"
+      x-auth: admin-or-session
+      responses:
+        "200": { description: "{method, status: replayed, events_replayed, source}" }
+  /v1/ml/beacons:
+    get:
+      summary: "Beaconing candidates from network events"
+      parameters:
+        - { name: host, in: query, schema: { type: string } }
+        - { name: min_events, in: query, schema: { type: integer }, description: "4-100000" }
+        - { name: min_score, in: query, schema: { type: number } }
+        - { name: limit, in: query, schema: { type: integer }, description: "1-200, default 20" }
+        - { name: exclude_private, in: query, schema: { type: string }, description: "1 or true" }
+      responses:
+        "200": { description: "Beacon candidates" }
+  /v1/ml/priority:
+    get:
+      summary: "Advisory finding priority score (does not change /v1/ai/score)"
+      parameters:
+        - { name: finding_id, in: query, schema: { type: string }, description: "Score one finding" }
+        - { name: host, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer }, description: "1-500, default 50" }
+      responses:
+        "200": { description: "{mode, model, weights, note, priority|items}" }
+        "404": { description: "Finding not found" }
+  /v1/ml/synthesize:
+    post:
+      summary: "Synthesize detection ideas from a finding, command or event"
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "Exactly one of finding_id, command, event"
+      responses:
+        "200": { description: "Synthesis result" }
+        "400": { description: "Invalid body or not exactly one input" }
+        "404": { description: "Finding not found" }
+  /v1/prov/graph:
+    get:
+      summary: "Provenance graph"
+      parameters:
+        - { name: host, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer }, description: "Node cap, default 500" }
+      responses:
+        "200": { description: "Graph nodes and edges" }
+  /v1/prov/stories:
+    get:
+      summary: "Provenance stories (attack narratives)"
+      parameters:
+        - { name: host, in: query, schema: { type: string } }
+      responses:
+        "200": { description: "Stories" }
+  /v1/prov/trace:
+    get:
+      summary: "Trace back/forward from a finding"
+      parameters:
+        - { name: finding_id, in: query, schema: { type: string }, description: "Finding id" }
+        - { name: dir, in: query, schema: { type: string }, description: "back, fwd or both" }
+        - { name: hops, in: query, schema: { type: integer }, description: "Hop limit, default 3" }
+      responses:
+        "200": { description: "Trace subgraph" }
+        "400": { description: "Bad dir" }
+        "404": { description: "Finding not found" }
+  /v1/prov/status:
+    get:
+      summary: "Provenance engine status"
+      responses:
+        "200": { description: "Status" }
+  /v1/ransom/status:
+    get:
+      summary: "Ransomware detector method, thresholds and blind spots (report-only)"
+      responses:
+        "200": { description: "{method, window, thresholds, alert_rule, primary, secondary, cannot_see, report_only}" }
+  /v1/ransom/hosts:
+    get:
+      summary: "Per-host ransomware indicator scores"
+      responses:
+        "200": { description: "{hosts[], report_only}" }
+  /v1/ransom/host:
+    get:
+      summary: "Ransomware windows for one host"
+      parameters:
+        - { name: host, in: query, schema: { type: string }, description: "required" }
+        - { name: limit, in: query, schema: { type: integer } }
+      responses:
+        "200": { description: "{host, windows[], report_only}" }
+        "400": { description: "host required" }
+        "404": { description: "No file events for host" }
+  /v1/syslog/status:
+    get:
+      summary: "Syslog listener status"
+      responses:
+        "200": { description: "Listener status (enabled false when not configured)" }
+  /v1/syslog/samples:
+    get:
+      summary: "Recent unparsed syslog lines (redacted, truncated to 512 chars)"
+      responses:
+        "200": { description: "{count, samples[], note}" }
+  /v1/syslog/parse:
+    post:
+      summary: "Parse one syslog line without ingesting it (admin or session)"
+      x-auth: admin-or-session
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "{\"line\": \"<=8KiB syslog line\"}"
+      responses:
+        "200": { description: "{parsed, message, events, ingested: false}" }
+        "400": { description: "Missing or oversized line" }
+  /v1/ttp/similar:
+    get:
+      summary: "Adversary profiles similar to observed techniques"
+      parameters:
+        - { name: techniques, in: query, schema: { type: string }, description: "Comma-separated ATT&CK ids" }
+        - { name: finding_ids, in: query, schema: { type: string }, description: "Comma-separated finding ids" }
+        - { name: host, in: query, schema: { type: string }, description: "Use that host's techniques" }
+      responses:
+        "200": { description: "{confidence, matches[], method}" }
+        "400": { description: "Invalid or missing input (provide one of host=, finding_ids= or techniques=)" }
+  /v1/ttp/next:
+    get:
+      summary: "Hunt hints: techniques co-occurring in similar profiles (not a prediction)"
+      parameters:
+        - { name: techniques, in: query, schema: { type: string } }
+        - { name: finding_ids, in: query, schema: { type: string } }
+        - { name: host, in: query, schema: { type: string } }
+      responses:
+        "200": { description: "{confidence, hints[], label}" }
+        "400": { description: "Invalid or missing input (provide one of host=, finding_ids= or techniques=)" }
+  /v1/ttp/chains:
+    get:
+      summary: "Observed technique chains for a host against adversary profiles"
+      parameters:
+        - { name: host, in: query, schema: { type: string }, description: "required" }
+      responses:
+        "200": { description: "Chains" }
+        "400": { description: "host= required" }
+        "503": { description: "Adversary profiles unavailable" }
+  /v1/validate/scenarios:
+    get:
+      summary: "Detection validation scenarios"
+      parameters:
+        - { name: kind, in: query, schema: { type: string } }
+        - { name: platform, in: query, schema: { type: string } }
+        - { name: technique, in: query, schema: { type: string } }
+      responses:
+        "200": { description: "Scenario list" }
+  /v1/validate/scenarios/{id}:
+    get:
+      summary: "One validation scenario"
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Scenario" }
+        "404": { description: "Scenario not found" }
+  /v1/validate/run:
+    post:
+      summary: "Replay scenarios through the detection engine in memory (no real events are produced)"
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "{\"ids\": [...], \"all\": bool, \"include_custom\": bool}"
+      responses:
+        "200": { description: "Per-scenario pass/fail and coverage" }
+        "400": { description: "Invalid body, neither ids nor all, or too many ids" }
+  /v1/validate/coverage:
+    get:
+      summary: "Detection coverage by technique from scenarios"
+      parameters:
+        - { name: include_custom, in: query, schema: { type: string }, description: "true to include custom rules" }
+      responses:
+        "200": { description: "Coverage" }
+  /v1/vulns/priority:
+    get:
+      summary: "SSVC + EPSS + CVSS vulnerability prioritisation"
+      parameters:
+        - { name: host, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer }, description: "1-500, default 50" }
+      responses:
+        "200": { description: "{tree_version, total, count, ranking, epss, items[], limitations}" }
+        "400": { description: "limit must be 1-500" }
+  /v1/vulns/priority/status:
+    get:
+      summary: "EPSS feed and prioritisation status"
+      responses:
+        "200": { description: "Status" }
+  /v1/vulns/priority/refresh:
+    post:
+      summary: "Refresh the EPSS cache now (only fetches when KAVACH_EPSS_FEED=on)"
+      responses:
+        "200": { description: "Refresh result" }
+  /v1/vulns/priority/{cve}:
+    get:
+      summary: "Prioritisation of one CVE across hosts"
+      parameters:
+        - { name: cve, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "{cve, tree_version, hosts, ...}" }
+        "400": { description: "Invalid CVE id" }
+        "404": { description: "CVE not matched on any host" }
+  /v1/world/competitive:
+    get:
+      summary: "Competitive feature matrix (embedded competitive_matrix.json)"
+      responses:
+        "200": { description: "Matrix" }
+        "500": { description: "Matrix unavailable" }
+  /v1/inventory:
+    post:
+      summary: "Ingest a live inventory domain snapshot"
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "{domain, ...} (domain required)"
+      responses:
+        "200": { description: "Accepted" }
+        "400": { description: "Invalid inventory payload" }
+  /v1/ebpf/status:
+    get:
+      summary: "eBPF sensor status (observe-only)"
+      responses:
+        "200": { description: "JSON response" }
+  /v1/ebpf/health:
+    get:
+      summary: "eBPF sensor health (observe-only)"
+      responses:
+        "200": { description: "JSON response" }
+  /v1/ebpf/coverage:
+    get:
+      summary: "eBPF coverage (observe-only)"
+      responses:
+        "200": { description: "JSON response" }
+  /v1/ebpf/attachments:
+    get:
+      summary: "eBPF attachments (observe-only)"
+      responses:
+        "200": { description: "JSON response" }
+  /v1/ebpf/maps:
+    get:
+      summary: "eBPF maps (observe-only)"
+      responses:
+        "200": { description: "JSON response" }
+  /v1/ebpf/census:
+    get:
+      summary: "eBPF census (observe-only)"
+      responses:
+        "200": { description: "JSON response" }
+  /v1/ebpf/summary:
+    get:
+      summary: "eBPF summary (observe-only)"
+      responses:
+        "200": { description: "JSON response" }
+  /v1/ebpf/drops:
+    get:
+      summary: "eBPF dropped-event counters (observe-only)"
+      responses:
+        "200": { description: "JSON response" }
+  /v1/ebpf/processes:
+    get:
+      summary: "eBPF-observed processes (observe-only)"
+      responses:
+        "200": { description: "JSON response" }
+  /v1/ebpf/features:
+    get:
+      summary: "eBPF feature gates (observe-only)"
+      responses:
+        "200": { description: "JSON response" }
+  /v1/ebpf/capabilities:
+    get:
+      summary: "eBPF capabilities (observe-only; enforce=false)"
+      responses:
+        "200": { description: "{capabilities[], enforce}" }
+  /v1/ebpf/events:
+    get:
+      summary: "Ingested eBPF events"
+      parameters:
+        - { name: type, in: query, schema: { type: string }, description: "Event type filter" }
+      responses:
+        "200": { description: "JSON response" }
+    post:
+      summary: "Ingest eBPF events"
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "{\"events\": [...], \"lost\": n}"
+      responses:
+        "200": { description: "{ingested, lost}" }
+        "400": { description: "Bad JSON" }
+  /v1/ebpf/features/{id}:
+    post:
+      summary: "Set an observation sensor gate"
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "{\"mode\": \"auto|on|off\"}"
+      responses:
+        "200": { description: "{id, mode, enforce: false}" }
+        "400": { description: "Bad JSON or mode" }
+        "404": { description: "Unknown feature" }
+  /v1/ebpf/netra/status:
+    get:
+      summary: "Proxy of the Netra eBPF status view (read-only)"
+      responses:
+        "200": { description: "JSON response" }
+  /v1/ebpf/netra/drops:
+    get:
+      summary: "Proxy of the Netra eBPF drops view (read-only)"
+      responses:
+        "200": { description: "JSON response" }
+  /v1/ebpf/netra/flows:
+    get:
+      summary: "Proxy of the Netra eBPF flows view (read-only)"
+      responses:
+        "200": { description: "JSON response" }
+  /v1/ebpf/netra/attachments:
+    get:
+      summary: "Proxy of the Netra eBPF attachments view (read-only)"
+      responses:
+        "200": { description: "JSON response" }
+  /v1/sectors/events:
+    post:
+      summary: "Ingest sector observation events"
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "{\"events\": [{...}]}"
+      responses:
+        "200": { description: "{ingested, enforce: false}" }
+        "400": { description: "Bad JSON" }
+    get:
+      summary: "Observe-only sectors view: events"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/events:
+    post:
+      summary: "Ingest finance observation events"
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "{\"events\": [{...}]}"
+      responses:
+        "200": { description: "{ingested, enforce: false}" }
+        "400": { description: "Bad JSON" }
+    get:
+      summary: "Observe-only finance view: events"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/algo:
+    get:
+      summary: "Observe-only finance view: algo"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/atms:
+    get:
+      summary: "Observe-only finance view: atms"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/branches:
+    get:
+      summary: "Observe-only finance view: branches"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/cards:
+    get:
+      summary: "Observe-only finance view: cards"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/core-banking:
+    get:
+      summary: "Observe-only finance view: core banking"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/exchanges:
+    get:
+      summary: "Observe-only finance view: exchanges"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/fraud:
+    get:
+      summary: "Observe-only finance view: fraud"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/insider:
+    get:
+      summary: "Observe-only finance view: insider"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/institutions:
+    get:
+      summary: "Observe-only finance view: institutions"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/insurance:
+    get:
+      summary: "Observe-only finance view: insurance"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/insurance-lines:
+    get:
+      summary: "Observe-only finance view: insurance lines"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/insurance-tpa:
+    get:
+      summary: "Observe-only finance view: insurance tpa"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/irdai:
+    get:
+      summary: "Observe-only finance view: irdai"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/kyc:
+    get:
+      summary: "Observe-only finance view: kyc"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/market-data:
+    get:
+      summary: "Observe-only finance view: market data"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/markets:
+    get:
+      summary: "Observe-only finance view: markets"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/modules:
+    get:
+      summary: "Observe-only finance view: modules"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/motor-insurance:
+    get:
+      summary: "Observe-only finance view: motor insurance"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/mutual-funds:
+    get:
+      summary: "Observe-only finance view: mutual funds"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/nbfc:
+    get:
+      summary: "Observe-only finance view: nbfc"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/payment-rails:
+    get:
+      summary: "Observe-only finance view: payment rails"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/pci:
+    get:
+      summary: "Observe-only finance view: pci"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/rbi:
+    get:
+      summary: "Observe-only finance view: rbi"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/reinsurance:
+    get:
+      summary: "Observe-only finance view: reinsurance"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/sanctions:
+    get:
+      summary: "Observe-only finance view: sanctions"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/sebi:
+    get:
+      summary: "Observe-only finance view: sebi"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/summary:
+    get:
+      summary: "Observe-only finance view: summary"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/swift:
+    get:
+      summary: "Observe-only finance view: swift"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/trading-desks:
+    get:
+      summary: "Observe-only finance view: trading desks"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/treasury:
+    get:
+      summary: "Observe-only finance view: treasury"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/upi:
+    get:
+      summary: "Observe-only finance view: upi"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/finance/workstations:
+    get:
+      summary: "Observe-only finance view: workstations"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/air-cargo:
+    get:
+      summary: "Observe-only sectors view: air cargo"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/airlines:
+    get:
+      summary: "Observe-only sectors view: airlines"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/airport-security:
+    get:
+      summary: "Observe-only sectors view: airport security"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/airports:
+    get:
+      summary: "Observe-only sectors view: airports"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/atc-it:
+    get:
+      summary: "Observe-only sectors view: atc it"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/automotive:
+    get:
+      summary: "Observe-only sectors view: automotive"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/autos-rickshaw:
+    get:
+      summary: "Observe-only sectors view: autos rickshaw"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/aviation:
+    get:
+      summary: "Observe-only sectors view: aviation"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/baggage:
+    get:
+      summary: "Observe-only sectors view: baggage"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/border:
+    get:
+      summary: "Observe-only sectors view: border"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/brts:
+    get:
+      summary: "Observe-only sectors view: brts"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/cantonment:
+    get:
+      summary: "Observe-only sectors view: cantonment"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/cert-in:
+    get:
+      summary: "Observe-only sectors view: cert in"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/citizen-services:
+    get:
+      summary: "Observe-only sectors view: citizen services"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/city-buses:
+    get:
+      summary: "Observe-only sectors view: city buses"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/coast-guard:
+    get:
+      summary: "Observe-only sectors view: coast guard"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/courts:
+    get:
+      summary: "Observe-only sectors view: courts"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/critical-sites:
+    get:
+      summary: "Observe-only sectors view: critical sites"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/customs:
+    get:
+      summary: "Observe-only sectors view: customs"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/dealers:
+    get:
+      summary: "Observe-only sectors view: dealers"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/defence:
+    get:
+      summary: "Observe-only sectors view: defence"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/defence-civil:
+    get:
+      summary: "Observe-only sectors view: defence civil"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/defence-portals:
+    get:
+      summary: "Observe-only sectors view: defence portals"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/dgca:
+    get:
+      summary: "Observe-only sectors view: dgca"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/digital-id:
+    get:
+      summary: "Observe-only sectors view: digital id"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/drdo-labs:
+    get:
+      summary: "Observe-only sectors view: drdo labs"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/e-office:
+    get:
+      summary: "Observe-only sectors view: e office"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/education:
+    get:
+      summary: "Observe-only sectors view: education"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/elections:
+    get:
+      summary: "Observe-only sectors view: elections"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/electronics-mfg:
+    get:
+      summary: "Observe-only sectors view: electronics mfg"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/ev-charging:
+    get:
+      summary: "Observe-only sectors view: ev charging"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/ferries:
+    get:
+      summary: "Observe-only sectors view: ferries"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/fids:
+    get:
+      summary: "Observe-only sectors view: fids"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/flights:
+    get:
+      summary: "Observe-only sectors view: flights"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/freight:
+    get:
+      summary: "Observe-only sectors view: freight"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/gov-portals:
+    get:
+      summary: "Observe-only sectors view: gov portals"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/gov-vehicles:
+    get:
+      summary: "Observe-only sectors view: gov vehicles"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/ground-handling:
+    get:
+      summary: "Observe-only sectors view: ground handling"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/ground-stations:
+    get:
+      summary: "Observe-only sectors view: ground stations"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/health:
+    get:
+      summary: "Observe-only sectors view: health"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/highways:
+    get:
+      summary: "Observe-only sectors view: highways"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/industrial-parks:
+    get:
+      summary: "Observe-only sectors view: industrial parks"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/intercity-coaches:
+    get:
+      summary: "Observe-only sectors view: intercity coaches"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/isro-centers:
+    get:
+      summary: "Observe-only sectors view: isro centers"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/launch-range:
+    get:
+      summary: "Observe-only sectors view: launch range"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/manufacturing:
+    get:
+      summary: "Observe-only sectors view: manufacturing"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/metro:
+    get:
+      summary: "Observe-only sectors view: metro"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/ministries:
+    get:
+      summary: "Observe-only sectors view: ministries"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/modules:
+    get:
+      summary: "Observe-only sectors view: modules"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/municipal-fleet:
+    get:
+      summary: "Observe-only sectors view: municipal fleet"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/nsil-antrix:
+    get:
+      summary: "Observe-only sectors view: nsil antrix"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/oil-gas:
+    get:
+      summary: "Observe-only sectors view: oil gas"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/paramilitary:
+    get:
+      summary: "Observe-only sectors view: paramilitary"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/passenger-apps:
+    get:
+      summary: "Observe-only sectors view: passenger apps"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/pharma:
+    get:
+      summary: "Observe-only sectors view: pharma"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/ports:
+    get:
+      summary: "Observe-only sectors view: ports"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/postal:
+    get:
+      summary: "Observe-only sectors view: postal"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/power:
+    get:
+      summary: "Observe-only sectors view: power"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/public-vehicles:
+    get:
+      summary: "Observe-only sectors view: public vehicles"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/rail-signaling:
+    get:
+      summary: "Observe-only sectors view: rail signaling"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/railways:
+    get:
+      summary: "Observe-only sectors view: railways"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/scada:
+    get:
+      summary: "Observe-only sectors view: scada"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/school-buses:
+    get:
+      summary: "Observe-only sectors view: school buses"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/smart-city:
+    get:
+      summary: "Observe-only sectors view: smart city"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/space:
+    get:
+      summary: "Observe-only sectors view: space"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/space-research:
+    get:
+      summary: "Observe-only sectors view: space research"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/spectrum:
+    get:
+      summary: "Observe-only sectors view: spectrum"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/stations:
+    get:
+      summary: "Observe-only sectors view: stations"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/steel-cement:
+    get:
+      summary: "Observe-only sectors view: steel cement"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/summary:
+    get:
+      summary: "Observe-only sectors view: summary"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/tax:
+    get:
+      summary: "Observe-only sectors view: tax"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/taxis-cabs:
+    get:
+      summary: "Observe-only sectors view: taxis cabs"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/telecom:
+    get:
+      summary: "Observe-only sectors view: telecom"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/textiles:
+    get:
+      summary: "Observe-only sectors view: textiles"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/transport-reg:
+    get:
+      summary: "Observe-only sectors view: transport reg"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/vehicle-oem:
+    get:
+      summary: "Observe-only sectors view: vehicle oem"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
+  /v1/sectors/water:
+    get:
+      summary: "Observe-only sectors view: water"
+      responses:
+        "200": { description: "JSON view (enforce=false)" }
 components:
   securitySchemes:
     bearerAuth:

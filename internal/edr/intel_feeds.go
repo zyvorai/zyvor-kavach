@@ -80,7 +80,6 @@ type IntelFeeds struct {
 	Tick    time.Duration
 
 	startOnce sync.Once
-	wg        sync.WaitGroup
 }
 
 func NewIntelFeeds(store *Store) *IntelFeeds {
@@ -193,9 +192,9 @@ func (f *IntelFeeds) saveLocked() error {
 // Start polls due feeds until ctx is done (idempotent).
 func (f *IntelFeeds) Start(ctx context.Context) {
 	f.startOnce.Do(func() {
-		f.wg.Add(1)
+		lc.bg.Add(1)
 		go func() {
-			defer f.wg.Done()
+			defer lc.bg.Done()
 			f.poll(ctx)
 			t := time.NewTicker(f.Tick)
 			defer t.Stop()
@@ -565,9 +564,7 @@ func (f *IntelFeeds) statuses() []FeedStatus {
 // RegisterIntelFeeds wires /v1/intel/feeds and starts the fetcher.
 func RegisterIntelFeeds(mux *http.ServeMux, token string, store *Store) *IntelFeeds {
 	f := NewIntelFeeds(store)
-	ctx, cancel := context.WithCancel(context.Background())
-	f.Start(ctx)
-	store.OnClose(func() { cancel(); f.wg.Wait() })
+	f.Start(LifecycleContext())
 	registerIntelRoutes(mux, token, f)
 	return f
 }

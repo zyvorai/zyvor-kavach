@@ -41,6 +41,9 @@ func run(args []string) error {
 		return nil
 	}
 	ensureConfig()
+	if handled, err := nxDispatch(args, os.Stdout); handled {
+		return err
+	}
 	if handled, err := ccDispatch(args, os.Stdout); handled {
 		return err
 	}
@@ -69,6 +72,9 @@ func run(args []string) error {
 		return err
 	}
 	if handled, err := p4Dispatch(args, os.Stdout); handled {
+		return err
+	}
+	if handled, err := schedDispatch(args, os.Stdout); handled {
 		return err
 	}
 	if handled, err := inspectDispatch(args, os.Stdout); handled {

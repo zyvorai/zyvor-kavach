@@ -26,14 +26,7 @@ type ttpObserved struct {
 
 // ttpRuleMap merges built-in and live content-pack rule mappings, as the ATT&CK matrix does.
 func ttpRuleMap() map[string]struct{ Tactic, Technique, ID string } {
-	all := make(map[string]struct{ Tactic, Technique, ID string }, len(ruleMITRE))
-	for r, m := range ruleMITRE {
-		all[r] = m
-	}
-	for r, m := range contentMITREAll() {
-		all[r] = m
-	}
-	return all
+	return allRuleMITRE()
 }
 
 // ttpObserve derives observed techniques from findings via the ATT&CK matrix mapping.
@@ -46,6 +39,9 @@ func ttpObserve(findings []Finding, keep func(Finding) bool) []ttpObserved {
 			continue
 		}
 		m, ok := rules[f.Rule]
+		if !ok {
+			m, ok = mitreForFinding(f) // IOC id aliases and IOA tags
+		}
 		if !ok || m.ID == "" {
 			continue
 		}

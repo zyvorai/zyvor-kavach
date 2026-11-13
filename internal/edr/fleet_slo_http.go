@@ -56,21 +56,22 @@ func RegisterFleetSLO(mux *http.ServeMux, token string, store *Store, registry *
 		}
 		return registry.Status(now, fleetHOnlineAfter)
 	}
-	store.goBG(func(stop <-chan struct{}) {
+	eng.done = make(chan struct{})
+	go func() {
+		defer close(eng.done)
 		t := time.NewTicker(sloStep)
 		defer t.Stop()
 		for {
 			now := time.Now()
 			eng.sample(now, statuses(now), sloObserve(store, now))
 			select {
-			case <-stop:
-				return
 			case <-eng.stop:
 				return
 			case <-t.C:
 			}
 		}
-	})
+	}()
+	RegisterStopper("fleet-slo", eng.Shutdown)
 	out := func(w http.ResponseWriter, v any) {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(v)

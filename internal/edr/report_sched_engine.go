@@ -1,6 +1,7 @@
 package edr
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/csv"
 	"encoding/hex"
@@ -69,8 +70,9 @@ type rsEngine struct {
 	render   func(s rsSchedule, now time.Time) ([]byte, bool, error)
 	sem      chan struct{}
 	stop     chan struct{}
+	done     chan struct{}
+	started  bool
 	stopOnce sync.Once
-	wg       sync.WaitGroup
 	timeout  time.Duration
 	maxBytes int
 	maxFiles int
@@ -445,9 +447,12 @@ func (e *rsEngine) pruneLocked() {
 // Start runs one catch-up tick immediately, then ticks every rsTick on a
 // single goroutine. Stop ends it.
 func (e *rsEngine) Start() {
-	e.wg.Add(1)
+	e.mu.Lock()
+	e.started = true
+	e.done = make(chan struct{})
+	e.mu.Unlock()
 	go func() {
-		defer e.wg.Done()
+		defer close(e.done)
 		e.tick(e.clock().UTC())
 		t := time.NewTicker(rsTick)
 		defer t.Stop()
@@ -463,10 +468,25 @@ func (e *rsEngine) Start() {
 }
 
 // Stop ends the scheduler goroutine.
-// Stop ends the tick goroutine and waits for it (an in-flight tick finishes first).
-func (e *rsEngine) Stop() {
-	e.stopOnce.Do(func() { close(e.stop) })
-	e.wg.Wait()
+func (e *rsEngine) Stop() { e.stopOnce.Do(func() { close(e.stop) }) }
+
+// Shutdown stops the scheduler, waits for an in-flight tick, and persists the schedule list.
+func (e *rsEngine) Shutdown(ctx context.Context) error {
+	e.Stop()
+	e.mu.Lock()
+	started := e.started
+	e.mu.Unlock()
+	if started {
+		select {
+		case <-e.done:
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.saveLocked()
+	return nil
 }
 
 // ---------------- rendering ----------------

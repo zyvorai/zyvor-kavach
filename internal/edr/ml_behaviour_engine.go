@@ -2,6 +2,7 @@
 package edr
 
 import (
+	"context"
 	"encoding/json"
 	"hash/fnv"
 	"math"
@@ -120,10 +121,13 @@ type mlEngine struct {
 	store *Store
 	dirty bool
 	saved time.Time
+	quit  chan struct{}
+	done  chan struct{}
+	once  sync.Once
 }
 
 func newMLEngine(store *Store) *mlEngine {
-	e := &mlEngine{store: store, st: newMLState()}
+	e := &mlEngine{store: store, st: newMLState(), quit: make(chan struct{}), done: make(chan struct{})}
 	if store != nil {
 		e.path = store.path + ".mlbehaviour.json"
 		if b, err := os.ReadFile(e.path); err == nil {
@@ -632,17 +636,37 @@ func (e *mlEngine) maybeSave() {
 	e.mu.Unlock()
 }
 
-func (e *mlEngine) run(stop <-chan struct{}) {
+func (e *mlEngine) run() {
 	t := time.NewTicker(mlPollEvery)
 	defer t.Stop()
+	defer close(e.done)
 	for {
 		select {
-		case <-stop:
+		case <-e.quit:
 			return
 		case <-t.C:
 			e.poll()
 		}
 	}
+}
+
+// Shutdown stops the poll loop, waits for it, and flushes learned models if dirty.
+func (e *mlEngine) Shutdown(ctx context.Context) error {
+	e.once.Do(func() { close(e.quit) })
+	select {
+	case <-e.done:
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+	e.poll() // learn events ingested since the last tick
+	e.op.Lock()
+	defer e.op.Unlock()
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if e.dirty {
+		e.saveLocked()
+	}
+	return nil
 }
 
 // reset discards all learned state; the cursor is moved to the store tail so retained events are not re-learned.

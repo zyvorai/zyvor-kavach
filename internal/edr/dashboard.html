@@ -1353,6 +1353,78 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 .gs-item .gs-sub { font-size: 13px; color: var(--text-secondary); overflow-wrap: anywhere; }
 .gs-empty { text-align: center; padding: 28px 16px; color: var(--text-secondary); }
 .pal-list li.pal-search { color: var(--apple-link); }
+/* === coverage page === */
+.cv-opt { display: inline-flex; align-items: center; gap: 6px; min-height: var(--hit-min); }
+.cv-svg { width: 100%; max-width: 720px; height: auto; display: block; }
+.cv-svg text { fill: var(--text-secondary); font-size: 10px; font-family: var(--font); }
+.cv-seg-detected { fill: var(--success-text); }
+.cv-seg-partial { fill: var(--warning-text); }
+.cv-seg-missed { fill: var(--danger); }
+.cv-seg-not_testable { fill: var(--text-tertiary); }
+.cv-seg-untested { fill: var(--fill-tertiary); stroke: var(--hairline-1); }
+.tag.detected, .tag.active { background: var(--success-bg); color: var(--success-text); }
+.tag.missed { background: var(--danger-bg); color: var(--danger); }
+.tag.not_testable, .tag.untested, .tag.never_seen { background: var(--fill-tertiary); color: var(--text-secondary); }
+.cv-details { margin: 8px 0; }
+.cv-details summary { cursor: pointer; min-height: var(--hit-min); display: flex; align-items: center; font-weight: 600; }
+/* === kavach-seq hunt page === */
+.hs-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 860px) { .hs-grid { grid-template-columns: minmax(0, 1fr); } }
+.hs-query { width: 100%; box-sizing: border-box; font-family: var(--font-mono, ui-monospace, monospace); font-size: 13px; line-height: 1.5; resize: vertical; min-height: 120px; }
+.hs-query.is-bad { border-color: var(--danger); }
+.hs-caret { margin: 4px 0; padding: 6px 8px; overflow-x: auto; font-size: 12px; background: var(--danger-bg); color: var(--danger); border-radius: var(--radius-md); white-space: pre; }
+.hs-side { min-width: 0; }
+.hs-cat summary { cursor: pointer; min-height: var(--hit-min); display: flex; align-items: center; font-weight: 600; }
+.hs-cat ul { margin: 4px 0 8px; padding-left: 18px; font-size: 13px; }
+.hs-cat li { margin: 2px 0; overflow-wrap: anywhere; }
+.hs-absent { color: var(--text-secondary); }
+.hs-fields { margin: 4px 0; font-size: 12px; overflow-wrap: anywhere; color: var(--text-secondary); font-family: var(--font-mono, ui-monospace, monospace); white-space: pre-wrap; }
+.hs-match { margin: 8px 0; }
+.hs-tree { font-size: 12px; overflow-x: auto; white-space: pre; margin: 4px 0; }
+/* === vulnerability priority page === */
+.vp-detail { margin-top: 12px; border-color: var(--apple-blue); }
+.tag.act { background: var(--danger-bg); color: var(--danger); }
+.tag.attend { background: var(--warning-bg); color: var(--warning-text); }
+.tag.track, .tag.track_star { background: var(--info-bg); color: var(--apple-link); }
+.tag.unknown { background: var(--fill-tertiary); color: var(--text-secondary); border: 1px dashed var(--text-tertiary); }
+/* === feedback page and drawer verdicts === */
+#fb-drawer .px-actions button[aria-pressed="true"] { background: var(--apple-blue); color: var(--on-accent, #fff); }
+.fb-range { position: relative; height: 8px; min-width: 90px; border-radius: 4px; background: var(--fill-tertiary); }
+.fb-range > span { position: absolute; top: 0; bottom: 0; background: var(--apple-blue); border-radius: 4px; min-width: 2px; }
+.tag.review { background: var(--warning-bg); color: var(--warning-text); }
+.tag.true_positive { background: var(--success-bg); color: var(--success-text); }
+.tag.false_positive, .tag.benign_expected { background: var(--fill-tertiary); color: var(--text-secondary); }
+.tag.needs_more_data { background: var(--info-bg); color: var(--apple-link); }
+/* === attack chains and case workflow === */
+.ch-detail { margin-top: 12px; border-color: var(--apple-blue); }
+.cw-check { display: flex; gap: 10px; align-items: flex-start; min-height: var(--hit-min); padding: 4px 0; overflow-wrap: anywhere; }
+.cw-check input { margin-top: 4px; }
+.tag.overdue-sla { background: var(--danger-bg); color: var(--danger); }
+/* === automation page === */
+.tag.draft, .tag.retired, .tag.expired { background: var(--fill-tertiary); color: var(--text-secondary); }
+.tag.testing { background: var(--warning-bg); color: var(--warning-text); }
+.tag.production { background: var(--success-bg); color: var(--success-text); }
+/* === reports and fleet SLO page === */
+.field[hidden] { display: none; }
+.tag.meeting, .tag.fresh, .tag.reporting { background: var(--success-bg); color: var(--success-text); }
+.tag.breaching, .tag.silent { background: var(--danger-bg); color: var(--danger); }
+.tag.unknown, .tag.never_seen, .tag.never_reported { background: var(--fill-tertiary); color: var(--text-secondary); }
+.rp-nr { color: var(--text-tertiary); font-style: italic; }
+/* === content versions page === */
+.tag.added { background: var(--success-bg); color: var(--success-text); }
+.tag.removed { background: var(--danger-bg); color: var(--danger); }
+.tag.modified { background: var(--warning-bg); color: var(--warning-text); }
+/* === syslog status page === */
+.sl-pre { font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; margin: 4px 0; font-family: var(--font-mono, ui-monospace, monospace); }
+/* === competitive page === */
+.cp-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin: 0 0 12px; font-size: 13px; color: var(--text-secondary); }
+.tag.cp-has { background: var(--success-bg); color: var(--success-text); }
+.tag.cp-partial { background: var(--warning-bg); color: var(--warning-text); }
+.tag.cp-nd { background: var(--fill-tertiary); color: var(--text-secondary); }
+.tag.cp-oos { background: var(--info-bg); color: var(--apple-link); }
+.cp-cell { min-width: 120px; }
+.cp-cell .hint { display: block; margin-top: 4px; font-size: 12px; }
+.tag.cp-unverified { background: var(--warning-bg); color: var(--warning-text); border: 1px dashed var(--warning-text); }
 </style>
 </head>
 <body>
@@ -1448,6 +1520,16 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
             <button type="button" data-page="provenance" role="menuitem">Provenance</button>
             <button type="button" data-page="ransomware-behaviour" role="menuitem">Ransomware behaviour</button>
             <button type="button" data-page="ttp" role="menuitem">TTP similarity</button>
+            <button type="button" data-page="competitive" role="menuitem">Competitive</button>
+            <button type="button" data-page="syslog" role="menuitem">Syslog</button>
+            <button type="button" data-page="versions" role="menuitem">Content versions</button>
+            <button type="button" data-page="reports" role="menuitem">Reports and SLO</button>
+            <button type="button" data-page="automation" role="menuitem">Automation</button>
+            <button type="button" data-page="chains" role="menuitem">Attack chains</button>
+            <button type="button" data-page="feedback" role="menuitem">Feedback</button>
+            <button type="button" data-page="vulnprio" role="menuitem">Vulnerability priority</button>
+            <button type="button" data-page="huntseq" role="menuitem">Sequence hunt</button>
+            <button type="button" data-page="coverage" role="menuitem">Coverage</button>
           </div>
         </div>
       </div>
@@ -2990,6 +3072,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
           <div class="field"><label for="cs-d-resolution">Resolution</label><input class="input-field" id="cs-d-resolution" type="text" autocomplete="off"></div>
           <div class="field px-actions" id="cs-d-closeslot"></div>
         </div>
+        <div class="work-panel" id="cw-panel" aria-labelledby="cw-title"><h3 id="cw-title">Workflow</h3><div id="cw-out"></div></div>
         <h3>Timeline</h3>
         <table><thead><tr><th>Time</th><th>Actor</th><th>Kind</th><th>Detail</th></tr></thead><tbody id="cs-d-tl"></tbody></table>
         <h3>Comments</h3>
@@ -3269,6 +3352,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
           <button type="button" role="tab" data-in-mode="script" aria-selected="false">Script</button>
           <button type="button" role="tab" data-in-mode="cmdline" aria-selected="false">Command line</button>
           <button type="button" role="tab" data-in-mode="domain" aria-selected="false">Domain</button>
+          <button type="button" role="tab" data-in-mode="config" aria-selected="false">Config</button>
         </div>
         <div class="work-panel">
           <div id="in-mode-file">
@@ -3290,6 +3374,12 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
           <div id="in-mode-domain" hidden>
             <label class="hint" for="in-domain">Domain to score (it is parsed only, never resolved or contacted)</label>
             <input class="input-field" id="in-domain" type="text" spellcheck="false" autocomplete="off" placeholder="example.com">
+          </div>
+          <div id="in-mode-config" hidden>
+            <label class="hint" for="in-config-name">File name (optional, helps identify the format, for example sshd_config)</label>
+            <input class="input-field" id="in-config-name" type="text" spellcheck="false" autocomplete="off">
+            <label class="hint" for="in-config">Paste a configuration file. It is parsed only: nothing is executed, included, fetched or applied.</label>
+            <textarea class="input-field lab-code" id="in-config" spellcheck="false" autocomplete="off"></textarea>
           </div>
           <div class="px-actions"><button type="button" class="primary" id="in-run">Analyze</button><button type="button" class="secondary" id="in-clear">Clear</button></div>
         </div>
@@ -3551,6 +3641,299 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     </section>
     <!-- === end cert advisories page === -->
 
+    <!-- === coverage page === -->
+    <section id="page-coverage" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Coverage</p>
+        <h1>What Kavach claims, what it measured, and where it is blind.</h1>
+        <p class="lede">Claimed techniques are scored by replaying synthetic scenarios in memory. Blind spots show which telemetry categories have not arrived. Observe-only: nothing is recorded or changed.</p>
+      </header>
+      <div class="nx-note bh-caveat" id="cv-note" role="note"><strong>Limitations (always apply)</strong><ul><li>Synthetic data replayed in memory; measured on Kavach's own scenarios; not a guarantee against real attacks.</li></ul></div>
+      <p class="work-msg" id="cv-msg" role="status"></p>
+      <div class="toolbar-pill nx-filters bh-fields">
+        <label class="cv-opt"><input type="checkbox" id="cv-custom"> Include custom content rules</label>
+        <button type="button" id="cv-reload" class="secondary">Reload</button>
+        <button type="button" id="cv-run">Run scenarios</button>
+      </div>
+      <h2>Validation lab: measured vs claimed</h2>
+      <div id="cv-val-out"></div>
+      <div id="cv-run-out" aria-live="polite"></div>
+      <h2>Blind spots</h2>
+      <div id="cv-blind-out"></div>
+    </section>
+    <!-- === end coverage page === -->
+    <!-- === kavach-seq hunt page === -->
+    <section id="page-huntseq" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Sequence hunt</p>
+        <h1>Hunt for ordered behaviour with kavach-seq.</h1>
+        <p class="lede">Write a sequence or single-event query over the telemetry Kavach actually stores. Fields that are not collected are rejected with a reason instead of silently matching nothing. Read-only.</p>
+      </header>
+      <div class="nx-note bh-caveat" id="hs-sem" role="note"><strong>Semantics and limits (always apply)</strong><ul><li>Loading the query semantics from the server.</li></ul></div>
+      <p class="work-msg" id="hs-msg" role="status"></p>
+      <div class="hs-grid">
+        <div class="hs-main">
+          <div class="toolbar-pill nx-filters bh-fields">
+            <label class="hint" for="hs-example">Example</label>
+            <select class="input-field" id="hs-example"><option value="">Choose an example…</option></select>
+          </div>
+          <p class="hint" id="hs-example-desc"></p>
+          <label class="hint" for="hs-query">Query</label>
+          <textarea class="input-field hs-query" id="hs-query" rows="9" spellcheck="false" autocomplete="off" aria-describedby="hs-err"></textarea>
+          <pre class="hs-caret" id="hs-caret" hidden></pre>
+          <p class="work-msg is-error" id="hs-err" role="alert"></p>
+          <div class="toolbar-pill nx-filters bh-fields">
+            <label class="hint" for="hs-since">Since</label>
+            <input class="input-field" id="hs-since" value="7d" placeholder="24h, 7d or RFC3339" size="14">
+            <label class="hint" for="hs-limit">Max matches</label>
+            <input class="input-field" id="hs-limit" type="number" min="1" value="50">
+            <button type="button" id="hs-run">Run</button>
+            <button type="button" class="secondary" id="hs-explain">Explain</button>
+          </div>
+          <div id="hs-out" aria-live="polite"></div>
+        </div>
+        <aside class="hs-side" aria-labelledby="hs-cat-title">
+          <h2 id="hs-cat-title">Field catalogue</h2>
+          <div id="hs-cat-out"></div>
+        </aside>
+      </div>
+    </section>
+    <!-- === end kavach-seq hunt page === -->
+    <!-- === vulnerability priority page === -->
+    <section id="page-vulnprio" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Vulnerability priority</p>
+        <h1>Which matched CVEs to look at first, and what we do not know.</h1>
+        <p class="lede">Ranked by an SSVC decision tree using the evidence Kavach has. Unknown inputs use documented defaults and are always marked. This is advice only: nothing is patched or changed.</p>
+      </header>
+      <div class="nx-note bh-caveat" id="vp-limits" role="note"><strong>Limitations (always apply)</strong><ul><li>Observation only. Unknown decision points use documented defaults, so treat outcomes with unknown inputs as a range.</li></ul></div>
+      <p class="work-msg" id="vp-msg" role="status"></p>
+      <div class="toolbar-pill nx-filters bh-fields">
+        <label class="hint" for="vp-host">Host</label>
+        <input class="input-field" id="vp-host" placeholder="All hosts" size="16">
+        <label class="hint" for="vp-limit">Show top</label>
+        <input class="input-field" id="vp-limit" type="number" min="1" max="500" value="50">
+        <button type="button" id="vp-go">Load ranking</button>
+      </div>
+      <div id="vp-list-out"></div>
+      <div class="work-panel vp-detail" id="vp-detail" role="region" aria-labelledby="vp-detail-title" tabindex="-1" hidden>
+        <div class="ui-row"><h3 id="vp-detail-title">CVE</h3><button type="button" class="secondary" id="vp-detail-close">Close</button></div>
+        <div id="vp-detail-out"></div>
+      </div>
+      <h2>EPSS feed status</h2>
+      <div class="px-actions"><button type="button" class="secondary" id="vp-refresh">Refresh EPSS now</button></div>
+      <div id="vp-status-out"></div>
+    </section>
+    <!-- === end vulnerability priority page === -->
+    <!-- === feedback page === -->
+    <section id="page-feedback" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Feedback</p>
+        <h1>How analysts judged the findings, rule by rule.</h1>
+        <p class="lede">Verdicts are recorded from the finding drawer into a hash-chained log. Precision estimates carry an interval and are advice for a human to review; nothing here changes a rule.</p>
+      </header>
+      <div class="nx-note bh-caveat" id="fb-limits" role="note"><strong>Limitations (always apply)</strong><ul><li>Analysts label a biased subset of findings, so these rates are not fleet-wide precision. A review candidate is a prompt to look, never an action.</li></ul></div>
+      <p class="work-msg" id="fb-page-msg" role="status"></p>
+      <div class="toolbar-pill nx-filters bh-fields">
+        <label class="hint" for="fb-days">Recent window (days)</label>
+        <input class="input-field" id="fb-days" type="number" min="1" max="365" value="7">
+        <label class="hint" for="fb-minv">Minimum verdicts per rule</label>
+        <input class="input-field" id="fb-minv" type="number" min="1" max="1000" value="5">
+        <button type="button" id="fb-go">Reload</button>
+      </div>
+      <h2>Summary</h2>
+      <div id="fb-sum-out"></div>
+      <h2>Rule precision</h2>
+      <div id="fb-rules-out"></div>
+      <h2>Chain integrity</h2>
+      <div id="fb-chain-out"></div>
+      <h2>Recent verdicts</h2>
+      <div id="fb-recent-out"></div>
+    </section>
+    <!-- === end feedback page === -->
+    <!-- === attack chains page === -->
+    <section id="page-chains" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Attack chains</p>
+        <h1>Findings that belong together, and why they were grouped.</h1>
+        <p class="lede">Chains are a heuristic grouping of findings by shared evidence. They are a lead for investigation, not proof of one intrusion. Creating a case is the only action here, and it is safe to repeat.</p>
+      </header>
+      <div class="nx-note bh-caveat" id="ch-limits" role="note"><strong>Limitations (always apply)</strong><ul><li>Heuristic grouping, not proof of a single intrusion.</li></ul></div>
+      <p class="work-msg" id="ch-msg" role="status"></p>
+      <div class="toolbar-pill nx-filters bh-fields">
+        <label class="hint" for="ch-host">Host</label>
+        <input class="input-field" id="ch-host" placeholder="All hosts" size="16">
+        <label class="hint" for="ch-min">Minimum score</label>
+        <input class="input-field" id="ch-min" type="number" min="0" step="0.5" value="0">
+        <button type="button" id="ch-go">Load chains</button>
+      </div>
+      <div id="ch-list-out"></div>
+      <div class="work-panel ch-detail" id="ch-detail" role="region" aria-labelledby="ch-detail-title" tabindex="-1" hidden>
+        <div class="ui-row"><h3 id="ch-detail-title">Chain</h3><button type="button" class="secondary" id="ch-detail-close">Close</button></div>
+        <div id="ch-detail-out"></div>
+      </div>
+      <h2>Case templates</h2>
+      <p class="hint">Templates give a case a checklist and resolve deadlines. Apply one from a case's workflow panel on the Cases page.</p>
+      <div id="ch-tpl-out"></div>
+    </section>
+    <!-- === end attack chains page === -->
+    <!-- === automation page === -->
+    <section id="page-automation" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Automation</p>
+        <h1>Scheduled detections, hunt quotas and exceptions.</h1>
+        <p class="lede">Scheduled detections record findings; they never block, kill or contain anything. An exception suppresses reporting only: the matching findings are kept in a separate list and the underlying activity is untouched.</p>
+      </header>
+      <p class="work-msg" id="au-msg" role="status"></p>
+
+      <h2>Scheduled detections</h2>
+      <p class="hint" id="au-sched-sem"></p>
+      <div id="au-sched-out"></div>
+      <div class="work-panel" id="au-form" role="group" aria-labelledby="au-form-title">
+        <h3 id="au-form-title">New scheduled detection</h3>
+        <div class="work-grid">
+          <div class="field"><label for="au-name">Name</label><input class="input-field" id="au-name" maxlength="120" autocomplete="off"></div>
+          <div class="field"><label for="au-kind">Source</label><select class="select-field" id="au-kind"><option value="seq">kavach-seq query</option><option value="saved_search">Saved search</option></select></div>
+          <div class="field" id="au-f-ss"><label for="au-ss">Saved search id</label><input class="input-field" id="au-ss" autocomplete="off"></div>
+          <div class="field" id="au-f-since"><label for="au-since">Lookback (seq)</label><input class="input-field" id="au-since" value="24h" placeholder="24h, 7d"></div>
+          <div class="field"><label for="au-interval">Interval (seconds, 60 to 86400)</label><input class="input-field" id="au-interval" type="number" min="60" max="86400" value="3600"></div>
+          <div class="field"><label for="au-sev">Severity</label><select class="select-field" id="au-sev"><option value="info">Info</option><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select></div>
+          <div class="field"><label for="au-tech">Technique (optional)</label><input class="input-field" id="au-tech" placeholder="T1059.004" autocomplete="off"></div>
+          <div class="field"><label for="au-state">State</label><select class="select-field" id="au-state"><option value="draft">Draft</option><option value="testing">Testing (findings kept as shadow only)</option><option value="production">Production</option><option value="retired">Retired</option></select></div>
+        </div>
+        <div class="field" id="au-f-q"><label for="au-query">kavach-seq query</label><textarea class="input-field hs-query" id="au-query" rows="5" spellcheck="false"></textarea></div>
+        <div class="px-actions"><button type="button" id="au-save">Create detection</button><button type="button" class="secondary" id="au-cancel" hidden>Cancel edit</button></div>
+      </div>
+      <div id="au-run-out" aria-live="polite"></div>
+
+      <h2>Hunt quotas</h2>
+      <div id="au-lim-out"></div>
+
+      <h2>Exceptions</h2>
+      <div class="nx-note bh-caveat" role="note"><strong>What an exception does</strong><ul><li>It suppresses reporting only. Matching findings leave the main list and are kept in the suppressed list below.</li><li>Every exception must expire (at most 365 days). Creating or changing one needs the admin token.</li></ul></div>
+      <div id="au-exc-out"></div>
+      <div class="work-panel" role="group" aria-labelledby="au-exc-form-title">
+        <h3 id="au-exc-form-title">New exception</h3>
+        <div class="work-grid">
+          <div class="field"><label for="au-x-rule">Rule id or glob (required)</label><input class="input-field" id="au-x-rule" autocomplete="off"></div>
+          <div class="field"><label for="au-x-host">Host or glob (optional)</label><input class="input-field" id="au-x-host" autocomplete="off"></div>
+          <div class="field"><label for="au-x-path">Executable path glob (optional)</label><input class="input-field" id="au-x-path" autocomplete="off"></div>
+          <div class="field"><label for="au-x-owner">Owner</label><input class="input-field" id="au-x-owner" autocomplete="off"></div>
+          <div class="field"><label for="au-x-reason">Reason</label><input class="input-field" id="au-x-reason" autocomplete="off"></div>
+          <div class="field"><label for="au-x-exp">Expires (required)</label><input class="input-field" id="au-x-exp" type="datetime-local"></div>
+        </div>
+        <div class="px-actions"><button type="button" id="au-x-create">Create exception</button></div>
+      </div>
+      <h3>Suppressed findings</h3>
+      <div id="au-sup-out"></div>
+      <h3>Exception history</h3>
+      <div id="au-hist-out"></div>
+    </section>
+    <!-- === end automation page === -->
+    <!-- === reports and fleet SLO page === -->
+    <section id="page-reports" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Reports and SLO</p>
+        <h1>Scheduled reports, and how the fleet is meeting its targets.</h1>
+        <p class="lede">Reports are rendered on a schedule and stored locally for you to fetch. Fleet SLOs use only what agents already send; anything an agent does not report is shown as not reported, never estimated.</p>
+      </header>
+      <p class="work-msg" id="rp-msg" role="status"></p>
+
+      <h2>Scheduled reports</h2>
+      <div class="nx-note bh-caveat" id="rp-notes" role="note"><strong>Delivery and privacy</strong><ul><li>Pull-only: Kavach stores rendered reports locally and never emails or pushes them.</li></ul></div>
+      <div id="rp-sched-out"></div>
+      <div class="work-panel" role="group" aria-labelledby="rp-form-title">
+        <h3 id="rp-form-title">New scheduled report</h3>
+        <div class="work-grid">
+          <div class="field"><label for="rp-name">Name</label><input class="input-field" id="rp-name" maxlength="80" autocomplete="off"></div>
+          <div class="field"><label for="rp-tpl">Template</label><select class="select-field" id="rp-tpl"></select></div>
+          <div class="field"><label for="rp-freq">Frequency</label><select class="select-field" id="rp-freq"><option value="hourly">Hourly</option><option value="daily" selected>Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></div>
+          <div class="field" id="rp-f-time"><label for="rp-time">Time (UTC, HH:MM)</label><input class="input-field" id="rp-time" type="time" value="06:00"></div>
+          <div class="field" id="rp-f-min"><label for="rp-min">Minute past the hour</label><input class="input-field" id="rp-min" type="number" min="0" max="59" value="0"></div>
+          <div class="field" id="rp-f-wd"><label for="rp-wd">Weekday</label><select class="select-field" id="rp-wd"><option value="mon">Monday</option><option value="tue">Tuesday</option><option value="wed">Wednesday</option><option value="thu">Thursday</option><option value="fri">Friday</option><option value="sat">Saturday</option><option value="sun">Sunday</option></select></div>
+          <div class="field" id="rp-f-dom"><label for="rp-dom">Day of month (1 to 31)</label><input class="input-field" id="rp-dom" type="number" min="1" max="31" value="1"></div>
+          <div class="field"><label for="rp-fmt">Format</label><select class="select-field" id="rp-fmt"><option value="markdown">Markdown</option><option value="json">JSON</option><option value="csv">CSV</option></select></div>
+          <div class="field"><label for="rp-ret">Reports kept</label><input class="input-field" id="rp-ret" type="number" min="1" max="100" value="7"></div>
+          <div class="field"><label for="rp-since">Look back (hours, optional)</label><input class="input-field" id="rp-since" type="number" min="1" placeholder="template default"></div>
+          <div class="field"><label for="rp-sev">Minimum severity (optional)</label><select class="select-field" id="rp-sev"><option value="">Template default</option><option value="info">Info</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option></select></div>
+        </div>
+        <p class="hint" id="rp-host-warn" role="note"></p>
+        <div class="px-actions"><button type="button" id="rp-create">Create schedule</button></div>
+      </div>
+      <div id="rp-runs-out" aria-live="polite"></div>
+
+      <h2>Fleet SLO</h2>
+      <div class="px-actions"><button type="button" class="secondary" id="rp-slo-reload">Reload SLO status</button></div>
+      <div id="rp-slo-out"></div>
+    </section>
+    <!-- === end reports and fleet SLO page === -->
+    <!-- === content versions page === -->
+    <section id="page-versions" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Content versions</p>
+        <h1>What detection content changed between builds.</h1>
+        <p class="lede">A snapshot of the embedded detection content is recorded at startup when it differs from the last one. Compare two snapshots to see which rules were added, removed or changed. Read-only.</p>
+      </header>
+      <div class="nx-note bh-caveat" id="vr-note" role="note"><strong>Limitations (always apply)</strong><ul><li>Newest first. A snapshot is recorded at startup only when embedded content differs from the last one, so changes between restarts are not captured.</li></ul></div>
+      <p class="work-msg" id="vr-msg" role="status"></p>
+      <h2>Snapshots</h2>
+      <div id="vr-snap-out"></div>
+      <h2>Compare two snapshots</h2>
+      <div class="toolbar-pill nx-filters bh-fields">
+        <label class="hint" for="vr-from">From</label>
+        <select class="input-field" id="vr-from"></select>
+        <label class="hint" for="vr-to">To</label>
+        <select class="input-field" id="vr-to"></select>
+        <button type="button" id="vr-cmp">Compare</button>
+      </div>
+      <div id="vr-diff-out" aria-live="polite"></div>
+      <h2>Changelog</h2>
+      <div id="vr-log-out"></div>
+    </section>
+    <!-- === end content versions page === -->
+    <!-- === syslog status page === -->
+    <section id="page-syslog" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Syslog</p>
+        <h1>What the syslog listener received, parsed and dropped.</h1>
+        <p class="lede">The listener is off by default and only observes: nothing is ever written back to senders. Use the parse tester to see how a line would be read. It is a dry run and ingests nothing.</p>
+      </header>
+      <p class="work-msg" id="sl-msg" role="status"></p>
+      <div class="px-actions"><button type="button" class="secondary" id="sl-reload">Reload</button></div>
+      <h2>Status</h2>
+      <div id="sl-status-out"></div>
+      <h2>Unparsed samples</h2>
+      <div id="sl-samples-out"></div>
+      <h2>Parse tester</h2>
+      <div class="nx-note" role="note">Dry run: nothing is ingested. Do not paste secrets; the line is sent to this server only.</div>
+      <label for="sl-line" class="hint">Syslog line (up to 8 KiB)</label>
+      <textarea class="input-field hs-query" id="sl-line" rows="4" spellcheck="false" maxlength="8192" placeholder="&lt;34&gt;Oct 11 22:14:15 host sshd[1]: Failed password for root from 10.0.0.5 port 22 ssh2"></textarea>
+      <div class="toolbar-pill nx-filters bh-fields">
+        <label class="hint" for="sl-sender">Sender IP (optional)</label>
+        <input class="input-field" id="sl-sender" size="16" autocomplete="off">
+        <button type="button" id="sl-parse">Parse (dry run)</button>
+      </div>
+      <div id="sl-parse-out" aria-live="polite"></div>
+    </section>
+    <!-- === end syslog status page === -->
+    <!-- === competitive page === -->
+    <section id="page-competitive" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Competitive</p>
+        <h1>How Kavach compares on public documentation, and what to build next.</h1>
+        <p class="lede">A feature matrix built only from vendors' public documentation. It is not a benchmark and not a test of any product.</p>
+      </header>
+      <div class="nx-note bh-caveat" id="cp-note" role="note"><strong>How to read this (always apply)</strong><ul><li>Loading the matrix's own note from the server.</li></ul></div>
+      <p class="work-msg" id="cp-msg" role="status"></p>
+      <div class="cp-legend" id="cp-legend"></div>
+      <h2>Matrix</h2>
+      <div id="cp-matrix-out"></div>
+      <h2>Backlog</h2>
+      <div id="cp-backlog-out"></div>
+      <h2>Sources</h2>
+      <div id="cp-src-out"></div>
+    </section>
+    <!-- === end competitive page === -->
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
@@ -3611,6 +3994,20 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
         </div>
         <p class="work-msg" id="note-msg" role="status"></p>
       </div>
+      <div class="drawer-section" id="fb-drawer">
+        <h3>Analyst verdict</h3>
+        <p class="hint">Records your judgement of this finding in a tamper-evident log. It never changes rules, suppressions or hosts.</p>
+        <div class="px-actions" role="group" aria-label="Verdict">
+          <button type="button" class="secondary" data-fb-verdict="true_positive" aria-pressed="false">True positive</button>
+          <button type="button" class="secondary" data-fb-verdict="false_positive" aria-pressed="false">False positive</button>
+          <button type="button" class="secondary" data-fb-verdict="benign_expected" aria-pressed="false">Benign, expected</button>
+          <button type="button" class="secondary" data-fb-verdict="needs_more_data" aria-pressed="false">Needs data</button>
+        </div>
+        <label for="fb-note" class="hint">Optional note</label>
+        <textarea class="input-field" id="fb-note" maxlength="1000"></textarea>
+        <p class="work-msg" id="fb-msg" role="status"></p>
+        <div id="fb-history"></div>
+      </div>
       <div class="drawer-section">
         <button type="button" class="apple-text-link" id="drawer-to-incident">Use in Incidents Work</button>
       </div>
@@ -3621,8 +4018,8 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation', 'reports', 'versions', 'syslog', 'competitive'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage', 'huntseq': 'Sequence hunt', 'vulnprio': 'Vulnerability priority', 'feedback': 'Feedback', 'chains': 'Attack chains', 'automation': 'Automation', 'reports': 'Reports and SLO', 'versions': 'Content versions', 'syslog': 'Syslog', 'competitive': 'Competitive' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -3745,7 +4142,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation', 'reports', 'versions', 'syslog', 'competitive']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -3805,6 +4202,16 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     if (current === 'provenance' && typeof loadProvenance === 'function') loadProvenance();
     if (current === 'ransomware-behaviour' && typeof loadRansomwareBehaviour === 'function') loadRansomwareBehaviour();
     if (current === 'ttp' && typeof loadTtp === 'function') loadTtp();
+    if (current === 'competitive' && typeof loadCompetitive === 'function') loadCompetitive();
+    if (current === 'syslog' && typeof loadSyslog === 'function') loadSyslog();
+    if (current === 'versions' && typeof loadVersions === 'function') loadVersions();
+    if (current === 'reports' && typeof loadReports === 'function') loadReports();
+    if (current === 'automation' && typeof loadAutomation === 'function') loadAutomation();
+    if (current === 'chains' && typeof loadChains === 'function') loadChains();
+    if (current === 'feedback' && typeof loadFeedback === 'function') loadFeedback();
+    if (current === 'vulnprio' && typeof loadVulnPrio === 'function') loadVulnPrio();
+    if (current === 'huntseq' && typeof loadHuntSeq === 'function') loadHuntSeq();
+    if (current === 'coverage' && typeof loadCoverage === 'function') loadCoverage();
   }
 
   function fmtTime(v) {
@@ -3892,6 +4299,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     $('drawer-root').hidden = false;
     if (typeof loadNotes === 'function') loadNotes();
     syncIncidentFindingSelect();
+    if (typeof fbDrawerOpen === 'function') fbDrawerOpen(finding.id);
     loadAIScore(finding.id);
   }
 
@@ -6064,9 +6472,39 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     if (n >= 1024) return (n / 1024).toFixed(1) + ' KiB';
     return n + ' bytes';
   }
+  function inRenderConfig(box, rep) {
+    const a = (rep.meta || {})['config-assess.summary'] || {};
+    const v = el('div', '', 'work-panel');
+    v.appendChild(el('h3', 'Configuration assessment'));
+    const row = el('div', '', 'ui-row');
+    row.appendChild(uiTag('no verdict', 'not_enough_data'));
+    row.appendChild(el('span', 'A configuration check reports each policy, not whether the file is malicious. There is no overall score.', 'hint'));
+    v.appendChild(row);
+    uiMeta(v, ['Format: ' + (a.format || rep.format || 'not identified'), 'Size: ' + inFmtBytes(rep.size || 0), rep.name ? 'Name: ' + rep.name : '', 'Time: ' + fmtTime(rep.time)]);
+    if (!a.format) { uiNote(v, 'The configuration format was not recognised, so no policy was applied. Try giving a file name such as sshd_config.', true); box.appendChild(v); return; }
+    if (a.parse_error) uiNote(v, 'The file could not be fully parsed: ' + a.parse_error, true);
+    const c = a.counts || {};
+    uiMeta(v, ['Pass: ' + (c.pass ?? 0), 'Fail: ' + (c.fail ?? 0), 'Unknown: ' + (c.unknown ?? 0), 'Not applicable: ' + (c.not_applicable ?? 0), 'Compliance: ' + (typeof a.compliance_pct === 'number' ? a.compliance_pct + '% of pass and fail only' : 'unknown (nothing passed or failed)'), 'Policies for this format: ' + (a.policies_for_format ?? '?'), 'Policies for other formats: ' + (a.policies_other_formats ?? '?')]);
+    if (a.note) uiNote(v, a.note, true);
+    (a.parse_notes || []).forEach((n) => uiNote(v, 'Parse note: ' + n));
+    const rs = a.results || [];
+    if (!rs.length) v.appendChild(el('p', 'No policy results were returned.', 'hint'));
+    else {
+      const tb = uiTable(v, ['Status', 'Severity', 'Policy', 'Area', 'Why', 'Remediation (advice only)']);
+      rs.forEach((r) => {
+        const why = el('div', '');
+        why.appendChild(el('span', r.reason || (r.status === 'unknown' ? 'Not determinable from this file.' : '')));
+        (r.evidence || []).forEach((e) => why.appendChild(el('div', e, 'hint')));
+        if (r.absence_note) why.appendChild(el('div', r.absence_note, 'hint'));
+        tableRow(tb, [uiTag(r.status, r.status), r.severity, r.title + ' (' + r.policy_id + ')', r.area || '', why, r.remediation || '—']);
+      });
+    }
+    box.appendChild(v);
+  }
   function inRender(box, rep) {
     box.removeAttribute('aria-busy');
     box.replaceChildren();
+    if (rep.kind === 'config') { inRenderConfig(box, rep); return; }
     const v = el('div', '', 'work-panel');
     v.appendChild(el('h3', 'Verdict'));
     const row = el('div', '', 'ui-row');
@@ -6229,11 +6667,12 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       await inPost('/v1/inspect/file?name=' + encodeURIComponent(inFile.name), { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: buf }, inFile.name);
       return;
     }
-    const id = { script: 'in-script', cmdline: 'in-cmdline', domain: 'in-domain' }[inMode];
+    const id = { script: 'in-script', cmdline: 'in-cmdline', domain: 'in-domain', config: 'in-config' }[inMode];
     const text = $(id).value;
     if (!text.trim()) { setMsg('in-msg', 'Enter something to analyze.', true); $(id).focus(); return; }
     if (new Blob([text]).size > 4 * 1024 * 1024) { setMsg('in-msg', 'Text is over the 4 MiB limit.', true); return; }
-    await inPost('/v1/inspect/' + inMode, pgJSON({ text }), inMode);
+    const cfgName = inMode === 'config' ? $('in-config-name').value.trim() : '';
+    await inPost('/v1/inspect/' + inMode + (cfgName ? '?name=' + encodeURIComponent(cfgName) : ''), pgJSON({ text }), inMode);
   }
   async function inLoadReports() {
     const tb = $('in-rep-rows');
@@ -6242,7 +6681,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       const r = await pgApi('/v1/inspect/reports?limit=50');
       inReports = (r && r.reports) || [];
       $('in-rep-count').textContent = inReports.length + ' recent report' + (inReports.length === 1 ? '' : 's') + '. Reports hold results only, never the submitted bytes. Select a row to open it.';
-      pxFill('in-rep-rows', 7, inReports, 'No reports yet', 'Analyze something and its report will appear here.', (b, x) => tableRow(b, [fmtTime(x.time), x.kind, x.name || '-', uiTag(x.level, inLevelCls[x.level] || ''), x.score, (x.sha256 || '').slice(0, 16) + '…', (x.findings || []).length], { onClick: () => { inTabSel('analyze'); inRender($('in-result'), x); } }));
+      pxFill('in-rep-rows', 7, inReports, 'No reports yet', 'Analyze something and its report will appear here.', (b, x) => tableRow(b, [fmtTime(x.time), x.kind, x.name || '-', uiTag(x.level === 'not_scored' ? 'no verdict' : x.level, inLevelCls[x.level] || ''), x.score, (x.sha256 || '').slice(0, 16) + '…', (x.findings || []).length], { onClick: () => { inTabSel('analyze'); inRender($('in-result'), x); } }));
     } catch (e) { pxFail('in-rep-rows', 7, 'reports', e); $('in-rep-count').textContent = ''; }
   }
   async function inLoadLimits() {
@@ -6258,7 +6697,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   function loadInspector() { inLoadLimits(); }
   const inModeSel = uiTabs('in-modes', 'data-in-mode', (m) => {
     inMode = m;
-    ['file', 'script', 'cmdline', 'domain'].forEach((k) => { $('in-mode-' + k).hidden = k !== m; });
+    ['file', 'script', 'cmdline', 'domain', 'config'].forEach((k) => { $('in-mode-' + k).hidden = k !== m; });
   });
   const inTabSel = uiTabs('in-tabs', 'data-in-tab', (t) => {
     $('in-pane-analyze').hidden = t !== 'analyze';
@@ -6267,7 +6706,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   });
   $('in-run').addEventListener('click', inRun);
   $('in-clear').addEventListener('click', () => {
-    inFile = null; $('in-file').value = ''; $('in-script').value = ''; $('in-cmdline').value = ''; $('in-domain').value = '';
+    inFile = null; $('in-file').value = ''; $('in-script').value = ''; $('in-cmdline').value = ''; $('in-domain').value = ''; $('in-config').value = ''; $('in-config-name').value = '';
     $('in-drop-title').textContent = 'Drop a file here, or press Enter to choose one';
     $('in-result').replaceChildren(); setMsg('in-msg', '', false);
   });
@@ -7218,8 +7657,1306 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   });
   /* === end cert advisories page === */
 
+  /* === coverage page === */
+  const cvSegs = ['detected', 'partial', 'missed', 'not_testable', 'untested'];
+  function cvPct(v) { return typeof v === 'number' ? v.toFixed(1) + '%' : 'unknown'; }
+  function cvTactics(box, rows) {
+    const W = 720, rowH = 22, labW = 150, barW = W - labW - 190;
+    const svg = bhSvg('svg', { viewBox: '0 0 ' + W + ' ' + (rows.length * rowH + 6), class: 'cv-svg', role: 'img', 'aria-label': 'Per-tactic measured results for claimed techniques' });
+    rows.forEach((t, i) => {
+      const y = i * rowH + 3;
+      svg.appendChild(bhSvg('text', { x: 0, y: y + 12 }, t.tactic));
+      let x = labW;
+      const total = Math.max(1, t.claimed || 0);
+      cvSegs.forEach((k) => {
+        const n = t[k] || 0;
+        if (!n) return;
+        const w = barW * n / total;
+        const r = bhSvg('rect', { x: x, y: y, width: w, height: 14, class: 'cv-seg-' + k });
+        r.appendChild(bhSvg('title', {}, t.tactic + ': ' + k.replace('_', ' ') + ' ' + n + ' of ' + t.claimed));
+        svg.appendChild(r);
+        x += w;
+      });
+      svg.appendChild(bhSvg('text', { x: labW + barW + 6, y: y + 12 }, (t.claimed || 0) + ' claimed, ' + cvPct(t.measured_pct) + ' detected'));
+    });
+    box.appendChild(svg);
+    const lg = el('div', '', 'bh-legend');
+    cvSegs.forEach((k) => {
+      const s = el('span', '');
+      const sw = bhSvg('svg', { width: 10, height: 10, 'aria-hidden': 'true' });
+      sw.appendChild(bhSvg('rect', { width: 10, height: 10, class: 'cv-seg-' + k }));
+      s.appendChild(sw);
+      s.appendChild(document.createTextNode(' ' + k.replace('_', ' ')));
+      lg.appendChild(s);
+    });
+    box.appendChild(lg);
+  }
+  function cvTechList(box, title, list, hint) {
+    const d = document.createElement('details');
+    d.className = 'cv-details';
+    d.appendChild(el('summary', title + ' (' + (list || []).length + ')'));
+    if (hint) d.appendChild(el('p', hint, 'hint'));
+    if (!(list || []).length) d.appendChild(el('p', 'None.', 'hint'));
+    else {
+      const tb = uiTable(d, ['Technique', 'Name', 'Tactics', 'Status', 'Reason / scenarios']);
+      list.forEach((s) => tableRow(tb, [s.id, s.name || '', (s.tactics || []).join(', '), uiTag(s.status || 'unknown', s.status), s.reason || (s.scenarios || []).join(', ') || '—']));
+    }
+    box.appendChild(d);
+  }
+  function cvLoadValidation() {
+    const box = $('cv-val-out');
+    uiLoading(box, 'Replaying scenarios…');
+    return pgApi('/v1/validate/coverage' + ($('cv-custom').checked ? '?include_custom=true' : '')).then((r) => {
+      r = r || {};
+      box.removeAttribute('aria-busy');
+      box.replaceChildren();
+      const lim = ['Mode: ' + (r.mode || 'observe-only') + (r.synthetic ? ', synthetic data replayed in memory.' : '.')];
+      if (r.note) lim.unshift(r.note);
+      bhCaveat($('cv-note'), 'Limitations (always apply)', lim);
+      const c = r.counts || {};
+      uiMeta(box, [
+        'Claimed techniques: ' + (r.claimed_techniques ?? 'unknown'),
+        'Claimed tactic coverage: ' + cvPct(r.claimed_tactic_coverage_pct),
+        'Measured detected: ' + cvPct(r.measured_detected_pct),
+        'Detected or partial: ' + cvPct(r.measured_detected_or_partial_pct),
+        'Tested: ' + (r.tested_techniques ?? 'unknown') + ' (detection rate ' + cvPct(r.tested_detection_rate_pct) + ')'
+      ]);
+      uiMeta(box, cvSegs.map((k) => k.replace('_', ' ') + ': ' + (c[k] ?? 0)));
+      const sc = r.scenarios || {};
+      uiMeta(box, [
+        'Scenarios passed: ' + (sc.passed ?? '?') + ' of ' + (sc.non_benign ?? '?') + ' (floor ' + (typeof sc.floor === 'number' ? Math.round(sc.floor * 100) + '%' : 'unknown') + ')',
+        'Benign controls: ' + (sc.benign_controls ?? '?') + ', false positives: ' + (sc.benign_false_positives ?? '?')
+      ]);
+      if ((sc.failing || []).length) uiNote(box, 'Failing scenarios: ' + sc.failing.join(', '), true);
+      if ((sc.false_positive_ids || []).length) uiNote(box, 'Benign scenarios that fired: ' + sc.false_positive_ids.join(', '), true);
+      if (!(r.by_tactic || []).length) uiEmpty(box, 'No tactics scored', 'No claimed technique maps to a tactic yet.');
+      else cvTactics(box, r.by_tactic);
+      cvTechList(box, 'Missed', r.missed, 'Claimed, replayed, and not detected.');
+      cvTechList(box, 'Partial', r.partial, 'Some expectations detected, others not.');
+      cvTechList(box, 'Not testable', r.not_testable, 'No synthetic scenario can exercise these; they are not measured.');
+      cvTechList(box, 'Claimed, not measured (untested)', r.claimed_not_measured, 'Claimed by a rule but no scenario covers it. Not evidence of coverage.');
+      if ((r.tested_but_unclaimed || []).length) uiNote(box, 'Tested but not claimed: ' + r.tested_but_unclaimed.join(', '));
+    }).catch((e) => uiError(box, 'validation coverage', e, cvLoadValidation));
+  }
+  function cvLoadBlind() {
+    const box = $('cv-blind-out');
+    uiLoading(box, 'Loading telemetry state…');
+    return Promise.all([pgApi('/v1/coverage/blindspots'), pgApi('/v1/coverage/telemetry')]).then((rs) => {
+      const b = rs[0] || {}, t = rs[1] || {};
+      box.removeAttribute('aria-busy');
+      box.replaceChildren();
+      if (b.caveat) uiNote(box, b.caveat, true);
+      uiMeta(box, ['Stale after: ' + (b.stale_after_hours ?? t.stale_after_hours ?? 'unknown') + ' h', 'Techniques claimed by content rules: ' + (b.techniques_claimed ?? 'unknown'), 'Unobservable now: ' + (b.techniques_unobservable_count ?? 'unknown')]);
+      const ef = el('div', '', 'work-panel');
+      ef.appendChild(el('h3', 'Enable first'));
+      if ((b.enable_first || []).length) uiList(ef, b.enable_first.map((p) => '#' + p.rank + ' ' + p.category + ': ' + p.advice), true);
+      else ef.appendChild(el('p', 'Nothing to enable: no never-seen category blocks a claimed technique.', 'hint'));
+      box.appendChild(ef);
+      box.appendChild(el('h3', 'Telemetry categories'));
+      const cats = t.categories || b.telemetry || [];
+      if (!cats.length) box.appendChild(el('p', 'The server reported no telemetry categories.', 'hint'));
+      else {
+        const tb = uiTable(box, ['Category', 'State', 'Events held', 'Last seen', 'Age (h)']);
+        cats.forEach((c) => tableRow(tb, [c.category, uiTag(c.state || 'unknown', c.state), c.count ?? 0, c.last_seen ? fmtTime(c.last_seen) : 'never', c.age_hours ?? '—']));
+      }
+      box.appendChild(el('h3', 'Collection gaps'));
+      if (!(b.collection_gaps || []).length) box.appendChild(el('p', 'No gaps reported. Every category has recent events.', 'hint'));
+      else {
+        const tb = uiTable(box, ['Category', 'State', 'Rules that cannot fire', 'Techniques lost', 'Degraded', 'Message']);
+        b.collection_gaps.forEach((g) => tableRow(tb, [g.category, uiTag(g.state || 'unknown', g.state), g.rules_cannot_fire ?? 0, g.techniques_cannot_fire ?? 0, g.techniques_degraded ?? 0, g.message || '']));
+      }
+      const un = b.techniques_unobservable || [], ar = b.techniques_at_risk_stale || [];
+      [['Techniques that cannot fire here', un], ['Techniques at risk (stale telemetry)', ar]].forEach((p) => {
+        const d = document.createElement('details');
+        d.className = 'cv-details';
+        d.appendChild(el('summary', p[0] + ' (' + p[1].length + ')'));
+        if (!p[1].length) d.appendChild(el('p', 'None.', 'hint'));
+        else { const tb = uiTable(d, ['Technique', 'Needs', 'Rules', 'Why']); p[1].forEach((x) => tableRow(tb, [x.technique, (x.categories_required || []).join(', '), (x.rule_ids || []).join(', '), x.reason || ''])); }
+        box.appendChild(d);
+      });
+      const v = b.validation || {};
+      if (v.available === false) uiNote(box, 'Validation lab results were not included in this view.');
+      else if (v.note) uiNote(box, v.note);
+    }).catch((e) => uiError(box, 'blind spots', e, cvLoadBlind));
+  }
+  function cvRun() {
+    const box = $('cv-run-out');
+    const btn = $('cv-run');
+    btn.disabled = true;
+    setMsg('cv-msg', 'Running scenarios (read-only compute)…', false);
+    uiLoading(box, 'Replaying scenarios…');
+    pgApi('/v1/validate/run', pgJSON({ all: true, include_custom: $('cv-custom').checked })).then((r) => {
+      r = r || {};
+      box.removeAttribute('aria-busy');
+      box.replaceChildren();
+      setMsg('cv-msg', 'Ran ' + (r.count ?? 0) + ' scenarios. Nothing was recorded.', false);
+      box.appendChild(el('h3', 'Scenario results'));
+      if (r.note) uiNote(box, r.note);
+      if (!(r.results || []).length) { box.appendChild(el('p', 'The server returned no results.', 'hint')); return; }
+      const tb = uiTable(box, ['Scenario', 'Kind', 'Result', 'Rules fired', 'Detail']);
+      r.results.forEach((x) => {
+        const res = x.benign ? (x.false_positive ? 'false positive' : 'clean') : (x.pass ? 'detected' : 'missed');
+        tableRow(tb, [x.name || x.id, (x.kind || '') + (x.benign ? ' (benign control)' : ''), uiTag(res, res === 'false positive' ? 'missed' : res === 'clean' ? 'detected' : res), (x.fired || []).map((f) => f.rule).join(', ') || 'none', x.detail || '']);
+      });
+    }).catch((e) => { box.replaceChildren(); setMsg('cv-msg', 'Run failed: ' + e.message, true); }).finally(() => { btn.disabled = false; });
+  }
+  function loadCoverage() { cvLoadValidation(); cvLoadBlind(); }
+  $('cv-reload').addEventListener('click', loadCoverage);
+  $('cv-run').addEventListener('click', cvRun);
+  $('cv-custom').addEventListener('change', cvLoadValidation);
+  /* === end coverage page === */
+
+  /* === kavach-seq hunt page === */
+  let hsExamples = [], hsLoaded = false;
+  function hsClearErr() {
+    $('hs-err').textContent = '';
+    $('hs-caret').hidden = true;
+    $('hs-query').classList.remove('is-bad');
+  }
+  // Offset of (line, col), both 1-based, in the textarea text.
+  function hsOffset(text, line, col) {
+    const lines = text.split('\n');
+    let off = 0;
+    for (let i = 0; i < Math.min(line - 1, lines.length); i++) off += lines[i].length + 1;
+    return Math.min(text.length, off + Math.max(0, col - 1));
+  }
+  function hsShowErr(r, text) {
+    const ta = $('hs-query');
+    const msg = r.error || 'The query was rejected.';
+    $('hs-err').textContent = msg + (r.line ? ' (line ' + r.line + ', col ' + r.col + ')' : '');
+    ta.classList.add('is-bad');
+    if (r.line) {
+      const src = text.split('\n')[r.line - 1] || '';
+      const c = $('hs-caret');
+      c.textContent = src + '\n' + ' '.repeat(Math.max(0, r.col - 1)) + '^ ' + msg;
+      c.hidden = false;
+      const off = hsOffset(text, r.line, r.col);
+      ta.focus();
+      try { ta.setSelectionRange(off, Math.min(text.length, off + 1)); } catch (_) {}
+    }
+  }
+  function hsProblems(box, list) {
+    if (!(list || []).length) return;
+    const p = el('div', '', 'work-panel');
+    p.appendChild(el('h3', 'Fields that are not collected'));
+    const tb = uiTable(p, ['Line:col', 'Category', 'Field', 'Reason']);
+    list.forEach((x) => tableRow(tb, [x.line + ':' + x.col, x.category, x.field, x.reason]));
+    box.appendChild(p);
+  }
+  function hsRunMeta(box, r) {
+    const flags = [];
+    if (r.truncated) flags.push(uiTag('truncated: more matches than the limit', 'partial'));
+    if (r.timed_out) flags.push(uiTag('timed out: results are incomplete', 'failed'));
+    if (r.scan_capped) flags.push(uiTag('scan capped: only the newest events were scanned', 'partial'));
+    if (flags.length) { const row = el('div', '', 'bh-chips'); flags.forEach((f) => row.appendChild(f)); box.appendChild(row); }
+  }
+  function hsRender(box, r) {
+    box.removeAttribute('aria-busy');
+    box.replaceChildren();
+    box.appendChild(el('h3', (r.count ?? 0) + ' match' + (r.count === 1 ? '' : 'es') + (r.kind ? ' (' + r.kind + ')' : '')));
+    uiMeta(box, ['Scanned: ' + (r.scanned ?? '?') + ' of ' + (r.scanned_total ?? '?') + ' events', 'Elapsed: ' + (r.elapsed_ms ?? '?') + ' ms']);
+    hsRunMeta(box, r);
+    if (r.semantics) uiNote(box, 'Semantics: ' + r.semantics);
+    if (!(r.matches || []).length) { box.appendChild(el('p', 'No events matched. Absence of a match is not proof that nothing happened: the scan is bounded by the time window and the in-memory event cap.', 'hint')); return; }
+    r.matches.forEach((m, i) => {
+      const p = el('div', '', 'work-panel hs-match');
+      p.appendChild(el('h3', 'Match ' + (i + 1) + (m.key ? ' · key ' + m.key : '') + (m.span_ms !== undefined ? ' · span ' + m.span_ms + ' ms' : '')));
+      const tb = uiTable(p, ['Step', 'Category', 'Time', 'Event id', 'Fields']);
+      (m.events || []).forEach((e) => tableRow(tb, [e.step, e.category, fmtTime(e.time), e.id, el('div', JSON.stringify(e.fields || {}, null, 1), 'hs-fields')]));
+      box.appendChild(p);
+    });
+  }
+  function hsBody() {
+    const lim = parseInt($('hs-limit').value, 10);
+    const b = { query: $('hs-query').value, since: $('hs-since').value.trim() };
+    if (lim > 0) b.limit = lim;
+    return b;
+  }
+  async function hsRun() {
+    const b = hsBody();
+    hsClearErr();
+    setMsg('hs-msg', '', false);
+    if (!b.query.trim()) { $('hs-err').textContent = 'Enter a query first.'; $('hs-query').focus(); return; }
+    const box = $('hs-out');
+    uiLoading(box, 'Running…');
+    $('hs-run').disabled = true;
+    try {
+      const r = await uiFetchAny('/v1/hunt/seq', pgJSON(b));
+      if (r.status === 400 && r.body) {
+        box.removeAttribute('aria-busy'); box.replaceChildren();
+        if ((r.body.problems || []).length) {
+          $('hs-err').textContent = r.body.error || 'The query uses fields that are not collected.';
+          hsProblems(box, r.body.problems);
+          const f = r.body.problems[0];
+          hsShowErr({ error: f.reason, line: f.line, col: f.col }, b.query);
+        } else hsShowErr(r.body, b.query);
+        return;
+      }
+      if (!r.ok) throw new Error((r.body && r.body.error) || 'HTTP ' + r.status);
+      hsRender(box, r.body || {});
+    } catch (e) { uiError(box, 'hunt results', e, hsRun); }
+    finally { $('hs-run').disabled = false; }
+  }
+  function hsTree(n, depth) {
+    if (!n) return '';
+    const pad = '  '.repeat(depth);
+    let s = pad + n.op + (n.field ? ' ' + n.field : '') + (n.values ? ' ' + JSON.stringify(n.values) : '') + '\n';
+    (n.args || []).forEach((c) => { s += hsTree(c, depth + 1); });
+    return s;
+  }
+  async function hsExplain() {
+    const b = hsBody();
+    hsClearErr();
+    if (!b.query.trim()) { $('hs-err').textContent = 'Enter a query first.'; $('hs-query').focus(); return; }
+    const box = $('hs-out');
+    uiLoading(box, 'Explaining…');
+    try {
+      const r = await pgApi('/v1/hunt/seq/explain', pgJSON(b));
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      if (r.ok === false && r.error) { hsShowErr(r, b.query); }
+      box.appendChild(el('h3', 'Explain' + (r.kind ? ' (' + r.kind + ')' : '')));
+      if (r.ok === false && r.error) { box.appendChild(el('p', 'The query did not parse. No data was scanned.', 'hint')); return; }
+      hsProblems(box, r.unavailable_fields);
+      if (r.tree) {
+        const t = r.tree;
+        const p = el('div', '', 'work-panel');
+        p.appendChild(el('h3', 'Parsed structure'));
+        if (t.by) uiMeta(p, ['Joined by: ' + t.by.join(', '), t.maxspan ? 'Max span: ' + t.maxspan : '']);
+        (t.steps || []).forEach((s, i) => { p.appendChild(el('p', 'Step ' + (i + 1) + ': ' + s.category, 'hint')); p.appendChild(el('pre', hsTree(s.where, 0), 'hs-tree')); });
+        if (t.until) { p.appendChild(el('p', 'Until: ' + t.until.category, 'hint')); p.appendChild(el('pre', hsTree(t.until.where, 0), 'hs-tree')); }
+        box.appendChild(p);
+      }
+      if (r.step_match_counts) {
+        uiMeta(box, ['Events matching each step: ' + r.step_match_counts.join(', '), 'Would produce a match: ' + (r.has_match ? 'yes' : 'no'), 'Scanned: ' + (r.scanned ?? '?') + ' of ' + (r.scanned_total ?? '?')]);
+        hsRunMeta(box, r);
+      }
+      if (r.semantics) uiNote(box, 'Semantics: ' + r.semantics);
+    } catch (e) { uiError(box, 'the explanation', e, hsExplain); }
+  }
+  function hsRenderCatalogue(r) {
+    const box = $('hs-cat-out');
+    box.removeAttribute('aria-busy');
+    box.replaceChildren();
+    const lim = r.limits || {};
+    const bullets = (r.notes || []).slice();
+    if (r.operators) Object.keys(r.operators).forEach((k) => bullets.push('Operators (' + k + '): ' + r.operators[k]));
+    if (r.join_keys) bullets.push('Join keys: ' + r.join_keys.join(', '));
+    bhCaveat($('hs-sem'), 'Semantics and limits (always apply)', bullets.concat(Object.keys(lim).map((k) => k.replace(/_/g, ' ') + ': ' + lim[k])));
+    (r.categories || []).forEach((c) => {
+      const d = document.createElement('details');
+      d.className = 'hs-cat';
+      d.appendChild(el('summary', c.category));
+      d.appendChild(el('p', c.source, 'hint'));
+      const ul = document.createElement('ul');
+      (c.fields || []).forEach((f) => ul.appendChild(el('li', f.name + ' (' + f.type + (f.optional ? ', optional' : '') + (f.joinable ? ', joinable' : '') + ')' + (f.note ? ': ' + f.note : ''))));
+      d.appendChild(ul);
+      if ((c.absent || []).length) {
+        d.appendChild(el('p', 'Not collected', 'hint'));
+        const au = document.createElement('ul');
+        c.absent.forEach((a) => au.appendChild(el('li', a.name + ': ' + a.reason, 'hs-absent')));
+        d.appendChild(au);
+      }
+      box.appendChild(d);
+    });
+    if (!(r.categories || []).length) box.appendChild(el('p', 'The server returned no catalogue.', 'hint'));
+  }
+  function hsLoad() {
+    const cat = $('hs-cat-out');
+    uiLoading(cat, 'Loading fields…');
+    pgApi('/v1/hunt/seq/fields').then(hsRenderCatalogue).catch((e) => uiError(cat, 'the field catalogue', e, hsLoad));
+    pgApi('/v1/hunt/seq/examples').then((r) => {
+      hsExamples = (r && r.examples) || [];
+      const sel = $('hs-example');
+      sel.replaceChildren();
+      const o0 = el('option', hsExamples.length ? 'Choose an example…' : 'No examples available'); o0.value = ''; sel.appendChild(o0);
+      hsExamples.forEach((x, i) => { const o = el('option', x.name + (x.noisy ? ' (noisy)' : '')); o.value = String(i); sel.appendChild(o); });
+    }).catch((e) => setMsg('hs-msg', 'Could not load examples: ' + e.message, true));
+  }
+  function loadHuntSeq() { if (!hsLoaded) { hsLoaded = true; hsLoad(); } }
+  $('hs-example').addEventListener('change', () => {
+    const x = hsExamples[parseInt($('hs-example').value, 10)];
+    if (!x) { $('hs-example-desc').textContent = ''; return; }
+    $('hs-query').value = x.query;
+    $('hs-example-desc').textContent = [x.technique, x.tactic, x.description, x.noisy ? 'May fire on benign activity.' : ''].filter(Boolean).join(' · ');
+    hsClearErr();
+  });
+  $('hs-run').addEventListener('click', hsRun);
+  $('hs-explain').addEventListener('click', hsExplain);
+  $('hs-query').addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); hsRun(); } });
+  /* === end kavach-seq hunt page === */
+
+  /* === vulnerability priority page === */
+  function vpOutcomeTag(o) { return uiTag(o || 'unknown', String(o || 'unknown').toLowerCase().replace('*', '_star')); }
+  function vpPct(v) { return typeof v === 'number' ? (v * 100).toFixed(2) + '%' : 'unknown'; }
+  function vpFactors(parent, factors) {
+    const tb = uiTable(parent, ['Decision point', 'Value', 'Source', 'Evidence']);
+    (factors || []).forEach((f) => {
+      const v = el('span', '');
+      if (f.known === false || f.value === 'unknown') {
+        v.appendChild(uiTag('unknown', 'unknown'));
+        if (f.assumed_value) v.appendChild(document.createTextNode(' assumed ' + f.assumed_value));
+      } else v.appendChild(document.createTextNode(f.value));
+      tableRow(tb, [f.decision_point, v, f.source || '', f.evidence || '']);
+    });
+  }
+  function vpRange(item) {
+    const s = item.ssvc || {};
+    if (!s.outcome_depends_on_unknowns) return '';
+    return 'Outcome depends on unknowns: ' + (s.outcome_if_unknowns_favourable || '?') + ' (favourable) to ' + (s.outcome_if_unknowns_adverse || '?') + ' (adverse)';
+  }
+  function vpOpenDetail(cve) {
+    const p = $('vp-detail'), box = $('vp-detail-out');
+    p.hidden = false;
+    $('vp-detail-title').textContent = cve;
+    uiLoading(box);
+    p.focus();
+    pgApi('/v1/vulns/priority/' + encodeURIComponent(cve)).then((r) => {
+      box.removeAttribute('aria-busy');
+      box.replaceChildren();
+      uiMeta(box, ['Top outcome: ' + (r.top_outcome || 'unknown'), 'Hosts affected: ' + (r.hosts ?? '?'), 'Decision tree: ' + (r.tree_version || 'unknown')]);
+      (r.items || []).forEach((it) => {
+        const w = el('div', '', 'work-panel');
+        w.appendChild(el('h3', it.host + ' · ' + it.package + ' ' + it.version));
+        const row = el('div', '', 'ui-row');
+        row.appendChild(vpOutcomeTag(it.ssvc_outcome));
+        row.appendChild(el('span', 'EPSS ' + vpPct(it.epss) + (typeof it.epss_percentile === 'number' ? ' (percentile ' + vpPct(it.epss_percentile) + ')' : '') + ' · CVSS ' + (it.cvss || 'unknown') + ' · ' + (it.known_exploited ? 'known exploited (KEV)' : 'not in KEV'), 'hint'));
+        w.appendChild(row);
+        const rg = vpRange(it);
+        if (rg) uiNote(w, rg, true);
+        vpFactors(w, it.factors);
+        if ((it.explanation || []).length) uiList(w, it.explanation);
+        const u = (it.ssvc && it.ssvc.unknown_inputs) || [];
+        if (u.length) w.appendChild(el('p', 'Unknown inputs: ' + u.join(', '), 'hint'));
+        box.appendChild(w);
+      });
+      if (r.limitations) bhCaveat($('vp-limits'), 'Limitations (always apply)', r.limitations);
+    }).catch((e) => uiError(box, 'CVE detail', e, () => vpOpenDetail(cve)));
+  }
+  function vpLoadList() {
+    const box = $('vp-list-out');
+    const host = $('vp-host').value.trim(), lim = parseInt($('vp-limit').value, 10);
+    if (!(lim >= 1 && lim <= 500)) { setMsg('vp-msg', 'Show top must be 1 to 500.', true); $('vp-limit').focus(); return; }
+    setMsg('vp-msg', '', false);
+    $('vp-detail').hidden = true;
+    uiLoading(box, 'Loading ranking…');
+    pgApi('/v1/vulns/priority?limit=' + lim + (host ? '&host=' + encodeURIComponent(host) : '')).then((r) => {
+      box.removeAttribute('aria-busy');
+      box.replaceChildren();
+      if (r.limitations) bhCaveat($('vp-limits'), 'Limitations (always apply)', r.limitations);
+      uiMeta(box, ['Showing ' + (r.count ?? 0) + ' of ' + (r.total ?? 0), 'Decision tree: ' + (r.tree_version || 'unknown'), r.ranking ? 'Ranking: ' + r.ranking : '']);
+      if (!(r.items || []).length) { uiEmpty(box, 'No matched CVEs', 'No installed package matched an advisory. The advisory set may be a small sample; see the limitations above.'); return; }
+      const tb = uiTable(box, ['#', 'CVE', 'Host', 'Package', 'SSVC', 'EPSS', 'CVSS', 'KEV', 'Unknown inputs']);
+      r.items.forEach((it) => {
+        const u = ((it.ssvc || {}).unknown_inputs || []);
+        const cve = el('button', it.cve, 'secondary');
+        cve.type = 'button';
+        cve.setAttribute('aria-label', 'Show detail for ' + it.cve + ' on ' + it.host);
+        cve.addEventListener('click', () => vpOpenDetail(it.cve));
+        tableRow(tb, [it.rank, cve, it.host, it.package + ' ' + it.version, vpOutcomeTag(it.ssvc_outcome), vpPct(it.epss), it.cvss || 'unknown', it.known_exploited ? 'yes' : 'no', u.length ? uiTag(u.length + ' unknown', 'unknown') : 'none']);
+      });
+    }).catch((e) => uiError(box, 'the vulnerability ranking', e, vpLoadList));
+  }
+  function vpRenderStatus(box, st) {
+    box.removeAttribute('aria-busy');
+    box.replaceChildren();
+    const f = st.epss_feed || st;
+    uiNote(box, f.note || 'No note from the server.', !f.enabled);
+    uiMeta(box, ['Enabled: ' + (f.enabled ? 'yes (opt-in)' : 'no'), 'Source: ' + (f.source || 'none'), 'Cached CVEs: ' + (f.cached_cves ?? 0), f.model_version ? 'Model: ' + f.model_version : '', f.score_date ? 'Score date: ' + f.score_date : '', f.last_refresh && f.last_refresh.indexOf('0001-') !== 0 ? 'Last refresh: ' + fmtTime(f.last_refresh) : 'Never refreshed']);
+    if ((f.feed_errors || []).length) uiNote(box, 'Feed errors: ' + f.feed_errors.join('; '), true);
+    if (f.attribution) box.appendChild(el('p', f.attribution, 'hint'));
+    if (st.thresholds) uiMeta(box, Object.keys(st.thresholds).map((k) => k.replace(/_/g, ' ') + ': ' + st.thresholds[k]));
+  }
+  function vpLoadStatus() {
+    const box = $('vp-status-out');
+    uiLoading(box);
+    return pgApi('/v1/vulns/priority/status').then((st) => vpRenderStatus(box, st)).catch((e) => uiError(box, 'feed status', e, vpLoadStatus));
+  }
+  async function vpRefresh() {
+    const btn = $('vp-refresh');
+    btn.disabled = true;
+    setMsg('vp-msg', 'Refreshing EPSS from the public file…', false);
+    try {
+      const r = await uiFetchAny('/v1/vulns/priority/refresh', { method: 'POST' });
+      if (r.status === 409) {
+        setMsg('vp-msg', (r.body && r.body.error) || 'The EPSS feed is disabled (opt-in).', true);
+        if (r.body && r.body.status) vpRenderStatus($('vp-status-out'), { epss_feed: r.body.status });
+        return;
+      }
+      if (!r.ok) throw new Error((r.body && r.body.error) || 'HTTP ' + r.status);
+      setMsg('vp-msg', 'EPSS refreshed.', false);
+      vpRenderStatus($('vp-status-out'), { epss_feed: r.body });
+      vpLoadList();
+    } catch (e) { setMsg('vp-msg', 'Refresh failed: ' + e.message, true); }
+    finally { btn.disabled = false; }
+  }
+  function loadVulnPrio() { vpLoadStatus(); vpLoadList(); }
+  $('vp-go').addEventListener('click', vpLoadList);
+  $('vp-refresh').addEventListener('click', vpRefresh);
+  $('vp-detail-close').addEventListener('click', () => { $('vp-detail').hidden = true; });
+  $('vp-detail').addEventListener('keydown', (e) => { if (e.key === 'Escape') $('vp-detail').hidden = true; });
+  /* === end vulnerability priority page === */
+
+  /* === feedback page and drawer verdicts === */
+  const fbVerdictLabel = { true_positive: 'True positive', false_positive: 'False positive', benign_expected: 'Benign, expected', needs_more_data: 'Needs data' };
+  function fbPct(v) { return typeof v === 'number' ? (v * 100).toFixed(1) + '%' : 'unknown'; }
+  let fbDrawerId = '';
+  function fbDrawerHistory(id) {
+    const box = $('fb-history');
+    if (!id) { box.replaceChildren(); return; }
+    pgApi('/v1/feedback?finding_id=' + encodeURIComponent(id) + '&limit=20').then((r) => {
+      if (id !== fbDrawerId) return;
+      box.replaceChildren();
+      const es = (r && r.entries) || [];
+      if (!es.length) { box.appendChild(el('p', 'No verdicts recorded for this finding yet.', 'hint')); return; }
+      es.forEach((e) => box.appendChild(el('p', fmtTime(e.time) + ' · ' + (fbVerdictLabel[e.verdict] || e.verdict) + ' · ' + e.actor + (e.note ? ' · ' + e.note : ''), 'hint')));
+      const latest = es[0].verdict;
+      document.querySelectorAll('[data-fb-verdict]').forEach((b) => b.setAttribute('aria-pressed', b.getAttribute('data-fb-verdict') === latest ? 'true' : 'false'));
+    }).catch((e) => { if (id === fbDrawerId) { box.replaceChildren(el('p', 'Could not load verdict history: ' + e.message, 'hint')); } });
+  }
+  function fbDrawerOpen(id) {
+    fbDrawerId = id || '';
+    $('fb-note').value = '';
+    setMsg('fb-msg', '', false);
+    document.querySelectorAll('[data-fb-verdict]').forEach((b) => { b.setAttribute('aria-pressed', 'false'); b.disabled = !id; });
+    fbDrawerHistory(fbDrawerId);
+  }
+  async function fbSubmit(verdict) {
+    if (!fbDrawerId) return;
+    const id = fbDrawerId;
+    const btns = document.querySelectorAll('[data-fb-verdict]');
+    btns.forEach((b) => { b.disabled = true; });
+    setMsg('fb-msg', 'Recording verdict…', false);
+    try {
+      await pgApi('/v1/feedback', pgJSON({ finding_id: id, verdict: verdict, note: $('fb-note').value.trim() }));
+      setMsg('fb-msg', 'Recorded: ' + fbVerdictLabel[verdict] + '.', false);
+      $('fb-note').value = '';
+      fbDrawerHistory(id);
+    } catch (e) { setMsg('fb-msg', 'Could not record verdict: ' + e.message, true); }
+    finally { btns.forEach((b) => { b.disabled = false; }); }
+  }
+  document.querySelectorAll('[data-fb-verdict]').forEach((b) => b.addEventListener('click', () => fbSubmit(b.getAttribute('data-fb-verdict'))));
+
+  function fbInterval(lo, hi) {
+    const r = el('div', '', 'fb-range');
+    r.setAttribute('role', 'img');
+    r.setAttribute('aria-label', '95% interval ' + fbPct(lo) + ' to ' + fbPct(hi));
+    const s = document.createElement('span');
+    s.style.left = (Math.max(0, lo) * 100) + '%';
+    s.style.width = (Math.max(0.01, hi - lo) * 100) + '%';
+    r.appendChild(s);
+    return r;
+  }
+  function fbIntervalCell(lo, hi) {
+    const d = el('div', '');
+    d.appendChild(fbInterval(lo, hi));
+    d.appendChild(el('span', fbPct(lo) + ' to ' + fbPct(hi), 'hint'));
+    return d;
+  }
+  function fbLoadSummary() {
+    const box = $('fb-sum-out');
+    uiLoading(box);
+    const days = Math.max(1, Math.min(365, parseInt($('fb-days').value, 10) || 7));
+    return pgApi('/v1/feedback/summary?days=' + days).then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      if (r.note) bhCaveat($('fb-limits'), 'Limitations (always apply)', [r.note, 'A review candidate is a prompt for a human to look, never an action.']);
+      if (!r.entries_total) { uiEmpty(box, 'No verdicts yet', 'Open a finding and record a verdict to start the log.'); return; }
+      uiMeta(box, ['Verdict entries: ' + r.entries_total, 'Findings with a verdict: ' + r.findings_with_verdict,
+        'Recent findings (' + r.recent_days + 'd): ' + r.recent_findings + ', with a verdict: ' + r.recent_findings_covered,
+        'Coverage: ' + (r.verdict_coverage == null ? 'unknown (no recent findings)' : fbPct(r.verdict_coverage)),
+        'Mean time to first verdict: ' + (r.mean_seconds_to_first_verdict == null ? 'unknown' : uiFmtSecs(r.mean_seconds_to_first_verdict).replace(' left', ''))]);
+      const tb = uiTable(box, ['Verdict', 'All entries', 'Latest per analyst']);
+      Object.keys(fbVerdictLabel).forEach((k) => tableRow(tb, [uiTag(fbVerdictLabel[k], k), (r.counts_all_entries || {})[k] ?? 0, (r.counts_latest_per_actor || {})[k] ?? 0]));
+      [['Top false-positive rules', r.top_false_positive_rules], ['Top true-positive rules', r.top_true_positive_rules]].forEach((p) => {
+        if ((p[1] || []).length) uiMeta(box, [p[0] + ': ' + p[1].map((x) => x.rule + ' (' + x.count + ')').join(', ')]);
+      });
+    }).catch((e) => uiError(box, 'the feedback summary', e, fbLoadSummary));
+  }
+  function fbLoadRules() {
+    const box = $('fb-rules-out');
+    uiLoading(box);
+    const minv = Math.max(1, Math.min(1000, parseInt($('fb-minv').value, 10) || 5));
+    return pgApi('/v1/feedback/rules?min_verdicts=' + minv).then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      const m = r.method || {};
+      uiMeta(box, [m.observed ? 'Observed: ' + m.observed : '', m.interval ? 'Interval: ' + m.interval : '', m.shrunk ? 'Shrunk: ' + m.shrunk : '']);
+      if (m.review_meaning) uiNote(box, 'Review candidate: ' + m.review_meaning + ' (below ' + fbPct(m.review_below) + ').');
+      const ranked = r.ranked_by_shrunk_precision || [], few = r.not_enough_verdicts || [];
+      if (!ranked.length && !few.length) { uiEmpty(box, 'No rules have verdicts', 'Precision appears once findings from a rule are labelled.'); return; }
+      if (ranked.length) {
+        const tb = uiTable(box, ['Rule', 'Decided', 'True positives', 'Observed', '95% interval (Wilson)', 'Shrunk', 'Review']);
+        ranked.forEach((x) => tableRow(tb, [x.rule, x.decided_findings, x.true_positives ?? '—', fbPct(x.observed_precision),
+          fbIntervalCell(x.wilson95_low, x.wilson95_high),
+          fbPct(x.shrunk_precision), x.review_candidate ? uiTag('review candidate', 'review') : 'no']));
+      }
+      if (few.length) {
+        box.appendChild(el('h3', 'Not enough verdicts'));
+        const tb = uiTable(box, ['Rule', 'Decided', 'Contested', 'Undecided', 'Status', 'Note']);
+        few.forEach((x) => tableRow(tb, [x.rule, x.decided_findings, x.contested_findings, x.undecided_findings, uiTag('not_enough_verdicts', 'not_enough_data'), x.note || 'No point estimate until the minimum is reached.']));
+      }
+      if ((r.review_candidates || []).length) uiNote(box, 'Review candidates: ' + r.review_candidates.join(', '), true);
+    }).catch((e) => uiError(box, 'rule precision', e, fbLoadRules));
+  }
+  function fbLoadChain() {
+    const box = $('fb-chain-out');
+    uiLoading(box);
+    return pgApi('/v1/feedback/verify').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      const row = el('div', '', 'ui-row');
+      row.appendChild(uiTag(r.ok ? 'intact' : 'broken', r.ok ? 'verified' : 'failed'));
+      row.appendChild(el('span', r.entries + ' entries checked' + (r.ok ? '.' : '. First broken entry: seq ' + r.first_broken_seq + (r.reason ? ' (' + r.reason + ')' : '') + '.')));
+      box.appendChild(row);
+      if (!r.ok) uiNote(box, 'The hash chain does not verify. Treat the log as possibly altered and investigate before relying on these numbers.', true);
+    }).catch((e) => uiError(box, 'chain integrity', e, fbLoadChain));
+  }
+  function fbLoadRecent() {
+    const box = $('fb-recent-out');
+    uiLoading(box);
+    return pgApi('/v1/feedback?limit=25').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      const es = (r && r.entries) || [];
+      if (!es.length) { uiEmpty(box, 'No verdicts recorded', 'Verdicts appear here, newest first.'); return; }
+      const tb = uiTable(box, ['Time', 'Rule', 'Host', 'Verdict', 'Analyst', 'Note']);
+      es.forEach((e) => tableRow(tb, [fmtTime(e.time), e.rule, e.host, uiTag(fbVerdictLabel[e.verdict] || e.verdict, e.verdict), e.actor, e.note || '']));
+    }).catch((e) => uiError(box, 'recent verdicts', e, fbLoadRecent));
+  }
+  function loadFeedback() { fbLoadSummary(); fbLoadRules(); fbLoadChain(); fbLoadRecent(); }
+  $('fb-go').addEventListener('click', loadFeedback);
+  /* === end feedback page === */
+
+  /* === attack chains and case workflow === */
+  function chSevTag(s) { return uiTag(s || 'unknown', String(s || 'low').toLowerCase()); }
+  function chWhy(c) { return (c.why_summary || []).map((x) => x.reason + ' (' + (typeof x.weight === 'number' ? x.weight.toFixed(2) : '?') + ')').join('; ') || 'no reason recorded'; }
+  function chOpenCase(id) { showPage('cases'); if (typeof csShow === 'function') csShow(id); }
+  async function chCreateCase(c, btn) {
+    btn.disabled = true;
+    setMsg('ch-msg', 'Creating case…', false);
+    try {
+      const r = await pgApi('/v1/chains/' + encodeURIComponent(c.id) + '/case', { method: 'POST' });
+      setMsg('ch-msg', (r.created ? 'Case created: ' : 'A case already exists for this chain: ') + (r.case && r.case.id) + '.', false);
+      chLoadList();
+      if (r.case && r.case.id) chOpenDetail(c.id);
+    } catch (e) { setMsg('ch-msg', 'Could not create case: ' + e.message, true); btn.disabled = false; }
+  }
+  function chOpenDetail(id) {
+    const p = $('ch-detail'), box = $('ch-detail-out');
+    p.hidden = false;
+    $('ch-detail-title').textContent = 'Chain ' + id;
+    uiLoading(box);
+    p.focus();
+    pgApi('/v1/chains/' + encodeURIComponent(id)).then((r) => {
+      const c = r.chain || {};
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      if (r.limitations) bhCaveat($('ch-limits'), 'Limitations (always apply)', r.limitations);
+      const row = el('div', '', 'ui-row');
+      row.appendChild(chSevTag(c.severity));
+      row.appendChild(el('span', 'Score ' + (typeof c.score === 'number' ? c.score.toFixed(2) : '?') + ' · ' + (c.size ?? '?') + ' findings · ' + (c.hosts || []).join(', '), 'hint'));
+      box.appendChild(row);
+      if ((r.tactics_in_order || []).length) { box.appendChild(el('p', 'Tactics in order', 'hint')); bhChips(box, r.tactics_in_order, true); }
+      uiMeta(box, ['First: ' + fmtTime(c.first), 'Last: ' + fmtTime(c.last)]);
+      box.appendChild(el('p', 'Why grouped: ' + chWhy(c), 'nx-note'));
+      const act = el('div', '', 'px-actions');
+      if (c.case_id) act.appendChild(pgBtn('Open case ' + c.case_id, 'secondary', () => chOpenCase(c.case_id)));
+      act.appendChild(pgBtn(c.case_id ? 'Create case again (returns the same case)' : 'Create case', 'secondary', function () { chCreateCase(c, this); }));
+      box.appendChild(act);
+      box.appendChild(el('h3', 'Timeline'));
+      const tb = uiTable(box, ['Time', 'Host', 'Rule', 'Severity', 'Tactic', 'Finding']);
+      (r.members || []).forEach((m) => tableRow(tb, [fmtTime(m.time), m.host, m.rule, chSevTag(m.severity), m.tactic || 'unmapped', m.id]));
+      box.appendChild(el('h3', 'Links'));
+      if (r.links_truncated) uiNote(box, 'Only the strongest ' + (r.links || []).length + ' of ' + c.link_count + ' links are shown.');
+      if (!(r.links || []).length) box.appendChild(el('p', 'No links reported.', 'hint'));
+      else {
+        const lt = uiTable(box, ['From', 'To', 'Weight', 'Reasons']);
+        r.links.forEach((l) => tableRow(lt, [l.from, l.to, typeof l.weight === 'number' ? l.weight.toFixed(2) : '?', (l.reasons || []).map((x) => x.reason + ' (' + x.weight + ')').join('; ')]));
+      }
+      if ((r.suggested_questions || []).length) {
+        box.appendChild(el('h3', 'Questions to consider'));
+        uiNote(box, r.questions_note || 'Hints only; they are not findings.');
+        uiList(box, r.suggested_questions);
+      }
+    }).catch((e) => uiError(box, 'chain detail', e, () => chOpenDetail(id)));
+  }
+  function chLoadList() {
+    const box = $('ch-list-out');
+    const min = $('ch-min').value.trim(), host = $('ch-host').value.trim();
+    if (min !== '' && !(Number(min) >= 0)) { setMsg('ch-msg', 'Minimum score must be 0 or more.', true); $('ch-min').focus(); return; }
+    setMsg('ch-msg', '', false);
+    $('ch-detail').hidden = true;
+    uiLoading(box, 'Loading chains…');
+    const qs = [];
+    if (host) qs.push('host=' + encodeURIComponent(host));
+    if (Number(min) > 0) qs.push('min_score=' + encodeURIComponent(min));
+    pgApi('/v1/chains' + (qs.length ? '?' + qs.join('&') : '')).then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      if (r.limitations) bhCaveat($('ch-limits'), 'Limitations (always apply)', r.limitations);
+      if (r.method) box.appendChild(el('p', 'Method: ' + r.method, 'nx-note'));
+      uiMeta(box, ['Showing ' + (r.returned ?? 0) + ' of ' + (r.total ?? 0)]);
+      if (!(r.chains || []).length) { uiEmpty(box, 'No chains', 'No set of findings is linked strongly enough to form a chain. That does not prove the findings are unrelated.'); return; }
+      const tb = uiTable(box, ['Chain', 'Severity', 'Score', 'Findings', 'Hosts', 'Tactics', 'Why grouped', 'Case']);
+      r.chains.forEach((c) => {
+        const b = el('button', c.id, 'secondary');
+        b.type = 'button';
+        b.setAttribute('aria-label', 'Show chain ' + c.id);
+        b.addEventListener('click', () => chOpenDetail(c.id));
+        tableRow(tb, [b, chSevTag(c.severity), typeof c.score === 'number' ? c.score.toFixed(2) : '?', c.size, (c.hosts || []).join(', '), (c.tactics || []).join(' > ') || 'none mapped', chWhy(c), c.case_id ? pgBtn(c.case_id, 'secondary', () => chOpenCase(c.case_id)) : 'none']);
+      });
+    }).catch((e) => uiError(box, 'attack chains', e, chLoadList));
+  }
+  function chLoadTemplates() {
+    const box = $('ch-tpl-out');
+    uiLoading(box);
+    pgApi('/v1/case-templates').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      const ts = Array.isArray(r) ? r : [];
+      if (!ts.length) { uiEmpty(box, 'No templates', 'The server has no case templates.'); return; }
+      const tb = uiTable(box, ['Template', 'Type', 'Default severity', 'Steps', 'Resolve SLA (hours)', 'Source']);
+      ts.forEach((t) => tableRow(tb, [t.name, t.case_type, chSevTag(t.default_severity), (t.checklist || []).length, Object.keys(t.sla_hours || {}).map((k) => k + ': ' + t.sla_hours[k]).join(', ') || 'none', t.built_in ? 'built in' : 'custom']));
+    }).catch((e) => uiError(box, 'case templates', e, chLoadTemplates));
+  }
+  function loadChains() { chLoadList(); chLoadTemplates(); }
+  $('ch-go').addEventListener('click', chLoadList);
+  $('ch-detail-close').addEventListener('click', () => { $('ch-detail').hidden = true; });
+  $('ch-detail').addEventListener('keydown', (e) => { if (e.key === 'Escape') $('ch-detail').hidden = true; });
+
+  /* case workflow panel inside the Cases view */
+  let cwCase = '', cwTpls = [];
+  async function cwLoad(id) {
+    cwCase = id;
+    const box = $('cw-out');
+    uiLoading(box);
+    try {
+      const [wf, tpls] = await Promise.all([pgApi('/v1/cases/' + encodeURIComponent(id) + '/workflow'), pgApi('/v1/case-templates').catch(() => [])]);
+      if (id !== cwCase) return;
+      cwTpls = Array.isArray(tpls) ? tpls : [];
+      cwRender(box, wf);
+    } catch (e) { uiError(box, 'the case workflow', e, () => cwLoad(id)); }
+  }
+  async function cwAct(path, body, okMsg) {
+    try {
+      const wf = await pgApi('/v1/cases/' + encodeURIComponent(cwCase) + path, pgJSON(body));
+      setMsg('cs-msg', okMsg, false);
+      cwRender($('cw-out'), wf);
+    } catch (e) { setMsg('cs-msg', 'Workflow update failed: ' + e.message, true); }
+  }
+  function cwRender(box, wf) {
+    box.removeAttribute('aria-busy'); box.replaceChildren();
+    const prog = wf.checklist_progress || {};
+    uiMeta(box, ['Template: ' + (wf.template_name || 'none applied'), 'Checklist: ' + (prog.done ?? 0) + ' of ' + (prog.total ?? 0) + ' done', 'Assignee: ' + (wf.assignee || 'unassigned')]);
+    const sla = wf.template_sla;
+    if (sla) {
+      const row = el('div', '', 'ui-row');
+      row.appendChild(uiTag(sla.overdue ? 'overdue' : 'on track', sla.overdue ? 'overdue-sla' : 'verified'));
+      row.appendChild(el('span', 'Resolve due ' + fmtTime(sla.resolve_due) + ' (' + sla.resolve_hours + ' h): ' + uiFmtSecs((sla.remaining_minutes || 0) * 60), 'hint'));
+      box.appendChild(row);
+    } else if (wf.template_name) box.appendChild(el('p', 'This template has no resolve deadline for severity ' + wf.severity + '.', 'hint'));
+    if (wf.builtin_sla) uiMeta(box, ['Built-in SLA: ' + (wf.builtin_sla.resolve_breached ? 'resolve breached' : wf.builtin_sla.respond_breached ? 'respond breached' : (wf.builtin_sla.resolve_remaining_minutes ?? '?') + ' min left to resolve')]);
+    // template apply
+    const tr = el('div', '', 'toolbar-pill nx-filters bh-fields');
+    const sel = document.createElement('select');
+    sel.className = 'input-field';
+    sel.id = 'cw-tpl';
+    sel.setAttribute('aria-label', 'Case template');
+    cwTpls.forEach((t) => { const o = el('option', t.name + ' (' + t.case_type + ')'); o.value = t.id; if (t.id === wf.template_id) o.selected = true; sel.appendChild(o); });
+    tr.appendChild(sel);
+    const ap = pgBtn(wf.template_id ? 'Re-apply template' : 'Apply template', 'secondary', () => { if (sel.value) cwAct('/apply-template', { template_id: sel.value }, 'Template applied. Completed steps with the same text are kept.'); });
+    if (!cwTpls.length) { sel.disabled = true; ap.disabled = true; }
+    tr.appendChild(ap);
+    box.appendChild(tr);
+    // checklist
+    const items = wf.checklist || [];
+    if (!items.length) box.appendChild(el('p', 'No checklist yet. Apply a template to add one.', 'hint'));
+    items.forEach((it, i) => {
+      const lab = document.createElement('label');
+      lab.className = 'cw-check';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = !!it.done;
+      cb.addEventListener('change', () => cwAct('/checklist/' + (i + 1), { done: cb.checked }, 'Checklist step ' + (i + 1) + (cb.checked ? ' done.' : ' reopened.')));
+      lab.appendChild(cb);
+      lab.appendChild(el('span', it.text + (it.done && it.by ? ' (done by ' + it.by + (it.done_at ? ', ' + fmtTime(it.done_at) : '') + ')' : '')));
+      box.appendChild(lab);
+    });
+    // assign
+    const as = el('div', '', 'toolbar-pill nx-filters bh-fields');
+    const lbl = el('label', 'Assign to', 'hint'); lbl.setAttribute('for', 'cw-assignee');
+    const inp = document.createElement('input');
+    inp.className = 'input-field'; inp.id = 'cw-assignee'; inp.maxLength = 80; inp.value = wf.assignee || ''; inp.autocomplete = 'off';
+    as.appendChild(lbl); as.appendChild(inp);
+    as.appendChild(pgBtn('Assign', 'secondary', () => cwAct('/assign', { assignee: inp.value.trim() }, 'Assignee set.')));
+    box.appendChild(as);
+    if (wf.assignee_note) box.appendChild(el('p', wf.assignee_note, 'hint'));
+  }
+  /* === end attack chains and case workflow === */
+
+  /* === automation page === */
+  let auEdit = '', auLimits = null;
+  function auKindSync() {
+    const seq = $('au-kind').value === 'seq';
+    $('au-f-ss').hidden = seq;
+    $('au-f-since').hidden = !seq;
+    $('au-f-q').hidden = !seq;
+  }
+  function auFormReset() {
+    auEdit = '';
+    $('au-form-title').textContent = 'New scheduled detection';
+    $('au-save').textContent = 'Create detection';
+    $('au-cancel').hidden = true;
+    ['au-name', 'au-ss', 'au-tech', 'au-query'].forEach((i) => { $(i).value = ''; });
+    $('au-since').value = '24h'; $('au-interval').value = '3600'; $('au-sev').value = 'medium'; $('au-state').value = 'draft'; $('au-kind').value = 'seq';
+    auKindSync();
+  }
+  function auFormLoad(d) {
+    auEdit = d.id;
+    $('au-form-title').textContent = 'Edit ' + d.id;
+    $('au-save').textContent = 'Save changes';
+    $('au-cancel').hidden = false;
+    $('au-name').value = d.name || '';
+    $('au-kind').value = (d.source && d.source.kind) || 'seq';
+    $('au-ss').value = (d.source && d.source.saved_search_id) || '';
+    $('au-query').value = (d.source && d.source.query) || '';
+    $('au-since').value = (d.source && d.source.since) || '24h';
+    $('au-interval').value = d.interval_sec;
+    $('au-sev').value = d.severity;
+    $('au-tech').value = d.technique || '';
+    $('au-state').value = d.state;
+    auKindSync();
+    $('au-name').focus();
+  }
+  async function auSave() {
+    const kind = $('au-kind').value;
+    const interval = parseInt($('au-interval').value, 10);
+    if (!$('au-name').value.trim()) { setMsg('au-msg', 'Name is required.', true); $('au-name').focus(); return; }
+    if (!(interval >= 60 && interval <= 86400)) { setMsg('au-msg', 'Interval must be 60 to 86400 seconds.', true); $('au-interval').focus(); return; }
+    const source = kind === 'seq' ? { kind: 'seq', query: $('au-query').value, since: $('au-since').value.trim() || '24h' } : { kind: 'saved_search', saved_search_id: $('au-ss').value.trim() };
+    if (kind === 'seq' && !source.query.trim()) { setMsg('au-msg', 'A kavach-seq query is required.', true); $('au-query').focus(); return; }
+    if (kind === 'saved_search' && !source.saved_search_id) { setMsg('au-msg', 'A saved search id is required.', true); $('au-ss').focus(); return; }
+    const body = { name: $('au-name').value.trim(), source: source, interval_sec: interval, severity: $('au-sev').value, technique: $('au-tech').value.trim(), state: $('au-state').value };
+    try {
+      await pgApi('/v1/detections/scheduled' + (auEdit ? '/' + encodeURIComponent(auEdit) : ''), { method: auEdit ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      setMsg('au-msg', auEdit ? 'Detection updated.' : 'Detection created.', false);
+      auFormReset();
+      auLoadSched();
+    } catch (e) { setMsg('au-msg', 'Could not save: ' + e.message, true); }
+  }
+  function auShowRun(res, dry, id) {
+    const box = $('au-run-out');
+    box.replaceChildren();
+    const r = res.run || {};
+    box.appendChild(el('h3', (dry ? 'Dry run of ' : 'Run of ') + id));
+    if (dry) uiNote(box, res.note || 'Dry run: nothing was recorded. "Would be reported" is what a real run would add.');
+    const flags = [];
+    if (r.truncated) flags.push(uiTag('truncated', 'partial'));
+    if (r.timed_out) flags.push(uiTag('timed out', 'failed'));
+    if (flags.length) { const row = el('div', '', 'bh-chips'); flags.forEach((f) => row.appendChild(f)); box.appendChild(row); }
+    uiMeta(box, ['Scanned: ' + r.scanned, 'Matched: ' + r.matched, (dry ? 'Would be reported: ' : 'Reported: ') + r.recorded, 'Shadow only: ' + r.shadow, 'Deduplicated: ' + r.deduped, 'Reporting suppressed by exceptions: ' + r.suppressed, 'Took ' + r.duration_ms + ' ms']);
+    if ((r.errors || []).length) uiNote(box, 'Errors: ' + r.errors.join('; '), true);
+  }
+  async function auRun(d, dry) {
+    const box = $('au-run-out');
+    uiLoading(box, dry ? 'Dry run…' : 'Running…');
+    try {
+      const res = await pgApi('/v1/detections/scheduled/' + encodeURIComponent(d.id) + (dry ? '/dryrun' : '/run'), { method: 'POST' });
+      auShowRun(res || {}, dry, d.id);
+      if (!dry) auLoadSched();
+    } catch (e) { uiError(box, dry ? 'the dry run' : 'the run', e, () => auRun(d, dry)); }
+  }
+  async function auHistory(d) {
+    const box = $('au-run-out');
+    uiLoading(box, 'Loading run history…');
+    try {
+      const r = await pgApi('/v1/detections/scheduled/' + encodeURIComponent(d.id) + '/history');
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      box.appendChild(el('h3', 'Run history for ' + d.id));
+      uiMeta(box, ['Retention: ' + (r.retention ?? '?') + ' runs per detection']);
+      if (!(r.history || []).length) { box.appendChild(el('p', 'No runs recorded yet.', 'hint')); return; }
+      const tb = uiTable(box, ['Time', 'Trigger', 'Scanned', 'Matched', 'Reported (or would be)', 'Shadow', 'Deduped', 'Suppressed', 'Flags']);
+      r.history.slice().reverse().forEach((x) => tableRow(tb, [fmtTime(x.time), x.trigger + (x.dry_run ? ' (dry run, nothing recorded)' : ''), x.scanned, x.matched, x.recorded, x.shadow, x.deduped, x.suppressed, [x.truncated ? 'truncated' : '', x.timed_out ? 'timed out' : '', (x.errors || []).join('; ')].filter(Boolean).join(', ') || '—']));
+    } catch (e) { uiError(box, 'run history', e, () => auHistory(d)); }
+  }
+  async function auDelete(d) {
+    try {
+      await pgApi('/v1/detections/scheduled/' + encodeURIComponent(d.id), { method: 'DELETE' });
+      setMsg('au-msg', d.id + ' deleted. Findings it already recorded are kept.', false);
+      auLoadSched();
+    } catch (e) { setMsg('au-msg', 'Could not delete: ' + e.message, true); }
+  }
+  function auLoadSched() {
+    const box = $('au-sched-out');
+    uiLoading(box);
+    return pgApi('/v1/detections/scheduled').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      $('au-sched-sem').textContent = r.semantics || '';
+      const ds = r.detections || [];
+      if (!ds.length) { uiEmpty(box, 'No scheduled detections', 'Create one below. Start in Draft or Testing so findings are not reported until you have checked a dry run.'); return; }
+      const tb = uiTable(box, ['ID', 'Name', 'Source', 'Every', 'Severity', 'State', 'Last run', 'Actions']);
+      ds.forEach((d) => {
+        const acts = el('div', '', 'px-actions');
+        acts.appendChild(pgBtn('Edit', 'secondary', () => auFormLoad(d), 'Edit ' + d.id));
+        acts.appendChild(pgBtn('Dry run', 'secondary', () => auRun(d, true), 'Dry run ' + d.id));
+        acts.appendChild(pxConfirm('Run now', 'Run now? This records real findings.', 'Run now', () => auRun(d, false)));
+        acts.appendChild(pgBtn('History', 'secondary', () => auHistory(d), 'Run history for ' + d.id));
+        acts.appendChild(pxConfirm('Delete', 'Delete ' + d.id + '? Recorded findings are kept.', 'Delete', () => auDelete(d)));
+        tableRow(tb, [d.id, d.name, d.source && d.source.kind === 'seq' ? 'seq: ' + d.source.query : 'saved search ' + ((d.source || {}).saved_search_id || ''), d.interval_sec + 's', d.severity, uiTag(d.state, d.state), pxTime(d.last_run), acts]);
+      });
+    }).catch((e) => uiError(box, 'scheduled detections', e, auLoadSched));
+  }
+  function auLoadLimits() {
+    const box = $('au-lim-out');
+    uiLoading(box);
+    return pgApi('/v1/hunts/limits').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      const l = r.limits || {}, u = r.usage || {};
+      uiMeta(box, ['Scheduled: ' + (u.scheduled_detections ?? '?') + ' of ' + (l.max_scheduled ?? '?'), 'Runs in the last hour: ' + (u.runs_last_hour ?? '?') + ' of ' + (l.max_runs_per_hour ?? '?'), 'Max matches per run: ' + (l.max_matches_per_run ?? '?'), 'History kept: ' + (l.history_retention ?? '?') + ' runs']);
+      if ((r.env || []).length) box.appendChild(el('p', 'Quotas are set by environment variables: ' + r.env.join(', ') + '.', 'hint'));
+      const refused = r.refused || {}, counts = refused.counts || {};
+      if (Object.keys(counts).length) uiMeta(box, ['Refused by quota: ' + Object.keys(counts).map((k) => k + ' ' + counts[k]).join(', ')]);
+      if ((refused.recent || []).length) {
+        const tb = uiTable(box, ['Time', 'What', 'Detection', 'Reason']);
+        refused.recent.forEach((x) => tableRow(tb, [fmtTime(x.time), x.what, x.id || '—', x.reason]));
+      } else box.appendChild(el('p', 'Nothing has been refused by a quota.', 'hint'));
+    }).catch((e) => uiError(box, 'hunt quotas', e, auLoadLimits));
+  }
+  async function auExpire(e) {
+    try {
+      await pgApi('/v1/exceptions/' + encodeURIComponent(e.id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expire: true }) });
+      setMsg('au-msg', e.id + ' expired. Reporting resumes.', false);
+      auLoadExceptions();
+    } catch (err) { setMsg('au-msg', 'Could not expire: ' + err.message, true); }
+  }
+  function auLoadExceptions() {
+    const box = $('au-exc-out');
+    uiLoading(box);
+    pgApi('/v1/exceptions').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      if (r.semantics) uiNote(box, r.semantics);
+      const ch = r.chain || {};
+      uiMeta(box, ['History chain: ' + (ch.ok ? 'intact' : 'BROKEN at seq ' + ch.broken_at_seq), (ch.entries ?? '?') + ' entries', 'Maximum lifetime: ' + (r.max_lifetime_days ?? '?') + ' days']);
+      const xs = r.exceptions || [];
+      if (!xs.length) { uiEmpty(box, 'No exceptions', 'Nothing is being suppressed. Every finding is reported.'); return; }
+      const tb = uiTable(box, ['ID', 'Rule', 'Host', 'Path', 'Owner', 'Reason', 'Expires', 'Status', 'Suppressed', 'Actions']);
+      xs.forEach((x) => tableRow(tb, [x.id, x.rule, x.host || 'any', x.path || 'any', x.owner, x.reason, fmtTime(x.expires), uiTag(x.status, x.status === 'active' ? 'production' : 'expired'), x.suppressed_count + ' findings (reporting only)', x.status === 'active' ? pxConfirm('Expire now', 'Expire ' + x.id + '? Reporting resumes.', 'Expire', () => auExpire(x)) : '—']));
+    }).catch((e) => uiError(box, 'exceptions', e, auLoadExceptions));
+  }
+  async function auCreateExc() {
+    const exp = $('au-x-exp').value;
+    const body = { rule: $('au-x-rule').value.trim(), host: $('au-x-host').value.trim(), path: $('au-x-path').value.trim(), owner: $('au-x-owner').value.trim(), reason: $('au-x-reason').value.trim() };
+    if (!body.rule) { setMsg('au-msg', 'Rule is required (a bare * is refused).', true); $('au-x-rule').focus(); return; }
+    if (!body.owner || !body.reason) { setMsg('au-msg', 'Owner and reason are required.', true); (body.owner ? $('au-x-reason') : $('au-x-owner')).focus(); return; }
+    if (!exp) { setMsg('au-msg', 'An expiry date is required.', true); $('au-x-exp').focus(); return; }
+    const t = new Date(exp);
+    if (isNaN(t.getTime()) || t.getTime() <= Date.now()) { setMsg('au-msg', 'Expiry must be in the future.', true); $('au-x-exp').focus(); return; }
+    body.expires = t.toISOString();
+    try {
+      const r = await pgApi('/v1/exceptions', pgJSON(body));
+      setMsg('au-msg', 'Exception ' + r.id + ' created. It suppresses reporting only.', false);
+      ['au-x-rule', 'au-x-host', 'au-x-path', 'au-x-owner', 'au-x-reason', 'au-x-exp'].forEach((i) => { $(i).value = ''; });
+      auLoadExceptions(); auLoadSuppressed(); auLoadHistory();
+    } catch (e) { setMsg('au-msg', 'Could not create exception: ' + e.message, true); }
+  }
+  function auLoadSuppressed() {
+    const box = $('au-sup-out');
+    uiLoading(box);
+    pgApi('/v1/exceptions/suppressed').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      uiMeta(box, ['Total suppressed: ' + (r.total_suppressed ?? 0), 'Retained: ' + (r.retained ?? 0) + ' of ' + (r.retained_max ?? '?')]);
+      const xs = r.suppressed || [];
+      if (!xs.length) { box.appendChild(el('p', 'No findings have been suppressed.', 'hint')); return; }
+      const tb = uiTable(box, ['Suppressed at', 'Exception', 'Rule', 'Host', 'Severity', 'Finding']);
+      xs.forEach((x) => tableRow(tb, [fmtTime(x.suppressed_at), x.exception_id, (x.finding || {}).rule, (x.finding || {}).host, (x.finding || {}).severity, (x.finding || {}).id]));
+    }).catch((e) => uiError(box, 'suppressed findings', e, auLoadSuppressed));
+  }
+  function auLoadHistory() {
+    const box = $('au-hist-out');
+    uiLoading(box);
+    pgApi('/v1/exceptions/history').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      const row = el('div', '', 'ui-row');
+      row.appendChild(uiTag(r.chain_ok ? 'chain intact' : 'chain broken', r.chain_ok ? 'verified' : 'failed'));
+      if (!r.chain_ok) row.appendChild(el('span', 'First broken entry: seq ' + r.broken_at_seq, 'hint'));
+      box.appendChild(row);
+      const hs = (r.history || []).slice().reverse();
+      if (!hs.length) { box.appendChild(el('p', 'No changes recorded yet.', 'hint')); return; }
+      const tb = uiTable(box, ['Seq', 'Time', 'Actor', 'Action', 'Target', 'Detail']);
+      hs.forEach((h) => tableRow(tb, [h.seq, fmtTime(h.time), h.actor, h.action, h.target, h.detail]));
+    }).catch((e) => uiError(box, 'exception history', e, auLoadHistory));
+  }
+  function loadAutomation() { auLoadSched(); auLoadLimits(); auLoadExceptions(); auLoadSuppressed(); auLoadHistory(); }
+  $('au-kind').addEventListener('change', auKindSync);
+  $('au-save').addEventListener('click', auSave);
+  $('au-cancel').addEventListener('click', auFormReset);
+  $('au-x-create').addEventListener('click', auCreateExc);
+  auKindSync();
+  /* === end automation page === */
+
+  /* === reports and fleet SLO page === */
+  let rpHostTpls = [];
+  function rpFreqSync() {
+    const f = $('rp-freq').value;
+    $('rp-f-min').hidden = f !== 'hourly';
+    $('rp-f-time').hidden = f === 'hourly';
+    $('rp-f-wd').hidden = f !== 'weekly';
+    $('rp-f-dom').hidden = f !== 'monthly';
+  }
+  function rpHostWarnSync() {
+    const w = $('rp-host-warn');
+    w.textContent = rpHostTpls.includes($('rp-tpl').value) ? 'Warning: this template includes host names. Anyone who can fetch the archived report sees them. Host names are masked only where they look like IP addresses.' : '';
+    w.classList.toggle('nx-warn', !!w.textContent);
+  }
+  async function rpDownload(run) {
+    try {
+      const t = await rxText('/v1/reports/archive/' + encodeURIComponent(run.run_id));
+      const ext = run.format === 'json' ? '.json' : run.format === 'csv' ? '.csv' : '.md';
+      rxSave(run.run_id + ext, t, run.format === 'json' ? 'application/json' : run.format === 'csv' ? 'text/csv' : 'text/markdown');
+      setMsg('rp-msg', 'Downloaded ' + run.run_id + (run.sha256 ? ' (sha256 ' + run.sha256.slice(0, 12) + '…).' : '.'), false);
+    } catch (e) { setMsg('rp-msg', 'Could not download the report: ' + e.message, true); }
+  }
+  async function rpRuns(s) {
+    const box = $('rp-runs-out');
+    uiLoading(box, 'Loading runs…');
+    try {
+      const r = await pgApi('/v1/reports/scheduled/' + encodeURIComponent(s.id) + '/runs');
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      box.appendChild(el('h3', 'Archive for ' + (s.name || s.id)));
+      const runs = (r.runs || []).slice().reverse();
+      if (!runs.length) { box.appendChild(el('p', 'No reports have been generated yet.', 'hint')); return; }
+      const tb = uiTable(box, ['Run', 'Time', 'Trigger', 'Status', 'Size', 'Redacted', 'Download']);
+      runs.forEach((x) => tableRow(tb, [x.run_id, fmtTime(x.generated_at), x.trigger, x.error ? uiTag(x.status, 'failed') : uiTag(x.status, x.status === 'ok' ? 'verified' : 'failed'), x.bytes + ' bytes', x.redacted ? 'yes' : 'no',
+        x.status === 'ok' ? pgBtn('Download', 'secondary', () => rpDownload(x), 'Download report ' + x.run_id) : (x.error || 'unavailable')]));
+    } catch (e) { uiError(box, 'report runs', e, () => rpRuns(s)); }
+  }
+  async function rpRunNow(s) {
+    setMsg('rp-msg', 'Generating ' + (s.name || s.id) + '…', false);
+    try {
+      const run = await pgApi('/v1/reports/scheduled/' + encodeURIComponent(s.id) + '/run', { method: 'POST' });
+      setMsg('rp-msg', 'Generated ' + run.run_id + ' (' + run.status + ').', run.status !== 'ok');
+      rpLoadSched();
+      rpRuns(s);
+    } catch (e) { setMsg('rp-msg', 'Run failed: ' + e.message, true); }
+  }
+  async function rpToggle(s) {
+    const body = { name: s.name || '', template: s.template, params: s.params || {}, frequency: s.frequency, retention: s.retention, format: s.format, enabled: !s.enabled };
+    if (s.frequency === 'hourly') body.minute = s.minute; else body.time = String(s.hour).padStart(2, '0') + ':' + String(s.minute).padStart(2, '0');
+    if (s.weekday) body.weekday = s.weekday;
+    if (s.day_of_month) body.day_of_month = s.day_of_month;
+    try {
+      await pgApi('/v1/reports/scheduled/' + encodeURIComponent(s.id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      setMsg('rp-msg', (s.name || s.id) + (s.enabled ? ' paused.' : ' enabled.'), false);
+      rpLoadSched();
+    } catch (e) { setMsg('rp-msg', 'Could not update schedule: ' + e.message, true); }
+  }
+  async function rpDelete(s) {
+    try {
+      await pgApi('/v1/reports/scheduled/' + encodeURIComponent(s.id), { method: 'DELETE' });
+      setMsg('rp-msg', 'Schedule deleted.', false);
+      $('rp-runs-out').replaceChildren();
+      rpLoadSched();
+    } catch (e) { setMsg('rp-msg', 'Could not delete: ' + e.message, true); }
+  }
+  function rpWhen(s) {
+    const hhmm = String(s.hour).padStart(2, '0') + ':' + String(s.minute).padStart(2, '0') + ' UTC';
+    if (s.frequency === 'hourly') return 'hourly at minute ' + s.minute;
+    if (s.frequency === 'weekly') return 'weekly, ' + s.weekday + ' ' + hhmm;
+    if (s.frequency === 'monthly') return 'monthly, day ' + s.day_of_month + ' ' + hhmm;
+    return 'daily ' + hhmm;
+  }
+  async function rpLoadSched() {
+    const box = $('rp-sched-out');
+    uiLoading(box);
+    try {
+      const [r, tpls] = await Promise.all([pgApi('/v1/reports/scheduled'), pgApi('/v1/reports/templates').catch(() => [])]);
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      rpHostTpls = r.templates_with_host_names || [];
+      const notes = [r.delivery, r.redaction].filter(Boolean);
+      if (rpHostTpls.length) notes.push('Templates that include host names: ' + rpHostTpls.join(', ') + '.');
+      if (notes.length) bhCaveat($('rp-notes'), 'Delivery and privacy', notes);
+      const sel = $('rp-tpl'), cur = sel.value;
+      sel.replaceChildren();
+      (Array.isArray(tpls) ? tpls : []).forEach((t) => { const o = el('option', t.title + (rpHostTpls.includes(t.id) ? ' (includes host names)' : '')); o.value = t.id; sel.appendChild(o); });
+      if (cur) sel.value = cur;
+      $('rp-create').disabled = !sel.options.length;
+      rpHostWarnSync();
+      const l = r.limits || {};
+      uiMeta(box, ['Limits: ' + (l.max_schedules ?? '?') + ' schedules, ' + (l.max_retention ?? '?') + ' reports kept each, ' + (l.run_timeout_seconds ?? '?') + ' s per run']);
+      const ss = r.schedules || [];
+      if (!ss.length) { uiEmpty(box, 'No scheduled reports', 'Create one below. Reports are stored locally for you to download.'); return; }
+      const tb = uiTable(box, ['Name', 'Template', 'When', 'Format', 'Keeps', 'Next run', 'Last run', 'State', 'Actions']);
+      ss.forEach((s) => {
+        const acts = el('div', '', 'px-actions');
+        acts.appendChild(pgBtn('Archive', 'secondary', () => rpRuns(s), 'Show archive for ' + (s.name || s.id)));
+        acts.appendChild(pgBtn('Run now', 'secondary', () => rpRunNow(s), 'Run ' + (s.name || s.id) + ' now'));
+        acts.appendChild(pgBtn(s.enabled ? 'Pause' : 'Enable', 'secondary', () => rpToggle(s), (s.enabled ? 'Pause ' : 'Enable ') + (s.name || s.id)));
+        acts.appendChild(pxConfirm('Delete', 'Delete this schedule?', 'Delete', () => rpDelete(s)));
+        tableRow(tb, [s.name || s.id, s.template + (rpHostTpls.includes(s.template) ? ' (host names)' : ''), rpWhen(s), s.format, s.retention, s.enabled ? pxTime(s.next_run) : 'paused', pxTime(s.last_run), s.last_status ? uiTag(s.last_status, s.last_status === 'ok' ? 'verified' : 'failed') : 'never run', acts]);
+      });
+    } catch (e) { uiError(box, 'scheduled reports', e, rpLoadSched); }
+  }
+  async function rpCreate() {
+    const f = $('rp-freq').value;
+    const body = { name: $('rp-name').value.trim(), template: $('rp-tpl').value, frequency: f, format: $('rp-fmt').value, retention: parseInt($('rp-ret').value, 10), params: {} };
+    if (!body.template) { setMsg('rp-msg', 'Choose a template.', true); return; }
+    if (!(body.retention >= 1 && body.retention <= 100)) { setMsg('rp-msg', 'Reports kept must be 1 to 100.', true); $('rp-ret').focus(); return; }
+    if (f === 'hourly') { const m = parseInt($('rp-min').value, 10); if (!(m >= 0 && m <= 59)) { setMsg('rp-msg', 'Minute must be 0 to 59.', true); return; } body.minute = m; }
+    else { if (!$('rp-time').value) { setMsg('rp-msg', 'Choose a time.', true); return; } body.time = $('rp-time').value; }
+    if (f === 'weekly') body.weekday = $('rp-wd').value;
+    if (f === 'monthly') { const d = parseInt($('rp-dom').value, 10); if (!(d >= 1 && d <= 31)) { setMsg('rp-msg', 'Day of month must be 1 to 31.', true); return; } body.day_of_month = d; }
+    if ($('rp-since').value.trim()) body.params.since_hours = $('rp-since').value.trim();
+    if ($('rp-sev').value) body.params.min_severity = $('rp-sev').value;
+    try {
+      const s = await pgApi('/v1/reports/scheduled', pgJSON(body));
+      setMsg('rp-msg', 'Schedule created: ' + (s.name || s.id) + '.', false);
+      $('rp-name').value = '';
+      rpLoadSched();
+    } catch (e) { setMsg('rp-msg', 'Could not create schedule: ' + e.message, true); }
+  }
+  function rpPct(v) { return typeof v === 'number' ? v.toFixed(2) + '%' : 'unknown'; }
+  function rpIndicatorRow(tb, name, i) {
+    tableRow(tb, [name, (i.target_pct ?? '?') + '%', rpPct(i.compliance_pct), uiTag(i.status || 'unknown', i.status || 'unknown'), (i.good_samples ?? 0) + ' of ' + (i.judged_samples ?? 0) + ' judged', typeof i.error_budget_remaining_pct === 'number' ? i.error_budget_remaining_pct.toFixed(1) + '%' : 'unknown', i.note || '']);
+  }
+  function rpLoadSlo() {
+    const box = $('rp-slo-out');
+    uiLoading(box);
+    return pgApi('/v1/fleet/slo').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      const t = r.targets || {}, f = r.fleet || {};
+      uiMeta(box, ['Generated: ' + fmtTime(r.generated_at), 'Window: ' + (t.window_hours ?? '?') + ' h', 'Enrolled active agents: ' + (f.enrolled_active_agents ?? 0), 'Fresh heartbeat now: ' + (f.agents_with_fresh_heartbeat_now ?? 0)]);
+      (r.notes || []).forEach((n) => uiNote(box, n));
+      if (!(f.enrolled_active_agents > 0)) { uiEmpty(box, 'No enrolled agents', 'There is nothing to measure until an agent enrolls. Targets are shown below.'); }
+      box.appendChild(el('h3', 'Fleet indicators vs targets'));
+      const tb = uiTable(box, ['Indicator', 'Target', 'Measured', 'Status', 'Samples', 'Error budget left', 'Note']);
+      if (f.heartbeat) rpIndicatorRow(tb, 'Heartbeat freshness (within ' + (t.heartbeat_fresh_minutes ?? '?') + ' min)', f.heartbeat);
+      if (f.continuity) rpIndicatorRow(tb, 'Telemetry continuity (gap over ' + (t.continuity_gap_minutes ?? '?') + ' min)', f.continuity);
+      box.appendChild(el('h3', 'Telemetry coverage'));
+      const ct = uiTable(box, ['Category', 'Agents reporting', 'Coverage', 'Target', 'Status']);
+      (r.coverage || []).forEach((c) => tableRow(ct, [c.category, c.agents_reporting + ' of ' + c.agents_enrolled, rpPct(c.coverage_pct), (c.target_pct ?? '?') + '%', uiTag(c.status, c.status)]));
+      box.appendChild(el('h3', 'Breaches'));
+      if (!(r.breaches || []).length) box.appendChild(el('p', 'No breaches in the window.', 'hint'));
+      else { const bt = uiTable(box, ['Agent', 'Indicator', 'Kind', 'Detail', 'Value']); r.breaches.forEach((b) => tableRow(bt, [b.agent || 'fleet', b.indicator, b.kind, b.detail, typeof b.value === 'number' ? b.value + '%' : '—'])); }
+      box.appendChild(el('h3', 'Agents'));
+      if (!(r.agents || []).length) box.appendChild(el('p', 'No agents.', 'hint'));
+      else {
+        const at = uiTable(box, ['Agent', 'State', 'Heartbeat now', 'Heartbeat SLO', 'Continuity SLO', 'Telemetry', 'Queued', 'Sensor']);
+        r.agents.forEach((a) => {
+          const cats = Object.keys(a.categories || {}).map((k) => k + ': ' + a.categories[k]).join(', ');
+          const fp = a.footprint || {};
+          tableRow(at, [a.host, a.state, uiTag(a.heartbeat_current, a.heartbeat_current), rpPct((a.heartbeat || {}).compliance_pct) + ' (' + ((a.heartbeat || {}).status || 'unknown') + ')', rpPct((a.continuity || {}).compliance_pct) + ' (' + ((a.continuity || {}).status || 'unknown') + ')', cats, fp.queued_items ?? '—', fp.sensor || 'not reported by agent']);
+        });
+      }
+      box.appendChild(el('h3', 'Not reported by agent'));
+      box.appendChild(el('p', 'These footprint measures are not sent by agents today, so no value is shown or estimated.', 'hint'));
+      const nr = el('div', '', 'bh-chips');
+      (r.not_reported_by_agent || []).forEach((n) => nr.appendChild(uiTag(n.replace(/_/g, ' ') + ': not reported by agent', 'not_enough_data')));
+      box.appendChild(nr);
+    }).catch((e) => uiError(box, 'fleet SLO status', e, rpLoadSlo));
+  }
+  function loadReports() { rpLoadSched(); rpLoadSlo(); }
+  $('rp-freq').addEventListener('change', rpFreqSync);
+  $('rp-tpl').addEventListener('change', rpHostWarnSync);
+  $('rp-create').addEventListener('click', rpCreate);
+  $('rp-slo-reload').addEventListener('click', rpLoadSlo);
+  rpFreqSync();
+  /* === end reports and fleet SLO page === */
+
+  /* === content versions page === */
+  function vrShort(h) { return h ? String(h).slice(0, 12) : '—'; }
+  function vrChanges(box, title, list, cls) {
+    const d = document.createElement('details');
+    d.className = 'cv-details';
+    d.open = (list || []).length > 0 && (list || []).length <= 25;
+    d.appendChild(el('summary', title + ' (' + (list || []).length + ')'));
+    if (!(list || []).length) d.appendChild(el('p', 'None.', 'hint'));
+    else {
+      const tb = uiTable(d, ['Pack', 'Kind', 'Item', 'Fields changed', 'Severity or match affected']);
+      list.forEach((c) => tableRow(tb, [c.pack, c.kind, el('span', c.id), (c.fields_changed || []).join(', ') || '—', (c.highlights || []).length ? uiTag((c.highlights || []).join(', '), 'modified') : 'no']));
+    }
+    box.appendChild(d);
+  }
+  function vrFillSelects(snaps) {
+    const from = $('vr-from'), to = $('vr-to'), pf = from.value, pt = to.value;
+    [from, to].forEach((s) => s.replaceChildren());
+    snaps.forEach((s) => {
+      const label = '#' + s.seq + ' · ' + fmtTime(s.time) + (s.build ? ' · ' + s.build : '');
+      [from, to].forEach((sel) => { const o = el('option', label); o.value = String(s.seq); sel.appendChild(o); });
+    });
+    // newest first: default compare previous (index 1) to latest (index 0)
+    if (snaps.length) { to.value = pt || String(snaps[0].seq); from.value = pf || String((snaps[1] || snaps[0]).seq); }
+    $('vr-cmp').disabled = snaps.length < 1;
+  }
+  function vrLoadSnaps() {
+    const box = $('vr-snap-out');
+    uiLoading(box);
+    return pgApi('/v1/content/versions').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      if (r.note) bhCaveat($('vr-note'), 'Limitations (always apply)', [r.note, 'History is capped at ' + (r.history_cap ?? '?') + ' snapshots.']);
+      const sn = r.snapshots || [];
+      vrFillSelects(sn);
+      if (!sn.length) { uiEmpty(box, 'No snapshots recorded', 'A snapshot is recorded at startup. None exists yet on this install.'); return; }
+      const tb = uiTable(box, ['Snapshot', 'Time', 'Build', 'Hash', 'Items', 'By kind', 'Packs']);
+      sn.forEach((s) => tableRow(tb, ['#' + s.seq, fmtTime(s.time), s.build || 'unknown', vrShort(s.hash), s.total_items, Object.keys(s.items_by_kind || {}).map((k) => k + ' ' + s.items_by_kind[k]).join(', ') || '—', (s.packs || []).length]));
+    }).catch((e) => uiError(box, 'content snapshots', e, vrLoadSnaps));
+  }
+  function vrCompare() {
+    const box = $('vr-diff-out');
+    const from = $('vr-from').value, to = $('vr-to').value;
+    if (!from || !to) { setMsg('vr-msg', 'Choose two snapshots.', true); return; }
+    setMsg('vr-msg', '', false);
+    uiLoading(box, 'Comparing…');
+    pgApi('/v1/content/changes?from=' + encodeURIComponent(from) + '&to=' + encodeURIComponent(to)).then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      if (r.message && !r.diff) { box.appendChild(el('p', r.message, 'hint')); return; }
+      const d = r.diff || {};
+      box.appendChild(el('h3', 'Snapshot #' + d.from_seq + ' to #' + d.to_seq));
+      if (d.identical) { box.appendChild(el('p', 'These snapshots are identical. No content changed.', 'hint')); return; }
+      uiMeta(box, ['Added: ' + (d.added || []).length, 'Removed: ' + (d.removed || []).length, 'Modified: ' + (d.modified || []).length, 'Packs changed: ' + ((d.packs_changed || []).join(', ') || 'none')]);
+      vrChanges(box, 'Added', d.added);
+      vrChanges(box, 'Removed', d.removed);
+      vrChanges(box, 'Modified', d.modified);
+    }).catch((e) => uiError(box, 'the comparison', e, vrCompare));
+  }
+  function vrLoadLog() {
+    const box = $('vr-log-out');
+    uiLoading(box);
+    return pgApi('/v1/content/changelog').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      if (r.message) box.appendChild(el('p', r.message, 'hint'));
+      const es = r.changelog || [];
+      if (!es.length) { uiEmpty(box, 'No changelog', 'There are no snapshots to describe.'); return; }
+      const tb = uiTable(box, ['Snapshot', 'Time', 'Build', 'Summary', 'With severity or match change']);
+      es.forEach((e) => tableRow(tb, ['#' + e.seq, fmtTime(e.time), e.build || 'unknown', e.summary || '', e.modified_with_severity_or_match_change ?? '—']));
+    }).catch((e) => uiError(box, 'the changelog', e, vrLoadLog));
+  }
+  function loadVersions() { vrLoadSnaps().then(vrCompare); vrLoadLog(); }
+  $('vr-cmp').addEventListener('click', vrCompare);
+  /* === end content versions page === */
+
+  /* === syslog status page === */
+  function slCounts(box, title, m, emptyText) {
+    box.appendChild(el('h3', title));
+    const keys = Object.keys(m || {});
+    if (!keys.length) { box.appendChild(el('p', emptyText, 'hint')); return; }
+    const tb = uiTable(box, ['Name', 'Count']);
+    keys.sort((a, b) => m[b] - m[a]).forEach((k) => tableRow(tb, [k, m[k]]));
+  }
+  function slLoadStatus() {
+    const box = $('sl-status-out');
+    uiLoading(box);
+    return pgApi('/v1/syslog/status').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      const row = el('div', '', 'ui-row');
+      row.appendChild(uiTag(r.enabled ? 'listening' : 'disabled', r.enabled ? 'verified' : 'not_enough_data'));
+      if (r.note) row.appendChild(el('span', r.note, 'hint'));
+      box.appendChild(row);
+      if (r.error) uiNote(box, 'Start error: ' + r.error, true);
+      if (r.warning) uiNote(box, r.warning, true);
+      if (!r.enabled) { uiEmpty(box, 'Syslog listener is off', 'It is disabled by default. Counters appear once it is enabled by the operator.'); return; }
+      uiMeta(box, ['Listeners: ' + ((r.listeners || []).join(', ') || 'none'), 'Allowlist: ' + ((r.allowlist || []).join(', ') || 'none'), 'Received: ' + r.received, 'Unparsed: ' + r.unparsed, 'Parsed without an event: ' + r.parsed_without_event, 'Rate limited: ' + r.rate_limited, 'Queue: ' + r.queue_len]);
+      const l = r.limits || {};
+      uiMeta(box, Object.keys(l).map((k) => k.replace(/_/g, ' ') + ': ' + l[k]));
+      slCounts(box, 'Dropped, by reason', r.dropped_by_reason, 'Nothing has been dropped.');
+      slCounts(box, 'Parsed, by format', r.parsed_by_format, 'Nothing has been parsed.');
+      slCounts(box, 'Events produced, by type', r.events_by_type, 'No events have been produced.');
+      const ls = r.last_message_by_source || {};
+      box.appendChild(el('h3', 'Last message by source'));
+      if (!Object.keys(ls).length) box.appendChild(el('p', 'No sources have sent anything.', 'hint'));
+      else { const tb = uiTable(box, ['Source', 'Last message']); Object.keys(ls).forEach((k) => tableRow(tb, [k, fmtTime(ls[k])])); }
+    }).catch((e) => uiError(box, 'syslog status', e, slLoadStatus));
+  }
+  function slLoadSamples() {
+    const box = $('sl-samples-out');
+    uiLoading(box);
+    return pgApi('/v1/syslog/samples').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      if (r.note) uiNote(box, r.note);
+      if (!(r.samples || []).length) { box.appendChild(el('p', 'No unparsed lines held.', 'hint')); return; }
+      r.samples.forEach((s) => box.appendChild(el('pre', s, 'sl-pre')));
+    }).catch((e) => uiError(box, 'syslog samples', e, slLoadSamples));
+  }
+  async function slParse() {
+    const line = $('sl-line').value;
+    const box = $('sl-parse-out');
+    if (!line.trim()) { setMsg('sl-msg', 'Paste a syslog line first.', true); $('sl-line').focus(); return; }
+    setMsg('sl-msg', '', false);
+    uiLoading(box, 'Parsing…');
+    $('sl-parse').disabled = true;
+    try {
+      const r = await pgApi('/v1/syslog/parse', pgJSON({ line: line, sender: $('sl-sender').value.trim() }));
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      const row = el('div', '', 'ui-row');
+      row.appendChild(uiTag(r.parsed ? 'parsed' : 'not recognised', r.parsed ? 'verified' : 'failed'));
+      row.appendChild(el('span', r.note || 'Dry run: nothing was ingested.', 'hint'));
+      box.appendChild(row);
+      const m = r.message || {};
+      uiMeta(box, ['Format: ' + (m.format || 'unknown'), 'Facility: ' + m.facility, 'Severity: ' + m.severity, 'Host: ' + (m.host || 'none'), 'App: ' + (m.app || 'none')]);
+      box.appendChild(el('pre', JSON.stringify(m, null, 1), 'sl-pre'));
+      box.appendChild(el('h3', 'Events it would produce (' + (r.events || []).length + ')'));
+      if (!(r.events || []).length) box.appendChild(el('p', 'No event would be produced from this line.', 'hint'));
+      (r.events || []).forEach((e) => { box.appendChild(el('p', e.type + ' (' + e.shape + ')', 'hint')); box.appendChild(el('pre', JSON.stringify(e.telemetry || e.network || {}, null, 1), 'sl-pre')); });
+    } catch (e) { uiError(box, 'the parse result', e, slParse); }
+    finally { $('sl-parse').disabled = false; }
+  }
+  function loadSyslog() { slLoadStatus(); slLoadSamples(); }
+  $('sl-reload').addEventListener('click', loadSyslog);
+  $('sl-parse').addEventListener('click', slParse);
+  /* === end syslog status page === */
+
+  /* === competitive page === */
+  const cpCls = { 'Has': 'cp-has', 'Partial': 'cp-partial', 'Not documented': 'cp-nd', 'Out of scope by design': 'cp-oos' };
+  const cpLabel = { 'Out of scope by design': 'Out of scope' };
+  function cpChip(status) { return uiTag(cpLabel[status] || status, cpCls[status] || 'cp-nd'); }
+  function cpCell(c, isKavach) {
+    const d = el('div', '', 'cp-cell');
+    d.appendChild(cpChip(c.status));
+    if (!isKavach && !c.verified) { d.appendChild(document.createTextNode(' ')); d.appendChild(uiTag('UNVERIFIED', 'cp-unverified')); }
+    if (c.note) d.appendChild(el('span', c.note, 'hint'));
+    if ((c.sources || []).length) d.appendChild(el('span', 'Sources: ' + c.sources.join(', '), 'hint'));
+    return d;
+  }
+  function loadCompetitive() {
+    const mb = $('cp-matrix-out'), bb = $('cp-backlog-out'), sb = $('cp-src-out');
+    [mb, bb, sb].forEach((b) => uiLoading(b));
+    pgApi('/v1/world/competitive').then((m) => {
+      m = m || {};
+      bhCaveat($('cp-note'), 'How to read this (always apply)', [m.note || 'No note from the server.', 'Last researched: ' + (m.last_researched || 'unknown') + '.', 'UNVERIFIED means a competitor cell is not confirmed against a cited public source. Treat it as unconfirmed.', 'Out of scope means Kavach does not do this by design (it is observe-only).']);
+      const lg = $('cp-legend');
+      lg.replaceChildren();
+      (m.status_values || []).forEach((s) => lg.appendChild(cpChip(s)));
+      lg.appendChild(uiTag('UNVERIFIED', 'cp-unverified'));
+      // matrix
+      mb.removeAttribute('aria-busy'); mb.replaceChildren();
+      const prods = m.products || [], areas = m.areas || [];
+      if (!prods.length || !areas.length) uiEmpty(mb, 'No matrix', 'The server returned no products or areas.');
+      else {
+        const tb = uiTable(mb, ['Area'].concat(prods.map((p) => p.name)));
+        areas.forEach((a) => {
+          const row = (m.matrix || {})[a.id] || {};
+          tableRow(tb, [a.name].concat(prods.map((p) => row[p.id] ? cpCell(row[p.id], p.id === 'kavach') : 'no data')));
+        });
+      }
+      // backlog
+      bb.removeAttribute('aria-busy'); bb.replaceChildren();
+      const bl = m.backlog || [];
+      if (!bl.length) uiEmpty(bb, 'No backlog', 'The server returned no backlog items.');
+      else {
+        uiMeta(bb, [bl.length + ' candidate items. Each states whether current telemetry is enough and whether it conflicts with observe-only.']);
+        const tb = uiTable(bb, ['#', 'Title', 'What', 'Why', 'Data needed', 'Telemetry sufficient', 'Effort', 'Risk', 'Conflicts with observe-only', 'Competitors']);
+        bl.forEach((b) => tableRow(tb, [b.id, b.title, b.what, b.why || '', b.data_needed, b.telemetry_sufficient || 'unknown', b.effort, b.risk || '', b.conflicts_with_observation_only, b.competitors || '']));
+      }
+      // sources
+      sb.removeAttribute('aria-busy'); sb.replaceChildren();
+      const ss = m.sources || [];
+      if (!ss.length) sb.appendChild(el('p', 'No sources listed.', 'hint'));
+      else {
+        const tb = uiTable(sb, ['Id', 'Title', 'Link', 'Accessed']);
+        ss.forEach((s) => {
+          let link = el('span', s.url || '');
+          if (/^https?:\/\//i.test(s.url || '')) { link = document.createElement('a'); link.href = s.url; link.textContent = s.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; }
+          tableRow(tb, [s.id, s.title, link, s.accessed]);
+        });
+      }
+    }).catch((e) => { [mb, bb, sb].forEach((b, i) => uiError(b, i === 0 ? 'the competitive matrix' : 'this section', e, loadCompetitive)); });
+  }
+  /* === end competitive page === */
+
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', '/': 'search' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '.': 'huntseq', '\'': 'vulnprio', '`': 'feedback', '\\': 'chains', '!': 'automation', '@': 'reports', '#': 'versions', '$': 'syslog', '%': 'competitive', '/': 'search' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
@@ -7983,6 +9720,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       const slot = $('cs-d-closeslot'); slot.replaceChildren();
       if (!closed) slot.appendChild(pxConfirm('Close case', 'Close with the resolution entered?', 'Close case', csCloseCase));
       pxFill('cs-d-tl', 4, c.timeline, 'No timeline', 'Nothing recorded yet.', (tb, x) => tableRow(tb, [pxTime(x.time), x.actor, x.kind, x.detail]));
+      if (typeof cwLoad === 'function') cwLoad(id);
       pxFill('cs-d-cm', 3, c.comments, 'No comments', 'Add the first comment below.', (tb, x) => tableRow(tb, [pxTime(x.time), x.author, x.text]));
     } catch (e) { setMsg('cs-msg', 'Could not load case: ' + e.message, true); }
   }
