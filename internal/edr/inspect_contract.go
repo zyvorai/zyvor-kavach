@@ -50,9 +50,11 @@ const (
 	InspectKindCmdline = "cmdline"
 	InspectKindDomain  = "domain"
 	InspectKindConfig  = "config"
+	InspectKindURL     = "url"
+	InspectKindEmail   = "email"
 )
 
-var inspectKinds = []string{InspectKindFile, InspectKindScript, InspectKindCmdline, InspectKindDomain, InspectKindConfig}
+var inspectKinds = []string{InspectKindFile, InspectKindScript, InspectKindCmdline, InspectKindDomain, InspectKindConfig, InspectKindURL, InspectKindEmail}
 
 // InspectMaxDepth is the deepest decoder/archive recursion analyzers may use.
 const InspectMaxDepth = inspectMaxRecursion
