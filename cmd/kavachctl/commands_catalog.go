@@ -201,6 +201,19 @@ func allCLICommands() []cliCommand {
 		// global_search.go: cross-entity search.
 		{Name: "search", Args: []string{"search", "T1059", "--type", "technique"}},
 
+		// inspect.go / ml.go: artifact inspector and local ML models.
+		{Name: "inspect-analyzers", Args: []string{"inspect", "analyzers"}},
+		{Name: "inspect-reports", Args: []string{"inspect", "reports", "--limit", "5"}},
+		{Name: "inspect-domain", Args: []string{"inspect", "domain", "example.com"}, Mutating: true},
+		{Name: "inspect-cmdline", Args: []string{"inspect", "cmdline", "whoami"}, Mutating: true},
+		{Name: "ml-status", Args: []string{"ml", "status"}},
+		{Name: "ml-lineage", Args: []string{"ml", "lineage", "--limit", "5"}},
+		{Name: "ml-similar", Args: []string{"ml", "similar", "whoami"}},
+		{Name: "ml-beacons", Args: []string{"ml", "beacons"}},
+		{Name: "ml-synthesize", Args: []string{"ml", "synthesize", "--command", "whoami /all"}, Mutating: true},
+		{Name: "ml-reset", Args: []string{"ml", "reset", "--yes"}, Mutating: true},
+		{Name: "ml-replay", Args: []string{"ml", "replay", "--yes"}, Mutating: true},
+
 		// cert_feeds.go: worldwide CERT advisory feeds (opt-in server side).
 		{Name: "advisories-list", Args: []string{"advisories", "list", "--limit", "5"}},
 		{Name: "advisories-status", Args: []string{"advisories", "status"}},
