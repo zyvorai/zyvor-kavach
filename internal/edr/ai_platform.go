@@ -601,6 +601,9 @@ func fuzzyNLMatch(text string, f Finding) bool {
 
 func findingNarrative(f Finding) string {
 	d := MapDetection(f)
+	if d.Unmapped {
+		d.TechniqueID, d.Technique = "(none)", "no ATT&CK technique is mapped to this rule"
+	}
 	return fmt.Sprintf(
 		"On host %s at %s, Kavach observed behavior matching rule %q (severity %s). "+
 			"This maps to MITRE %s — %s. Evidence centers on process %s (pid %d, parent %s). "+
@@ -669,7 +672,9 @@ func predictAttackPath(f Finding, ok bool, store *Store) []AttackStep {
 	}
 	if ok {
 		d := MapDetection(f)
-		steps[0] = AttackStep{Step: 1, TechniqueID: d.TechniqueID, Technique: d.Technique, Likelihood: 0.85, Evidence: []string{f.Rule, f.Evidence.Executable}, Advice: "Validate evidence in drawer"}
+		if !d.Unmapped {
+			steps[0] = AttackStep{Step: 1, TechniqueID: d.TechniqueID, Technique: d.Technique, Likelihood: 0.85, Evidence: []string{f.Rule, f.Evidence.Executable}, Advice: "Validate evidence in drawer"}
+		}
 		if strings.Contains(f.Rule, "ransomware") {
 			steps[3].Likelihood = 0.9
 		}
@@ -814,7 +819,7 @@ func classifyBehavior(f Finding) BehaviorClass {
 	case f.Destination != "" || strings.Contains(rule, "netra"):
 		return BehaviorClass{Family: "c2_network", Confidence: 0.7, Signals: []string{"xdr", f.Destination}, TechniqueID: "T1071"}
 	default:
-		return BehaviorClass{Family: "suspicious_generic", Confidence: 0.45, Signals: []string{f.Rule}, TechniqueID: "T1082"}
+		return BehaviorClass{Family: "suspicious_generic", Confidence: 0.45, Signals: []string{f.Rule}} // no technique: a generic class must not claim Discovery
 	}
 }
 
@@ -873,6 +878,9 @@ func incidentReportMD(f Finding) string {
 	d := MapDetection(f)
 	rs := ScoreFinding(f)
 	cls := classifyBehavior(f)
+	if d.Unmapped {
+		d.TechniqueID, d.Technique = "none", "unmapped rule"
+	}
 	return fmt.Sprintf(`# Incident Report — %s
 
 - **Host:** %s

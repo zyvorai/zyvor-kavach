@@ -126,6 +126,11 @@ func valTechnique(reg *ContentRegistry, f Finding) (id, tactic string, ok bool) 
 	if m, found := ruleMITRE[f.Rule]; found {
 		return m.ID, m.Tactic, true
 	}
+	if a, found := iocRuleAlias[f.Rule]; found { // Detect emits ioc-<type>; ruleMITRE keys end in -match
+		if m, found := ruleMITRE[a]; found {
+			return m.ID, m.Tactic, true
+		}
+	}
 	if r := reg.byID[f.Rule]; r != nil {
 		return r.Technique, r.Tactic, true
 	}

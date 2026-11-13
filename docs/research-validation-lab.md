@@ -228,3 +228,71 @@ These came out of reading the code while building the lab. Nothing was changed.
   collector that supplies them must exist in the deployment.
 * Detected means a rule mapped to the technique fired, not that the mapping is right, and not that the
   alert was actionable. Benign controls are 33 everyday sequences, not a measure of production noise.
+
+## 6. Follow-up: ATT&CK mapping fixes (before / after)
+
+Section 4 recorded defects in how findings are mapped to ATT&CK. They are fixed as follows. Sections 1
+to 5 above are the original measurement and are kept unchanged as the "before" record.
+
+**Fixes**
+
+1. `MapDetection` no longer defaults an unmapped rule to T1082. It returns `unmapped: true` with empty
+   `tactic`, `technique` and `technique_id`. The ATT&CK matrix response has a new `unmapped_rules` list
+   (built-in rules that can fire but have no technique, plus rule ids seen in findings) and
+   `unmapped_hits`; unmapped findings count toward neither coverage nor `observed_hits`. The generic AI
+   behaviour class (`suspicious_generic`) no longer claims T1082 either; narratives and incident reports
+   say "no ATT&CK technique is mapped" instead.
+2. Four built-in rules that silently relied on the default now carry a justified mapping:
+
+   | Rule | Trigger | Technique | Why |
+   |---|---|---|---|
+   | `unsafe-permissions` | `chmod 777 /etc/...` | T1222.002 (Defense Evasion) | Loosening permissions on sensitive config is Linux and Mac File and Directory Permissions Modification. |
+   | `persistence-attempt` | `crontab`, `at`, `systemctl enable` | T1053 (Persistence) | Scheduled Task/Job covers cron and at. `systemctl enable` is strictly T1543.002, which the rule does not distinguish, so the parent is used and no sub-technique is over-claimed. |
+   | `script-inline-execution` | `python/perl/ruby/node/php` with `-c`, base64 or `/dev/tcp` | T1059 (Execution) | Interpreter-driven execution; same technique as `lolbin-netcat-shell`. |
+   | `root-history-clear` | root shell running `history -c` | T1070.003 (Defense Evasion) | Clear Command History. |
+
+   Every other built-in rule id was run through the mapper (test `TestNoRuleDefaultsToT1082`). Two
+   remain intentionally unmapped and are reported in `unmapped_rules`: `ransomware-churn` (a weak
+   canary-path churn signal, not a specific technique) and `identity-from-finding` (an identity event
+   derived from findings, not a finding rule). A test fails if any rule maps to T1082 without T1082
+   being its technique.
+3. IOC findings are emitted as `ioc-<type>` (`ioc-domain`, `ioc-ipv4`, `ioc-sha256`, ...) while
+   `ruleMITRE` is keyed `ioc-*-match`. The lookup now aliases `ioc-domain` to the domain match,
+   `ioc-ipv4`/`ioc-ipv6` to the IP match and `ioc-sha256`/`ioc-md5`/`ioc-sha1` to the hash match
+   (T1071, T1071, T1204). Operator-added IOC types without an alias stay unmapped. Verified by driving
+   real IOC matches through `Detect`.
+4. IOA findings (`ioa-<id>`) are resolved through the IOA rule's `TechniqueID`, and enabled IOAs with a
+   known technique count toward matrix coverage. Findings from an IOA that was later edited or deleted
+   still map through the technique tag on the finding. An IOA with an unknown technique id contributes
+   no coverage.
+5. The lab's technique resolver also applies the IOC aliasing, and two scenarios were added so the
+   newly mapped techniques are measured rather than merely claimed: `emu-t1053-crontab-persist` and
+   `emu-t1059-python-inline-b64`.
+
+**Measured before / after** (same harness, shipped packs, no live content registry loaded for the matrix
+figures; the lab figures use the embedded packs)
+
+| Measure | Before | After |
+|---|---|---|
+| ATT&CK matrix tactics covered (of 14) | 6 (42%) | 7 (50%) |
+| ATT&CK matrix techniques listed (built-in + IOA) | 13 | 17 |
+| Lab claimed techniques | 245 | 246 |
+| Lab Detected | 95 (38.7%) | 97 (39.4%) |
+| Lab Partial / Missed / Not-testable | 17 / 26 / 11 | 17 / 26 / 11 |
+| Lab Untested (claimed, no scenario) | 96 | 95 |
+| Scenarios | 204 | 206 |
+| Non-benign scenarios passing | 111 of 171 (64.9%) | 113 of 173 (65.3%) |
+| Benign controls firing at medium or above | 0 of 33 | 0 of 33 |
+| Findings fired in replay with no ATT&CK mapping | 10 of 427 (`persistence-attempt` 4, `script-inline-execution` 3, `root-history-clear` 2, `unsafe-permissions` 1) | 0 of 431 |
+
+Reading the numbers: the 4 remapped rules did not change any pre-existing technique's Detected count,
+because the lab already reported their findings as unmapped (it never used the T1082 default), so the
+gain there is the removal of 10 unmapped fires. The matrix gain (42% to 50% tactic coverage) is real:
+Persistence is now covered by a built-in rule, and IOA techniques (T1003, T1059, T1490) appear in the
+matrix. The two added scenarios account for the +2 Detected. The detected-rate floor
+(`valDetectedFloor`, 0.60) is unchanged; measured rate is 0.653.
+
+Limits that remain: the 50% figure counts tactics with at least one mapped rule, not detection quality;
+the IOC alias for `ioc-sha256` maps all hash matches to T1204 (User Execution), which is a coarse label
+for "a known-bad hash was seen in a command line"; and the IOA mapping trusts the technique id an
+operator typed.
