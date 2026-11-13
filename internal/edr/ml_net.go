@@ -106,6 +106,11 @@ func (c *priorityCtx) score(f Finding) PriorityResult {
 		vals["rule_trust"] = PriorityFactor{"rule_trust", 1 - float64(h.NoisyScore)/100, 0.15,
 			"rule noisiness " + strconv.Itoa(h.NoisyScore) + "/100 (rule health), lifecycle " + h.State + "; noisy rules rank lower"}
 	}
+	if FeedbackRuleTrust != nil { // analyst-derived trust, when enough verdicts exist (feedback_http.go)
+		if t, ok := FeedbackRuleTrust(f.Rule); ok {
+			vals["rule_trust"] = PriorityFactor{"rule_trust", clamp01(t), 0.15, "analyst verdicts: shrunk precision " + f2(t) + " for this rule (advisory)"}
+		}
+	}
 	var rarityNote string
 	if MLRarityProvider != nil {
 		if v, ok := MLRarityProvider(f.Host, f.Evidence.Executable, f.Evidence.ParentExe); ok {
