@@ -117,7 +117,11 @@ func TestContentPrefilterEquivalence(t *testing.T) {
 	var rules []*ContentRule
 	rules = append(rules, reg.rules...)
 	rnd := rand.New(rand.NewSource(20260101))
-	for i := 0; i < 500; i++ {
+	genRules, randEvents, shippedStride := 500, 1500, 1
+	if raceEnabled { // cost is rules x events x 2 evaluations; the full corpus runs in the non-race job
+		genRules, randEvents, shippedStride = 100, 300, 3
+	}
+	for i := 0; i < genRules; i++ {
 		rules = append(rules, compileTestRule(t, fmt.Sprintf("gen-%d", i), "process", randTree(rnd, 0)))
 	}
 	withPre := 0
@@ -130,12 +134,16 @@ func TestContentPrefilterEquivalence(t *testing.T) {
 		t.Fatalf("prefilter extracted literals for only %d of %d rules", withPre, len(rules))
 	}
 	var events []LabEvent
+	var shipped []LabEvent
 	for _, r := range reg.rules { // every sample event of every shipped rule
-		events = append(events, r.Tests.Positive...)
-		events = append(events, r.Tests.Negative...)
+		shipped = append(shipped, r.Tests.Positive...)
+		shipped = append(shipped, r.Tests.Negative...)
+	}
+	for i := 0; i < len(shipped); i += shippedStride {
+		events = append(events, shipped[i])
 	}
 	events = append(events, benignBaseline...)
-	for i := 0; i < 1500; i++ {
+	for i := 0; i < randEvents; i++ {
 		uid := 1000
 		ev := LabEvent{Executable: randField(rnd), Command: randField(rnd), Path: randField(rnd), Destination: randField(rnd)}
 		if i%2 == 0 {

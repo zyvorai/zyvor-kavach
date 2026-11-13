@@ -206,7 +206,11 @@ func TestFileStringsAnalyzerASCIIAndUTF16(t *testing.T) {
 		t.Fatalf("iocs: %v", r.IOCs)
 	}
 	fileMustHave(t, r, "file-str-ransom-note", "file-str-wallet", "file-str-wallet-ransom")
-	big := bytes.Repeat([]byte("abcdefg\x00"), 3<<20) // 24 MiB, many strings
+	bigN := 3 << 20 // 24 MiB, many strings
+	if raceEnabled {
+		bigN = 3 << 18 // 2 MiB: the race detector makes the 5 s analyzer budget flaky at full size
+	}
+	big := bytes.Repeat([]byte("abcdefg\x00"), bigN)
 	r = fileRun(big)
 	if len(r.Errors) > 0 {
 		t.Fatal(r.Errors)
