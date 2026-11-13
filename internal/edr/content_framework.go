@@ -408,7 +408,12 @@ func contentMITREAll() map[string]struct{ Tactic, Technique, ID string } {
 
 // contentEvaluate runs the live rules for one event kind. No-op (nil) when no packs are loaded.
 func contentEvaluate(kind string, ev LabEvent, base Finding) []Finding {
-	reg := contentReg.Load()
+	return contentEvaluateWith(contentReg.Load(), kind, ev, base)
+}
+
+// contentEvaluateWith is contentEvaluate against a caller-supplied registry (used by the validation
+// lab to replay synthetic events against an isolated registry). Pure: no global state is touched.
+func contentEvaluateWith(reg *ContentRegistry, kind string, ev LabEvent, base Finding) []Finding {
 	if reg == nil {
 		return nil
 	}

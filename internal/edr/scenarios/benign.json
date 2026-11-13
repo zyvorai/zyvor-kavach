@@ -1,0 +1,726 @@
+{
+ "scenarios": [
+  {
+   "id": "benign-go-build",
+   "name": "Go developer building and testing",
+   "description": "Negative control: go developer building and testing. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/go/bin/go",
+     "command": "go build ./...",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/local/go/bin/go",
+     "command": "go test ./... -race",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/git",
+     "command": "git status",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-npm-install",
+   "name": "Frontend developer installing packages",
+   "description": "Negative control: frontend developer installing packages. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/npm",
+     "command": "npm install",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/node",
+     "command": "node build.js",
+     "parent_exe": "/usr/bin/npm"
+    },
+    {
+     "type": "network",
+     "destination": "registry.npmjs.org:443"
+    }
+   ]
+  },
+  {
+   "id": "benign-pip-venv",
+   "name": "Python virtualenv and pip install",
+   "description": "Negative control: python virtualenv and pip install. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/python3",
+     "command": "python3 -m venv .venv",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/pip3",
+     "command": "pip3 install -r requirements.txt",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "network",
+     "destination": "pypi.org:443"
+    }
+   ]
+  },
+  {
+   "id": "benign-apt-upgrade",
+   "name": "Routine package updates",
+   "description": "Negative control: routine package updates. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/apt",
+     "command": "apt update",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/apt",
+     "command": "apt upgrade -y",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    },
+    {
+     "type": "network",
+     "destination": "archive.ubuntu.com:80"
+    }
+   ]
+  },
+  {
+   "id": "benign-docker-dev",
+   "name": "Developer running a local container",
+   "description": "Negative control: developer running a local container. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/docker",
+     "command": "docker run --rm -p 8080:80 nginx:alpine",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/docker",
+     "command": "docker ps",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/docker",
+     "command": "docker logs web",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-tar-backup",
+   "name": "Nightly tar backup of web content",
+   "description": "Negative control: nightly tar backup of web content. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/tar",
+     "command": "tar czf /backup/www-2026-03-01.tgz /var/www",
+     "parent_exe": "/usr/sbin/cron",
+     "uid": 0
+    },
+    {
+     "type": "file",
+     "path": "/backup/www-2026-03-01.tgz",
+     "operation": "create"
+    }
+   ]
+  },
+  {
+   "id": "benign-rsync-backup",
+   "name": "rsync to a backup host",
+   "description": "Negative control: rsync to a backup host. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/rsync",
+     "command": "rsync -az /srv/data/ backup01:/srv/backup/",
+     "parent_exe": "/usr/sbin/cron",
+     "uid": 0
+    },
+    {
+     "type": "network",
+     "destination": "10.0.0.20:22"
+    }
+   ]
+  },
+  {
+   "id": "benign-logrotate",
+   "name": "Log rotation",
+   "description": "Negative control: log rotation. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/sbin/logrotate",
+     "command": "logrotate /etc/logrotate.conf",
+     "parent_exe": "/usr/sbin/cron",
+     "uid": 0
+    },
+    {
+     "type": "file",
+     "path": "/var/log/syslog.1",
+     "operation": "create"
+    }
+   ]
+  },
+  {
+   "id": "benign-systemd-restart",
+   "name": "Admin restarting a service",
+   "description": "Negative control: admin restarting a service. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/systemctl",
+     "command": "systemctl restart nginx",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/systemctl",
+     "command": "systemctl status nginx",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-ssh-admin",
+   "name": "Admin SSH to a known host",
+   "description": "Negative control: admin ssh to a known host. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/ssh",
+     "command": "ssh deploy@app01.internal uptime",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "auth",
+     "user": "deploy",
+     "source_ip": "10.0.0.8",
+     "method": "ssh",
+     "outcome": "success"
+    }
+   ]
+  },
+  {
+   "id": "benign-sudo-update",
+   "name": "sudo package maintenance",
+   "description": "Negative control: sudo package maintenance. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "auth",
+     "user": "ann",
+     "source_ip": "10.0.0.8",
+     "method": "sudo",
+     "outcome": "success"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/sudo",
+     "command": "sudo apt install -y htop",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-curl-api",
+   "name": "Health-check script calling an API",
+   "description": "Negative control: health-check script calling an api. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/curl",
+     "command": "curl -s https://api.example.com/health",
+     "parent_exe": "/usr/bin/bash"
+    },
+    {
+     "type": "network",
+     "destination": "api.example.com:443"
+    }
+   ]
+  },
+  {
+   "id": "benign-vim-edit",
+   "name": "Editing config in vim",
+   "description": "Negative control: editing config in vim. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/vim",
+     "command": "vim /etc/nginx/nginx.conf",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    },
+    {
+     "type": "file",
+     "path": "/etc/nginx/nginx.conf",
+     "operation": "modify"
+    }
+   ]
+  },
+  {
+   "id": "benign-cron-logrotate-job",
+   "name": "Package-managed cron job",
+   "description": "Negative control: package-managed cron job. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/etc/cron.daily/logrotate",
+     "operation": "modify"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/run-parts",
+     "command": "run-parts /etc/cron.daily",
+     "parent_exe": "/usr/sbin/cron",
+     "uid": 0
+    }
+   ]
+  },
+  {
+   "id": "benign-db-dump",
+   "name": "Scheduled database dump",
+   "description": "Negative control: scheduled database dump. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/pg_dump",
+     "command": "pg_dump -U app appdb -f /backup/appdb.sql",
+     "parent_exe": "/usr/sbin/cron",
+     "uid": 0
+    },
+    {
+     "type": "file",
+     "path": "/backup/appdb.sql",
+     "operation": "create"
+    }
+   ]
+  },
+  {
+   "id": "benign-kubectl-ops",
+   "name": "Operator checking a cluster",
+   "description": "Negative control: operator checking a cluster. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/kubectl",
+     "command": "kubectl get nodes",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/kubectl",
+     "command": "kubectl rollout status deploy/web",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-git-clone",
+   "name": "Clone and fetch",
+   "description": "Negative control: clone and fetch. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/git",
+     "command": "git clone https://github.com/example/project.git",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "network",
+     "destination": "github.com:443"
+    }
+   ]
+  },
+  {
+   "id": "benign-make-build",
+   "name": "C project build",
+   "description": "Negative control: c project build. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/make",
+     "command": "make -j8",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/gcc",
+     "command": "gcc -O2 -o app main.c",
+     "parent_exe": "/usr/bin/make"
+    }
+   ]
+  },
+  {
+   "id": "benign-office-win",
+   "name": "Office user editing documents",
+   "description": "Negative control: office user editing documents. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "windows",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Program Files\\Microsoft Office\\root\\Office16\\WINWORD.EXE",
+     "command": "WINWORD.EXE C:\\Users\\ann\\Documents\\plan.docx",
+     "parent_exe": "C:\\Windows\\explorer.exe"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\plan.docx",
+     "operation": "modify"
+    }
+   ]
+  },
+  {
+   "id": "benign-windows-update",
+   "name": "Windows Update activity",
+   "description": "Negative control: windows update activity. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "windows",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\wuauclt.exe",
+     "command": "wuauclt.exe /detectnow",
+     "parent_exe": "C:\\Windows\\System32\\svchost.exe"
+    },
+    {
+     "type": "network",
+     "destination": "download.windowsupdate.com:80"
+    }
+   ]
+  },
+  {
+   "id": "benign-vs-build",
+   "name": "Visual Studio build",
+   "description": "Negative control: visual studio build. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "windows",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe",
+     "command": "MSBuild.exe C:\\src\\app\\app.sln /m",
+     "parent_exe": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\devenv.exe"
+    }
+   ]
+  },
+  {
+   "id": "benign-win-admin-net",
+   "name": "Admin using ipconfig and ping",
+   "description": "Negative control: admin using ipconfig and ping. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "windows",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\ipconfig.exe",
+     "command": "ipconfig /all",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\PING.EXE",
+     "command": "ping 10.0.0.1",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ]
+  },
+  {
+   "id": "benign-win-backup",
+   "name": "robocopy backup",
+   "description": "Negative control: robocopy backup. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "windows",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\robocopy.exe",
+     "command": "robocopy D:\\data E:\\backup /MIR /R:1",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ]
+  },
+  {
+   "id": "benign-win-pwsh-admin",
+   "name": "Admin PowerShell listing services",
+   "description": "Negative control: admin powershell listing services. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "windows",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+     "command": "powershell Get-Service | Where-Object Status -eq Running",
+     "parent_exe": "C:\\Windows\\explorer.exe"
+    }
+   ]
+  },
+  {
+   "id": "benign-browser-run-key",
+   "name": "Browser updater registering its autostart",
+   "description": "Negative control: browser updater registering its autostart. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "windows",
+   "benign": true,
+   "steps": [
+    {
+     "type": "registry",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+     "operation": "set",
+     "value_name": "GoogleChromeAutoLaunch",
+     "value_data": "\"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\" --no-startup-window"
+    }
+   ]
+  },
+  {
+   "id": "benign-onedrive-sync",
+   "name": "OneDrive autostart",
+   "description": "Negative control: onedrive autostart. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "windows",
+   "benign": true,
+   "steps": [
+    {
+     "type": "registry",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+     "operation": "set",
+     "value_name": "OneDrive",
+     "value_data": "\"C:\\Users\\ann\\AppData\\Local\\Microsoft\\OneDrive\\OneDrive.exe\" /background"
+    }
+   ]
+  },
+  {
+   "id": "benign-zoom-teams",
+   "name": "Video conferencing",
+   "description": "Negative control: video conferencing. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "windows",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Users\\ann\\AppData\\Roaming\\Zoom\\bin\\Zoom.exe",
+     "command": "Zoom.exe",
+     "parent_exe": "C:\\Windows\\explorer.exe"
+    },
+    {
+     "type": "network",
+     "destination": "zoom.us:443"
+    }
+   ]
+  },
+  {
+   "id": "benign-mac-brew",
+   "name": "Homebrew install",
+   "description": "Negative control: homebrew install. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "macos",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/opt/homebrew/bin/brew",
+     "command": "brew install wget",
+     "parent_exe": "/bin/zsh"
+    },
+    {
+     "type": "network",
+     "destination": "github.com:443"
+    }
+   ]
+  },
+  {
+   "id": "benign-mac-xcode",
+   "name": "Xcode build",
+   "description": "Negative control: xcode build. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "macos",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/xcodebuild",
+     "command": "xcodebuild -scheme App build",
+     "parent_exe": "/bin/zsh"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/clang",
+     "command": "clang -c main.m",
+     "parent_exe": "/usr/bin/xcodebuild"
+    }
+   ]
+  },
+  {
+   "id": "benign-mac-time-machine",
+   "name": "Time Machine backup",
+   "description": "Negative control: time machine backup. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "macos",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/System/Library/CoreServices/backupd",
+     "command": "backupd",
+     "parent_exe": "/sbin/launchd"
+    },
+    {
+     "type": "file",
+     "path": "/Volumes/Backup/Backups.backupdb/mac/latest",
+     "operation": "modify"
+    }
+   ]
+  },
+  {
+   "id": "benign-mac-open-safari",
+   "name": "User opening a page",
+   "description": "Negative control: user opening a page. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "macos",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/open",
+     "command": "open -a Safari https://example.com",
+     "parent_exe": "/bin/zsh"
+    },
+    {
+     "type": "network",
+     "destination": "example.com:443"
+    }
+   ]
+  },
+  {
+   "id": "benign-dns-normal",
+   "name": "Ordinary DNS lookups",
+   "description": "Negative control: ordinary dns lookups. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "dns",
+     "query": "github.com",
+     "qtype": "A"
+    },
+    {
+     "type": "dns",
+     "query": "api.example.com",
+     "qtype": "A"
+    },
+    {
+     "type": "dns",
+     "query": "mirror.ubuntu.com",
+     "qtype": "A"
+    },
+    {
+     "type": "dns",
+     "query": "registry.npmjs.org",
+     "qtype": "A"
+    }
+   ]
+  },
+  {
+   "id": "benign-auth-normal",
+   "name": "Normal logins",
+   "description": "Negative control: normal logins. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "auth",
+     "user": "ann",
+     "source_ip": "10.0.0.8",
+     "method": "ssh",
+     "outcome": "success"
+    },
+    {
+     "type": "auth",
+     "user": "bob",
+     "source_ip": "10.0.0.9",
+     "method": "console",
+     "outcome": "success"
+    }
+   ]
+  }
+ ]
+}
