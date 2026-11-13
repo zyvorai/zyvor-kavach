@@ -495,6 +495,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	RegisterStream(mux, token, store)
 	RegisterRiskTrends(mux, token, store)
 	RegisterFleetHealth(mux, token, store, registry)
+	RegisterContentVersionsAndBlindspots(mux, token, store)
 	RegisterPrevalenceGraph(mux, token, store)
 	RegisterProvenance(mux, token, store)
 	RegisterIntelFeeds(mux, token, store)
