@@ -41,6 +41,9 @@ func run(args []string) error {
 		return nil
 	}
 	ensureConfig()
+	if handled, err := nxDispatch(args, os.Stdout); handled {
+		return err
+	}
 	if handled, err := ccDispatch(args, os.Stdout); handled {
 		return err
 	}
