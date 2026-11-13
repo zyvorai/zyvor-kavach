@@ -85,6 +85,8 @@ func printHelp(w io.Writer) {
 	row("watchlists", "Entity watchlists")
 	row("ioc|ioa|exclusions|rules", "Detection content")
 	row("search QUERY [--type T,...] [--limit N]", "Search findings, hosts, rules, CVEs, IOCs, cases")
+	row("inspect file|script|cmdline|domain|reports|analyzers", "Static artifact inspector (file max 32 MiB; never executed)")
+	row("ml status|lineage|similar|baseline|beacons|synthesize|priority|reset|replay", "Local ML models (reset/replay need --yes)")
 	row("overwatch", "OverWatch alerts")
 	row("dns threats", "DNS security threats")
 

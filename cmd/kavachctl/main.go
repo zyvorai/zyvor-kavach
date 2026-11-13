@@ -68,6 +68,12 @@ func run(args []string) error {
 	if handled, err := advDispatch(args, os.Stdout); handled {
 		return err
 	}
+	if handled, err := inspectDispatch(args, os.Stdout); handled {
+		return err
+	}
+	if handled, err := mlDispatch(args, os.Stdout); handled {
+		return err
+	}
 
 	switch args[0] {
 	case "status":
