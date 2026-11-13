@@ -1296,6 +1296,15 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 .md-pane .nx-filters label { display: inline-flex; align-items: center; gap: 6px; min-height: var(--hit-min); }
 .md-method { margin: 0 0 12px; }
 
+/* === regulatory clocks page === */
+.rg-fields { border: 1px solid var(--hairline-1); border-radius: var(--radius-md); margin: 0 0 12px; padding: 8px 12px; min-width: 0; }
+.rg-opt { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; min-height: var(--hit-min); overflow-wrap: anywhere; }
+.rg-opt input { margin-top: 5px; flex: none; }
+.rg-opt small { display: block; color: var(--text-secondary); }
+.rg-stage { margin: 0 0 10px; }
+.rg-overdue td { color: var(--danger); }
+.rg-text-only { color: var(--text-secondary); font-style: italic; }
+
 /* Global search */
 .gs-bar { display: flex; gap: 8px; flex-wrap: wrap; }
 .gs-bar .input-field { flex: 1 1 260px; min-width: 0; }
@@ -1397,6 +1406,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
             <button type="button" data-page="rulehealth" role="menuitem">Rule health</button>
             <button type="button" data-page="export" role="menuitem">Export</button>
             <button type="button" data-page="search" role="menuitem">Search</button>
+            <button type="button" data-page="regulatory" role="menuitem">Regulatory clocks</button>
             <button type="button" data-page="models" role="menuitem">Models</button>
             <button type="button" data-page="inspector" role="menuitem">Inspector</button>
           </div>
@@ -3346,6 +3356,44 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     </section>
     <!-- === end models page === -->
 
+    <!-- === regulatory clocks page === -->
+    <section id="page-regulatory" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Regulatory clocks</p>
+        <h1>Know which reporting deadlines may apply.</h1>
+        <p class="lede">Breach notification regimes, the ones you select, and how much time each open high or critical finding has left. Read only: Kavach never files anything.</p>
+      </header>
+      <p class="nx-note nx-warn" id="rg-disclaimer" role="note">Informational, not legal advice; Kavach does not file reports. Clocks start at first detection as a proxy, while real regimes often start at awareness, classification or a materiality decision. Verify every rule with the regulator or counsel. (Waiting for the server's own disclaimer.)</p>
+      <p class="work-msg" id="rg-msg" role="status"></p>
+
+      <div class="work-panel">
+        <h3>Your regimes</h3>
+        <p class="hint">Choose the regimes you believe apply to you. Kavach cannot decide that for you. Saving needs an administrator or an active signed-in session.</p>
+        <fieldset class="rg-fields" id="rg-profile" aria-describedby="rg-profile-hint"><legend class="hint" id="rg-profile-hint">Applicable regimes</legend><div id="rg-profile-list"></div></fieldset>
+        <div class="px-actions"><button type="button" class="primary" id="rg-save">Save selection</button><span class="hint" id="rg-profile-meta"></span></div>
+        <div class="nx-note nx-warn" id="rg-confirm" hidden role="alertdialog" aria-labelledby="rg-confirm-text">
+          <p id="rg-confirm-text"></p>
+          <div class="px-actions"><button type="button" id="rg-confirm-yes">Save selection</button><button type="button" class="secondary" id="rg-confirm-no">Cancel</button></div>
+        </div>
+      </div>
+
+      <div class="nx-tabs" role="tablist" aria-label="Regulatory sections" id="rg-tabs">
+        <button type="button" role="tab" data-rg-tab="clocks" aria-selected="true">Clocks</button>
+        <button type="button" role="tab" data-rg-tab="regimes" aria-selected="false">Regimes</button>
+      </div>
+
+      <div id="rg-pane-clocks" class="rg-pane">
+        <div class="px-actions"><button type="button" class="secondary" id="rg-clocks-refresh">Refresh</button><span class="hint" id="rg-clocks-meta"></span></div>
+        <div id="rg-clocks-out"></div>
+      </div>
+      <div id="rg-pane-regimes" class="rg-pane" hidden>
+        <div class="table-wrap nx-scroll">
+          <table><thead><tr><th>Regime</th><th>Jurisdiction</th><th>Regulator</th><th>Status</th><th>Stages</th><th>Applies to</th><th>Source</th></tr></thead><tbody id="rg-regime-rows"></tbody></table>
+        </div>
+      </div>
+    </section>
+    <!-- === end regulatory clocks page === -->
+
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
@@ -3416,8 +3464,8 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -3540,7 +3588,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -3593,6 +3641,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     if (current === 'rulehealth' && typeof loadRuleHealth === 'function') loadRuleHealth();
     if (current === 'export' && typeof loadExportPage === 'function') loadExportPage();
     if (current === 'search' && typeof loadSearchPage === 'function') loadSearchPage();
+    if (current === 'regulatory' && typeof loadRegulatory === 'function') loadRegulatory();
     if (current === 'models' && typeof loadModels === 'function') loadModels();
     if (current === 'inspector' && typeof loadInspector === 'function') loadInspector();
   }
@@ -6312,8 +6361,149 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
   });
   /* === end models page === */
 
+  /* === regulatory clocks page === */
+  const rg = { regimes: [], saved: [], tab: 'clocks', gen: 0, genAt: 0 };
+  function rgBadge(r) { return uiTag(r.verified ? 'VERIFIED' : 'UNVERIFIED', r.verified ? 'verified' : 'unverified'); }
+  function rgStageText(s) {
+    const t = s.hours ? s.hours + ' h' : (s.business_days ? s.business_days + ' business days' : 'no fixed duration');
+    return s.name + ': ' + t + (s.from_start ? ' from the start event' : '') + ' - ' + s.description;
+  }
+  function rgLink(url) {
+    if (!/^https:\/\//.test(String(url || ''))) return el('span', url ? 'Invalid link: ' + url : '-');
+    const a = el('a', url, 'ev-link');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    return a;
+  }
+  function rgDisclaimer(t) { if (t) $('rg-disclaimer').textContent = t; }
+  function rgRenderProfile() {
+    const box = $('rg-profile-list');
+    box.replaceChildren();
+    if (!rg.regimes.length) { box.appendChild(el('p', 'No regimes are available to choose from.', 'hint')); return; }
+    rg.regimes.forEach((r) => {
+      const lab = el('label', '', 'rg-opt');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = r.id;
+      cb.checked = rg.saved.includes(r.id);
+      lab.appendChild(cb);
+      const t = document.createElement('span');
+      t.appendChild(el('span', r.jurisdiction + ': ' + r.name + ' '));
+      t.appendChild(rgBadge(r));
+      t.appendChild(el('small', r.regulator));
+      lab.appendChild(t);
+      box.appendChild(lab);
+    });
+  }
+  function rgChosen() { return Array.from($('rg-profile-list').querySelectorAll('input:checked')).map((c) => c.value); }
+  function rgRenderRegimes() {
+    pxFill('rg-regime-rows', 7, rg.regimes, 'No regimes', 'The regime catalog is empty.', (tb, r) => {
+      const stages = el('div');
+      uiList(stages, r.stages.map(rgStageText));
+      const note = r.verified ? 'Last verified ' + r.last_verified : 'Not verified against an official source. ' + (r.notes || '');
+      tableRow(tb, [el('span', r.name + ' (' + r.id + ')'), r.jurisdiction, r.regulator, (() => { const d = el('div'); d.appendChild(rgBadge(r)); d.appendChild(el('p', note, 'hint')); return d; })(), stages, r.applies_to + ' Start event: ' + r.start_event + '.', rgLink(r.source_url)]);
+    });
+  }
+  async function rgLoadStatic() {
+    skeletonRows($('rg-regime-rows'), 7, 3);
+    $('rg-profile-list').replaceChildren(el('p', 'Loading regimes…', 'hint'));
+    try {
+      const [rs, pr] = await Promise.all([pgApi('/v1/regulatory/regimes'), pgApi('/v1/regulatory/profile')]);
+      rg.regimes = (rs && rs.regimes) || [];
+      rg.saved = (pr && pr.profile && pr.profile.regimes) || [];
+      rgDisclaimer(rs && rs.disclaimer);
+      const p = pr && pr.profile;
+      $('rg-profile-meta').textContent = p && p.updated_at && !String(p.updated_at).startsWith('0001') ? 'Last saved ' + fmtTime(p.updated_at) + ' by ' + (p.updated_by || 'unknown') + '.' : 'No selection has been saved yet.';
+      rgRenderProfile();
+      rgRenderRegimes();
+    } catch (e) {
+      $('rg-profile-list').replaceChildren();
+      uiError($('rg-profile-list'), 'regimes', e, rgLoadStatic);
+      pxFail('rg-regime-rows', 7, 'regimes', e);
+    }
+  }
+  function rgFmtRemaining(row) {
+    const live = row.remaining_seconds - Math.round((Date.now() - rg.genAt) / 1000);
+    return uiFmtSecs(live);
+  }
+  async function rgLoadClocks() {
+    const box = $('rg-clocks-out');
+    uiLoading(box, 'Computing clocks…');
+    try {
+      const r = await pgApi('/v1/regulatory/clocks');
+      rg.genAt = Date.now();
+      rgDisclaimer(r.disclaimer);
+      $('rg-clocks-meta').textContent = 'Computed ' + fmtTime(r.generated_at) + '. ' + (r.note || '');
+      box.removeAttribute('aria-busy');
+      box.replaceChildren();
+      const list = r.regimes || [];
+      if (!list.length) { uiEmpty(box, 'No regimes selected', 'Choose the regimes that apply to you above, then save. Clocks appear here for open high and critical findings.'); return; }
+      list.forEach((g) => {
+        const p = el('div', '', 'work-panel');
+        const head = el('div', '', 'ui-row');
+        head.appendChild(el('h3', g.name + ' (' + g.jurisdiction + ')'));
+        head.appendChild(rgBadge(g));
+        p.appendChild(head);
+        p.appendChild(el('p', g.start_proxy || '', 'hint'));
+        if (!g.verified) p.appendChild(el('p', 'UNVERIFIED: this regime has not been confirmed against an official source. ' + (g.notes || ''), 'nx-note nx-warn'));
+        else if (g.notes) p.appendChild(el('p', g.notes, 'hint'));
+        p.appendChild(rgLink(g.source_url));
+        (g.stages || []).forEach((s) => {
+          const sd = el('div', '', 'rg-stage');
+          sd.appendChild(el('h4', s.name + (s.hours ? ' - ' + s.hours + ' h' : (s.business_days ? ' - ' + s.business_days + ' business days' : ''))));
+          sd.appendChild(el('p', s.description, 'hint'));
+          if (!s.computable) {
+            sd.appendChild(el('p', 'Rule text only: this stage has no fixed duration Kavach can count down, so no clock is shown. Read the rule above.', 'rg-text-only'));
+          } else if (!(s.incidents || []).length) {
+            sd.appendChild(el('p', 'No open high or critical findings are running against this stage.', 'hint'));
+          } else {
+            const tb = uiTable(sd, ['Finding', 'Host', 'Rule', 'Severity', 'Status', 'First detected', 'Deadline', 'Time']);
+            s.incidents.forEach((i) => {
+              const tr = tableRow(tb, [i.finding_id, i.host, i.rule, uiTag(i.severity), i.status, fmtTime(i.first_detected), fmtTime(i.deadline), rgFmtRemaining(i)]);
+              if (i.overdue) tr.classList.add('rg-overdue');
+              tr.dataset.rem = String(i.remaining_seconds);
+            });
+          }
+          p.appendChild(sd);
+        });
+        box.appendChild(p);
+      });
+    } catch (e) { uiError(box, 'clocks', e, rgLoadClocks); }
+  }
+  function loadRegulatory() { rgLoadStatic().then(rgLoadClocks); }
+  const rgTabSel = uiTabs('rg-tabs', 'data-rg-tab', (t) => {
+    rg.tab = t;
+    $('rg-pane-clocks').hidden = t !== 'clocks';
+    $('rg-pane-regimes').hidden = t !== 'regimes';
+  });
+  $('rg-clocks-refresh').addEventListener('click', rgLoadClocks);
+  $('rg-save').addEventListener('click', () => {
+    const ids = rgChosen();
+    const names = ids.map((id) => { const r = rg.regimes.find((x) => x.id === id); return r ? r.name + (r.verified ? '' : ' [UNVERIFIED]') : id; });
+    const unv = ids.some((id) => { const r = rg.regimes.find((x) => x.id === id); return r && !r.verified; });
+    $('rg-confirm-text').textContent = (ids.length ? 'Set your regimes to: ' + names.join('; ') + '.' : 'Clear your regime selection so no clocks are shown.') + ' This is your own statement of which regimes apply; Kavach does not check it and does not file anything.' + (unv ? ' At least one selected regime is UNVERIFIED: confirm its rules with the regulator or counsel.' : '');
+    $('rg-confirm').hidden = false;
+    $('rg-confirm-no').focus();
+  });
+  $('rg-confirm-no').addEventListener('click', () => { $('rg-confirm').hidden = true; $('rg-save').focus(); });
+  $('rg-confirm-yes').addEventListener('click', async () => {
+    $('rg-confirm').hidden = true;
+    setMsg('rg-msg', 'Saving…', false);
+    try {
+      const r = await pgApi('/v1/regulatory/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ regimes: rgChosen() }) });
+      rg.saved = (r && r.profile && r.profile.regimes) || [];
+      rgDisclaimer(r && r.disclaimer);
+      setMsg('rg-msg', 'Selection saved.', false);
+      rgLoadStatic().then(rgLoadClocks);
+    } catch (e) { setMsg('rg-msg', 'Could not save: ' + e.message, true); }
+    $('rg-save').focus();
+  });
+  setInterval(() => { if (current === 'regulatory' && !document.hidden && appVisible()) document.querySelectorAll('#rg-clocks-out tr[data-rem]').forEach((tr) => { const rem = Number(tr.dataset.rem) - Math.round((Date.now() - rg.genAt) / 1000); tr.lastChild.textContent = uiFmtSecs(rem); tr.classList.toggle('rg-overdue', rem < 0); }); }, 30000);
+  /* === end regulatory clocks page === */
+
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '/': 'search' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '/': 'search' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
