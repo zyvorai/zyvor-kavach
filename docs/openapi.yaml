@@ -1741,6 +1741,28 @@ paths:
       summary: Refresh KEV/OSV feeds now (409 when KAVACH_VULN_FEED is unset)
       security: [{bearerAuth: []}]
       responses: {'200': {description: OK}, '409': {description: Feeds disabled}}
+  /v1/advisories:
+    get:
+      summary: Normalised worldwide CERT advisories from the opt-in feed cache (KAVACH_CERT_FEEDS); advisories whose CVEs match the local software inventory are flagged matched with the affected hosts. Empty when feeds are disabled
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: source, in: query, description: "Comma-separated feed ids", schema: {type: string, example: "cisa,cert-eu"}}
+        - {name: cve, in: query, description: "Only advisories mentioning this CVE", schema: {type: string}}
+        - {name: since, in: query, description: "RFC 3339 or YYYY-MM-DD", schema: {type: string}}
+        - {name: q, in: query, description: "Substring in title, id or CVEs", schema: {type: string}}
+        - {name: matched, in: query, description: "true = only inventory-matched advisories", schema: {type: boolean}}
+        - {name: limit, in: query, description: "Default 100, max 500", schema: {type: integer}}
+      responses: {'200': {description: "{count, total, enabled_feeds, last_refresh, feed_errors, note, advisories[{source,id,title,published,url,cves[],severity,matched,matched_cves,matched_hosts}]}"}, '400': {description: Bad cve, since or limit}, '401': {description: Unauthorized}}
+  /v1/advisories/feeds/status:
+    get:
+      summary: CERT advisory feed status (enabled and available feed ids, per-feed counts, last refresh, errors)
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}, '401': {description: Unauthorized}}
+  /v1/advisories/feeds/refresh:
+    post:
+      summary: Refresh CERT advisory feeds now (409 when KAVACH_CERT_FEEDS is unset). Plain GETs to allowlisted hosts only; no host or inventory data is sent
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: OK}, '401': {description: Unauthorized}, '409': {description: Feeds disabled}}
   /v1/vulns/software:
     get:
       summary: Vulnerability management software

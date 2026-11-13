@@ -7,6 +7,7 @@ All files sit next to the findings store path (`<store>` below), are written ato
 | `<store>.intel.json` | Threat-intel feed definitions, last-sync status, ETags, indicator expiries and the feed-sourced indicators (older files with a bare feed array still load) |
 | `<store>.tuning.json` | Tuning history (applied and reverted exclusions are re-derived from it at startup) and digest definitions with schedule state |
 | `<store>.alerts.json` | Alert rules (deliveries are in-memory and de-duplicated per finding) |
+| `<store>.certfeeds.json` | Cache of the opt-in worldwide CERT advisory feeds (`KAVACH_CERT_FEEDS`): up to 300 normalised advisories and the last fetch time per feed. Served from cache; a feed that fails keeps its previous items. See `docs/cert-feeds.md` |
 | `<store>.workspace.json` | Saved searches, notes and the hash-chained analyst journal (alert-rule changes are journaled here) |
 | `<store>.regulatory.json` | Regulatory profile: the regime ids the operator selected as applicable (`PUT /v1/regulatory/profile`), with update time and actor. Ids are validated against the embedded catalog on write; see `docs/regional-reporting.md` |
 | `<store>.deception.json` | Deception canaries and trips |

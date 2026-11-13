@@ -104,6 +104,7 @@ func printHelp(w io.Writer) {
 	section("Identity / vulns / cases / hunts")
 	row("identity summary|indicators|risk|privileged|timeline USER", "ITDR")
 	row("vulns software|advisories|findings|exposure|top; sbom HOST", "Vulnerability management")
+	row("advisories list|status|refresh", "Worldwide CERT advisory feeds (opt-in, KAVACH_CERT_FEEDS)")
 	row("incidents correlated; case list|show|create|update|comment|close|export", "Incidents and cases")
 	row("hunt packs|run|run-all|schedules|schedule-add|schedule-rm|history|devices", "Hunt packs")
 	row("ransomware risk|host H; containers risk; lateral", "Ransomware / lateral")
