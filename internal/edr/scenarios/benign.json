@@ -721,6 +721,154 @@
      "outcome": "success"
     }
    ]
+  },
+  {
+   "id": "benign-three-failed-ssh-then-success",
+   "name": "User mistypes their password three times",
+   "description": "Negative control: user mistypes their password three times. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "auth",
+     "user": "ann",
+     "source_ip": "10.0.0.8",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "ann",
+     "source_ip": "10.0.0.8",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "ann",
+     "source_ip": "10.0.0.8",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "ann",
+     "source_ip": "10.0.0.8",
+     "method": "ssh",
+     "outcome": "success"
+    }
+   ]
+  },
+  {
+   "id": "benign-ops-cloud-and-k8s-listing",
+   "name": "Operator lists cloud and cluster resources",
+   "description": "Negative control: operator lists cloud and cluster resources. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/aws",
+     "command": "aws sts get-caller-identity",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/kubectl",
+     "command": "kubectl get pods -n payments",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/docker",
+     "command": "docker ps -a",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-maintenance-and-staging",
+   "name": "Admin scheduled shutdown and a normal backup copy",
+   "description": "Negative control: admin scheduled shutdown and a normal backup copy. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/sbin/shutdown",
+     "command": "shutdown -h +30 'maintenance'",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    },
+    {
+     "type": "process",
+     "executable": "/bin/cp",
+     "command": "cp -r /var/lib/app/data /srv/backups/2026-11-13",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/bin/mkdir",
+     "command": "mkdir -p /tmp/build/cache",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-powershell-local-admin",
+   "name": "Windows admin local PowerShell work",
+   "description": "Negative control: windows admin local powershell work. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "windows",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+     "command": "powershell Get-Service WinDefend",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+     "command": "powershell Invoke-Command -ScriptBlock { hostname }",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\wscript.exe",
+     "command": "wscript.exe C:\\Scripts\\logon.vbs",
+     "parent_exe": "C:\\Windows\\explorer.exe"
+    }
+   ]
+  },
+  {
+   "id": "benign-dns-normal-lookups",
+   "name": "Ordinary DNS lookups",
+   "description": "Negative control: ordinary dns lookups. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "dns",
+     "query": "www.example.com",
+     "qtype": "A"
+    },
+    {
+     "type": "dns",
+     "query": "mail.example.com",
+     "qtype": "TXT"
+    },
+    {
+     "type": "dns",
+     "query": "cdn-static.top",
+     "qtype": "A"
+    }
+   ]
   }
  ]
 }

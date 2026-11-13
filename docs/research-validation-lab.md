@@ -116,8 +116,8 @@ beyond the snippets above.
   `GET /v1/validate/scenarios/{id}`, `POST /v1/validate/run {ids|all, include_custom?}`,
   `GET /v1/validate/coverage`.
 * **Regression gate** (`TestValDetectedRateFloor`): the share of non-benign scenarios whose
-  expectations are all Detected must stay at or above `valDetectedFloor` (0.60; measured 0.649 when
-  written), and benign false positives must stay at 0. Raise the floor as detection improves; lowering
+  expectations are all Detected must stay at or above `valDetectedFloor` (0.93; measured 0.947 after the gap-closure
+  pass, 0.649 originally), and benign false positives must stay at 0. Raise the floor as detection improves; lowering
   it needs a recorded reason here.
 
 ## 3. Results (measured on the shipped packs)
@@ -228,3 +228,26 @@ These came out of reading the code while building the lab. Nothing was changed.
   collector that supplies them must exist in the deployment.
 * Detected means a rule mapped to the technique fired, not that the mapping is right, and not that the
   alert was actionable. Benign controls are 33 everyday sequences, not a measure of production noise.
+
+## 6. Gap-closure pass (measured)
+
+Before: 95 Detected, 17 Partial, 26 Missed (scenario pass rate 64.9%). After: 139 Detected, 0 Partial,
+0 Missed, 11 Not-testable, 95 Untested (scenario pass rate 94.7% of 188 non-benign scenarios; 38
+benign controls fire nothing at medium or above). Floor raised from 0.60 to 0.93.
+
+* All 26 Missed and 17 Partial techniques are now Detected: 46 original rules in
+  `content/gaps.json` (batch `gaps-v1`, ids `gap-*`, positive and negative samples each) plus one
+  built-in detector, `auth_burst.go` (T1110 and T1110.003: 8 failures or 5 distinct accounts from one
+  source in 60s, 5 minute cooldown, fed from `IngestTelemetry`; the lab replays it with a fresh
+  per-scenario instance). No technique was declared not detectable: each has some telemetry hook.
+* Honest caveat: the original scenario for each technique was one variant, and the new rules were
+  written after seeing it. To measure that the rules are not tied to one sample, 17 second-variant
+  scenarios (`emu-*-variant`, differently worded) and 5 benign controls were added; all variants
+  pass. This is still synthetic data written by the same author.
+* Weak spots that remain by design: T1498 only sees flood tooling by name (no flow volume), T1491.001
+  only sees the cached wallpaper file (file events carry no writer), T1564.001, T1568.002, T1102.001
+  and T1048.003 are string heuristics on the DNS or command line, and rate or volume signals are not
+  available. Low-severity `noisy-risk` rules (clipboard, share and cloud enumeration, shutdown,
+  container exec, systeminfo, VM fingerprint, wallpaper, hidden tmp dirs, DGA-like names, paste-site TXT,
+  WinRM remoting, LaunchAgent create) are informational and are expected to fire on
+  healthy systems.

