@@ -1143,6 +1143,15 @@ footer {
 #cl-tabs { flex-wrap: wrap; }
 #cl-tabs [aria-selected="true"] { background: var(--apple-blue); color: #fff; }
 .cl-pane pre.px-pre { max-height: 320px; overflow: auto; }
+.nx-filters { flex-wrap: wrap; gap: 8px; }
+.nx-filters .select-field, .nx-filters .input-field { flex: 1 1 140px; min-width: 0; }
+.nx-note { margin: 8px 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--fill-tertiary); color: var(--text-secondary); font-size: 14px; }
+.nx-warn { border-color: var(--warning-text); color: var(--warning-text); background: var(--warning-bg); }
+.nx-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 6px 0; font-size: 14px; color: var(--text-secondary); }
+.nx-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.nx-tabs [aria-selected="true"] { background: var(--apple-blue); color: #fff; }
+.nx-scroll { overflow: auto; max-height: 420px; }
+.nx-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; overflow-wrap: anywhere; }
 @media (max-width: 640px) {
   .apple-metric-band { grid-template-columns: 1fr; }
   .chapter { grid-template-columns: 1fr; align-items: start; }
@@ -1348,6 +1357,9 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
             <button type="button" data-page="huntpacks" role="menuitem">Hunt packs</button>
             <button type="button" data-page="ransomware" role="menuitem">Ransomware</button>
             <button type="button" data-page="content" role="menuitem">Content library</button>
+            <button type="button" data-page="adversaries" role="menuitem">Adversaries</button>
+            <button type="button" data-page="rulehealth" role="menuitem">Rule health</button>
+            <button type="button" data-page="export" role="menuitem">Export</button>
             <button type="button" data-page="search" role="menuitem">Search</button>
           </div>
         </div>
@@ -3025,6 +3037,115 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     </section>
     <!-- === end content library page === -->
 
+    <!-- === adversaries page === -->
+    <section id="page-adversaries" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Adversaries</p>
+        <h1>Who uses which techniques, and what we can observe.</h1>
+        <p class="lede">Public threat-actor and ransomware profiles mapped to ATT&amp;CK techniques and to Kavach content. Read only.</p>
+      </header>
+      <p class="nx-note" id="adv-note">Attribution reflects public reporting and is not detection of the actor. Coverage means Kavach can observe the technique, not that the actor is present.</p>
+      <p class="work-msg" id="adv-msg" role="status"></p>
+      <div class="nx-tabs" role="tablist" aria-label="Adversary views" id="adv-tabs">
+        <button type="button" role="tab" data-adv-tab="list" aria-selected="true">Profiles</button>
+        <button type="button" role="tab" data-adv-tab="rank" aria-selected="false">Coverage ranking</button>
+      </div>
+      <div id="adv-pane-list">
+        <div class="toolbar-pill nx-filters">
+          <input class="input-field" id="adv-q" type="search" placeholder="Search name, alias, id" aria-label="Search adversaries" autocomplete="off">
+          <select class="select-field" id="adv-kind" aria-label="Kind"><option value="">All kinds</option><option value="nation-state">Nation-state</option><option value="cybercrime">Cybercrime</option><option value="ransomware">Ransomware</option></select>
+          <input class="input-field" id="adv-tech" type="text" placeholder="Technique, e.g. T1059.001" aria-label="Technique id" autocomplete="off" spellcheck="false">
+        </div>
+        <p class="hint" id="adv-count" role="status"></p>
+        <div class="table-wrap"><table><thead><tr><th>Actor</th><th>Kind</th><th>Origin</th><th>Confidence</th><th>Techniques</th></tr></thead><tbody id="adv-rows"></tbody></table></div>
+        <div class="work-panel" id="adv-detail" hidden tabindex="-1">
+          <h3 id="adv-d-title"></h3>
+          <div class="nx-meta" id="adv-d-meta"></div>
+          <p class="hint" id="adv-d-aliases"></p>
+          <p class="hint" id="adv-d-targets"></p>
+          <h4>Sources</h4>
+          <ul id="adv-d-sources"></ul>
+          <h4>Technique coverage</h4>
+          <p class="hint" id="adv-d-sum"></p>
+          <div class="table-wrap"><table><thead><tr><th>Technique</th><th>Status</th><th>Rules</th><th>Observed hits</th></tr></thead><tbody id="adv-d-tech"></tbody></table></div>
+        </div>
+      </div>
+      <div id="adv-pane-rank" hidden>
+        <div class="px-actions"><label for="adv-rank-by">Rank by</label>
+          <select class="select-field" id="adv-rank-by"><option value="by_coverage">Kavach coverage</option><option value="by_observed_hits">Observed ATT&amp;CK hits</option></select></div>
+        <div class="table-wrap"><table><thead><tr><th>Actor</th><th>Kind</th><th>Coverage</th><th>Exact</th><th>Related</th><th>Gaps</th><th>Observed hits</th></tr></thead><tbody id="adv-rank-rows"></tbody></table></div>
+      </div>
+    </section>
+    <!-- === end adversaries page === -->
+
+    <!-- === rule health page === -->
+    <section id="page-rulehealth" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Rule health</p>
+        <h1>Which rules fire, which are noisy, which are silent.</h1>
+        <p class="lede">Computed from stored findings. Lifecycle state affects reporting and ordering only.</p>
+      </header>
+      <p class="work-msg" id="rh-msg" role="status"></p>
+      <div class="toolbar-pill nx-filters">
+        <input class="input-field" id="rh-q" type="search" placeholder="Search rule id or name" aria-label="Search rules" autocomplete="off">
+        <select class="select-field" id="rh-state" aria-label="Lifecycle state"><option value="">All states</option><option value="production">Production</option><option value="testing">Testing</option><option value="draft">Draft</option><option value="retired">Retired</option></select>
+        <select class="select-field" id="rh-source" aria-label="Source"><option value="">All sources</option><option value="custom">Custom</option><option value="embedded">Embedded</option><option value="builtin">Built-in</option></select>
+        <select class="select-field" id="rh-flag" aria-label="Flag"><option value="">All rules</option><option value="silent">Silent only</option><option value="noisy">Noisy only</option></select>
+        <select class="select-field" id="rh-sort" aria-label="Sort by"><option value="noisy_score">Sort: noisy score</option><option value="hits_24h">Sort: hits 24h</option><option value="hits_7d">Sort: hits 7d</option><option value="hits_30d">Sort: hits 30d</option><option value="distinct_hosts_30d">Sort: hosts</option><option value="shadow_hits">Sort: shadow hits</option><option value="rule">Sort: rule id</option></select>
+      </div>
+      <p class="hint" id="rh-count" role="status"></p>
+      <div class="table-wrap"><table><thead><tr><th>Rule</th><th>State</th><th>24h</th><th>7d</th><th>30d</th><th>Hosts</th><th>Trend</th><th>Noisy</th><th>Silent</th><th>Shadow</th></tr></thead><tbody id="rh-rows"></tbody></table></div>
+      <div class="work-panel" id="rh-detail" hidden tabindex="-1">
+        <h3 id="rh-d-title"></h3>
+        <div class="nx-meta" id="rh-d-meta"></div>
+        <h4>Change history</h4>
+        <p class="hint" id="rh-d-chain" role="status"></p>
+        <div class="table-wrap nx-scroll"><table><thead><tr><th>Seq</th><th>Time</th><th>Actor</th><th>Action</th><th>Detail</th></tr></thead><tbody id="rh-d-hist"></tbody></table></div>
+        <h4>Lifecycle</h4>
+        <p class="hint">Administrator action; the server rejects it otherwise. Testing means shadow mode: hits are kept as shadow findings and left out of the main findings list. Kavach stays observation-only in every state.</p>
+        <div class="px-actions">
+          <label for="rh-new-state">New state</label>
+          <select class="select-field" id="rh-new-state"><option value="draft">Draft</option><option value="testing">Testing (shadow mode)</option><option value="production">Production</option><option value="retired">Retired</option></select>
+          <input class="input-field" id="rh-new-note" type="text" maxlength="500" placeholder="Note (optional)" aria-label="Lifecycle note" autocomplete="off">
+          <button type="button" id="rh-apply">Change state</button>
+        </div>
+        <div class="nx-note nx-warn" id="rh-confirm" hidden role="alertdialog" aria-labelledby="rh-confirm-text">
+          <p id="rh-confirm-text"></p>
+          <div class="px-actions"><button type="button" id="rh-confirm-yes">Confirm change</button><button type="button" class="secondary" id="rh-confirm-no">Cancel</button></div>
+        </div>
+      </div>
+    </section>
+    <!-- === end rule health page === -->
+
+    <!-- === export page === -->
+    <section id="page-export" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Export</p>
+        <h1>Send what Kavach sees to your SIEM.</h1>
+        <p class="lede">Preview the first records, then download. Read only.</p>
+      </header>
+      <p class="nx-note nx-warn" id="ex-warn">Event exports skip data-governance redaction. Finding exports follow the active governance policy. Handle event exports as raw telemetry.</p>
+      <p class="work-msg" id="ex-msg" role="status"></p>
+      <div class="toolbar-pill nx-filters">
+        <select class="select-field" id="ex-format" aria-label="Format">
+          <option value="ocsf">OCSF</option><option value="ecs">ECS</option><option value="cef">CEF</option><option value="leef">LEEF</option><option value="splunk-hec">Splunk HEC</option><option value="stix">STIX 2.1 (IOCs)</option><option value="attack-layer">ATT&amp;CK Navigator layer</option>
+        </select>
+        <select class="select-field" id="ex-kind" aria-label="Record kind"><option value="findings">Findings</option><option value="events">Events (ungoverned)</option></select>
+        <select class="select-field" id="ex-sev" aria-label="Severity"><option value="">All severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option><option value="info">Info</option></select>
+        <input class="input-field" id="ex-host" type="text" placeholder="Host" aria-label="Host" autocomplete="off">
+        <input class="input-field" id="ex-rule" type="text" placeholder="Rule id" aria-label="Rule id" autocomplete="off">
+        <input class="input-field" id="ex-since" type="text" placeholder="Since, RFC 3339" aria-label="Since (RFC 3339)" autocomplete="off" spellcheck="false">
+        <input class="input-field" id="ex-limit" type="number" min="1" max="10000" value="1000" aria-label="Download limit">
+        <input class="input-field" id="ex-cursor" type="text" placeholder="Cursor (resume after)" aria-label="Cursor" autocomplete="off" spellcheck="false">
+      </div>
+      <p class="hint" id="ex-scope">Filters, kind, limit and cursor apply to the SIEM record formats. STIX and the Navigator layer export everything and ignore them.</p>
+      <div class="px-actions"><button type="button" id="ex-preview">Preview first 5</button><button type="button" class="secondary" id="ex-download">Download</button><button type="button" class="secondary" id="ex-usecur" disabled>Use next cursor</button></div>
+      <div class="nx-meta" id="ex-hdrs" role="status"></div>
+      <p class="hint" id="ex-poll">Polling: send the X-Kavach-Next-Cursor value back as the cursor parameter to get only newer records. A response with a count of 0 returns the same cursor.</p>
+      <pre class="px-pre nx-scroll" id="ex-out" tabindex="0" aria-label="Export preview"></pre>
+    </section>
+    <!-- === end export page === -->
+
     <!-- === global search page === -->
     <section id="page-search" class="page" hidden>
       <header class="page-hero">
@@ -3111,8 +3232,8 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'search'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', search: 'Search' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -3235,7 +3356,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'search']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -3284,6 +3405,9 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     if (current === 'huntpacks' && typeof loadHuntPacks === 'function') loadHuntPacks();
     if (current === 'ransomware' && typeof loadRansomware === 'function') loadRansomware();
     if (current === 'content' && typeof loadContent === 'function') loadContent();
+    if (current === 'adversaries' && typeof loadAdversaries === 'function') loadAdversaries();
+    if (current === 'rulehealth' && typeof loadRuleHealth === 'function') loadRuleHealth();
+    if (current === 'export' && typeof loadExportPage === 'function') loadExportPage();
     if (current === 'search' && typeof loadSearchPage === 'function') loadSearchPage();
   }
 
@@ -5426,7 +5550,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
   });
 
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', '/': 'search' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', '/': 'search' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
@@ -6433,6 +6557,203 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
   $('cl-gq').addEventListener('input', () => { clearTimeout(clTimer); clTimer = setTimeout(clGuidance, 250); });
   document.querySelectorAll('#cl-tabs [data-cl-tab]').forEach((b) => b.addEventListener('click', () => clTab(b.getAttribute('data-cl-tab'))));
   /* === end content library page === */
+
+  /* === adversaries / rule health / export pages === */
+  /* adversaries */
+  let advTimer = 0, advRank = null;
+  function advCovTag(st) { return el('span', st, 'tag ' + (st === 'exact' ? 'online' : st === 'related' ? 'pending' : 'failed')); }
+  async function loadAdversaries() {
+    setMsg('adv-msg', '', false);
+    listEmpty($('adv-rows'), 5, 'Loading', 'Fetching adversary profiles.', '', null);
+    const qs = new URLSearchParams();
+    const k = $('adv-kind').value, t = $('adv-tech').value.trim(), q = $('adv-q').value.trim();
+    if (k) qs.set('kind', k);
+    if (t) qs.set('technique', t);
+    if (q) qs.set('q', q);
+    try {
+      const r = await pgApi('/v1/adversaries' + (qs.toString() ? '?' + qs : ''));
+      if (r.note) $('adv-note').textContent = r.note;
+      $('adv-count').textContent = (r.count || 0) + (r.count === 1 ? ' adversary' : ' adversaries');
+      pxFill('adv-rows', 5, r.adversaries, 'No adversaries', 'No profile matches these filters.', (tb, x) =>
+        tableRow(tb, [x.name, x.kind, x.attributed_origin || '-', x.confidence, (x.techniques || []).length], { onClick: () => advOpen(x.id) }));
+    } catch (e) { $('adv-count').textContent = ''; pxFail('adv-rows', 5, 'adversaries', e); }
+  }
+  async function advOpen(id) {
+    const box = $('adv-detail'); box.hidden = false;
+    $('adv-d-title').textContent = 'Loading…';
+    try {
+      const r = await pgApi('/v1/adversaries/' + encodeURIComponent(id));
+      const p = r.profile || {}, c = r.coverage || {};
+      $('adv-d-title').textContent = p.name || id;
+      const m = $('adv-d-meta'); m.replaceChildren();
+      [['Kind', p.kind], ['Origin', p.attributed_origin || '-'], ['Motivation', p.motivation], ['Confidence', p.confidence]].forEach((kv) => m.appendChild(el('span', kv[0] + ': ' + kv[1])));
+      $('adv-d-aliases').textContent = 'Aliases: ' + rxJoin(p.aliases);
+      $('adv-d-targets').textContent = 'Targets: ' + (p.targets || '-');
+      const src = $('adv-d-sources'); src.replaceChildren();
+      (p.sources || []).forEach((s) => {
+        const li = document.createElement('li');
+        if (/^https:\/\//.test(s.url || '')) { const a = el('a', s.title, 'apple-text-link'); a.href = s.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; li.appendChild(a); }
+        else li.textContent = s.title;
+        src.appendChild(li);
+      });
+      $('adv-d-sum').textContent = (c.coverage_pct || 0) + '% covered (' + (c.exact || 0) + ' exact, ' + (c.related || 0) + ' related, ' + (c.gaps || []).length + ' gaps) of ' + (c.total || 0) + ' techniques; ' + (c.observed_hits || 0) + ' observed hits. Coverage is the ability to observe, not detection of this actor.';
+      pxFill('adv-d-tech', 4, c.techniques, 'No techniques', 'This profile lists no techniques.', (tb, x) => tableRow(tb, [x.technique, advCovTag(x.status), rxJoin(x.rules), x.hits]));
+      box.focus();
+    } catch (e) { $('adv-d-title').textContent = 'Could not load ' + id; setMsg('adv-msg', 'Could not load profile: ' + e.message, true); }
+  }
+  async function advLoadRank() {
+    listEmpty($('adv-rank-rows'), 7, 'Loading', 'Fetching coverage ranking.', '', null);
+    try {
+      if (!advRank) advRank = await pgApi('/v1/adversaries/coverage');
+      if (advRank.note) $('adv-note').textContent = advRank.note;
+      pxFill('adv-rank-rows', 7, advRank[$('adv-rank-by').value], 'No adversaries', 'No profiles are loaded.', (tb, x) =>
+        tableRow(tb, [x.name, x.kind, x.coverage_pct + '%', x.exact, x.related, (x.gaps || []).length, x.observed_hits], { onClick: () => { advTab('list'); advOpen(x.id); } }));
+    } catch (e) { advRank = null; pxFail('adv-rank-rows', 7, 'ranking', e); }
+  }
+  function advTab(name) {
+    document.querySelectorAll('#adv-tabs [data-adv-tab]').forEach((b) => b.setAttribute('aria-selected', b.getAttribute('data-adv-tab') === name ? 'true' : 'false'));
+    $('adv-pane-list').hidden = name !== 'list';
+    $('adv-pane-rank').hidden = name !== 'rank';
+    if (name === 'rank') advLoadRank();
+  }
+  document.querySelectorAll('#adv-tabs [data-adv-tab]').forEach((b) => b.addEventListener('click', () => advTab(b.getAttribute('data-adv-tab'))));
+  $('adv-kind').addEventListener('change', loadAdversaries);
+  ['adv-q', 'adv-tech'].forEach((id) => $(id).addEventListener('input', () => { clearTimeout(advTimer); advTimer = setTimeout(loadAdversaries, 300); }));
+  $('adv-rank-by').addEventListener('change', advLoadRank);
+
+  /* rule health */
+  let rhRows = [], rhOpen = '', rhPending = '', rhTotal = 0, rhThr = 0;
+  async function loadRuleHealth() {
+    setMsg('rh-msg', '', false);
+    listEmpty($('rh-rows'), 10, 'Loading', 'Computing rule health.', '', null);
+    const qs = new URLSearchParams({ limit: '200' });
+    if ($('rh-state').value) qs.set('state', $('rh-state').value);
+    if ($('rh-source').value) qs.set('source', $('rh-source').value);
+    if ($('rh-flag').value === 'silent') qs.set('silent', '1');
+    if ($('rh-flag').value === 'noisy') qs.set('noisy', '1');
+    try {
+      const r = await pgApi('/v1/rules/health?' + qs);
+      rhRows = r.rules || [];
+      rhTotal = r.count || 0; rhThr = r.noisy_threshold || 0;
+      rhRender();
+    } catch (e) { $('rh-count').textContent = ''; pxFail('rh-rows', 10, 'rule health', e); }
+  }
+  function rhRender() {
+    const q = $('rh-q').value.trim().toLowerCase(), key = $('rh-sort').value;
+    const list = rhRows.filter((x) => !q || (x.rule + ' ' + (x.name || '')).toLowerCase().includes(q));
+    list.sort((a, b) => key === 'rule' ? a.rule.localeCompare(b.rule) : (b[key] || 0) - (a[key] || 0));
+    $('rh-count').textContent = list.length + ' shown of ' + rhTotal + ' rules' + (rhThr ? '. Noisy at score ' + rhThr + ' or higher.' : '');
+    pxFill('rh-rows', 10, list, 'No rules', 'No rule matches these filters.', (tb, x) =>
+      tableRow(tb, [x.name ? x.rule + ' (' + x.name + ')' : x.rule, el('span', x.state, 'tag ' + (x.state === 'production' ? 'online' : x.state === 'retired' ? 'false_positive' : 'pending')), x.hits_24h, x.hits_7d, x.hits_30d, x.distinct_hosts_30d,
+        x.trend, x.noisy_score + (x.noisy ? ' (noisy)' : ''), x.silent ? 'Silent' : '-', x.shadow_hits], { onClick: () => rhShow(x.rule) }));
+  }
+  async function rhShow(id) {
+    rhOpen = id; $('rh-confirm').hidden = true;
+    const box = $('rh-detail'); box.hidden = false;
+    $('rh-d-title').textContent = id;
+    $('rh-d-chain').textContent = 'Loading history…';
+    listEmpty($('rh-d-hist'), 5, 'Loading', 'Fetching change history.', '', null);
+    const row = rhRows.find((x) => x.rule === id);
+    const m = $('rh-d-meta'); m.replaceChildren();
+    if (row) {
+      [['State', row.state], ['Source', row.source], ['Severity', row.severity || '-'], ['Last fired', pxTime(row.last_fired)], ['Shadow hits', row.shadow_hits]].forEach((kv) => m.appendChild(el('span', kv[0] + ': ' + kv[1])));
+      $('rh-new-state').value = row.state;
+    }
+    box.focus();
+    try {
+      const h = await pgApi('/v1/rules/history/' + encodeURIComponent(id));
+      $('rh-d-chain').textContent = h.chain_ok ? 'Hash chain verified (chain_ok: true).' : 'Hash chain broken at seq ' + h.broken_at_seq + ' (chain_ok: false). The history may have been altered.';
+      $('rh-d-chain').classList.toggle('is-error', !h.chain_ok);
+      pxFill('rh-d-hist', 5, (h.entries || []).slice().reverse(), 'No history', 'No changes are recorded for this rule.', (tb, x) => tableRow(tb, [x.seq, pxTime(x.time), x.actor, x.action, el('span', x.detail, 'nx-mono')]));
+    } catch (e) { $('rh-d-chain').textContent = ''; pxFail('rh-d-hist', 5, 'history', e); }
+  }
+  $('rh-apply').addEventListener('click', () => {
+    if (!rhOpen) return;
+    rhPending = $('rh-new-state').value;
+    const extra = rhPending === 'testing' ? ' Testing is shadow mode: hits are kept as shadow findings and hidden from the main list. Kavach remains observation-only.' : '';
+    $('rh-confirm-text').textContent = 'Change ' + rhOpen + ' to ' + rhPending + '?' + extra;
+    $('rh-confirm').hidden = false;
+    $('rh-confirm-yes').focus();
+  });
+  $('rh-confirm-no').addEventListener('click', () => { $('rh-confirm').hidden = true; $('rh-apply').focus(); });
+  $('rh-confirm-yes').addEventListener('click', async () => {
+    const id = rhOpen, state = rhPending;
+    $('rh-confirm').hidden = true;
+    setMsg('rh-msg', 'Saving…', false);
+    try {
+      await pgApi('/v1/rules/lifecycle/' + encodeURIComponent(id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ state, note: $('rh-new-note').value.trim() }) });
+      setMsg('rh-msg', id + ' is now ' + state + '.', false);
+      await loadRuleHealth();
+      rhShow(id);
+    } catch (e) { setMsg('rh-msg', 'Could not change lifecycle (administrator required): ' + e.message, true); }
+  });
+  ['rh-state', 'rh-source', 'rh-flag'].forEach((id) => $(id).addEventListener('change', loadRuleHealth));
+  $('rh-sort').addEventListener('change', rhRender);
+  $('rh-q').addEventListener('input', rhRender);
+
+  /* export */
+  let exNext = '';
+  function exSiem() { return !['stix', 'attack-layer'].includes($('ex-format').value); }
+  function exUrl(limit) {
+    const f = $('ex-format').value;
+    if (f === 'stix') return '/v1/export/iocs?format=stix';
+    if (f === 'attack-layer') return '/v1/export/attack-layer';
+    const qs = new URLSearchParams({ format: f, kind: $('ex-kind').value, limit: String(limit) });
+    [['severity', 'ex-sev'], ['host', 'ex-host'], ['rule', 'ex-rule'], ['since', 'ex-since'], ['cursor', 'ex-cursor']].forEach((p) => { const v = $(p[1]).value.trim(); if (v) qs.set(p[0], v); });
+    return '/v1/export/findings?' + qs;
+  }
+  function exSync() {
+    const siem = exSiem();
+    ['ex-kind', 'ex-sev', 'ex-host', 'ex-rule', 'ex-since', 'ex-limit', 'ex-cursor'].forEach((id) => { $(id).disabled = !siem; });
+    $('ex-warn').textContent = siem && $('ex-kind').value === 'events'
+      ? 'You selected raw events. Event exports skip data-governance redaction and may contain sensitive telemetry.'
+      : 'Event exports skip data-governance redaction. Finding exports follow the active governance policy. Handle event exports as raw telemetry.';
+  }
+  function loadExportPage() { exSync(); }
+  async function exFetch(limit) {
+    const res = await fetch(exUrl(limit), { credentials: 'same-origin' });
+    if (!res.ok) { let t = ''; try { t = (await res.text()).trim(); } catch (_) {} throw new Error(t && t.length < 300 ? t : 'HTTP ' + res.status); }
+    return { text: await res.text(), count: res.headers.get('X-Kavach-Count'), next: res.headers.get('X-Kavach-Next-Cursor'), ct: res.headers.get('content-type') || '' };
+  }
+  function exHeaders(r) {
+    const m = $('ex-hdrs'); m.replaceChildren();
+    if (!exSiem()) { m.appendChild(el('span', 'No cursor for this format.')); exNext = ''; $('ex-usecur').disabled = true; return; }
+    m.appendChild(el('span', 'X-Kavach-Count: ' + (r.count === null ? '-' : r.count)));
+    m.appendChild(el('span', 'X-Kavach-Next-Cursor: ' + (r.next || '(none)'), 'nx-mono'));
+    exNext = r.next || '';
+    $('ex-usecur').disabled = !exNext;
+  }
+  $('ex-preview').addEventListener('click', async () => {
+    setMsg('ex-msg', 'Loading preview…', false);
+    $('ex-out').textContent = '';
+    try {
+      const r = await exFetch(5);
+      const f = $('ex-format').value;
+      let out;
+      if (f === 'stix') { const b = JSON.parse(r.text); out = JSON.stringify(Object.assign({}, b, { objects: (b.objects || []).slice(0, 5) }), null, 2); }
+      else if (f === 'attack-layer') { const b = JSON.parse(r.text); out = JSON.stringify(Object.assign({}, b, { techniques: (b.techniques || []).slice(0, 5) }), null, 2); }
+      else out = r.text.split('\n').filter(Boolean).slice(0, 5).join('\n');
+      $('ex-out').textContent = out || 'No records match these filters.';
+      exHeaders(r);
+      setMsg('ex-msg', out ? 'Preview ready.' : 'No records.', false);
+    } catch (e) { setMsg('ex-msg', 'Could not preview: ' + e.message, true); }
+  });
+  $('ex-download').addEventListener('click', async () => {
+    const lim = parseInt($('ex-limit').value, 10);
+    if (exSiem() && !(lim >= 1 && lim <= 10000)) { setMsg('ex-msg', 'Limit must be 1 to 10000.', true); return; }
+    setMsg('ex-msg', 'Preparing download…', false);
+    try {
+      const r = await exFetch(lim || 1000);
+      const f = $('ex-format').value;
+      const ext = f === 'cef' || f === 'leef' ? 'log' : (exSiem() ? 'ndjson' : 'json');
+      rxSave('kavach-' + f + (exSiem() ? '-' + $('ex-kind').value : '') + '.' + ext, r.text, r.ct || 'text/plain');
+      exHeaders(r);
+      setMsg('ex-msg', 'Downloaded' + (r.count ? ' ' + r.count + ' records' : '') + '.', false);
+    } catch (e) { setMsg('ex-msg', 'Could not download: ' + e.message, true); }
+  });
+  $('ex-usecur').addEventListener('click', () => { if (exNext) { $('ex-cursor').value = exNext; setMsg('ex-msg', 'Cursor set. Preview or download to get newer records.', false); } });
+  ['ex-format', 'ex-kind'].forEach((id) => $(id).addEventListener('change', exSync));
+  /* === end adversaries / rule health / export pages === */
 
   const appVisible = () => !$('app').hidden;
   let lastFocus = null;
