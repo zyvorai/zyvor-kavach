@@ -2293,6 +2293,58 @@
    ]
   },
   {
+   "id": "emu-t1053-crontab-persist",
+   "name": "Crontab persistence",
+   "description": "Synthetic event sequence emulating T1053: install a cron job for persistence. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1053"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/crontab",
+     "command": "crontab /tmp/.jobs",
+     "parent_exe": "/bin/bash",
+     "uid": 1000
+    }
+   ],
+   "expect": [
+    "T1053"
+   ]
+  },
+  {
+   "id": "emu-t1059-python-inline-b64",
+   "name": "Interpreter inline base64 payload",
+   "description": "Synthetic event sequence emulating T1059: python executes an inline base64 payload. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1059"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/python3",
+     "command": "python3 -c exec(__import__('base64').b64decode('cHJpbnQoMSk='))",
+     "parent_exe": "/bin/bash",
+     "uid": 1000
+    }
+   ],
+   "expect": [
+    "T1059"
+   ]
+  },
+  {
    "id": "emu-t1222-002-chmod-777-etc",
    "name": "Loosen permissions broadly",
    "description": "Synthetic event sequence emulating T1222.002: loosen permissions broadly. Data only; nothing is executed.",

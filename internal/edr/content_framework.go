@@ -384,7 +384,15 @@ func mitreFor(rule string) (struct{ Tactic, Technique, ID string }, bool) {
 	if m, ok := ruleMITRE[rule]; ok {
 		return m, true
 	}
-	return contentMITRE(rule)
+	if a, ok := iocRuleAlias[rule]; ok {
+		if m, ok := ruleMITRE[a]; ok {
+			return m, true
+		}
+	}
+	if m, ok := contentMITRE(rule); ok {
+		return m, true
+	}
+	return ioaMITRE(rule)
 }
 
 // contentMITREAll lists live content rules for ATT&CK matrix coverage (pending rules are excluded:
