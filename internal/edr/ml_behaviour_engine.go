@@ -658,6 +658,7 @@ func (e *mlEngine) Shutdown(ctx context.Context) error {
 	case <-ctx.Done():
 		return ctx.Err()
 	}
+	e.poll() // learn events ingested since the last tick
 	e.op.Lock()
 	defer e.op.Unlock()
 	e.mu.Lock()
