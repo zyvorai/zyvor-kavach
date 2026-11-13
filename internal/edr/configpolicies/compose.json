@@ -1,0 +1,375 @@
+{
+ "area": "compose",
+ "policies": [
+  {
+   "id": "compose-privileged",
+   "title": "Service runs privileged",
+   "description": "Checks that privileged is not true.",
+   "rationale": "A privileged container has nearly the host's power.",
+   "severity": "critical",
+   "applies_to": {
+    "formats": [
+     "compose"
+    ]
+   },
+   "check": {
+    "key": "service.privileged",
+    "op": "not_equals",
+    "value": "true"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is unprivileged.",
+   "remediation": "Remove privileged and add specific capabilities.",
+   "references": [
+    "Compose file reference (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "services:\n  web:\n    image: app:1.0\n    privileged: true\n",
+   "negative": "services:\n  web:\n    image: app:1.0\n    privileged: false\n"
+  },
+  {
+   "id": "compose-runtime-socket",
+   "title": "Service mounts the Docker socket",
+   "description": "Checks that no volume maps a container runtime socket.",
+   "rationale": "Access to the socket is root on the host.",
+   "severity": "critical",
+   "applies_to": {
+    "formats": [
+     "compose"
+    ]
+   },
+   "check": {
+    "key_regex": "^service\\.volumes\\[\\](\\.source)?$",
+    "op": "not_regex",
+    "value": "(docker|containerd|podman)\\.sock"
+   },
+   "on_absent": "pass",
+   "absence_note": "No volumes.",
+   "remediation": "Use a socket proxy with a narrow API allow-list if truly needed.",
+   "references": [
+    "Compose file reference (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "services:\n  web:\n    image: app:1.0\n    volumes:\n      - /var/run/docker.sock:/var/run/docker.sock\n",
+   "negative": "services:\n  web:\n    image: app:1.0\n    volumes:\n      - data:/data\n"
+  },
+  {
+   "id": "compose-host-network",
+   "title": "Service uses the host network",
+   "description": "Checks that network_mode is not host.",
+   "rationale": "The container shares the host's network stack.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "compose"
+    ]
+   },
+   "check": {
+    "key": "service.network_mode",
+    "op": "not_equals",
+    "value": "host"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is the project network.",
+   "remediation": "Use published ports on a bridge network.",
+   "references": [
+    "Compose file reference (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "services:\n  web:\n    image: app:1.0\n    network_mode: host\n",
+   "negative": "services:\n  web:\n    image: app:1.0\n    network_mode: bridge\n"
+  },
+  {
+   "id": "compose-host-namespaces",
+   "title": "Service shares a host namespace",
+   "description": "Checks that pid, ipc, uts and userns_mode are not host.",
+   "rationale": "Sharing namespaces removes isolation from host processes or memory.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "compose"
+    ]
+   },
+   "check": {
+    "key_regex": "^service\\.(pid|ipc|uts|userns_mode)$",
+    "op": "not_equals",
+    "value": "host"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is isolated.",
+   "remediation": "Remove the setting.",
+   "references": [
+    "Compose file reference (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "services:\n  web:\n    image: app:1.0\n    pid: host\n",
+   "negative": "services:\n  web:\n    image: app:1.0\n    pid: service:other\n"
+  },
+  {
+   "id": "compose-cap-add",
+   "title": "Service adds a powerful capability",
+   "description": "Checks that cap_add does not include ALL or near-root capabilities.",
+   "rationale": "These capabilities enable host-level actions.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "compose"
+    ]
+   },
+   "check": {
+    "key": "service.cap_add[]",
+    "op": "not_regex",
+    "value": "(?i)^(CAP_)?(ALL|SYS_ADMIN|NET_ADMIN|SYS_PTRACE|SYS_MODULE|DAC_READ_SEARCH|SYS_RAWIO|SYS_BOOT|BPF)$"
+   },
+   "on_absent": "pass",
+   "absence_note": "No added capabilities.",
+   "remediation": "Add only the minimum.",
+   "references": [
+    "Compose file reference (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "services:\n  web:\n    image: app:1.0\n    cap_add:\n      - SYS_ADMIN\n",
+   "negative": "services:\n  web:\n    image: app:1.0\n    cap_add:\n      - NET_BIND_SERVICE\n"
+  },
+  {
+   "id": "compose-cap-drop",
+   "title": "Service does not drop capabilities",
+   "description": "Checks that cap_drop includes ALL.",
+   "rationale": "Fewer capabilities, smaller escape surface.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "compose"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "key": "service.cap_drop[]",
+      "op": "regex",
+      "value": "(?i)^(CAP_)?ALL$",
+      "occ": "any"
+     },
+     {
+      "key": "service.unset.cap_drop[]",
+      "op": "absent"
+     }
+    ]
+   },
+   "on_absent": "evaluate",
+   "absence_note": "Without cap_drop the default capability set is kept: treated as a failure.",
+   "remediation": "Use cap_drop: [ALL] and add back what is required.",
+   "references": [
+    "Compose file reference (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "services:\n  web:\n    image: app:1.0\n    restart: always\n",
+   "negative": "services:\n  web:\n    image: app:1.0\n    cap_drop:\n      - ALL\n"
+  },
+  {
+   "id": "compose-db-ports",
+   "title": "Database or Docker API port is published",
+   "description": "Checks that common data-store and Docker API ports are not published on the host.",
+   "rationale": "Published ports are reachable from outside the compose network.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "compose"
+    ]
+   },
+   "check": {
+    "key": "service.ports[]",
+    "op": "not_regex",
+    "value": "^(0\\.0\\.0\\.0:|\\[::\\]:)?(3306|5432|6379|27017|9200|2375|11211):"
+   },
+   "on_absent": "pass",
+   "absence_note": "No published ports.",
+   "remediation": "Do not publish them, or bind to 127.0.0.1.",
+   "references": [
+    "Compose file reference (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "services:\n  web:\n    image: app:1.0\n    ports:\n      - \"6379:6379\"\n",
+   "negative": "services:\n  web:\n    image: app:1.0\n    ports:\n      - \"127.0.0.1:6379:6379\"\n"
+  },
+  {
+   "id": "compose-read-only",
+   "title": "Service filesystem is writable",
+   "description": "Checks that read_only is true.",
+   "rationale": "A read-only root filesystem blocks many tampering techniques.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "compose"
+    ]
+   },
+   "check": {
+    "key": "service.read_only",
+    "op": "equals",
+    "value": "true"
+   },
+   "on_absent": "fail",
+   "absence_note": "Default is writable: treated as a failure.",
+   "remediation": "Set read_only: true and use tmpfs/volumes for writable paths.",
+   "references": [
+    "Compose file reference (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "services:\n  web:\n    image: app:1.0\n    restart: always\n",
+   "negative": "services:\n  web:\n    image: app:1.0\n    read_only: true\n"
+  },
+  {
+   "id": "compose-user-root",
+   "title": "Service runs as root",
+   "description": "Checks that user is not root.",
+   "rationale": "Root inside the container makes bugs more costly.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "compose"
+    ]
+   },
+   "check": {
+    "key": "service.user",
+    "op": "not_regex",
+    "value": "(?i)^(root|0)(:.*)?$"
+   },
+   "on_absent": "unknown",
+   "absence_note": "No user: the image's USER applies and is not visible here: result is unknown.",
+   "remediation": "Set user: \"10001:10001\".",
+   "references": [
+    "Compose file reference (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "services:\n  web:\n    image: app:1.0\n    user: root\n",
+   "negative": "services:\n  web:\n    image: app:1.0\n    user: \"10001:10001\"\n"
+  },
+  {
+   "id": "compose-security-opt",
+   "title": "Service disables a security profile",
+   "description": "Checks that seccomp/AppArmor/SELinux confinement is not disabled.",
+   "rationale": "These profiles are the default safety net.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "compose"
+    ]
+   },
+   "check": {
+    "key": "service.security_opt[]",
+    "op": "not_regex",
+    "value": "(?i)(seccomp[:=]unconfined|apparmor[:=]unconfined|label[:=]disable)"
+   },
+   "on_absent": "pass",
+   "absence_note": "No security_opt.",
+   "remediation": "Remove the unconfined setting.",
+   "references": [
+    "Compose file reference (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "services:\n  web:\n    image: app:1.0\n    security_opt:\n      - seccomp:unconfined\n",
+   "negative": "services:\n  web:\n    image: app:1.0\n    security_opt:\n      - no-new-privileges:true\n"
+  },
+  {
+   "id": "compose-env-secret",
+   "title": "A literal secret is set in the environment",
+   "description": "Checks that secret-like environment names have no inline value (list or map form).",
+   "rationale": "Inline secrets end up in version control.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "compose"
+    ]
+   },
+   "check": {
+    "not": {
+     "any": [
+      {
+       "key": "service.environment[]",
+       "op": "regex",
+       "value": "(?i)^[^=]*(passw(or)?d|secret|token|api_?key|access_?key|private_?key|credential)[^=]*=[^$\\s]",
+       "occ": "any"
+      },
+      {
+       "key_regex": "^service\\.environment\\.[^.]*(passw(or)?d|secret|token|api_?key|access_?key|private_?key|credential)",
+       "op": "regex",
+       "value": "^[^$\\s]",
+       "occ": "any"
+      }
+     ]
+    }
+   },
+   "on_absent": "pass",
+   "absence_note": "No environment entries.",
+   "remediation": "Use env_file kept out of version control, or Docker secrets.",
+   "references": [
+    "Compose file reference (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "services:\n  web:\n    image: app:1.0\n    environment:\n      - DB_PASSWORD=hunter2\n",
+   "negative": "services:\n  web:\n    image: app:1.0\n    environment:\n      - DB_HOST=db\n"
+  },
+  {
+   "id": "compose-image-tag",
+   "title": "Service image uses latest or no tag",
+   "description": "Checks that images have an explicit non-latest tag.",
+   "rationale": "Mutable tags make deployments non-reproducible.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "compose"
+    ]
+   },
+   "check": {
+    "key": "service.image",
+    "op": "not_regex",
+    "value": "(^|/)[^/:@$]+$|:latest(@|$)"
+   },
+   "on_absent": "pass",
+   "absence_note": "No image.",
+   "remediation": "Pin a version tag or digest.",
+   "references": [
+    "Compose file reference (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "services:\n  web:\n    image: nginx\n",
+   "negative": "services:\n  web:\n    image: nginx:1.27\n"
+  }
+ ]
+}

@@ -1,0 +1,878 @@
+{
+ "area": "kubernetes",
+ "policies": [
+  {
+   "id": "k8s-privileged",
+   "title": "Container runs privileged",
+   "description": "Checks that no container sets privileged: true.",
+   "rationale": "A privileged container has nearly the host's power and is a direct escape path.",
+   "severity": "critical",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "key": "container.securitycontext.privileged",
+    "op": "not_equals",
+    "value": "true"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is unprivileged.",
+   "remediation": "Remove privileged: true; add only the specific capability needed.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)",
+    "ATT&CK T1611 (hint)"
+   ],
+   "positive": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n        securityContext:\n          privileged: true\n",
+   "negative": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n        securityContext:\n          privileged: false\n",
+   "applies_when": {
+    "key": "k8s.workload",
+    "op": "present"
+   }
+  },
+  {
+   "id": "k8s-privilege-escalation",
+   "title": "Containers may gain more privileges than their parent",
+   "description": "Checks that every container sets allowPrivilegeEscalation: false.",
+   "rationale": "Set-uid binaries could otherwise raise privileges inside the container.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "key": "container.securitycontext.allowprivilegeescalation",
+      "op": "equals",
+      "value": "false"
+     },
+     {
+      "key": "container.unset.securitycontext.allowprivilegeescalation",
+      "op": "absent"
+     }
+    ]
+   },
+   "on_absent": "evaluate",
+   "absence_note": "Default for allowPrivilegeEscalation is true, so a container that does not set it fails.",
+   "remediation": "Set allowPrivilegeEscalation: false on each container.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n        securityContext:\n          readOnlyRootFilesystem: true\n",
+   "negative": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n        securityContext:\n          allowPrivilegeEscalation: false\n",
+   "applies_when": {
+    "key": "k8s.workload",
+    "op": "present"
+   }
+  },
+  {
+   "id": "k8s-host-network",
+   "title": "Pod shares the host network namespace",
+   "description": "Checks that hostNetwork is not true.",
+   "rationale": "The pod could reach services bound to the node's loopback and sniff node traffic.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "key": "pod.hostnetwork",
+    "op": "not_equals",
+    "value": "true"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is false.",
+   "remediation": "Remove hostNetwork: true.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      hostNetwork: true\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n",
+   "negative": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      hostNetwork: false\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n",
+   "applies_when": {
+    "key": "k8s.workload",
+    "op": "present"
+   }
+  },
+  {
+   "id": "k8s-host-pid",
+   "title": "Pod shares the host process namespace",
+   "description": "Checks that hostPID is not true.",
+   "rationale": "The pod could see and signal host processes.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "key": "pod.hostpid",
+    "op": "not_equals",
+    "value": "true"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is false.",
+   "remediation": "Remove hostPID: true.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      hostPID: true\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n",
+   "negative": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      hostPID: false\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n",
+   "applies_when": {
+    "key": "k8s.workload",
+    "op": "present"
+   }
+  },
+  {
+   "id": "k8s-host-ipc",
+   "title": "Pod shares the host IPC namespace",
+   "description": "Checks that hostIPC is not true.",
+   "rationale": "Shared memory with the host exposes other workloads' data.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "key": "pod.hostipc",
+    "op": "not_equals",
+    "value": "true"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is false.",
+   "remediation": "Remove hostIPC: true.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      hostIPC: true\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n",
+   "negative": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      hostIPC: false\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n",
+   "applies_when": {
+    "key": "k8s.workload",
+    "op": "present"
+   }
+  },
+  {
+   "id": "k8s-hostpath",
+   "title": "Pod mounts a host path",
+   "description": "Checks that no volume is a hostPath.",
+   "rationale": "Host file systems let a pod read or modify the node.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "key": "pod.volumes[].hostpath.path",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No hostPath volume present.",
+   "remediation": "Use emptyDir, PVCs or ConfigMaps/Secrets instead.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)",
+    "ATT&CK T1611 (hint)"
+   ],
+   "positive": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      volumes:\n      - name: d\n        hostPath:\n          path: /data\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n",
+   "negative": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      volumes:\n      - name: d\n        emptyDir:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n",
+   "applies_when": {
+    "key": "k8s.workload",
+    "op": "present"
+   }
+  },
+  {
+   "id": "k8s-runtime-socket",
+   "title": "Pod mounts a container runtime socket",
+   "description": "Checks that no hostPath points at a container runtime socket.",
+   "rationale": "Control of the runtime means control of every container and the node.",
+   "severity": "critical",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "key": "pod.volumes[].hostpath.path",
+    "op": "not_regex",
+    "value": "(docker|containerd|crio|cri-dockerd)\\.sock"
+   },
+   "on_absent": "pass",
+   "absence_note": "No hostPath volume present.",
+   "remediation": "Never mount the runtime socket into workloads.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)",
+    "ATT&CK T1610 (hint)"
+   ],
+   "positive": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      volumes:\n      - name: d\n        hostPath:\n          path: /var/run/docker.sock\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n",
+   "negative": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      volumes:\n      - name: d\n        hostPath:\n          path: /data\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n",
+   "applies_when": {
+    "key": "k8s.workload",
+    "op": "present"
+   }
+  },
+  {
+   "id": "k8s-run-as-non-root",
+   "title": "Containers are not required to run as non-root",
+   "description": "Checks that runAsNonRoot: true is set at pod level or on every container.",
+   "rationale": "Root in a container is far easier to turn into a node compromise.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "not": {
+       "key": "pod.securitycontext.runasnonroot",
+       "op": "equals",
+       "value": "false",
+       "occ": "any"
+      }
+     },
+     {
+      "not": {
+       "key": "container.securitycontext.runasnonroot",
+       "op": "equals",
+       "value": "false",
+       "occ": "any"
+      }
+     },
+     {
+      "any": [
+       {
+        "key": "pod.securitycontext.runasnonroot",
+        "op": "equals",
+        "value": "true"
+       },
+       {
+        "key": "container.unset.securitycontext.runasnonroot",
+        "op": "absent"
+       }
+      ]
+     }
+    ]
+   },
+   "on_absent": "evaluate",
+   "absence_note": "Not set means the image's user is used, which may be root: treated as a failure (the Restricted standard asks for an explicit setting).",
+   "remediation": "Set securityContext.runAsNonRoot: true and a numeric runAsUser.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n        securityContext:\n          readOnlyRootFilesystem: true\n",
+   "negative": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      securityContext:\n        runAsNonRoot: true\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n",
+   "applies_when": {
+    "key": "k8s.workload",
+    "op": "present"
+   }
+  },
+  {
+   "id": "k8s-run-as-user-zero",
+   "title": "A workload explicitly runs as UID 0",
+   "description": "Checks that runAsUser is not 0.",
+   "rationale": "UID 0 is root.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "key_regex": "^(pod|container)\\.securitycontext\\.runasuser$",
+    "op": "not_equals",
+    "value": "0"
+   },
+   "on_absent": "pass",
+   "absence_note": "No runAsUser set.",
+   "remediation": "Use a non-zero UID.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n        securityContext:\n          runAsUser: 0\n",
+   "negative": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n        securityContext:\n          runAsUser: 10001\n",
+   "applies_when": {
+    "key": "k8s.workload",
+    "op": "present"
+   }
+  },
+  {
+   "id": "k8s-dangerous-capabilities",
+   "title": "Container adds a powerful Linux capability",
+   "description": "Checks that capabilities.add does not include ALL or other near-root capabilities.",
+   "rationale": "These capabilities enable host-level actions and escapes.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "key": "container.securitycontext.capabilities.add[]",
+    "op": "not_regex",
+    "value": "(?i)^(CAP_)?(ALL|SYS_ADMIN|NET_ADMIN|SYS_PTRACE|SYS_MODULE|DAC_READ_SEARCH|SYS_RAWIO|SYS_BOOT|BPF|PERFMON|SYS_TIME)$"
+   },
+   "on_absent": "pass",
+   "absence_note": "No added capabilities.",
+   "remediation": "Add only the minimal capability required, such as NET_BIND_SERVICE.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n        securityContext:\n          capabilities:\n            add: [\"SYS_ADMIN\"]\n",
+   "negative": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n        securityContext:\n          capabilities:\n            add: [\"NET_BIND_SERVICE\"]\n",
+   "applies_when": {
+    "key": "k8s.workload",
+    "op": "present"
+   }
+  },
+  {
+   "id": "k8s-drop-all-capabilities",
+   "title": "Containers do not drop all capabilities",
+   "description": "Checks that every container drops ALL capabilities.",
+   "rationale": "Fewer capabilities, smaller escape surface.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "key": "container.securitycontext.capabilities.drop[]",
+      "op": "regex",
+      "value": "(?i)^(CAP_)?ALL$",
+      "occ": "any"
+     },
+     {
+      "key": "container.unset.securitycontext.capabilities.drop[]",
+      "op": "absent"
+     }
+    ]
+   },
+   "on_absent": "evaluate",
+   "absence_note": "Without a drop list the runtime default capability set is kept: treated as a failure.",
+   "remediation": "Set capabilities.drop: [\"ALL\"] and add back only what is needed.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n        securityContext:\n          privileged: false\n",
+   "negative": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n        securityContext:\n          capabilities:\n            drop: [\"ALL\"]\n",
+   "applies_when": {
+    "key": "k8s.workload",
+    "op": "present"
+   }
+  },
+  {
+   "id": "k8s-read-only-rootfs",
+   "title": "Container root filesystem is writable",
+   "description": "Checks that every container sets readOnlyRootFilesystem: true.",
+   "rationale": "A read-only filesystem stops many persistence and tampering techniques.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "key": "container.securitycontext.readonlyrootfilesystem",
+      "op": "equals",
+      "value": "true"
+     },
+     {
+      "key": "container.unset.securitycontext.readonlyrootfilesystem",
+      "op": "absent"
+     }
+    ]
+   },
+   "on_absent": "evaluate",
+   "absence_note": "Default is writable: treated as a failure.",
+   "remediation": "Set readOnlyRootFilesystem: true and mount emptyDir where writes are needed.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n        securityContext:\n          privileged: false\n",
+   "negative": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n        securityContext:\n          readOnlyRootFilesystem: true\n",
+   "applies_when": {
+    "key": "k8s.workload",
+    "op": "present"
+   }
+  },
+  {
+   "id": "k8s-memory-limit",
+   "title": "Container has no memory limit",
+   "description": "Checks that every container sets resources.limits.memory.",
+   "rationale": "An unbounded container can starve the node and its neighbours.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "key": "container.unset.resources.limits.memory",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "All containers set a memory limit (or there are none to check).",
+   "remediation": "Set resources.limits.memory.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n",
+   "negative": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n        resources:\n          limits:\n            memory: 256Mi\n",
+   "applies_when": {
+    "key": "k8s.workload",
+    "op": "present"
+   }
+  },
+  {
+   "id": "k8s-cpu-limit",
+   "title": "Container has no CPU limit",
+   "description": "Checks that every container sets resources.limits.cpu.",
+   "rationale": "An unbounded container can monopolise CPU (some teams deliberately omit CPU limits; treat as advisory).",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "key": "container.unset.resources.limits.cpu",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "All containers set a CPU limit (or there are none to check).",
+   "remediation": "Set resources.limits.cpu or document the exception.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n",
+   "negative": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n        resources:\n          limits:\n            cpu: 500m\n",
+   "applies_when": {
+    "key": "k8s.workload",
+    "op": "present"
+   }
+  },
+  {
+   "id": "k8s-image-tag",
+   "title": "Image uses the latest tag or no tag",
+   "description": "Checks that every image has an explicit, non-latest tag or digest.",
+   "rationale": "Mutable tags make deployments non-reproducible and hide what is running.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "key": "container.image",
+    "op": "not_regex",
+    "value": "(^|/)[^/:@]+$|:latest(@|$)"
+   },
+   "on_absent": "pass",
+   "absence_note": "No image listed.",
+   "remediation": "Pin a version tag, ideally a digest.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: v1\nkind: Pod\nspec:\n  containers:\n  - name: a\n    image: nginx\n",
+   "negative": "apiVersion: v1\nkind: Pod\nspec:\n  containers:\n  - name: a\n    image: nginx:1.27\n",
+   "applies_when": {
+    "key": "k8s.workload",
+    "op": "present"
+   }
+  },
+  {
+   "id": "k8s-image-digest",
+   "title": "Image is not pinned by digest",
+   "description": "Checks that every image reference includes a sha256 digest.",
+   "rationale": "Digests are immutable; tags can be repointed.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "key": "container.image",
+    "op": "regex",
+    "value": "@sha256:[0-9a-f]{64}"
+   },
+   "on_absent": "pass",
+   "absence_note": "No image listed.",
+   "remediation": "Reference images as repo@sha256:...",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n",
+   "negative": "apiVersion: v1\nkind: Pod\nspec:\n  containers:\n  - name: a\n    image: reg.example/a@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n",
+   "applies_when": {
+    "key": "k8s.workload",
+    "op": "present"
+   }
+  },
+  {
+   "id": "k8s-seccomp",
+   "title": "No seccomp profile is applied",
+   "description": "Checks that a RuntimeDefault or Localhost seccomp profile is set for the pod or each container.",
+   "rationale": "Seccomp removes dangerous system calls from the container's reach.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "any": [
+     {
+      "key": "pod.securitycontext.seccompprofile.type",
+      "op": "in",
+      "values": [
+       "RuntimeDefault",
+       "Localhost"
+      ]
+     },
+     {
+      "all": [
+       {
+        "key": "container.securitycontext.seccompprofile.type",
+        "op": "in",
+        "values": [
+         "RuntimeDefault",
+         "Localhost"
+        ]
+       },
+       {
+        "key": "container.unset.securitycontext.seccompprofile.type",
+        "op": "absent"
+       }
+      ]
+     }
+    ]
+   },
+   "on_absent": "evaluate",
+   "absence_note": "Without an explicit profile the runtime may run unconfined: treated as a failure.",
+   "remediation": "Set securityContext.seccompProfile.type: RuntimeDefault.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n",
+   "negative": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      securityContext:\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n",
+   "applies_when": {
+    "key": "k8s.workload",
+    "op": "present"
+   }
+  },
+  {
+   "id": "k8s-sa-token",
+   "title": "Service account token is mounted by default",
+   "description": "Checks that automountServiceAccountToken is false for pods that do not call the API.",
+   "rationale": "A stolen token is a ready-made credential for the Kubernetes API.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "key": "pod.automountserviceaccounttoken",
+    "op": "equals",
+    "value": "false"
+   },
+   "on_absent": "fail",
+   "absence_note": "Default is to mount the token: treated as a failure.",
+   "remediation": "Set automountServiceAccountToken: false.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n",
+   "negative": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      automountServiceAccountToken: false\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n",
+   "applies_when": {
+    "key": "k8s.workload",
+    "op": "present"
+   }
+  },
+  {
+   "id": "k8s-host-port",
+   "title": "Container binds a host port",
+   "description": "Checks that no container uses hostPort.",
+   "rationale": "Host ports bypass network policy and limit scheduling.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "key": "container.ports[].hostport",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No host ports.",
+   "remediation": "Use a Service instead.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n        ports:\n        - containerPort: 80\n          hostPort: 80\n",
+   "negative": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n        ports:\n        - containerPort: 80\n",
+   "applies_when": {
+    "key": "k8s.workload",
+    "op": "present"
+   }
+  },
+  {
+   "id": "k8s-proc-mount",
+   "title": "Container uses an unmasked /proc",
+   "description": "Checks that procMount is not Unmasked.",
+   "rationale": "Unmasked /proc exposes host kernel interfaces.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "key": "container.securitycontext.procmount",
+    "op": "not_equals",
+    "value": "Unmasked"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is Default (masked).",
+   "remediation": "Remove procMount: Unmasked.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n        securityContext:\n          procMount: Unmasked\n",
+   "negative": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n        securityContext:\n          procMount: Default\n",
+   "applies_when": {
+    "key": "k8s.workload",
+    "op": "present"
+   }
+  },
+  {
+   "id": "k8s-env-secret",
+   "title": "A literal secret is set in an environment variable",
+   "description": "Checks that env entries with secret-like names use secretKeyRef rather than inline values.",
+   "rationale": "Inline secrets end up in manifests, history and process listings.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "key": "container.env_literal",
+    "op": "not_regex",
+    "value": "(?i)^[^=]*(passw(or)?d|secret|token|api_?key|access_?key|private_?key|credential)[^=]*=.+"
+   },
+   "on_absent": "pass",
+   "absence_note": "No literal env values.",
+   "remediation": "Move the value to a Secret and reference it with valueFrom.secretKeyRef.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n        env:\n        - name: DB_PASSWORD\n          value: hunter2\n",
+   "negative": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: a\nspec:\n  template:\n    spec:\n      containers:\n      - name: app\n        image: reg.example/app:1.2.3\n        env:\n        - name: DB_HOST\n          value: db\n",
+   "applies_when": {
+    "key": "k8s.workload",
+    "op": "present"
+   }
+  },
+  {
+   "id": "k8s-rbac-wildcard-verbs",
+   "title": "RBAC rule allows every verb",
+   "description": "Checks that no rule uses the * verb.",
+   "rationale": "Wildcard verbs include delete and escalate-style actions.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "key": "doc.rules[].verbs[]",
+    "op": "not_equals",
+    "value": "*"
+   },
+   "on_absent": "pass",
+   "absence_note": "No rules.",
+   "remediation": "List only the verbs required.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: rbac.authorization.k8s.io/v1\nkind: ClusterRole\nmetadata:\n  name: r\nrules:\n- apiGroups: [\"\"]\n  resources: [\"pods\"]\n  verbs: [\"*\"]\n",
+   "negative": "apiVersion: rbac.authorization.k8s.io/v1\nkind: ClusterRole\nmetadata:\n  name: r\nrules:\n- apiGroups: [\"\"]\n  resources: [\"pods\"]\n  verbs: [\"get\", \"list\"]\n",
+   "applies_when": {
+    "key": "k8s.kind",
+    "op": "regex",
+    "value": "^(Cluster)?Role$",
+    "occ": "any"
+   }
+  },
+  {
+   "id": "k8s-rbac-wildcard-resources",
+   "title": "RBAC rule covers every resource",
+   "description": "Checks that no rule uses the * resource.",
+   "rationale": "Wildcard resources include secrets and future resource types.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "key": "doc.rules[].resources[]",
+    "op": "not_equals",
+    "value": "*"
+   },
+   "on_absent": "pass",
+   "absence_note": "No rules.",
+   "remediation": "List only the resources required.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: rbac.authorization.k8s.io/v1\nkind: ClusterRole\nmetadata:\n  name: r\nrules:\n- apiGroups: [\"\"]\n  resources: [\"*\"]\n  verbs: [\"get\"]\n",
+   "negative": "apiVersion: rbac.authorization.k8s.io/v1\nkind: ClusterRole\nmetadata:\n  name: r\nrules:\n- apiGroups: [\"\"]\n  resources: [\"pods\"]\n  verbs: [\"get\"]\n",
+   "applies_when": {
+    "key": "k8s.kind",
+    "op": "regex",
+    "value": "^(Cluster)?Role$",
+    "occ": "any"
+   }
+  },
+  {
+   "id": "k8s-rbac-cluster-admin",
+   "title": "Binding grants cluster-admin",
+   "description": "Checks that no binding references cluster-admin.",
+   "rationale": "cluster-admin is unrestricted; bindings to it should be rare and reviewed.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "key": "doc.roleref.name",
+    "op": "not_equals",
+    "value": "cluster-admin"
+   },
+   "on_absent": "pass",
+   "absence_note": "No roleRef.",
+   "remediation": "Bind a narrower role.",
+   "references": [
+    "Kubernetes Pod Security Standards (public)",
+    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: rbac.authorization.k8s.io/v1\nkind: ClusterRoleBinding\nmetadata:\n  name: b\nroleRef:\n  kind: ClusterRole\n  name: cluster-admin\n",
+   "negative": "apiVersion: rbac.authorization.k8s.io/v1\nkind: ClusterRoleBinding\nmetadata:\n  name: b\nroleRef:\n  kind: ClusterRole\n  name: view\n",
+   "applies_when": {
+    "key": "k8s.kind",
+    "op": "regex",
+    "value": "^(Cluster)?RoleBinding$",
+    "occ": "any"
+   }
+  }
+ ]
+}
