@@ -18,7 +18,7 @@ Limits: 4 MiB per artefact (an oversized artefact is listed as failed, the rest 
 
 ## Host label and impersonation guard
 
-The analyst supplies `host` (1-64 characters of `A-Za-z0-9._-`, no `:`). Every event and finding carries the host `import:<case>:<host>`. A label cannot contain `:` or start with `import`, and no field inside an artefact is read as a host, so an import can never produce an event attributed to an enrolled agent's host name. Promotion refuses any finding whose host is outside the `import:` namespace.
+The analyst supplies `host` (1-64 characters of `A-Za-z0-9._-`, no `:`). Every event and finding carries the host `import:<case>:<host>`. A label cannot contain `:`, and no field inside an artefact is read as a host, so an import can never produce an event attributed to an enrolled agent's host name. Promotion refuses any finding whose host is outside the `import:` namespace.
 
 ## Formats parsed
 
