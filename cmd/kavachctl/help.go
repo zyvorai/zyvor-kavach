@@ -84,6 +84,7 @@ func printHelp(w io.Writer) {
 	row("ueba", "UEBA scores")
 	row("watchlists", "Entity watchlists")
 	row("ioc|ioa|exclusions|rules", "Detection content")
+	row("search QUERY [--type T,...] [--limit N]", "Search findings, hosts, rules, CVEs, IOCs, cases")
 	row("overwatch", "OverWatch alerts")
 	row("dns threats", "DNS security threats")
 

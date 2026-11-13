@@ -53,6 +53,9 @@ func run(args []string) error {
 	if handled, err := ocDispatch(args, os.Stdout); handled {
 		return err
 	}
+	if handled, err := gsDispatch(args, os.Stdout); handled {
+		return err
+	}
 
 	switch args[0] {
 	case "status":

@@ -906,6 +906,15 @@ paths:
       summary: Content coverage counts by tactic, technique, os, batch, severity and event type; techniques covered (pending_telemetry is always empty now that registry, dns, auth and module rules are evaluated)
       security: [{bearerAuth: []}]
       responses: {'200': {description: OK}}
+  /v1/search:
+    get:
+      summary: Global search across findings, hosts, content rules, hunt packs, queries, guidance, ATT&CK techniques, CVEs, IOCs, cases and saved searches. Plain substring match (no regex); results scored exact id > prefix > substring, each with a console route hint
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: q, in: query, required: true, description: "At least 2 characters; truncated at 128", schema: {type: string}}
+        - {name: types, in: query, description: "Comma-separated filter", schema: {type: string, example: "finding,host,rule,huntpack,query,guidance,technique,cve,ioc,case,saved"}}
+        - {name: limit, in: query, description: "Default 20, max 100", schema: {type: integer}}
+      responses: {'200': {description: "{query, count, results[{type,id,title,subtitle,score,route}]}"}, '400': {description: Bad q or unknown type}, '401': {description: Unauthorized}}
   /v1/content/custom:
     get:
       summary: List customer-authored content rules (source=custom); add tests=1 for samples

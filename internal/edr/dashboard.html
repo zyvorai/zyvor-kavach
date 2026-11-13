@@ -1251,6 +1251,19 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 .px-confirm { display:inline-flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:13px; }
 .px-detail { margin-top:12px; }
 /* === end ops-intel pages === */
+/* Global search */
+.gs-bar { display: flex; gap: 8px; flex-wrap: wrap; }
+.gs-bar .input-field { flex: 1 1 260px; min-width: 0; }
+.gs-group h3 { margin: 16px 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-tertiary); }
+.gs-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--hairline); border-radius: 12px; background: var(--surface-1); overflow: hidden; }
+.gs-list li + li { border-top: 1px solid var(--hairline); }
+.gs-item { display: flex; flex-direction: column; gap: 2px; width: 100%; text-align: left; border: 0; background: transparent; color: var(--text-primary); font: inherit; padding: 10px 14px; min-height: 44px; cursor: pointer; }
+.gs-item:hover, .gs-item:focus-visible { background: var(--surface-hover); }
+.gs-item .gs-id { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--apple-link); overflow-wrap: anywhere; }
+.gs-item .gs-title { overflow-wrap: anywhere; }
+.gs-item .gs-sub { font-size: 13px; color: var(--text-secondary); overflow-wrap: anywhere; }
+.gs-empty { text-align: center; padding: 28px 16px; color: var(--text-secondary); }
+.pal-list li.pal-search { color: var(--apple-link); }
 </style>
 </head>
 <body>
@@ -1335,6 +1348,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
             <button type="button" data-page="huntpacks" role="menuitem">Hunt packs</button>
             <button type="button" data-page="ransomware" role="menuitem">Ransomware</button>
             <button type="button" data-page="content" role="menuitem">Content library</button>
+            <button type="button" data-page="search" role="menuitem">Search</button>
           </div>
         </div>
       </div>
@@ -3011,6 +3025,22 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     </section>
     <!-- === end content library page === -->
 
+    <!-- === global search page === -->
+    <section id="page-search" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Search</p>
+        <h1>Find anything, then jump to it.</h1>
+        <p class="lede">Findings, hosts, rules, hunt packs, queries, guidance, techniques, CVEs, IOCs and cases. Read only.</p>
+      </header>
+      <div class="toolbar-pill gs-bar">
+        <input class="input-field" id="gs-q" type="search" placeholder="Search ids, hosts, T1059, CVE-..., text" aria-label="Global search" autocomplete="off" spellcheck="false" maxlength="128">
+        <select class="select-field" id="gs-type" aria-label="Result type"><option value="">All types</option><option value="finding">Findings</option><option value="host">Hosts</option><option value="rule">Rules</option><option value="huntpack">Hunt packs</option><option value="query">Queries</option><option value="guidance">Guidance</option><option value="technique">Techniques</option><option value="cve">CVEs</option><option value="ioc">IOCs</option><option value="case">Cases</option><option value="saved">Saved searches</option></select>
+      </div>
+      <p class="hint" id="gs-status" role="status" aria-live="polite">Type at least 2 characters. Use the arrow keys to move through results, Enter to open.</p>
+      <div id="gs-results" class="gs-results"></div>
+    </section>
+    <!-- === end global search page === -->
+
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
@@ -3081,8 +3111,8 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'search'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', search: 'Search' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -3205,7 +3235,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'search']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -3254,6 +3284,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     if (current === 'huntpacks' && typeof loadHuntPacks === 'function') loadHuntPacks();
     if (current === 'ransomware' && typeof loadRansomware === 'function') loadRansomware();
     if (current === 'content' && typeof loadContent === 'function') loadContent();
+    if (current === 'search' && typeof loadSearchPage === 'function') loadSearchPage();
   }
 
   function fmtTime(v) {
@@ -5304,8 +5335,98 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     btn.disabled = false;
   });
 
+
+  // --- Global search page (GET /v1/search) ---
+  const gsLabels = { finding: 'Findings', host: 'Hosts', rule: 'Rules', huntpack: 'Hunt packs', query: 'Queries', guidance: 'Guidance', technique: 'Techniques', cve: 'CVEs', ioc: 'IOCs', case: 'Cases', saved: 'Saved searches' };
+  let gsTimer = 0, gsSeq = 0, gsPending = '';
+  function gsOpen(r) {
+    const page = String(r.route || '').replace(/^#\/?/, '');
+    if (!pages.includes(page)) return;
+    showPage(page);
+    if (r.type === 'finding') {
+      const f = (cache.findings || []).find((x) => x.id === r.id);
+      if (f) openDrawer(f);
+    }
+  }
+  function gsRender(data, q) {
+    const box = $('gs-results');
+    box.replaceChildren();
+    const rs = (data && data.results) || [];
+    if (!rs.length) { box.appendChild(el('div', 'No results for "' + q + '".', 'gs-empty')); $('gs-status').textContent = 'No results.'; return; }
+    $('gs-status').textContent = rs.length + ' result' + (rs.length === 1 ? '' : 's') + '. Arrow keys to move, Enter to open.';
+    const groups = {};
+    rs.forEach((r) => { (groups[r.type] = groups[r.type] || []).push(r); });
+    Object.keys(gsLabels).filter((t) => groups[t]).forEach((t) => {
+      const g = document.createElement('section');
+      g.className = 'gs-group';
+      g.appendChild(el('h3', gsLabels[t]));
+      const ul = document.createElement('ul');
+      ul.className = 'gs-list';
+      groups[t].forEach((r) => {
+        const li = document.createElement('li');
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'gs-item';
+        b.appendChild(el('span', r.id, 'gs-id'));
+        if (r.title && r.title !== r.id) b.appendChild(el('span', r.title, 'gs-title'));
+        if (r.subtitle) b.appendChild(el('span', r.subtitle, 'gs-sub'));
+        b.addEventListener('click', () => gsOpen(r));
+        li.appendChild(b);
+        ul.appendChild(li);
+      });
+      g.appendChild(ul);
+      box.appendChild(g);
+    });
+  }
+  async function gsRun() {
+    const q = $('gs-q').value.trim();
+    const box = $('gs-results');
+    if (q.length < 2) { box.replaceChildren(); $('gs-status').textContent = 'Type at least 2 characters. Use the arrow keys to move through results, Enter to open.'; return; }
+    const seq = ++gsSeq;
+    $('gs-status').textContent = 'Searching…';
+    box.setAttribute('aria-busy', 'true');
+    try {
+      const t = $('gs-type').value;
+      const data = await pgApi('/v1/search?q=' + encodeURIComponent(q) + (t ? '&types=' + t : '') + '&limit=50');
+      if (seq !== gsSeq) return;
+      gsRender(data, q);
+    } catch (err) {
+      if (seq !== gsSeq) return;
+      box.replaceChildren();
+      const d = document.createElement('div');
+      d.className = 'state-error';
+      d.appendChild(el('h3', 'Search failed'));
+      d.appendChild(el('p', String(err && err.message ? err.message : err)));
+      const retry = el('button', 'Retry');
+      retry.type = 'button';
+      retry.addEventListener('click', gsRun);
+      d.appendChild(retry);
+      box.appendChild(d);
+      $('gs-status').textContent = 'Search failed.';
+    } finally { if (seq === gsSeq) box.removeAttribute('aria-busy'); }
+  }
+  function loadSearchPage() {
+    if (gsPending) { $('gs-q').value = gsPending; gsPending = ''; gsRun(); }
+    $('gs-q').focus();
+  }
+  $('gs-q').addEventListener('input', () => { clearTimeout(gsTimer); gsTimer = setTimeout(gsRun, 250); });
+  $('gs-type').addEventListener('change', gsRun);
+  function gsMove(dir) {
+    const items = Array.from(document.querySelectorAll('#gs-results .gs-item'));
+    if (!items.length) return;
+    const i = items.indexOf(document.activeElement);
+    const next = i < 0 ? (dir > 0 ? 0 : items.length - 1) : i + dir;
+    if (next < 0) { $('gs-q').focus(); return; }
+    if (next < items.length) items[next].focus();
+  }
+  $('page-search').addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); gsMove(1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); gsMove(-1); }
+    else if (e.key === 'Enter' && e.target === $('gs-q')) { e.preventDefault(); clearTimeout(gsTimer); gsRun(); }
+  });
+
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', '/': 'search' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
@@ -6322,10 +6443,24 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
   function renderPalette() {
     const q = ($('palette-input').value || '').trim().toLowerCase();
     palItems = pages.filter((p) => !q || p.includes(q) || pageLabels[p].toLowerCase().includes(q));
-    palSel = Math.min(palSel, Math.max(0, palItems.length - 1));
+    palSel = Math.min(palSel, palItems.length + (($('palette-input').value || '').trim().length >= 2 ? 0 : -1));
+    if (palSel < 0) palSel = 0;
     const ul = $('palette-list');
     ul.replaceChildren();
-    if (!palItems.length) { ul.appendChild(el('li', 'No matching page', 'pal-empty')); return; }
+    const gsQ = ($('palette-input').value || '').trim();
+    if (gsQ.length >= 2) {
+      const li = document.createElement('li');
+      li.className = 'pal-search';
+      li.setAttribute('role', 'option');
+      li.id = 'pal-search-all';
+      li.setAttribute('aria-selected', palSel === palItems.length ? 'true' : 'false');
+      li.appendChild(el('span', 'Search everything for "' + gsQ + '"'));
+      li.appendChild(el('small', 'g /'));
+      li.addEventListener('click', () => palSearchAll());
+      ul.dataset.hasSearch = '1';
+      palSearchLi = li;
+    } else { palSearchLi = null; }
+    if (!palItems.length && !palSearchLi) { ul.appendChild(el('li', 'No matching page', 'pal-empty')); return; }
     palItems.forEach((p, i) => {
       const li = document.createElement('li');
       li.setAttribute('role', 'option');
@@ -6337,8 +6472,12 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
       li.addEventListener('click', () => { closePalette(); showPage(p); });
       ul.appendChild(li);
     });
+    if (palSearchLi) ul.appendChild(palSearchLi);
     if (palItems[palSel]) $('palette-input').setAttribute('aria-activedescendant', 'pal-' + palItems[palSel]);
+    else if (palSearchLi) $('palette-input').setAttribute('aria-activedescendant', 'pal-search-all');
   }
+  let palSearchLi = null;
+  function palSearchAll() { gsPending = ($('palette-input').value || '').trim(); closePalette(); showPage('search'); }
   function openPalette() { if (!appVisible()) return; palSel = 0; $('palette-input').value = ''; overlayOpen('palette-root'); renderPalette(); $('palette-input').focus(); }
   function closePalette() { overlayClose('palette-root'); }
   function openHelp() {
@@ -6366,8 +6505,9 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
   $('help-root').addEventListener('mousedown', (e) => { if (e.target === $('help-root')) closeHelp(); });
   $('palette-input').addEventListener('input', () => { palSel = 0; renderPalette(); });
   $('palette-input').addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowDown') { e.preventDefault(); palSel = Math.min(palItems.length - 1, palSel + 1); renderPalette(); }
+    if (e.key === 'ArrowDown') { e.preventDefault(); palSel = Math.min(palItems.length - (($('palette-input').value || '').trim().length >= 2 ? 0 : 1), palSel + 1); renderPalette(); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); palSel = Math.max(0, palSel - 1); renderPalette(); }
+    else if (e.key === 'Enter' && palSel === palItems.length && palSearchLi) { e.preventDefault(); palSearchAll(); }
     else if (e.key === 'Enter' && palItems[palSel]) { e.preventDefault(); const p = palItems[palSel]; closePalette(); showPage(p); }
   });
   let gPending = 0;
@@ -6382,9 +6522,9 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     const t = e.target;
     const typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
     if (typing || !$('palette-root').hidden || !$('help-root').hidden || !$('drawer-root').hidden) return;
+    if (gPending && Date.now() - gPending < 1200 && gKeys[e.key]) { e.preventDefault(); gPending = 0; showPage(gKeys[e.key]); return; }
     if (e.key === '/') { e.preventDefault(); openPalette(); return; }
     if (e.key === '?') { e.preventDefault(); openHelp(); return; }
-    if (gPending && Date.now() - gPending < 1200 && gKeys[e.key]) { e.preventDefault(); gPending = 0; showPage(gKeys[e.key]); return; }
     gPending = e.key === 'g' ? Date.now() : 0;
   });
   window.addEventListener('hashchange', () => {
