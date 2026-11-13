@@ -1,0 +1,15 @@
+{
+ "not_testable": {
+  "T1055.012": "Process hollowing is visible only through memory and API-call telemetry (suspended create, unmap, write, resume); Kavach collects process command lines, so a synthetic command line cannot demonstrate the behavior.",
+  "T1055.009": "Proc-memory injection needs write-to-another-process memory telemetry that Kavach does not collect.",
+  "T1055": "Generic process injection needs API-level or memory telemetry that Kavach does not collect.",
+  "T1055.001": "DLL injection needs remote-thread and image-load API telemetry; only module-load events and command lines are collected.",
+  "T1014": "A rootkit hides itself from the very process and file listings the sensor reads; synthetic events cannot represent absence.",
+  "T1205.002": "Socket filter backdoors need kernel packet-filter telemetry that Kavach does not collect.",
+  "T1565.001": "Stored data manipulation needs content-integrity telemetry (before/after content), not file metadata.",
+  "T1027.002": "Software packing needs static binary analysis of file content; Kavach events carry no file bytes.",
+  "T1573.002": "Encrypted channel detection needs TLS or flow-content telemetry that Kavach does not collect.",
+  "T1030": "Transfer size limits need per-flow byte-volume telemetry; network events carry only a destination.",
+  "T1550.003": "Pass-the-ticket needs Kerberos ticket telemetry beyond the auth event fields Kavach models."
+ }
+}
