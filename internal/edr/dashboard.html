@@ -1353,6 +1353,20 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 .gs-item .gs-sub { font-size: 13px; color: var(--text-secondary); overflow-wrap: anywhere; }
 .gs-empty { text-align: center; padding: 28px 16px; color: var(--text-secondary); }
 .pal-list li.pal-search { color: var(--apple-link); }
+/* === coverage page === */
+.cv-opt { display: inline-flex; align-items: center; gap: 6px; min-height: var(--hit-min); }
+.cv-svg { width: 100%; max-width: 720px; height: auto; display: block; }
+.cv-svg text { fill: var(--text-secondary); font-size: 10px; font-family: var(--font); }
+.cv-seg-detected { fill: var(--success-text); }
+.cv-seg-partial { fill: var(--warning-text); }
+.cv-seg-missed { fill: var(--danger); }
+.cv-seg-not_testable { fill: var(--text-tertiary); }
+.cv-seg-untested { fill: var(--fill-tertiary); stroke: var(--hairline-1); }
+.tag.detected, .tag.active { background: var(--success-bg); color: var(--success-text); }
+.tag.missed { background: var(--danger-bg); color: var(--danger); }
+.tag.not_testable, .tag.untested, .tag.never_seen { background: var(--fill-tertiary); color: var(--text-secondary); }
+.cv-details { margin: 8px 0; }
+.cv-details summary { cursor: pointer; min-height: var(--hit-min); display: flex; align-items: center; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -1448,6 +1462,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
             <button type="button" data-page="provenance" role="menuitem">Provenance</button>
             <button type="button" data-page="ransomware-behaviour" role="menuitem">Ransomware behaviour</button>
             <button type="button" data-page="ttp" role="menuitem">TTP similarity</button>
+            <button type="button" data-page="coverage" role="menuitem">Coverage</button>
           </div>
         </div>
       </div>
@@ -3551,6 +3566,27 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     </section>
     <!-- === end cert advisories page === -->
 
+    <!-- === coverage page === -->
+    <section id="page-coverage" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Coverage</p>
+        <h1>What Kavach claims, what it measured, and where it is blind.</h1>
+        <p class="lede">Claimed techniques are scored by replaying synthetic scenarios in memory. Blind spots show which telemetry categories have not arrived. Observe-only: nothing is recorded or changed.</p>
+      </header>
+      <div class="nx-note bh-caveat" id="cv-note" role="note"><strong>Limitations (always apply)</strong><ul><li>Synthetic data replayed in memory; measured on Kavach's own scenarios; not a guarantee against real attacks.</li></ul></div>
+      <p class="work-msg" id="cv-msg" role="status"></p>
+      <div class="toolbar-pill nx-filters bh-fields">
+        <label class="cv-opt"><input type="checkbox" id="cv-custom"> Include custom content rules</label>
+        <button type="button" id="cv-reload" class="secondary">Reload</button>
+        <button type="button" id="cv-run">Run scenarios</button>
+      </div>
+      <h2>Validation lab: measured vs claimed</h2>
+      <div id="cv-val-out"></div>
+      <div id="cv-run-out" aria-live="polite"></div>
+      <h2>Blind spots</h2>
+      <div id="cv-blind-out"></div>
+    </section>
+    <!-- === end coverage page === -->
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
@@ -3621,8 +3657,8 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -3745,7 +3781,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -3805,6 +3841,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     if (current === 'provenance' && typeof loadProvenance === 'function') loadProvenance();
     if (current === 'ransomware-behaviour' && typeof loadRansomwareBehaviour === 'function') loadRansomwareBehaviour();
     if (current === 'ttp' && typeof loadTtp === 'function') loadTtp();
+    if (current === 'coverage' && typeof loadCoverage === 'function') loadCoverage();
   }
 
   function fmtTime(v) {
@@ -7218,8 +7255,157 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   });
   /* === end cert advisories page === */
 
+  /* === coverage page === */
+  const cvSegs = ['detected', 'partial', 'missed', 'not_testable', 'untested'];
+  function cvPct(v) { return typeof v === 'number' ? v.toFixed(1) + '%' : 'unknown'; }
+  function cvTactics(box, rows) {
+    const W = 720, rowH = 22, labW = 150, barW = W - labW - 190;
+    const svg = bhSvg('svg', { viewBox: '0 0 ' + W + ' ' + (rows.length * rowH + 6), class: 'cv-svg', role: 'img', 'aria-label': 'Per-tactic measured results for claimed techniques' });
+    rows.forEach((t, i) => {
+      const y = i * rowH + 3;
+      svg.appendChild(bhSvg('text', { x: 0, y: y + 12 }, t.tactic));
+      let x = labW;
+      const total = Math.max(1, t.claimed || 0);
+      cvSegs.forEach((k) => {
+        const n = t[k] || 0;
+        if (!n) return;
+        const w = barW * n / total;
+        const r = bhSvg('rect', { x: x, y: y, width: w, height: 14, class: 'cv-seg-' + k });
+        r.appendChild(bhSvg('title', {}, t.tactic + ': ' + k.replace('_', ' ') + ' ' + n + ' of ' + t.claimed));
+        svg.appendChild(r);
+        x += w;
+      });
+      svg.appendChild(bhSvg('text', { x: labW + barW + 6, y: y + 12 }, (t.claimed || 0) + ' claimed, ' + cvPct(t.measured_pct) + ' detected'));
+    });
+    box.appendChild(svg);
+    const lg = el('div', '', 'bh-legend');
+    cvSegs.forEach((k) => {
+      const s = el('span', '');
+      const sw = bhSvg('svg', { width: 10, height: 10, 'aria-hidden': 'true' });
+      sw.appendChild(bhSvg('rect', { width: 10, height: 10, class: 'cv-seg-' + k }));
+      s.appendChild(sw);
+      s.appendChild(document.createTextNode(' ' + k.replace('_', ' ')));
+      lg.appendChild(s);
+    });
+    box.appendChild(lg);
+  }
+  function cvTechList(box, title, list, hint) {
+    const d = document.createElement('details');
+    d.className = 'cv-details';
+    d.appendChild(el('summary', title + ' (' + (list || []).length + ')'));
+    if (hint) d.appendChild(el('p', hint, 'hint'));
+    if (!(list || []).length) d.appendChild(el('p', 'None.', 'hint'));
+    else {
+      const tb = uiTable(d, ['Technique', 'Name', 'Tactics', 'Status', 'Reason / scenarios']);
+      list.forEach((s) => tableRow(tb, [s.id, s.name || '', (s.tactics || []).join(', '), uiTag(s.status || 'unknown', s.status), s.reason || (s.scenarios || []).join(', ') || '—']));
+    }
+    box.appendChild(d);
+  }
+  function cvLoadValidation() {
+    const box = $('cv-val-out');
+    uiLoading(box, 'Replaying scenarios…');
+    return pgApi('/v1/validate/coverage' + ($('cv-custom').checked ? '?include_custom=true' : '')).then((r) => {
+      r = r || {};
+      box.removeAttribute('aria-busy');
+      box.replaceChildren();
+      const lim = ['Mode: ' + (r.mode || 'observe-only') + (r.synthetic ? ', synthetic data replayed in memory.' : '.')];
+      if (r.note) lim.unshift(r.note);
+      bhCaveat($('cv-note'), 'Limitations (always apply)', lim);
+      const c = r.counts || {};
+      uiMeta(box, [
+        'Claimed techniques: ' + (r.claimed_techniques ?? 'unknown'),
+        'Claimed tactic coverage: ' + cvPct(r.claimed_tactic_coverage_pct),
+        'Measured detected: ' + cvPct(r.measured_detected_pct),
+        'Detected or partial: ' + cvPct(r.measured_detected_or_partial_pct),
+        'Tested: ' + (r.tested_techniques ?? 'unknown') + ' (detection rate ' + cvPct(r.tested_detection_rate_pct) + ')'
+      ]);
+      uiMeta(box, cvSegs.map((k) => k.replace('_', ' ') + ': ' + (c[k] ?? 0)));
+      const sc = r.scenarios || {};
+      uiMeta(box, [
+        'Scenarios passed: ' + (sc.passed ?? '?') + ' of ' + (sc.non_benign ?? '?') + ' (floor ' + (typeof sc.floor === 'number' ? Math.round(sc.floor * 100) + '%' : 'unknown') + ')',
+        'Benign controls: ' + (sc.benign_controls ?? '?') + ', false positives: ' + (sc.benign_false_positives ?? '?')
+      ]);
+      if ((sc.failing || []).length) uiNote(box, 'Failing scenarios: ' + sc.failing.join(', '), true);
+      if ((sc.false_positive_ids || []).length) uiNote(box, 'Benign scenarios that fired: ' + sc.false_positive_ids.join(', '), true);
+      if (!(r.by_tactic || []).length) uiEmpty(box, 'No tactics scored', 'No claimed technique maps to a tactic yet.');
+      else cvTactics(box, r.by_tactic);
+      cvTechList(box, 'Missed', r.missed, 'Claimed, replayed, and not detected.');
+      cvTechList(box, 'Partial', r.partial, 'Some expectations detected, others not.');
+      cvTechList(box, 'Not testable', r.not_testable, 'No synthetic scenario can exercise these; they are not measured.');
+      cvTechList(box, 'Claimed, not measured (untested)', r.claimed_not_measured, 'Claimed by a rule but no scenario covers it. Not evidence of coverage.');
+      if ((r.tested_but_unclaimed || []).length) uiNote(box, 'Tested but not claimed: ' + r.tested_but_unclaimed.join(', '));
+    }).catch((e) => uiError(box, 'validation coverage', e, cvLoadValidation));
+  }
+  function cvLoadBlind() {
+    const box = $('cv-blind-out');
+    uiLoading(box, 'Loading telemetry state…');
+    return Promise.all([pgApi('/v1/coverage/blindspots'), pgApi('/v1/coverage/telemetry')]).then((rs) => {
+      const b = rs[0] || {}, t = rs[1] || {};
+      box.removeAttribute('aria-busy');
+      box.replaceChildren();
+      if (b.caveat) uiNote(box, b.caveat, true);
+      uiMeta(box, ['Stale after: ' + (b.stale_after_hours ?? t.stale_after_hours ?? 'unknown') + ' h', 'Techniques claimed by content rules: ' + (b.techniques_claimed ?? 'unknown'), 'Unobservable now: ' + (b.techniques_unobservable_count ?? 'unknown')]);
+      const ef = el('div', '', 'work-panel');
+      ef.appendChild(el('h3', 'Enable first'));
+      if ((b.enable_first || []).length) uiList(ef, b.enable_first.map((p) => '#' + p.rank + ' ' + p.category + ': ' + p.advice), true);
+      else ef.appendChild(el('p', 'Nothing to enable: no never-seen category blocks a claimed technique.', 'hint'));
+      box.appendChild(ef);
+      box.appendChild(el('h3', 'Telemetry categories'));
+      const cats = t.categories || b.telemetry || [];
+      if (!cats.length) box.appendChild(el('p', 'The server reported no telemetry categories.', 'hint'));
+      else {
+        const tb = uiTable(box, ['Category', 'State', 'Events held', 'Last seen', 'Age (h)']);
+        cats.forEach((c) => tableRow(tb, [c.category, uiTag(c.state || 'unknown', c.state), c.count ?? 0, c.last_seen ? fmtTime(c.last_seen) : 'never', c.age_hours ?? '—']));
+      }
+      box.appendChild(el('h3', 'Collection gaps'));
+      if (!(b.collection_gaps || []).length) box.appendChild(el('p', 'No gaps reported. Every category has recent events.', 'hint'));
+      else {
+        const tb = uiTable(box, ['Category', 'State', 'Rules that cannot fire', 'Techniques lost', 'Degraded', 'Message']);
+        b.collection_gaps.forEach((g) => tableRow(tb, [g.category, uiTag(g.state || 'unknown', g.state), g.rules_cannot_fire ?? 0, g.techniques_cannot_fire ?? 0, g.techniques_degraded ?? 0, g.message || '']));
+      }
+      const un = b.techniques_unobservable || [], ar = b.techniques_at_risk_stale || [];
+      [['Techniques that cannot fire here', un], ['Techniques at risk (stale telemetry)', ar]].forEach((p) => {
+        const d = document.createElement('details');
+        d.className = 'cv-details';
+        d.appendChild(el('summary', p[0] + ' (' + p[1].length + ')'));
+        if (!p[1].length) d.appendChild(el('p', 'None.', 'hint'));
+        else { const tb = uiTable(d, ['Technique', 'Needs', 'Rules', 'Why']); p[1].forEach((x) => tableRow(tb, [x.technique, (x.categories_required || []).join(', '), (x.rule_ids || []).join(', '), x.reason || ''])); }
+        box.appendChild(d);
+      });
+      const v = b.validation || {};
+      if (v.available === false) uiNote(box, 'Validation lab results were not included in this view.');
+      else if (v.note) uiNote(box, v.note);
+    }).catch((e) => uiError(box, 'blind spots', e, cvLoadBlind));
+  }
+  function cvRun() {
+    const box = $('cv-run-out');
+    const btn = $('cv-run');
+    btn.disabled = true;
+    setMsg('cv-msg', 'Running scenarios (read-only compute)…', false);
+    uiLoading(box, 'Replaying scenarios…');
+    pgApi('/v1/validate/run', pgJSON({ all: true, include_custom: $('cv-custom').checked })).then((r) => {
+      r = r || {};
+      box.removeAttribute('aria-busy');
+      box.replaceChildren();
+      setMsg('cv-msg', 'Ran ' + (r.count ?? 0) + ' scenarios. Nothing was recorded.', false);
+      box.appendChild(el('h3', 'Scenario results'));
+      if (r.note) uiNote(box, r.note);
+      if (!(r.results || []).length) { box.appendChild(el('p', 'The server returned no results.', 'hint')); return; }
+      const tb = uiTable(box, ['Scenario', 'Kind', 'Result', 'Rules fired', 'Detail']);
+      r.results.forEach((x) => {
+        const res = x.benign ? (x.false_positive ? 'false positive' : 'clean') : (x.pass ? 'detected' : 'missed');
+        tableRow(tb, [x.name || x.id, (x.kind || '') + (x.benign ? ' (benign control)' : ''), uiTag(res, res === 'false positive' ? 'missed' : res === 'clean' ? 'detected' : res), (x.fired || []).map((f) => f.rule).join(', ') || 'none', x.detail || '']);
+      });
+    }).catch((e) => { box.replaceChildren(); setMsg('cv-msg', 'Run failed: ' + e.message, true); }).finally(() => { btn.disabled = false; });
+  }
+  function loadCoverage() { cvLoadValidation(); cvLoadBlind(); }
+  $('cv-reload').addEventListener('click', loadCoverage);
+  $('cv-run').addEventListener('click', cvRun);
+  $('cv-custom').addEventListener('change', cvLoadValidation);
+  /* === end coverage page === */
+
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', '/': 'search' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '/': 'search' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
