@@ -25,6 +25,7 @@ only samples the corpora. The non-race run keeps the full counts.
 | `TestObfEvaluation` | 60 samples per language (150) | 150 | Thresholds unchanged. |
 | `TestObfBudgetOverCorpus` | 10 per language (40) | 40 | Budget check per sample unchanged. |
 | `TestFileStringsAnalyzerASCIIAndUTF16` | 2 MiB strings blob (24 MiB) | 24 MiB | At 24 MiB the 5 s analyzer budget is exceeded under race on a loaded machine. The input-size bound is exercised in the non-race run. |
+| `TestSimilarityAnalyzerIsWindowed` | 12 MiB input (32 MiB) | 32 MiB | Still beyond the 8 MiB digest window, so windowing and the limit report are exercised; the 5 s analyzer budget was exceeded under race. |
 | `TestDeobBombCapped`, PDF bomb in `TestFilePDF`, `TestFileZipBombRatio`, `TestByteHugeInputIsBounded` | 8 to 24 MiB bombs (40 to 64 MiB, 32 MiB) | full | Still many times over the cap (deob cap is 1 MiB), so the cap logic runs. |
 
 Skipped under race:
