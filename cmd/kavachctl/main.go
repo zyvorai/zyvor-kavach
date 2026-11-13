@@ -47,6 +47,9 @@ func run(args []string) error {
 	if handled, err := rhDispatch(args, os.Stdout); handled {
 		return err
 	}
+	if handled, err := regDispatch(args, os.Stdout); handled {
+		return err
+	}
 	if handled, err := om2Dispatch(args, os.Stdout); handled {
 		return err
 	}

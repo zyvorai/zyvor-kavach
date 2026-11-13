@@ -1,0 +1,644 @@
+{
+ "disclaimer": "Informational, not legal advice. Kavach does not file reports.",
+ "regimes": [
+  {
+   "id": "eu-gdpr-art33",
+   "jurisdiction": "EU",
+   "regulator": "National supervisory authorities (EDPB coordinates)",
+   "name": "GDPR Art. 33 personal data breach",
+   "trigger": "Personal data breach likely to result in a risk to individuals' rights and freedoms",
+   "start_event": "awareness",
+   "applies_to": "Controllers (processors must alert the controller without undue delay)",
+   "stages": [
+    {
+     "name": "Notify supervisory authority",
+     "hours": 72,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Without undue delay and, where feasible, within 72 hours of becoming aware; reasons required if later"
+    }
+   ],
+   "source_url": "https://gdpr-info.eu/art-33-gdpr/",
+   "source_kind": "secondary",
+   "last_verified": "",
+   "last_researched": "2026-11-13",
+   "verified": false,
+   "notes": "Content read from gdpr-info.eu (unofficial reproduction of the Regulation); official EUR-Lex text not read. UNVERIFIED against the official source."
+  },
+  {
+   "id": "eu-nis2-art23",
+   "jurisdiction": "EU",
+   "regulator": "National competent authorities / CSIRTs",
+   "name": "NIS2 Art. 23 significant incident",
+   "trigger": "Significant incident affecting an essential or important entity",
+   "start_event": "awareness",
+   "applies_to": "Essential and important entities under NIS2 (as transposed nationally)",
+   "stages": [
+    {
+     "name": "Early warning",
+     "hours": 24,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Within 24 hours of becoming aware of a significant incident"
+    },
+    {
+     "name": "Incident notification",
+     "hours": 72,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Within 72 hours of becoming aware"
+    },
+    {
+     "name": "Final report",
+     "hours": 0,
+     "business_days": 0,
+     "from_start": false,
+     "description": "No later than one month after the incident notification"
+    }
+   ],
+   "source_url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+   "source_kind": "official_fetched",
+   "last_verified": "",
+   "last_researched": "2026-11-13",
+   "verified": false,
+   "notes": "24h/72h/one-month figures confirmed on the EUR-Lex page; the start trigger wording and national transposition differences were NOT confirmed. UNVERIFIED."
+  },
+  {
+   "id": "eu-dora-major-ict",
+   "jurisdiction": "EU",
+   "regulator": "Competent financial supervisors (ESAs oversee)",
+   "name": "DORA major ICT-related incident",
+   "trigger": "Incident classified as major under the DORA classification RTS",
+   "start_event": "classification",
+   "applies_to": "Financial entities in scope of DORA",
+   "stages": [
+    {
+     "name": "Initial notification",
+     "hours": 24,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Within 4 hours of classifying as major and no later than 24 hours after awareness"
+    },
+    {
+     "name": "Intermediate report",
+     "hours": 0,
+     "business_days": 0,
+     "from_start": false,
+     "description": "Within 72 hours of the initial notification"
+    },
+    {
+     "name": "Final report",
+     "hours": 0,
+     "business_days": 0,
+     "from_start": false,
+     "description": "No later than one month after the latest intermediate report"
+    }
+   ],
+   "source_url": "https://www.springlex.eu/en/packages/dora/rts-ir-regulation/article-5/",
+   "source_kind": "secondary",
+   "last_verified": "",
+   "last_researched": "2026-11-13",
+   "verified": false,
+   "notes": "Taken from a secondary copy of RTS Art. 5 (OJ L 2025/301) surfaced by search; sources disagree on clock starts and weekend relief. Official EUR-Lex text not read. UNVERIFIED. Kavach computes only the 24-hour outer limit from first detection."
+  },
+  {
+   "id": "uk-gdpr",
+   "jurisdiction": "United Kingdom",
+   "regulator": "Information Commissioner's Office (ICO)",
+   "name": "UK GDPR personal data breach",
+   "trigger": "Breach likely to risk individuals' rights and freedoms",
+   "start_event": "awareness",
+   "applies_to": "UK controllers",
+   "stages": [
+    {
+     "name": "Report to ICO",
+     "hours": 72,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Within 72 hours of becoming aware; phased reporting allowed; explain any delay"
+    }
+   ],
+   "source_url": "https://ico.org.uk/for-organisations/report-a-breach/personal-data-breach/personal-data-breaches-a-guide/",
+   "source_kind": "official_fetched",
+   "last_verified": "2026-11-13",
+   "last_researched": "2026-11-13",
+   "verified": true,
+   "notes": ""
+  },
+  {
+   "id": "uk-nis",
+   "jurisdiction": "United Kingdom",
+   "regulator": "Sectoral competent authorities (e.g. Ofcom, Ofgem, DWI, ICO for digital service providers)",
+   "name": "NIS Regulations 2018 incident notification",
+   "trigger": "Incident with significant impact on continuity of an essential service",
+   "start_event": "awareness",
+   "applies_to": "Operators of essential services and relevant digital service providers",
+   "stages": [
+    {
+     "name": "Notify competent authority",
+     "hours": 72,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Without undue delay and no later than 72 hours"
+    }
+   ],
+   "source_url": "https://www.ncsc.gov.uk/collection/nis-directive",
+   "source_kind": "official_unfetched",
+   "last_verified": "",
+   "last_researched": "2026-11-13",
+   "verified": false,
+   "notes": "72 hours recalled from general knowledge; page not read. UNVERIFIED. UK cyber resilience reforms may change this."
+  },
+  {
+   "id": "us-sec-8k-1-05",
+   "jurisdiction": "United States",
+   "regulator": "Securities and Exchange Commission",
+   "name": "Form 8-K Item 1.05 material cybersecurity incident",
+   "trigger": "Registrant determines a cybersecurity incident is material",
+   "start_event": "materiality_determination",
+   "applies_to": "SEC registrants (US-listed issuers)",
+   "stages": [
+    {
+     "name": "File Form 8-K Item 1.05",
+     "hours": 0,
+     "business_days": 4,
+     "from_start": false,
+     "description": "Four business days after determining materiality; materiality must be determined without unreasonable delay; the US Attorney General may authorise delay for national security or public safety"
+    }
+   ],
+   "source_url": "https://www.sec.gov/newsroom/press-releases/2023-139",
+   "source_kind": "official_fetched",
+   "last_verified": "2026-11-13",
+   "last_researched": "2026-11-13",
+   "verified": true,
+   "notes": "Kavach cannot know when materiality is determined, so no deadline is computed from findings (the clock starts at the determination, not detection)."
+  },
+  {
+   "id": "us-hipaa-breach",
+   "jurisdiction": "United States",
+   "regulator": "HHS Office for Civil Rights",
+   "name": "HIPAA Breach Notification Rule",
+   "trigger": "Discovery of a breach of unsecured protected health information",
+   "start_event": "discovery",
+   "applies_to": "HIPAA covered entities (business associates notify the covered entity)",
+   "stages": [
+    {
+     "name": "Notify individuals and HHS (500 or more)",
+     "hours": 1440,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Without unreasonable delay and no later than 60 calendar days after discovery"
+    },
+    {
+     "name": "Annual HHS log (fewer than 500)",
+     "hours": 0,
+     "business_days": 0,
+     "from_start": false,
+     "description": "Within 60 days after the end of the calendar year in which the breach was discovered"
+    }
+   ],
+   "source_url": "https://www.hhs.gov/hipaa/for-professionals/breach-notification/breach-reporting/index.html",
+   "source_kind": "official_unfetched",
+   "last_verified": "",
+   "last_researched": "2026-11-13",
+   "verified": false,
+   "notes": "HHS page returned HTTP 403 to the research tool; values recalled from general knowledge. UNVERIFIED. Media notice also applies for breaches over 500 residents of a state."
+  },
+  {
+   "id": "us-circia",
+   "jurisdiction": "United States",
+   "regulator": "CISA",
+   "name": "CIRCIA covered cyber incident and ransom payment reporting",
+   "trigger": "Covered entity reasonably believes a covered cyber incident occurred; or pays a ransom",
+   "start_event": "reasonable_belief",
+   "applies_to": "Critical infrastructure covered entities (proposed rule)",
+   "stages": [
+    {
+     "name": "Covered cyber incident report",
+     "hours": 72,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Proposed: within 72 hours of reasonable belief the incident occurred"
+    },
+    {
+     "name": "Ransom payment report",
+     "hours": 0,
+     "business_days": 0,
+     "from_start": false,
+     "description": "Proposed: within 24 hours of making a ransom payment"
+    }
+   ],
+   "source_url": "https://www.cisa.gov/topics/cyber-threats-and-advisories/information-sharing/cyber-incident-reporting-critical-infrastructure-act-2022-circia",
+   "source_kind": "official_fetched",
+   "last_verified": "2026-11-13",
+   "last_researched": "2026-11-13",
+   "verified": true,
+   "notes": "NOT YET IN EFFECT: the NPRM was published 2024-04-04 and the final rule has no stated effective date; reporting is not required until the final rule takes effect. Informational only until then."
+  },
+  {
+   "id": "sg-cybersecurity-act",
+   "jurisdiction": "Singapore",
+   "regulator": "Cyber Security Agency of Singapore (CSA)",
+   "name": "Cybersecurity Act incident reporting",
+   "trigger": "Prescribed cybersecurity incident affecting a CII or covered system",
+   "start_event": "awareness",
+   "applies_to": "CII owners (and entities covered by the 2025 amendments)",
+   "stages": [
+    {
+     "name": "Initial notification (verbal)",
+     "hours": 2,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Within 2 hours of becoming aware"
+    },
+    {
+     "name": "Supplementary details",
+     "hours": 72,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Written details within 72 hours per CSA form; secondary sources cite 14 days, conflicting"
+    },
+    {
+     "name": "Final report",
+     "hours": 720,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Within 30 days per CSA form"
+    }
+   ],
+   "source_url": "https://www.csa.gov.sg/legislation/forms/",
+   "source_kind": "secondary",
+   "last_verified": "",
+   "last_researched": "2026-11-13",
+   "verified": false,
+   "notes": "Figures surfaced via search summary of the CSA form page; the Act page fetched did not state them and sources conflict. UNVERIFIED."
+  },
+  {
+   "id": "sg-pdpa",
+   "jurisdiction": "Singapore",
+   "regulator": "Personal Data Protection Commission (PDPC)",
+   "name": "PDPA data breach notification",
+   "trigger": "Breach assessed to be notifiable (significant harm or 500 or more individuals)",
+   "start_event": "assessment",
+   "applies_to": "Organisations under the PDPA",
+   "stages": [
+    {
+     "name": "Notify PDPC",
+     "hours": 72,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Within 3 calendar days of assessing the breach as notifiable (measured here from first detection as a conservative proxy)"
+    }
+   ],
+   "source_url": "https://www.pdpc.gov.sg/overview-of-pdpa/the-legislation/personal-data-protection-act/data-protection-obligations",
+   "source_kind": "official_unfetched",
+   "last_verified": "",
+   "last_researched": "2026-11-13",
+   "verified": false,
+   "notes": "Secondary sources only; PDPC page not read. UNVERIFIED."
+  },
+  {
+   "id": "au-soci-critical",
+   "jurisdiction": "Australia",
+   "regulator": "Australian Signals Directorate (ASD / ACSC)",
+   "name": "SOCI Act critical cyber security incident",
+   "trigger": "Incident with significant impact on availability of a critical infrastructure asset",
+   "start_event": "awareness",
+   "applies_to": "Responsible entities of critical infrastructure assets",
+   "stages": [
+    {
+     "name": "Report to ASD",
+     "hours": 12,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Within 12 hours of becoming aware; written follow-up within 84 hours if reported verbally (sources differ)"
+    }
+   ],
+   "source_url": "https://www.cyber.gov.au/report-and-recover/report/report-a-cyber-security-incident",
+   "source_kind": "secondary",
+   "last_verified": "",
+   "last_researched": "2026-11-13",
+   "verified": false,
+   "notes": "Law-firm summaries; ASD page not read. UNVERIFIED."
+  },
+  {
+   "id": "au-soci-other",
+   "jurisdiction": "Australia",
+   "regulator": "Australian Signals Directorate (ASD / ACSC)",
+   "name": "SOCI Act other cyber security incident",
+   "trigger": "Incident with relevant impact on a critical infrastructure asset",
+   "start_event": "awareness",
+   "applies_to": "Responsible entities of critical infrastructure assets",
+   "stages": [
+    {
+     "name": "Report to ASD",
+     "hours": 72,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Within 72 hours of becoming aware"
+    }
+   ],
+   "source_url": "https://www.cyber.gov.au/report-and-recover/report/report-a-cyber-security-incident",
+   "source_kind": "secondary",
+   "last_verified": "",
+   "last_researched": "2026-11-13",
+   "verified": false,
+   "notes": "Law-firm summaries. UNVERIFIED."
+  },
+  {
+   "id": "au-ndb",
+   "jurisdiction": "Australia",
+   "regulator": "Office of the Australian Information Commissioner (OAIC)",
+   "name": "Notifiable Data Breaches scheme",
+   "trigger": "Eligible data breach likely to result in serious harm",
+   "start_event": "awareness",
+   "applies_to": "Organisations covered by the Privacy Act 1988",
+   "stages": [
+    {
+     "name": "Complete assessment",
+     "hours": 720,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Reasonable steps to assess within 30 days of suspicion; notify OAIC and individuals as soon as practicable once an eligible breach is confirmed"
+    }
+   ],
+   "source_url": "https://www.oaic.gov.au/privacy/notifiable-data-breaches",
+   "source_kind": "official_unfetched",
+   "last_verified": "",
+   "last_researched": "2026-11-13",
+   "verified": false,
+   "notes": "Secondary summaries only; OAIC page not read. UNVERIFIED."
+  },
+  {
+   "id": "jp-appi",
+   "jurisdiction": "Japan",
+   "regulator": "Personal Information Protection Commission (PPC)",
+   "name": "APPI leakage report",
+   "trigger": "Leak, loss or damage of personal data likely to harm individuals' rights (e.g. sensitive data, unauthorised access, 1,000+ people)",
+   "start_event": "awareness",
+   "applies_to": "Business operators handling personal information",
+   "stages": [
+    {
+     "name": "Preliminary report",
+     "hours": 0,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Promptly, commonly described as about 3 to 5 days"
+    },
+    {
+     "name": "Final report (wrongful-purpose cases)",
+     "hours": 1440,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Within 60 days where wrongful acts are involved; otherwise 30 days"
+    }
+   ],
+   "source_url": "https://www.ppc.go.jp/en/",
+   "source_kind": "secondary",
+   "last_verified": "",
+   "last_researched": "2026-11-13",
+   "verified": false,
+   "notes": "Law-firm summaries (Nishimura, Baker McKenzie); PPC guideline not read; a proposed exemption from the preliminary report was not confirmed. UNVERIFIED."
+  },
+  {
+   "id": "in-certin-2022",
+   "jurisdiction": "India",
+   "regulator": "CERT-In (MeitY)",
+   "name": "CERT-In Directions of 28 April 2022",
+   "trigger": "Occurrence of a listed cyber security incident (Annexure I)",
+   "start_event": "awareness",
+   "applies_to": "Service providers, intermediaries, data centres, body corporates, government organisations",
+   "stages": [
+    {
+     "name": "Report to CERT-In",
+     "hours": 6,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Within 6 hours of noticing or being notified of the incident"
+    }
+   ],
+   "source_url": "https://www.cert-in.org.in/",
+   "source_kind": "secondary",
+   "last_verified": "",
+   "last_researched": "2026-11-13",
+   "verified": false,
+   "notes": "Six hours corroborated by several law-firm summaries; the official Directions PDF was not read, and sources differ on the exact trigger. This is the clock Kavach already shows at /v1/compliance/cert-in-clock. UNVERIFIED."
+  },
+  {
+   "id": "in-dpdp",
+   "jurisdiction": "India",
+   "regulator": "Data Protection Board of India",
+   "name": "DPDP Rules 2025 personal data breach (Rule 7)",
+   "trigger": "Personal data breach",
+   "start_event": "awareness",
+   "applies_to": "Data fiduciaries",
+   "stages": [
+    {
+     "name": "Detailed report to the Board",
+     "hours": 72,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Intimate the Board and affected individuals without delay; detailed report within 72 hours (Board may extend)"
+    }
+   ],
+   "source_url": "https://www.dpdpa.com/dpdparules/rule7.html",
+   "source_kind": "secondary",
+   "last_verified": "",
+   "last_researched": "2026-11-13",
+   "verified": false,
+   "notes": "Secondary page reproducing Rule 7; breach obligations may only apply from a later compliance date (one source says 13 May 2027). UNVERIFIED."
+  },
+  {
+   "id": "br-lgpd",
+   "jurisdiction": "Brazil",
+   "regulator": "Autoridade Nacional de Protecao de Dados (ANPD)",
+   "name": "LGPD security incident (Resolution CD/ANPD 15/2024)",
+   "trigger": "Incident that may cause relevant risk or damage to data subjects",
+   "start_event": "awareness",
+   "applies_to": "Controllers under LGPD",
+   "stages": [
+    {
+     "name": "Notify ANPD and data subjects",
+     "hours": 0,
+     "business_days": 3,
+     "from_start": true,
+     "description": "Within 3 business days of knowing the incident affected personal data; supplementary information within 20 business days; small agents get double time"
+    }
+   ],
+   "source_url": "https://www.gov.br/anpd/pt-br",
+   "source_kind": "secondary",
+   "last_verified": "",
+   "last_researched": "2026-11-13",
+   "verified": false,
+   "notes": "Several Brazilian law-firm summaries agree on 3 business days; the Resolution text was not read. UNVERIFIED."
+  },
+  {
+   "id": "sa-nca-ecc",
+   "jurisdiction": "Saudi Arabia",
+   "regulator": "National Cybersecurity Authority (NCA)",
+   "name": "NCA Essential Cybersecurity Controls incident reporting",
+   "trigger": "Cybersecurity incident at an entity subject to NCA controls",
+   "start_event": "awareness",
+   "applies_to": "Government and critical national infrastructure entities",
+   "stages": [
+    {
+     "name": "Notify NCA",
+     "hours": 0,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Timeline not found"
+    }
+   ],
+   "source_url": "https://nca.gov.sa/en/",
+   "source_kind": "official_unfetched",
+   "last_verified": "",
+   "last_researched": "2026-11-13",
+   "verified": false,
+   "notes": "No reporting timeline found in research. UNVERIFIED (rule text unknown)."
+  },
+  {
+   "id": "sa-pdpl",
+   "jurisdiction": "Saudi Arabia",
+   "regulator": "Saudi Data and AI Authority (SDAIA)",
+   "name": "PDPL breach notification",
+   "trigger": "Breach likely to harm data subjects or conflict with their rights (draft amendments would remove the harm test)",
+   "start_event": "awareness",
+   "applies_to": "Controllers under the PDPL",
+   "stages": [
+    {
+     "name": "Notify SDAIA",
+     "hours": 72,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Within 72 hours of awareness; written justification if later"
+    }
+   ],
+   "source_url": "https://sdaia.gov.sa/en/",
+   "source_kind": "secondary",
+   "last_verified": "",
+   "last_researched": "2026-11-13",
+   "verified": false,
+   "notes": "Law-firm summaries; draft amendments are proposals. UNVERIFIED."
+  },
+  {
+   "id": "ae-pdpl",
+   "jurisdiction": "United Arab Emirates",
+   "regulator": "UAE Data Office",
+   "name": "Federal PDPL breach notification",
+   "trigger": "Breach affecting data subjects' privacy, confidentiality or security",
+   "start_event": "awareness",
+   "applies_to": "Controllers under Federal Decree-Law 45 of 2021 (DIFC and ADGM have separate regimes)",
+   "stages": [
+    {
+     "name": "Notify Data Office",
+     "hours": 0,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Immediate notification expected; no fixed time limit published"
+    }
+   ],
+   "source_url": "https://uaelegislation.gov.ae/",
+   "source_kind": "secondary",
+   "last_verified": "",
+   "last_researched": "2026-11-13",
+   "verified": false,
+   "notes": "Secondary summaries say the Executive Regulations had not fixed a deadline. UNVERIFIED."
+  },
+  {
+   "id": "za-popia",
+   "jurisdiction": "South Africa",
+   "regulator": "Information Regulator",
+   "name": "POPIA section 22 security compromise",
+   "trigger": "Reasonable grounds to believe personal information was accessed or acquired by an unauthorised person",
+   "start_event": "awareness",
+   "applies_to": "Responsible parties under POPIA",
+   "stages": [
+    {
+     "name": "Notify Regulator and data subjects",
+     "hours": 0,
+     "business_days": 0,
+     "from_start": true,
+     "description": "As soon as reasonably possible after discovery; no fixed hour limit"
+    }
+   ],
+   "source_url": "https://inforegulator.org.za/",
+   "source_kind": "secondary",
+   "last_verified": "",
+   "last_researched": "2026-11-13",
+   "verified": false,
+   "notes": "Law-firm summaries; form SCN1. UNVERIFIED."
+  },
+  {
+   "id": "ca-pipeda",
+   "jurisdiction": "Canada",
+   "regulator": "Office of the Privacy Commissioner of Canada (OPC)",
+   "name": "PIPEDA breach of security safeguards",
+   "trigger": "Breach creating a real risk of significant harm",
+   "start_event": "awareness",
+   "applies_to": "Private-sector organisations under PIPEDA",
+   "stages": [
+    {
+     "name": "Report to OPC and notify individuals",
+     "hours": 0,
+     "business_days": 0,
+     "from_start": true,
+     "description": "As soon as feasible after determining the breach meets the threshold; keep records for 24 months"
+    }
+   ],
+   "source_url": "https://www.priv.gc.ca/en/privacy-topics/privacy-laws-in-canada/the-personal-information-protection-and-electronic-documents-act-pipeda/pipeda-compliance-help/pipeda-breach-of-security-safeguards/",
+   "source_kind": "official_unfetched",
+   "last_verified": "",
+   "last_researched": "2026-11-13",
+   "verified": false,
+   "notes": "The OPC page tried returned HTTP 404; wording from general knowledge. UNVERIFIED."
+  },
+  {
+   "id": "kr-pipa",
+   "jurisdiction": "South Korea",
+   "regulator": "Personal Information Protection Commission (PIPC) / KISA",
+   "name": "PIPA breach notification (Art. 34)",
+   "trigger": "Leak of personal information (thresholds apply for regulator reporting, e.g. 1,000+ data subjects)",
+   "start_event": "awareness",
+   "applies_to": "Personal information controllers",
+   "stages": [
+    {
+     "name": "Notify data subjects and report to PIPC/KISA",
+     "hours": 72,
+     "business_days": 0,
+     "from_start": true,
+     "description": "Within 72 hours of becoming aware"
+    }
+   ],
+   "source_url": "https://www.pipc.go.kr/eng/",
+   "source_kind": "secondary",
+   "last_verified": "",
+   "last_researched": "2026-11-13",
+   "verified": false,
+   "notes": "Law-firm summaries; a 2026 amendment extending triggers could not be confirmed. UNVERIFIED."
+  },
+  {
+   "id": "hk-pdpo",
+   "jurisdiction": "Hong Kong",
+   "regulator": "Office of the Privacy Commissioner for Personal Data (PCPD)",
+   "name": "PDPO data breach notification",
+   "trigger": "Data breach with real risk of harm (notification currently guidance, not mandatory; reform proposed)",
+   "start_event": "awareness",
+   "applies_to": "Data users under the PDPO",
+   "stages": [
+    {
+     "name": "Notify PCPD (guidance)",
+     "hours": 0,
+     "business_days": 0,
+     "from_start": true,
+     "description": "As soon as practicable; no statutory hour limit"
+    }
+   ],
+   "source_url": "https://www.pcpd.org.hk/english/index.html",
+   "source_kind": "official_unfetched",
+   "last_verified": "",
+   "last_researched": "2026-11-13",
+   "verified": false,
+   "notes": "PCPD page fetch returned no content; recalled from general knowledge. UNVERIFIED."
+  }
+ ]
+}
