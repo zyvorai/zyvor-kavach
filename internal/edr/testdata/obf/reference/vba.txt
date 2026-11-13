@@ -1,0 +1,39 @@
+Sub FormatReport()
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Worksheets("Summary")
+    ws.Range("A1:D1").Font.Bold = True
+    ws.Columns("A:D").AutoFit
+    MsgBox "Report formatted", vbInformation
+End Sub
+-----
+Function TotalRevenue(rng As Range) As Double
+    Dim cell As Range
+    Dim total As Double
+    For Each cell In rng
+        If IsNumeric(cell.Value) Then total = total + cell.Value
+    Next cell
+    TotalRevenue = total
+End Function
+-----
+Private Sub Workbook_Open()
+    Dim lastRow As Long
+    lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+    Range("A2:A" & lastRow).Sort Key1:=Range("A2"), Order1:=xlAscending, Header:=xlNo
+End Sub
+-----
+Sub ExportCsv()
+    Dim fileName As String
+    fileName = ThisWorkbook.Path & "\export_" & Format(Date, "yyyymmdd") & ".csv"
+    ActiveSheet.SaveAs fileName:=fileName, FileFormat:=xlCSV
+End Sub
+-----
+Sub SendReminder()
+    Dim outlookApp As Object
+    Set outlookApp = CreateObject("Outlook.Application")
+    With outlookApp.CreateItem(0)
+        .To = "team@example.com"
+        .Subject = "Weekly reminder"
+        .Body = "Please update the tracker."
+        .Display
+    End With
+End Sub
