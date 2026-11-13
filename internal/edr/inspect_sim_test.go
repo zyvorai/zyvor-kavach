@@ -505,6 +505,31 @@ func TestSimilarityIndexBounded(t *testing.T) {
 	}
 }
 
+// TestSimilarityWeakAgainstPacking documents a limit: the same payload
+// transformed by two different keystreams (a stand-in for per-sample packing
+// or encryption) shares no byte structure, so neither digest links them.
+func TestSimilarityWeakAgainstPacking(t *testing.T) {
+	r := simRNG(77)
+	linked, n := 0, 20
+	for i := 0; i < n; i++ {
+		base := simBlob(r, 64<<10)
+		a, b := append([]byte(nil), base...), append([]byte(nil), base...)
+		ka, kb := simRNG(uint64(i)*2+1000), simRNG(uint64(i)*2+1001)
+		for j := range base {
+			a[j] ^= byte(ka.Uint32())
+			b[j] ^= byte(kb.Uint32())
+		}
+		da, db := ComputeDigests(a), ComputeDigests(b)
+		if CTPHCompare(da.CTPH, db.CTPH) >= SimCTPHThreshold || LSHDistance(da.LSH, db.LSH) <= SimLSHThreshold {
+			linked++
+		}
+	}
+	t.Logf("same payload, different keystream: %d/%d linked (expected ~0)", linked, n)
+	if linked > 1 {
+		t.Fatalf("unexpectedly linked %d/%d", linked, n)
+	}
+}
+
 // ---- fuzz ----
 
 func FuzzCTPH(f *testing.F) {
