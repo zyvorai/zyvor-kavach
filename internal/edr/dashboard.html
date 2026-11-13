@@ -1446,6 +1446,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
             <button type="button" data-page="models" role="menuitem">Models</button>
             <button type="button" data-page="inspector" role="menuitem">Inspector</button>
             <button type="button" data-page="provenance" role="menuitem">Provenance</button>
+            <button type="button" data-page="ransomware-behaviour" role="menuitem">Ransomware behaviour</button>
           </div>
         </div>
       </div>
@@ -3333,6 +3334,34 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     </section>
     <!-- === end provenance page === -->
 
+    <!-- === ransomware behaviour page === -->
+    <section id="page-ransomware-behaviour" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Ransomware behaviour</p>
+        <h1>File-activity patterns that look like mass encryption.</h1>
+        <p class="lede">A per-host score over sliding windows of file events. It reports and ranks; it never blocks, kills or quarantines. The separate Ransomware page is the early-warning view.</p>
+      </header>
+      <div class="nx-note bh-caveat" id="rb-caveat" role="note">
+        <strong>This detector cannot see (always apply)</strong>
+        <ul><li>It sees only file path, size and event rate. It cannot see file contents and cannot see which process did the writing.</li><li>It has known evasions: slow encryption spread over hours, an attacker who stays under the thresholds, and renames that carry only the new name.</li><li>Thresholds are heuristics tuned on synthetic traces, not fitted to this fleet. A low score does not mean a host is safe, and a high score is a lead, not proof.</li></ul>
+      </div>
+      <p class="work-msg" id="rb-msg" role="status"></p>
+      <div class="toolbar-pill nx-filters bh-fields">
+        <button type="button" id="rb-refresh">Refresh</button>
+        <label class="hint" for="rb-host">Open a host directly</label>
+        <input class="input-field" id="rb-host" type="text" placeholder="Host name" autocomplete="off" spellcheck="false">
+        <button type="button" class="secondary" id="rb-host-go">Show timeline</button>
+      </div>
+      <div id="rb-hosts-out"></div>
+      <div class="work-panel prv-detail" id="rb-detail" role="region" aria-labelledby="rb-detail-title" tabindex="-1" hidden>
+        <div class="ui-row"><h3 id="rb-detail-title">Host</h3><button type="button" class="secondary" id="rb-detail-close">Close</button></div>
+        <div id="rb-detail-out"></div>
+      </div>
+      <h2>Detector status, thresholds and blind spots</h2>
+      <div id="rb-status-out"></div>
+    </section>
+    <!-- === end ransomware behaviour page === -->
+
     <!-- === models page === -->
     <section id="page-models" class="page" hidden>
       <header class="page-hero">
@@ -3560,8 +3589,8 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -3684,7 +3713,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -3742,6 +3771,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     if (current === 'models' && typeof loadModels === 'function') loadModels();
     if (current === 'inspector' && typeof loadInspector === 'function') loadInspector();
     if (current === 'provenance' && typeof loadProvenance === 'function') loadProvenance();
+    if (current === 'ransomware-behaviour' && typeof loadRansomwareBehaviour === 'function') loadRansomwareBehaviour();
   }
 
   function fmtTime(v) {
@@ -6194,6 +6224,135 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   });
   /* === end inspector page === */
 
+  /* === ransomware behaviour page === */
+  let rbThr = null;
+  const rbLevelCls = { none: 'clean', watch: 'suspicious', alert: 'malicious-likely' };
+  function rbFactors(parent, list) {
+    if (!(list || []).length) { parent.appendChild(el('p', 'No factor contributed.', 'hint')); return; }
+    const tb = uiTable(parent, ['Factor', 'Kind', 'Value', 'Trigger', 'Triggered', 'Points', 'Detail']);
+    list.forEach((f) => tableRow(tb, [f.name, f.kind, bhNum(f.value, 2), bhNum(f.trigger, 2), f.triggered ? uiTag('yes', 'medium') : 'no', f.points, f.detail || '-']));
+  }
+  function rbStatus() {
+    const box = $('rb-status-out');
+    uiLoading(box);
+    return pgApi('/v1/ransom/status').then((r) => {
+      r = r || {};
+      box.removeAttribute('aria-busy');
+      box.replaceChildren();
+      rbThr = r.thresholds || null;
+      if ((r.cannot_see || []).length) bhCaveat($('rb-caveat'), 'This detector cannot see (always apply)', r.cannot_see.concat(['It sees only file path, size and event rate. It has known evasions (see below).']));
+      if (r.method) box.appendChild(el('p', 'Method: ' + r.method, 'nx-note'));
+      uiMeta(box, ['Window: ' + (r.window || '-'), 'Stride: ' + (r.stride || '-'), 'Report only: ' + (r.report_only ? 'yes' : 'no'), r.alert_rule ? 'Alert rule: ' + r.alert_rule : '']);
+      if (r.note) uiNote(box, r.note, true);
+      const a = el('div', '', 'work-panel');
+      a.appendChild(el('h3', 'Indicators'));
+      a.appendChild(el('h4', 'Primary'));
+      uiList(a, r.primary || []);
+      a.appendChild(el('h4', 'Secondary'));
+      uiList(a, r.secondary || []);
+      box.appendChild(a);
+      const b = el('div', '', 'work-panel');
+      b.appendChild(el('h3', 'Cannot see'));
+      if ((r.cannot_see || []).length) uiList(b, r.cannot_see); else b.appendChild(el('p', 'The server listed nothing.', 'hint'));
+      if (r.recommended_agent_change) b.appendChild(el('p', 'Recommended agent change: ' + r.recommended_agent_change, 'hint'));
+      box.appendChild(b);
+      const t = r.thresholds || {};
+      const keys = Object.keys(t).filter((k) => k !== 'window_ns' && k !== 'stride_ns');
+      const c = el('div', '', 'work-panel');
+      c.appendChild(el('h3', 'Thresholds'));
+      c.appendChild(el('p', 'Literature-guided heuristics tuned on synthetic traces, not fitted to this fleet.', 'hint'));
+      if (keys.length) {
+        const tb = uiTable(c, ['Threshold', 'Value']);
+        keys.forEach((k) => tableRow(tb, [k.replace(/_/g, ' '), t[k]]));
+      } else c.appendChild(el('p', 'The server listed no thresholds.', 'hint'));
+      box.appendChild(c);
+    }).catch((e) => uiError(box, 'the detector status', e, rbStatus));
+  }
+  function rbLoadHosts() {
+    const box = $('rb-hosts-out');
+    $('rb-detail').hidden = true;
+    uiLoading(box, 'Loading hosts…');
+    return pgApi('/v1/ransom/hosts').then((r) => {
+      r = r || {};
+      const hs = r.hosts || [];
+      box.removeAttribute('aria-busy');
+      box.replaceChildren();
+      if (!hs.length) { uiEmpty(box, 'No hosts scored', 'No file events have been received, so there is nothing to score. This does not show that a host is safe: the detector cannot see contents.'); return; }
+      uiMeta(box, ['Hosts: ' + hs.length, 'Ranked by peak window score, highest first', 'Report only: nothing is blocked or quarantined']);
+      const tb = uiTable(box, ['Host', 'Peak score', 'Level', 'Peak window', 'Primary / secondary triggered', 'Windows', 'Alert windows', 'Factors that fired']);
+      hs.forEach((h) => {
+        const p = h.peak || {};
+        const fired = (p.factors || []).filter((f) => f.triggered).map((f) => f.name + ' (' + f.points + ')');
+        tableRow(tb, [h.host, p.score ?? '-', uiTag(p.level || 'none', rbLevelCls[p.level] || ''), pxTime(p.start), (p.primary_triggered ?? '-') + ' / ' + (p.secondary_triggered ?? '-'), h.windows, h.alert_windows, fired.join(', ') || 'none'], { onClick: () => rbOpen(h.host) });
+      });
+      box.appendChild(el('p', 'Select a row (Enter or Space on the keyboard) to see that host over time.', 'hint'));
+    }).catch((e) => uiError(box, 'ransomware behaviour hosts', e, rbLoadHosts));
+  }
+  function rbChart(ws) {
+    const W = 600, H = 170, L = 30, B = 20, T = 8;
+    const svg = bhSvg('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'bh-svg', role: 'img', 'aria-label': 'Bar chart of ' + ws.length + ' window scores over time, oldest on the left. The values are in the table below.' });
+    svg.style.maxWidth = '720px';
+    const max = Math.max(10, ...ws.map((w) => w.score || 0), (rbThr && rbThr.alert_score) || 0);
+    const ph = H - B - T, pw = W - L;
+    const y = (v) => T + ph - (v / max) * ph;
+    svg.appendChild(bhSvg('line', { x1: L, y1: H - B, x2: W, y2: H - B, class: 'rb-axis', stroke: 'currentColor', 'stroke-width': 1 }));
+    svg.appendChild(bhSvg('text', { x: L - 4, y: T + 8, 'text-anchor': 'end' }, Math.round(max)));
+    svg.appendChild(bhSvg('text', { x: L - 4, y: H - B, 'text-anchor': 'end' }, '0'));
+    const bw = pw / ws.length;
+    ws.forEach((w, i) => {
+      const h = Math.max(w.score ? 1 : 0, ph - (y(w.score || 0) - T));
+      const r = bhSvg('rect', { x: L + i * bw + Math.min(0.5, bw * 0.1), y: H - B - h, width: Math.max(1, bw - Math.min(1, bw * 0.2)), height: h, class: 'rb-bar' + (w.level === 'alert' ? ' rb-bar-alert' : w.level === 'watch' ? ' rb-bar-watch' : '') });
+      r.appendChild(bhSvg('title', {}, pxTime(w.start) + ': score ' + w.score + ', ' + (w.level || 'none')));
+      svg.appendChild(r);
+    });
+    if (rbThr && rbThr.alert_score) {
+      svg.appendChild(bhSvg('line', { x1: L, y1: y(rbThr.alert_score), x2: W, y2: y(rbThr.alert_score), class: 'rb-thr', 'stroke-width': 1 }));
+      svg.appendChild(bhSvg('text', { x: W - 2, y: y(rbThr.alert_score) - 3, 'text-anchor': 'end' }, 'alert ' + rbThr.alert_score));
+    }
+    svg.appendChild(bhSvg('text', { x: L, y: H - 5 }, pxTime(ws[0].start)));
+    svg.appendChild(bhSvg('text', { x: W, y: H - 5, 'text-anchor': 'end' }, pxTime(ws[ws.length - 1].end)));
+    return svg;
+  }
+  function rbOpen(host) {
+    const d = $('rb-detail'), out = $('rb-detail-out');
+    d.hidden = false;
+    $('rb-detail-title').textContent = 'Host ' + host;
+    uiLoading(out, 'Loading windows…');
+    d.scrollIntoView({ block: 'nearest' });
+    d.focus();
+    pgApi('/v1/ransom/host?host=' + encodeURIComponent(host)).then((r) => {
+      const ws = (r && r.windows) || [];
+      out.removeAttribute('aria-busy');
+      out.replaceChildren();
+      if (!ws.length) { uiEmpty(out, 'No windows', 'This host has no scored windows.'); return; }
+      uiMeta(out, ['Windows shown: ' + ws.length + ' (most recent 500 at most)', 'Alert windows: ' + ws.filter((w) => w.level === 'alert').length, 'Watch windows: ' + ws.filter((w) => w.level === 'watch').length]);
+      out.appendChild(rbChart(ws));
+      const lg = el('div', '', 'bh-legend');
+      ['Grey bar: none', 'Amber bar: watch', 'Red bar: alert', 'Dashed line: alert score threshold'].forEach((t) => lg.appendChild(el('span', t)));
+      out.appendChild(lg);
+      const peak = ws.reduce((a, w) => ((w.score || 0) > ((a && a.score) || 0) ? w : a), null) || ws[0];
+      out.appendChild(el('h4', 'Factors in the peak window (' + pxTime(peak.start) + ', score ' + peak.score + ')'));
+      rbFactors(out, peak.factors);
+      const det = document.createElement('details');
+      det.appendChild(el('summary', 'All windows (' + ws.length + ')'));
+      const tb = uiTable(det, ['Start', 'Events', 'Score', 'Level', 'Primary', 'Secondary']);
+      ws.slice().reverse().forEach((w) => tableRow(tb, [pxTime(w.start), w.events, w.score, uiTag(w.level || 'none', rbLevelCls[w.level] || ''), w.primary_triggered, w.secondary_triggered]));
+      out.appendChild(det);
+    }).catch((e) => uiError(out, 'the host timeline', e, () => rbOpen(host)));
+  }
+  function loadRansomwareBehaviour() { rbStatus().then(rbLoadHosts); }
+  $('rb-refresh').addEventListener('click', loadRansomwareBehaviour);
+  $('rb-host-go').addEventListener('click', () => {
+    const h = $('rb-host').value.trim();
+    if (!h) { setMsg('rb-msg', 'Enter a host name.', true); $('rb-host').focus(); return; }
+    setMsg('rb-msg', '', false);
+    rbOpen(h);
+  });
+  $('rb-host').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('rb-host-go').click(); });
+  $('rb-detail-close').addEventListener('click', () => { $('rb-detail').hidden = true; });
+  $('rb-detail').addEventListener('keydown', (e) => { if (e.key === 'Escape') $('rb-detail').hidden = true; });
+  /* === end ransomware behaviour page === */
+
   /* === provenance page === */
   let prvStories = [];
   function bhSvg(tag, attrs, text) {
@@ -6877,7 +7036,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   /* === end cert advisories page === */
 
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', '/': 'search' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', '/': 'search' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
