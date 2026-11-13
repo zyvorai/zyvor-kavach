@@ -1,0 +1,42 @@
+param([string]$Path = "C:\Logs", [int]$Days = 14)
+$cutoff = (Get-Date).AddDays(-$Days)
+Get-ChildItem -Path $Path -Filter *.log -Recurse | Where-Object { $_.LastWriteTime -lt $cutoff } | Remove-Item -Force -WhatIf
+Write-Host "Cleanup finished for $Path"
+-----
+function Get-DiskReport {
+    param([string[]]$ComputerName = $env:COMPUTERNAME)
+    foreach ($computer in $ComputerName) {
+        $disks = Get-CimInstance -ClassName Win32_LogicalDisk -ComputerName $computer -Filter "DriveType=3"
+        foreach ($disk in $disks) {
+            [pscustomobject]@{ Computer = $computer; Drive = $disk.DeviceID; FreeGB = [math]::Round($disk.FreeSpace / 1GB, 2) }
+        }
+    }
+}
+Get-DiskReport | Sort-Object FreeGB | Format-Table -AutoSize
+-----
+$services = Get-Service | Where-Object { $_.Status -eq 'Running' -and $_.StartType -eq 'Automatic' }
+$services | Select-Object Name, DisplayName | Export-Csv -Path .\running-services.csv -NoTypeInformation
+if (-not (Test-Path .\backup)) { New-Item -ItemType Directory -Path .\backup | Out-Null }
+Copy-Item .\running-services.csv .\backup\running-services.csv
+-----
+Import-Module ActiveDirectory
+$users = Get-ADUser -Filter {Enabled -eq $true} -Properties LastLogonDate, Department
+foreach ($user in $users) {
+    if ($user.LastLogonDate -lt (Get-Date).AddDays(-90)) {
+        Write-Output ("Stale account: {0} ({1})" -f $user.SamAccountName, $user.Department)
+    }
+}
+-----
+try {
+    $response = Invoke-RestMethod -Uri "https://api.example.com/v1/status" -Headers @{ Accept = "application/json" }
+    Write-Host "Service state: $($response.state)"
+} catch {
+    Write-Error "Request failed: $($_.Exception.Message)"
+    exit 1
+}
+-----
+$packages = @("git", "nodejs", "vscode", "7zip")
+foreach ($pkg in $packages) {
+    choco install $pkg -y --no-progress
+}
+Write-Host "All packages installed"

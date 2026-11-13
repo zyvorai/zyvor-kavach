@@ -1,0 +1,38 @@
+const express = require('express');
+const app = express();
+app.use(express.json());
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', uptime: process.uptime() });
+});
+app.listen(3000, () => console.log('listening on 3000'));
+-----
+function debounce(fn, wait) {
+  let timer = null;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), wait);
+  };
+}
+document.querySelector('#search').addEventListener('input', debounce(runSearch, 250));
+-----
+async function loadUsers() {
+  const response = await fetch('/api/users?limit=50');
+  if (!response.ok) {
+    throw new Error('Failed to load users: ' + response.status);
+  }
+  const users = await response.json();
+  return users.filter(user => user.active).map(user => user.name);
+}
+-----
+const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+console.log(`Order total: ${total.toFixed(2)}`);
+module.exports = { total };
+-----
+class Cache {
+  constructor(limit) { this.limit = limit; this.store = new Map(); }
+  get(key) { return this.store.get(key); }
+  set(key, value) {
+    if (this.store.size >= this.limit) this.store.delete(this.store.keys().next().value);
+    this.store.set(key, value);
+  }
+}

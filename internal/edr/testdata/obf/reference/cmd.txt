@@ -1,0 +1,26 @@
+@echo off
+setlocal enabledelayedexpansion
+set BACKUP_DIR=D:\backups\%date:~-4%%date:~4,2%%date:~7,2%
+if not exist "%BACKUP_DIR%" mkdir "%BACKUP_DIR%"
+xcopy /E /I /Y "C:\Data" "%BACKUP_DIR%" >nul
+echo Backup complete: %BACKUP_DIR%
+-----
+@echo off
+for /f "tokens=1,2 delims==" %%a in (settings.ini) do (
+    if "%%a"=="port" set PORT=%%b
+)
+echo Starting server on port %PORT%
+start "" "C:\Program Files\App\server.exe" --port %PORT%
+-----
+cmd /c "ipconfig /all > %TEMP%\net.txt && type %TEMP%\net.txt"
+-----
+@echo off
+net stop spooler
+del /Q /F %SystemRoot%\System32\spool\PRINTERS\*
+net start spooler
+echo Print spooler restarted
+-----
+if exist C:\Windows\Temp\*.tmp del /Q C:\Windows\Temp\*.tmp
+robocopy C:\Source D:\Mirror /MIR /R:2 /W:5 /LOG:C:\Logs\mirror.log
+-----
+schtasks /create /tn "NightlyBackup" /tr "C:\Scripts\backup.bat" /sc daily /st 02:00
