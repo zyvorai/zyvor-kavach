@@ -1,0 +1,186 @@
+{
+ "area": "login",
+ "policies": [
+  {
+   "id": "login-pass-max-days",
+   "title": "Passwords never expire or expire after more than a year",
+   "description": "Checks that PASS_MAX_DAYS is between 1 and 365.",
+   "rationale": "Rotation limits how long a leaked password stays useful (the 365-day bound is this project's choice).",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "logindefs"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "key": "pass_max_days",
+      "op": "le",
+      "value": "365"
+     },
+     {
+      "key": "pass_max_days",
+      "op": "gt",
+      "value": "0"
+     }
+    ]
+   },
+   "on_absent": "fail",
+   "absence_note": "Distributions commonly ship 99999 (never) when unset: treated as a failure.",
+   "remediation": "Set PASS_MAX_DAYS 365 or lower, per local policy.",
+   "references": [
+    "login.defs(5) manual page concept (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "PASS_MAX_DAYS 99999\n",
+   "negative": "PASS_MAX_DAYS 90\n"
+  },
+  {
+   "id": "login-pass-min-days",
+   "title": "Passwords can be changed immediately after a change",
+   "description": "Checks that PASS_MIN_DAYS is at least 1.",
+   "rationale": "A minimum age stops users cycling through history to reuse an old password.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "logindefs"
+    ]
+   },
+   "check": {
+    "key": "pass_min_days",
+    "op": "ge",
+    "value": "1"
+   },
+   "on_absent": "fail",
+   "absence_note": "Default is 0 (UNVERIFIED), which allows instant re-change: treated as a failure.",
+   "remediation": "Set PASS_MIN_DAYS 1.",
+   "references": [
+    "login.defs(5) manual page concept (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "PASS_MIN_DAYS 0\n",
+   "negative": "PASS_MIN_DAYS 1\n"
+  },
+  {
+   "id": "login-pass-warn-age",
+   "title": "Users get little warning before password expiry",
+   "description": "Checks that PASS_WARN_AGE is at least 7 days.",
+   "rationale": "Short notice leads to lockouts and rushed, weaker passwords.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "logindefs"
+    ]
+   },
+   "check": {
+    "key": "pass_warn_age",
+    "op": "ge",
+    "value": "7"
+   },
+   "on_absent": "unknown",
+   "absence_note": "Default is distribution specific; result is unknown.",
+   "remediation": "Set PASS_WARN_AGE 7.",
+   "references": [
+    "login.defs(5) manual page concept (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "PASS_WARN_AGE 0\n",
+   "negative": "PASS_WARN_AGE 7\n"
+  },
+  {
+   "id": "login-encrypt-method",
+   "title": "Password hashing method is weak",
+   "description": "Checks that new passwords use SHA-512 or yescrypt.",
+   "rationale": "MD5, DES and SHA-256-without-rounds hashes are fast to attack offline.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "logindefs"
+    ]
+   },
+   "check": {
+    "key": "encrypt_method",
+    "op": "in",
+    "values": [
+     "SHA512",
+     "YESCRYPT",
+     "GOST_YESCRYPT"
+    ]
+   },
+   "on_absent": "unknown",
+   "absence_note": "Default hash depends on the distribution and its PAM stack; result is unknown.",
+   "remediation": "Set ENCRYPT_METHOD YESCRYPT (or SHA512).",
+   "references": [
+    "login.defs(5) manual page concept (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "ENCRYPT_METHOD MD5\n",
+   "negative": "ENCRYPT_METHOD YESCRYPT\n"
+  },
+  {
+   "id": "login-login-retries",
+   "title": "Many failed login attempts are allowed per session",
+   "description": "Checks that LOGIN_RETRIES is 5 or lower.",
+   "rationale": "Fewer retries slow terminal-based guessing.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "logindefs"
+    ]
+   },
+   "check": {
+    "key": "login_retries",
+    "op": "le",
+    "value": "5"
+   },
+   "on_absent": "unknown",
+   "absence_note": "Default is distribution specific; result is unknown.",
+   "remediation": "Set LOGIN_RETRIES 5.",
+   "references": [
+    "login.defs(5) manual page concept (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "LOGIN_RETRIES 20\n",
+   "negative": "LOGIN_RETRIES 3\n"
+  },
+  {
+   "id": "login-umask",
+   "title": "Default umask leaves new files group- or world-writable/readable",
+   "description": "Checks that UMASK is 027 or stricter.",
+   "rationale": "A permissive default creates files other users can read or modify.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "logindefs"
+    ]
+   },
+   "check": {
+    "key": "umask",
+    "op": "regex",
+    "value": "^0?(027|037|077)$"
+   },
+   "on_absent": "unknown",
+   "absence_note": "Default umask is 022 on many distributions (UNVERIFIED); result is unknown when the file does not set it.",
+   "remediation": "Set UMASK 027 (or 077).",
+   "references": [
+    "login.defs(5) manual page concept (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "UMASK 022\n",
+   "negative": "UMASK 027\n"
+  }
+ ]
+}

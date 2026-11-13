@@ -1,0 +1,507 @@
+{
+ "area": "ssh",
+ "policies": [
+  {
+   "id": "ssh-root-login",
+   "title": "SSH daemon allows direct root login with a password",
+   "description": "Checks that root cannot log in over SSH with a password.",
+   "rationale": "A shared, well-known account name with full privileges is the first target of password guessing.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "sshd"
+    ]
+   },
+   "check": {
+    "key": "permitrootlogin",
+    "op": "in",
+    "values": [
+     "no",
+     "prohibit-password",
+     "without-password",
+     "forced-commands-only"
+    ]
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is prohibit-password (key-only for root) per the public man page, which is acceptable.",
+   "remediation": "Set PermitRootLogin to no (or prohibit-password) and use named accounts with sudo.",
+   "references": [
+    "OpenSSH sshd_config(5) manual page (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)",
+    "ATT&CK T1078 (hint)"
+   ],
+   "positive": "PermitRootLogin yes\n",
+   "negative": "PermitRootLogin no\n"
+  },
+  {
+   "id": "ssh-password-auth",
+   "title": "SSH password authentication is enabled",
+   "description": "Checks that only key-based (or other strong) authentication is used.",
+   "rationale": "Passwords on an internet-reachable daemon invite brute force and credential stuffing.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "sshd"
+    ]
+   },
+   "check": {
+    "key": "passwordauthentication",
+    "op": "equals",
+    "value": "no"
+   },
+   "on_absent": "fail",
+   "absence_note": "Default is yes, so an absent line means passwords are accepted: treated as a failure.",
+   "remediation": "Set PasswordAuthentication no after confirming key logins work.",
+   "references": [
+    "OpenSSH sshd_config(5) manual page (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)",
+    "ATT&CK T1110 (hint)"
+   ],
+   "positive": "PasswordAuthentication yes\n",
+   "negative": "PasswordAuthentication no\n"
+  },
+  {
+   "id": "ssh-empty-passwords",
+   "title": "SSH permits accounts with empty passwords",
+   "description": "Checks that accounts without a password cannot log in.",
+   "rationale": "An empty password turns the account into an open door.",
+   "severity": "critical",
+   "applies_to": {
+    "formats": [
+     "sshd"
+    ]
+   },
+   "check": {
+    "key": "permitemptypasswords",
+    "op": "equals",
+    "value": "no"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is no per the public man page.",
+   "remediation": "Set PermitEmptyPasswords no.",
+   "references": [
+    "OpenSSH sshd_config(5) manual page (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "PermitEmptyPasswords yes\n",
+   "negative": "PermitEmptyPasswords no\n"
+  },
+  {
+   "id": "ssh-x11-forwarding",
+   "title": "SSH X11 forwarding is enabled",
+   "description": "Checks that X11 forwarding is off on servers.",
+   "rationale": "Forwarding exposes the client display to the server and the server to the display.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "sshd"
+    ]
+   },
+   "check": {
+    "key": "x11forwarding",
+    "op": "equals",
+    "value": "no"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is no per the public man page.",
+   "remediation": "Set X11Forwarding no unless a documented need exists.",
+   "references": [
+    "OpenSSH sshd_config(5) manual page (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "X11Forwarding yes\n",
+   "negative": "X11Forwarding no\n"
+  },
+  {
+   "id": "ssh-max-auth-tries",
+   "title": "SSH allows many authentication attempts per connection",
+   "description": "Checks that MaxAuthTries is 4 or lower.",
+   "rationale": "Fewer attempts per connection slows online guessing (this threshold is this project's own choice).",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "sshd"
+    ]
+   },
+   "check": {
+    "key": "maxauthtries",
+    "op": "le",
+    "value": "4"
+   },
+   "on_absent": "fail",
+   "absence_note": "Default is 6 per the public man page, above the threshold used here: treated as a failure.",
+   "remediation": "Set MaxAuthTries 4 (or lower).",
+   "references": [
+    "OpenSSH sshd_config(5) manual page (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "MaxAuthTries 10\n",
+   "negative": "MaxAuthTries 3\n"
+  },
+  {
+   "id": "ssh-hostbased-auth",
+   "title": "SSH host-based authentication is enabled",
+   "description": "Checks that trust based on the client host (rhosts-style) is not used.",
+   "rationale": "Host trust lets one compromised machine impersonate every user on it.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "sshd"
+    ]
+   },
+   "check": {
+    "key": "hostbasedauthentication",
+    "op": "equals",
+    "value": "no"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is no per the public man page.",
+   "remediation": "Set HostbasedAuthentication no.",
+   "references": [
+    "OpenSSH sshd_config(5) manual page (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "HostbasedAuthentication yes\n",
+   "negative": "HostbasedAuthentication no\n"
+  },
+  {
+   "id": "ssh-user-environment",
+   "title": "SSH lets users set environment variables",
+   "description": "Checks that user-controlled environment settings are ignored.",
+   "rationale": "The man page notes this can bypass restrictions, for example through LD_PRELOAD.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "sshd"
+    ]
+   },
+   "check": {
+    "key": "permituserenvironment",
+    "op": "equals",
+    "value": "no"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is no per the public man page.",
+   "remediation": "Set PermitUserEnvironment no.",
+   "references": [
+    "OpenSSH sshd_config(5) manual page (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "PermitUserEnvironment yes\n",
+   "negative": "PermitUserEnvironment no\n"
+  },
+  {
+   "id": "ssh-log-level",
+   "title": "SSH logging verbosity is not INFO or VERBOSE",
+   "description": "Checks that logging is neither suppressed nor at privacy-violating debug levels.",
+   "rationale": "QUIET/ERROR hides probing; DEBUG levels log more than the man page recommends.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "sshd"
+    ]
+   },
+   "check": {
+    "key": "loglevel",
+    "op": "in",
+    "values": [
+     "INFO",
+     "VERBOSE"
+    ]
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is INFO per the public man page.",
+   "remediation": "Set LogLevel VERBOSE (records key fingerprints) or INFO.",
+   "references": [
+    "OpenSSH sshd_config(5) manual page (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "LogLevel DEBUG3\n",
+   "negative": "LogLevel VERBOSE\n"
+  },
+  {
+   "id": "ssh-ignore-rhosts",
+   "title": "SSH honours .rhosts files",
+   "description": "Checks that legacy rhosts trust files are ignored.",
+   "rationale": "Rhosts files are an old trust mechanism that is easy to abuse.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "sshd"
+    ]
+   },
+   "check": {
+    "key": "ignorerhosts",
+    "op": "equals",
+    "value": "yes"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is yes (UNVERIFIED in this research: not read from the man page).",
+   "remediation": "Set IgnoreRhosts yes.",
+   "references": [
+    "OpenSSH sshd_config(5) manual page (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "IgnoreRhosts no\n",
+   "negative": "IgnoreRhosts yes\n"
+  },
+  {
+   "id": "ssh-idle-timeout",
+   "title": "SSH idle sessions are never probed or closed",
+   "description": "Checks that ClientAliveInterval is between 1 and 900 seconds.",
+   "rationale": "Abandoned sessions stay usable by anyone who reaches the terminal.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "sshd"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "key": "clientaliveinterval",
+      "op": "gt",
+      "value": "0"
+     },
+     {
+      "key": "clientaliveinterval",
+      "op": "le",
+      "value": "900"
+     }
+    ]
+   },
+   "on_absent": "fail",
+   "absence_note": "Default ClientAliveInterval is 0 (no probes) per the public man page: treated as a failure.",
+   "remediation": "Set ClientAliveInterval 300 and ClientAliveCountMax 2 (or similar).",
+   "references": [
+    "OpenSSH sshd_config(5) manual page (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "ClientAliveInterval 0\n",
+   "negative": "ClientAliveInterval 300\n"
+  },
+  {
+   "id": "ssh-login-grace-time",
+   "title": "SSH login grace time is long or unlimited",
+   "description": "Checks that unauthenticated connections are dropped within 60 seconds (only plain seconds are understood).",
+   "rationale": "Long grace periods let idle unauthenticated connections tie up connection slots.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "sshd"
+    ]
+   },
+   "check": {
+    "key": "logingracetime",
+    "op": "regex",
+    "value": "^(0*[1-9]|[1-5][0-9]|60)s?$"
+   },
+   "on_absent": "fail",
+   "absence_note": "Default is 120 seconds (UNVERIFIED in this research), longer than the 60 s used here: treated as a failure.",
+   "remediation": "Set LoginGraceTime 30 (or up to 60).",
+   "references": [
+    "OpenSSH sshd_config(5) manual page (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "LoginGraceTime 0\n",
+   "negative": "LoginGraceTime 30\n"
+  },
+  {
+   "id": "ssh-weak-ciphers",
+   "title": "SSH offers legacy ciphers",
+   "description": "Checks that an explicit Ciphers line does not enable CBC, 3DES, RC4-family ciphers.",
+   "rationale": "These ciphers have known structural or key-size weaknesses.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "sshd"
+    ]
+   },
+   "check": {
+    "key": "ciphers",
+    "op": "not_regex",
+    "value": "(?i)(3des|-cbc|arcfour|rc4|blowfish|cast128)"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default cipher list favours ChaCha20-Poly1305 and AES-GCM/CTR per the public man page (it still lists some legacy ciphers as supported, not default).",
+   "remediation": "Use an explicit modern list such as chacha20-poly1305, aes256-gcm and aes128-gcm.",
+   "references": [
+    "OpenSSH sshd_config(5) manual page (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "Ciphers aes128-cbc,3des-cbc\n",
+   "negative": "Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com\n"
+  },
+  {
+   "id": "ssh-weak-macs",
+   "title": "SSH offers legacy MACs",
+   "description": "Checks that an explicit MACs line does not enable MD5, truncated SHA-1 or 64-bit UMAC.",
+   "rationale": "Short or MD5-based MACs give weaker integrity protection.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "sshd"
+    ]
+   },
+   "check": {
+    "key": "macs",
+    "op": "not_regex",
+    "value": "(?i)(hmac-md5|hmac-sha1-96|umac-64|ripemd160)"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default MAC list favours encrypt-then-MAC variants per the public man page.",
+   "remediation": "Prefer hmac-sha2-256-etm and hmac-sha2-512-etm.",
+   "references": [
+    "OpenSSH sshd_config(5) manual page (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "MACs hmac-md5,hmac-sha2-256\n",
+   "negative": "MACs hmac-sha2-256-etm@openssh.com\n"
+  },
+  {
+   "id": "ssh-weak-kex",
+   "title": "SSH offers SHA-1 based key exchange",
+   "description": "Checks that an explicit KexAlgorithms line does not enable SHA-1 Diffie-Hellman groups.",
+   "rationale": "SHA-1 based exchanges and the 1024-bit group are considered legacy.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "sshd"
+    ]
+   },
+   "check": {
+    "key": "kexalgorithms",
+    "op": "not_regex",
+    "value": "(?i)(diffie-hellman-group1-sha1|diffie-hellman-group14-sha1|diffie-hellman-group-exchange-sha1)"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default KEX list is modern in current OpenSSH (UNVERIFIED in this research).",
+   "remediation": "Use curve25519-sha256 and diffie-hellman-group16-sha512 or stronger.",
+   "references": [
+    "OpenSSH sshd_config(5) manual page (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "KexAlgorithms diffie-hellman-group1-sha1\n",
+   "negative": "KexAlgorithms curve25519-sha256\n"
+  },
+  {
+   "id": "ssh-strict-modes",
+   "title": "SSH StrictModes is disabled",
+   "description": "Checks that sshd refuses keys in files with unsafe ownership or permissions.",
+   "rationale": "Without it, a group-writable authorized_keys can be silently edited by others.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "sshd"
+    ]
+   },
+   "check": {
+    "key": "strictmodes",
+    "op": "equals",
+    "value": "yes"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is yes (UNVERIFIED in this research).",
+   "remediation": "Set StrictModes yes.",
+   "references": [
+    "OpenSSH sshd_config(5) manual page (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "StrictModes no\n",
+   "negative": "StrictModes yes\n"
+  },
+  {
+   "id": "ssh-legacy-protocol",
+   "title": "SSH protocol 1 is enabled",
+   "description": "Checks that a legacy Protocol line does not enable SSH-1.",
+   "rationale": "SSH-1 has fundamental cryptographic flaws.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "sshd"
+    ]
+   },
+   "check": {
+    "key": "protocol",
+    "op": "equals",
+    "value": "2"
+   },
+   "on_absent": "pass",
+   "absence_note": "Modern OpenSSH has no protocol 1 and no Protocol keyword (UNVERIFIED); absent means protocol 2 only.",
+   "remediation": "Remove the Protocol line or set Protocol 2.",
+   "references": [
+    "OpenSSH sshd_config(5) manual page (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "Protocol 2,1\n",
+   "negative": "Protocol 2\n"
+  },
+  {
+   "id": "ssh-access-allowlist",
+   "title": "SSH has no user or group allow-list",
+   "description": "Checks that SSH access is limited to named users or groups.",
+   "rationale": "An allow-list limits exposure from forgotten or service accounts.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "sshd"
+    ]
+   },
+   "check": {
+    "any": [
+     {
+      "key": "allowusers",
+      "op": "present"
+     },
+     {
+      "key": "allowgroups",
+      "op": "present"
+     }
+    ]
+   },
+   "on_absent": "fail",
+   "absence_note": "Without AllowUsers/AllowGroups every valid account may log in: treated as a failure.",
+   "remediation": "Add AllowGroups ssh-users (or AllowUsers) listing who may log in.",
+   "references": [
+    "OpenSSH sshd_config(5) manual page (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "Port 22\n",
+   "negative": "AllowGroups sshusers\n"
+  }
+ ]
+}

@@ -49,9 +49,10 @@ const (
 	InspectKindScript  = "script"
 	InspectKindCmdline = "cmdline"
 	InspectKindDomain  = "domain"
+	InspectKindConfig  = "config"
 )
 
-var inspectKinds = []string{InspectKindFile, InspectKindScript, InspectKindCmdline, InspectKindDomain}
+var inspectKinds = []string{InspectKindFile, InspectKindScript, InspectKindCmdline, InspectKindDomain, InspectKindConfig}
 
 // InspectMaxDepth is the deepest decoder/archive recursion analyzers may use.
 const InspectMaxDepth = inspectMaxRecursion
@@ -466,6 +467,7 @@ func RecentInspectReports(limit int) []*InspectReport {
 //	POST /v1/inspect/script   raw text or {"text": "..."}
 //	POST /v1/inspect/cmdline  raw text or {"text": "..."}
 //	POST /v1/inspect/domain   raw text or {"text": "..."} (one domain)
+//	POST /v1/inspect/config   raw text or {"text": "..."} (a configuration file, parse-only)
 //	GET  /v1/inspect/reports  recent reports (no input bytes)
 //	GET  /v1/inspect/analyzers
 func RegisterInspect(mux *http.ServeMux, token string) {

@@ -1,0 +1,192 @@
+{
+ "area": "pam",
+ "policies": [
+  {
+   "id": "pam-nullok",
+   "title": "PAM accepts empty passwords (nullok)",
+   "description": "Checks that pam_unix in the auth stack does not allow blank passwords.",
+   "rationale": "nullok lets accounts with an empty password log in.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "pam"
+    ]
+   },
+   "check": {
+    "key": "pam.auth.pam_unix",
+    "op": "not_regex",
+    "value": "\\bnullok(_secure)?\\b"
+   },
+   "on_absent": "pass",
+   "absence_note": "Without a pam_unix auth line there is nothing to flag.",
+   "remediation": "Remove nullok from the pam_unix auth line.",
+   "references": [
+    "Linux-PAM module concepts (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "auth required pam_unix.so nullok\n",
+   "negative": "auth required pam_unix.so\n"
+  },
+  {
+   "id": "pam-weak-hash",
+   "title": "PAM stores passwords with a weak hash",
+   "description": "Checks that pam_unix password changes do not select MD5/DES.",
+   "rationale": "Old hashes are quick to crack offline.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "pam"
+    ]
+   },
+   "check": {
+    "key": "pam.password.pam_unix",
+    "op": "not_regex",
+    "value": "\\b(md5|des|bigcrypt)\\b"
+   },
+   "on_absent": "pass",
+   "absence_note": "No explicit algorithm means the system default applies.",
+   "remediation": "Use sha512 or yescrypt on the pam_unix password line.",
+   "references": [
+    "Linux-PAM module concepts (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "password required pam_unix.so md5\n",
+   "negative": "password required pam_unix.so sha512\n"
+  },
+  {
+   "id": "pam-faillock",
+   "title": "No account lockout module is configured",
+   "description": "Checks that failed logins are counted and eventually lock the account.",
+   "rationale": "Without lockout, online password guessing is unthrottled. The module may live in an included file, which is not followed.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "pam"
+    ]
+   },
+   "check": {
+    "any": [
+     {
+      "key": "pam.auth.pam_faillock",
+      "op": "present"
+     },
+     {
+      "key": "pam.auth.pam_tally2",
+      "op": "present"
+     },
+     {
+      "key": "pam.auth.pam_tally",
+      "op": "present"
+     }
+    ]
+   },
+   "on_absent": "evaluate",
+   "absence_note": "Evaluated explicitly (module present or not).",
+   "remediation": "Add pam_faillock (or equivalent) to the auth stack.",
+   "references": [
+    "Linux-PAM module concepts (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "auth required pam_unix.so\n",
+   "negative": "auth required pam_faillock.so preauth\nauth required pam_unix.so\n",
+   "applies_when": {
+    "key": "pam.auth.pam_unix",
+    "op": "present"
+   }
+  },
+  {
+   "id": "pam-permit-sufficient",
+   "title": "pam_permit used as sufficient in the auth stack",
+   "description": "Checks that pam_permit never grants authentication by itself.",
+   "rationale": "A sufficient pam_permit in auth lets every login succeed.",
+   "severity": "critical",
+   "applies_to": {
+    "formats": [
+     "pam"
+    ]
+   },
+   "check": {
+    "key": "pam.module.pam_permit",
+    "op": "not_regex",
+    "value": "^auth\\s+sufficient\\b"
+   },
+   "on_absent": "pass",
+   "absence_note": "No pam_permit line, nothing to flag.",
+   "remediation": "Remove it or make it required behind a real authentication module.",
+   "references": [
+    "Linux-PAM module concepts (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "auth sufficient pam_permit.so\n",
+   "negative": "auth required pam_permit.so\n"
+  },
+  {
+   "id": "pam-su-wheel",
+   "title": "su is not restricted to a group",
+   "description": "Checks that su requires membership of a trusted group.",
+   "rationale": "Open su lets any account that learns the root password escalate.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "pam"
+    ]
+   },
+   "check": {
+    "key": "pam.auth.pam_wheel",
+    "op": "regex",
+    "value": "\\buse_uid\\b"
+   },
+   "on_absent": "evaluate",
+   "absence_note": "Evaluated explicitly; applies only to files that look like the su stack (pam_rootok present).",
+   "remediation": "Add: auth required pam_wheel.so use_uid",
+   "references": [
+    "Linux-PAM module concepts (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "auth sufficient pam_rootok.so\nauth required pam_unix.so\n",
+   "negative": "auth sufficient pam_rootok.so\nauth required pam_wheel.so use_uid\n",
+   "applies_when": {
+    "key": "pam.auth.pam_rootok",
+    "op": "present"
+   }
+  },
+  {
+   "id": "pam-debug",
+   "title": "A PAM module runs with debug enabled",
+   "description": "Checks that no PAM module line carries the debug option.",
+   "rationale": "Debug output from authentication modules can include sensitive data in logs.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "pam"
+    ]
+   },
+   "check": {
+    "key_regex": "^pam\\.module\\.",
+    "op": "not_regex",
+    "value": "(^|\\s)debug(\\s|$)"
+   },
+   "on_absent": "pass",
+   "absence_note": "No module lines, nothing to flag.",
+   "remediation": "Remove the debug option.",
+   "references": [
+    "Linux-PAM module concepts (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "auth required pam_unix.so debug\n",
+   "negative": "auth required pam_unix.so\n"
+  }
+ ]
+}

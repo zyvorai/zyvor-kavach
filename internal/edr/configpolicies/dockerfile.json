@@ -1,0 +1,441 @@
+{
+ "area": "dockerfile",
+ "policies": [
+  {
+   "id": "dockerfile-user-root",
+   "title": "Image runs as root",
+   "description": "Checks that the final stage sets a non-root USER.",
+   "rationale": "Root inside the container makes any application bug more costly.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "dockerfile"
+    ]
+   },
+   "check": {
+    "key": "df.final.user",
+    "op": "not_regex",
+    "value": "(?i)^(root|0)(:.*)?$",
+    "occ": "last"
+   },
+   "on_absent": "fail",
+   "absence_note": "No USER in the final stage means the process runs as root: treated as a failure.",
+   "remediation": "Create a dedicated user and add USER <uid>.",
+   "references": [
+    "Docker Dockerfile best practices (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)",
+    "ATT&CK T1611 (hint)"
+   ],
+   "positive": "FROM alpine:3.20\nRUN echo hi\n",
+   "negative": "FROM alpine:3.20\nRUN adduser -D app\nUSER app\n"
+  },
+  {
+   "id": "dockerfile-base-latest",
+   "title": "Base image uses latest or no tag",
+   "description": "Checks that FROM images carry an explicit non-latest tag (build-argument images are skipped).",
+   "rationale": "Mutable tags make builds irreproducible.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "dockerfile"
+    ]
+   },
+   "check": {
+    "any": [
+     {
+      "key": "df.from.image",
+      "op": "regex",
+      "value": "\\$"
+     },
+     {
+      "key": "df.from.image",
+      "op": "not_regex",
+      "value": "(^|/)[^/:@]+$|:latest(@|$)"
+     }
+    ]
+   },
+   "on_absent": "pass",
+   "absence_note": "No external base image.",
+   "remediation": "Pin a version tag, ideally a digest.",
+   "references": [
+    "Docker Dockerfile best practices (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "FROM ubuntu\nUSER app\n",
+   "negative": "FROM ubuntu:24.04\nUSER app\n"
+  },
+  {
+   "id": "dockerfile-base-digest",
+   "title": "Base image is not pinned by digest",
+   "description": "Checks that FROM references include a digest.",
+   "rationale": "Digests are immutable; tags can be repointed (the Docker guide also notes the trade-off of missing automatic updates).",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "dockerfile"
+    ]
+   },
+   "check": {
+    "any": [
+     {
+      "key": "df.from.image",
+      "op": "regex",
+      "value": "\\$"
+     },
+     {
+      "key": "df.from.image",
+      "op": "regex",
+      "value": "@sha256:[0-9a-f]{64}"
+     }
+    ]
+   },
+   "on_absent": "pass",
+   "absence_note": "No external base image.",
+   "remediation": "Pin by digest and use an update bot to refresh it.",
+   "references": [
+    "Docker Dockerfile best practices (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "FROM ubuntu:24.04\n",
+   "negative": "FROM ubuntu@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n"
+  },
+  {
+   "id": "dockerfile-curl-pipe-shell",
+   "title": "Build pipes a download straight into a shell",
+   "description": "Checks that no RUN downloads and executes in one step.",
+   "rationale": "The script is not verified and can change between builds.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "dockerfile"
+    ]
+   },
+   "check": {
+    "key": "df.run",
+    "op": "not_regex",
+    "value": "(?i)(curl|wget)\\b[^|;&]*\\|\\s*(sudo\\s+(-\\S+\\s+)*)?(ba|z|da|k)?sh\\b"
+   },
+   "on_absent": "pass",
+   "absence_note": "No RUN instruction.",
+   "remediation": "Download, verify a checksum or signature, then run.",
+   "references": [
+    "Docker Dockerfile best practices (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)",
+    "ATT&CK T1195 (hint)"
+   ],
+   "positive": "FROM alpine:3.20\nRUN curl -fsSL https://x.example/i.sh | sh\n",
+   "negative": "FROM alpine:3.20\nRUN curl -fsSLO https://x.example/i.tgz && sha256sum -c i.sha\n"
+  },
+  {
+   "id": "dockerfile-env-secret",
+   "title": "A secret is baked into the image with ENV",
+   "description": "Checks that ENV variables with secret-like names are empty or variable references.",
+   "rationale": "ENV values persist in image layers and can be read by anyone with the image.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "dockerfile"
+    ]
+   },
+   "check": {
+    "key_regex": "^df\\.env\\..*(passw(or)?d|secret|token|api_?key|access_?key|private_?key|credential)",
+    "op": "not_regex",
+    "value": "^[^$/\\s]"
+   },
+   "on_absent": "pass",
+   "absence_note": "No secret-like ENV names.",
+   "remediation": "Use build secrets (RUN --mount=type=secret) or runtime injection.",
+   "references": [
+    "Docker Dockerfile best practices (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "FROM alpine:3.20\nENV DB_PASSWORD=hunter2\n",
+   "negative": "FROM alpine:3.20\nENV DB_HOST=db\n"
+  },
+  {
+   "id": "dockerfile-arg-secret",
+   "title": "A secret default is set in an ARG",
+   "description": "Checks that ARG variables with secret-like names have no literal default.",
+   "rationale": "Build arguments are visible in image history.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "dockerfile"
+    ]
+   },
+   "check": {
+    "key_regex": "^df\\.arg\\..*(passw(or)?d|secret|token|api_?key|access_?key|private_?key|credential)",
+    "op": "not_regex",
+    "value": "^[^$/\\s]"
+   },
+   "on_absent": "pass",
+   "absence_note": "No secret-like ARG names with defaults.",
+   "remediation": "Pass secrets with build secrets, not ARG.",
+   "references": [
+    "Docker Dockerfile best practices (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "FROM alpine:3.20\nARG API_TOKEN=abc123\n",
+   "negative": "FROM alpine:3.20\nARG API_TOKEN\n"
+  },
+  {
+   "id": "dockerfile-add-url",
+   "title": "ADD fetches a remote URL",
+   "description": "Checks that ADD is not used to download.",
+   "rationale": "ADD from a URL has no integrity check unless --checksum is used.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "dockerfile"
+    ]
+   },
+   "check": {
+    "key": "df.add",
+    "op": "not_regex",
+    "value": "(^|\\s)https?://"
+   },
+   "on_absent": "pass",
+   "absence_note": "No ADD instruction.",
+   "remediation": "Use COPY for local files; download with a checksum for remote ones.",
+   "references": [
+    "Docker Dockerfile best practices (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "FROM alpine:3.20\nADD https://x.example/a.tgz /a\n",
+   "negative": "FROM alpine:3.20\nCOPY a.tgz /a\n"
+  },
+  {
+   "id": "dockerfile-sudo",
+   "title": "RUN uses sudo",
+   "description": "Checks that RUN does not use sudo.",
+   "rationale": "Build steps already run as root; sudo hints at a mixed-privilege image.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "dockerfile"
+    ]
+   },
+   "check": {
+    "key": "df.run",
+    "op": "not_regex",
+    "value": "(^|[;&|\\s])sudo\\s"
+   },
+   "on_absent": "pass",
+   "absence_note": "No RUN instruction.",
+   "remediation": "Switch USER explicitly instead.",
+   "references": [
+    "Docker Dockerfile best practices (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "FROM alpine:3.20\nRUN sudo apk add curl\n",
+   "negative": "FROM alpine:3.20\nRUN apk add curl\n"
+  },
+  {
+   "id": "dockerfile-insecure-download",
+   "title": "Build disables TLS verification",
+   "description": "Checks that RUN does not turn off certificate checks.",
+   "rationale": "Disabled verification allows tampering of build inputs.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "dockerfile"
+    ]
+   },
+   "check": {
+    "key": "df.run",
+    "op": "not_regex",
+    "value": "(?i)(curl\\s([^|;&]*\\s)?(-k\\b|--insecure)|wget\\s[^|;&]*--no-check-certificate|--trusted-host|strict-ssl\\s+false|NODE_TLS_REJECT_UNAUTHORIZED=0|GIT_SSL_NO_VERIFY)"
+   },
+   "on_absent": "pass",
+   "absence_note": "No RUN instruction.",
+   "remediation": "Fix the certificate chain instead.",
+   "references": [
+    "Docker Dockerfile best practices (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "FROM alpine:3.20\nRUN curl -k https://x.example/a\n",
+   "negative": "FROM alpine:3.20\nRUN curl https://x.example/a\n"
+  },
+  {
+   "id": "dockerfile-expose-ssh",
+   "title": "Image exposes port 22",
+   "description": "Checks that EXPOSE does not list port 22.",
+   "rationale": "An SSH daemon in a container is rarely needed and widens the attack surface.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "dockerfile"
+    ]
+   },
+   "check": {
+    "key": "df.expose",
+    "op": "not_regex",
+    "value": "(^|\\s)22(/tcp|/udp)?(\\s|$)"
+   },
+   "on_absent": "pass",
+   "absence_note": "No EXPOSE instruction.",
+   "remediation": "Use the container runtime's exec facilities.",
+   "references": [
+    "Docker Dockerfile best practices (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "FROM alpine:3.20\nEXPOSE 22\n",
+   "negative": "FROM alpine:3.20\nEXPOSE 8080\n"
+  },
+  {
+   "id": "dockerfile-healthcheck",
+   "title": "Image has no health check",
+   "description": "Checks that a HEALTHCHECK is defined.",
+   "rationale": "Without it the engine cannot tell a hung service from a healthy one.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "dockerfile"
+    ]
+   },
+   "check": {
+    "key": "df.final.healthcheck",
+    "op": "not_regex",
+    "value": "(?i)^NONE\\b"
+   },
+   "on_absent": "fail",
+   "absence_note": "No HEALTHCHECK in the final stage: treated as a failure (orchestrators may probe instead, which is not visible here).",
+   "remediation": "Add a HEALTHCHECK suited to the service.",
+   "references": [
+    "Docker Dockerfile best practices (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "FROM alpine:3.20\n",
+   "negative": "FROM alpine:3.20\nHEALTHCHECK CMD wget -q -O- http://localhost:8080/health\n"
+  },
+  {
+   "id": "dockerfile-apt-recommends",
+   "title": "apt-get install pulls recommended packages",
+   "description": "Checks that apt installs use --no-install-recommends (each install line is checked).",
+   "rationale": "Extra packages enlarge the attack surface.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "dockerfile"
+    ]
+   },
+   "check": {
+    "any": [
+     {
+      "key": "df.run",
+      "op": "not_regex",
+      "value": "apt(-get)?\\s+(-\\S+\\s+)*install"
+     },
+     {
+      "key": "df.run",
+      "op": "regex",
+      "value": "no-install-recommends"
+     }
+    ]
+   },
+   "on_absent": "pass",
+   "absence_note": "No RUN instruction.",
+   "remediation": "Add --no-install-recommends.",
+   "references": [
+    "Docker Dockerfile best practices (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "FROM debian:12\nRUN apt-get update && apt-get install -y curl\n",
+   "negative": "FROM debian:12\nRUN apt-get update && apt-get install -y --no-install-recommends curl\n"
+  },
+  {
+   "id": "dockerfile-copy-keys",
+   "title": "Private keys or env files are copied into the image",
+   "description": "Checks that COPY/ADD do not name key material or .env files.",
+   "rationale": "Anything copied into a layer can be extracted from the image.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "dockerfile"
+    ]
+   },
+   "check": {
+    "key_regex": "^df\\.(copy|add)$",
+    "op": "not_regex",
+    "value": "(?i)(id_rsa|id_ed25519|\\.pem\\b|\\.p12\\b|\\.pfx\\b|(^|[\\s/])\\.env(\\s|$)|\\.aws/credentials)"
+   },
+   "on_absent": "pass",
+   "absence_note": "No COPY/ADD.",
+   "remediation": "Use build secrets or runtime mounts.",
+   "references": [
+    "Docker Dockerfile best practices (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "FROM alpine:3.20\nCOPY id_rsa /root/.ssh/id_rsa\n",
+   "negative": "FROM alpine:3.20\nCOPY app /app\n"
+  },
+  {
+   "id": "dockerfile-set-password",
+   "title": "Build sets a user password on the command line",
+   "description": "Checks that RUN does not set account passwords.",
+   "rationale": "Hard-coded passwords persist in the image history.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "dockerfile"
+    ]
+   },
+   "check": {
+    "key": "df.run",
+    "op": "not_regex",
+    "value": "(chpasswd|passwd\\s+--stdin|useradd\\s[^;&|]*-p\\s)"
+   },
+   "on_absent": "pass",
+   "absence_note": "No RUN instruction.",
+   "remediation": "Create accounts without passwords (locked).",
+   "references": [
+    "Docker Dockerfile best practices (public)",
+    "Docker Engine security overview (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "FROM alpine:3.20\nRUN echo 'root:x' | chpasswd\n",
+   "negative": "FROM alpine:3.20\nRUN adduser -D app\n"
+  }
+ ]
+}
