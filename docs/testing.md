@@ -48,10 +48,10 @@ how each is handled:
 
 | Global | Handling |
 |---|---|
-| `mlRarityProvider` (was exported `MLRarityProvider`) | atomic pointer; `RegisterMLBehaviour` clears it (owner-checked) on `Store.Close`. Test overrides use `setMLRarityProvider(fn)()`. |
-| `feedbackRuleTrust` (was exported `FeedbackRuleTrust`) | atomic pointer; cleared on `Store.Close`. |
-| `excSvc`, `schedSvc`, `ruleSvc` | atomic pointers; cleared (compare-and-swap) on `Store.Close`. |
-| `Live` (domain inventory) | persist path is a field (no longer `os.Setenv("KAVACH_INVENTORY")`, which leaked the first test's TempDir into every later test); persist goroutines are tracked and waited on in `detach` at `Store.Close`. |
+| `mlRarityProvider` (was exported `MLRarityProvider`) | atomic pointer; `RegisterMLBehaviour` registers an owner-checked clear as a lifecycle stopper. Test overrides use `setMLRarityProvider(fn)()`. |
+| `feedbackRuleTrust` (was exported `FeedbackRuleTrust`) | atomic pointer; owner-checked clear registered as a lifecycle stopper. |
+| `excSvc`, `schedSvc`, `ruleSvc` | atomic pointers; cleared (compare-and-swap) by lifecycle stoppers. |
+| `Live` (domain inventory) | persist path is a field (no longer `os.Setenv("KAVACH_INVENTORY")`, which leaked the first test's TempDir into every later test); persist goroutines are tracked by `lc.bg`, the path is cleared by a lifecycle stopper. |
 | `certFeedStore`, `certFeedDefs`, `cfInsecure`, `cfExtra` | saved and restored by test cleanups. |
 | `ctNow`, `contentTelemetryBudget`, `ebpfAvailable`, `mlExemplars`, analyzer registry (`withAnalyzers`) | mutated only by single tests with cleanups; not parallel-safe, so no test is parallel. |
 | `vmFeeds`, `vpEPSS`, `certFeeds` background refreshers | start only when their feature env is set; never started by tests. |
@@ -60,15 +60,13 @@ how each is handled:
 
 Causes found and fixed:
 
-* `Register*` functions (`RegisterFleetSLO`, `RegisterHuntPacks`, `RegisterMLBehaviour`,
-  `RegisterReportSched`, `RegisterScheduledDetections`, `RegisterAlerts`, `RegisterIntelFeeds`,
-  `RegisterTuningDigest`) started goroutines that wrote next to the store file and could never be
-  stopped. They now attach to the store (`Store.OnClose` / `Store.goBG`); `Store.Close` stops and
-  waits for them. The daemon never closes the store, so production behaviour is unchanged.
+* `Register*` workers could not be stopped and wrote next to the store file. They now register
+  with the lifecycle registry (`lifecycle.go`: `RegisterStopper`, `LifecycleContext`, `lcGo`),
+  which is also the production shutdown path (SIGTERM calls `StopAll`).
 * `BootstrapLivePlatform` set a process-wide env var to the first store's path, so inventory
   persistence in later tests re-created (`MkdirAll`) a deleted TempDir.
-* Tests create stores with `testStore(t, ...)`, which registers `Store.Close` as a cleanup that
-  runs before TempDir removal.
+* Tests create stores with `testStore(t, ...)`, which registers `StopAllForTest` as a cleanup that
+  runs before TempDir removal. The registry is process-global; tests are sequential so this is correct.
 
 ## Not touched
 
