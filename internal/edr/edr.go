@@ -507,6 +507,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	analystWS := RegisterAnalystWorkspace(mux, token, store)
 	alertDispatcher.ws = analystWS
 	RegisterCaseManagement(mux, token, store, analystWS)
+	RegisterChainsAndTemplates(mux, token, store)
 	RegisterDetectionLab(mux, token, store)
 	RegisterValidationLab(mux, token, store)
 	RegisterCustomContent(mux, token, store)
