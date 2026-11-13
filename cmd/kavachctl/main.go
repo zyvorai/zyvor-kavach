@@ -71,6 +71,9 @@ func run(args []string) error {
 	if handled, err := p4Dispatch(args, os.Stdout); handled {
 		return err
 	}
+	if handled, err := schedDispatch(args, os.Stdout); handled {
+		return err
+	}
 	if handled, err := inspectDispatch(args, os.Stdout); handled {
 		return err
 	}
