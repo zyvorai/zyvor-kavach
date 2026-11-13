@@ -153,13 +153,13 @@ func ttpSimilar(m *ttpModel, obs map[string]struct{}, top int) (string, string, 
 		if len(out) >= top || s.Score <= 0 {
 			break
 		}
-		out = append(out, ttpMatch{ID: s.P.ID, Name: s.P.Name, Kind: s.P.Kind, Score: round3(s.Score),
-			TFIDFCosine: round3(s.Cosine), WeightedJaccard: round3(s.WJac), Overlap: s.Overlap, MissingTechnique: s.Missing})
+		out = append(out, ttpMatch{ID: s.P.ID, Name: s.P.Name, Kind: s.P.Kind, Score: ttpRound3(s.Score),
+			TFIDFCosine: ttpRound3(s.Cosine), WeightedJaccard: ttpRound3(s.WJac), Overlap: s.Overlap, MissingTechnique: s.Missing})
 	}
 	return conf, why, out
 }
 
-func round3(f float64) float64 { return float64(int(f*1000+0.5)) / 1000 }
+func ttpRound3(f float64) float64 { return float64(int(f*1000+0.5)) / 1000 }
 
 type ttpHint struct {
 	Technique string  `json:"technique"`
@@ -190,7 +190,7 @@ func ttpNext(m *ttpModel, obs map[string]struct{}, k int) []ttpHint {
 	}
 	hints := make([]ttpHint, 0, len(agg))
 	for _, h := range agg {
-		h.Weight = round3(h.Weight)
+		h.Weight = ttpRound3(h.Weight)
 		hints = append(hints, *h)
 	}
 	sort.Slice(hints, func(i, j int) bool {

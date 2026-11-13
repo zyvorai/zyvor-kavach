@@ -237,3 +237,25 @@ func TestInspectRingIsCapped(t *testing.T) {
 		t.Fatalf("ring must cap at %d, got %d", InspectRingCapacity, n)
 	}
 }
+
+func TestInspectObfuscationFindingsShareOneBudget(t *testing.T) {
+	r := &InspectReport{Findings: []InspectFinding{
+		{ID: "obf-statistical", Title: "statistically obfuscated", Weight: 25},
+		{ID: "deob-layers", Title: "many layers", Weight: 16},
+		{ID: "deob-xor-payload", Title: "xor payload", Weight: 20},
+	}}
+	scoreInspectReport(r)
+	if r.Score != InspectObfuscationCap || r.Level == "suspicious" || r.Level == "malicious-likely" {
+		t.Fatalf("obfuscation alone must stay below suspicious: score=%d level=%s", r.Score, r.Level)
+	}
+	// A real detection on a decoded layer is not obfuscation-only and still counts in full.
+	r = &InspectReport{Findings: []InspectFinding{
+		{ID: "obf-statistical", Title: "statistically obfuscated", Weight: 25},
+		{ID: "deob-layers", Title: "many layers", Weight: 16},
+		{ID: "deob-win-ps-iex-downloadstring", Title: "decoded layer fires a rule", Weight: 28},
+	}}
+	scoreInspectReport(r)
+	if r.Score < 40 || r.Level == "clean" || r.Level == "low" {
+		t.Fatalf("a real rule hit plus obfuscation should reach suspicious: score=%d level=%s", r.Score, r.Level)
+	}
+}

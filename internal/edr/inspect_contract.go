@@ -365,6 +365,27 @@ func crossCheckIOCs(r *InspectReport) {
 	sort.Strings(r.KnownIOCs)
 }
 
+// InspectObfuscationCap is the most that obfuscation-only findings (statistical
+// scoring and the deobfuscation analyzer's "this looks obfuscated" findings)
+// can add to a score together. It stays below the 40 "suspicious" line, so
+// obfuscation alone never produces a verdict; a decoded layer that triggers a
+// real detection rule is not obfuscation-only and is not capped here.
+const InspectObfuscationCap = 35
+
+// isObfuscationOnlyFinding reports whether a finding only says "the input
+// looks obfuscated" (as opposed to saying what it does).
+func isObfuscationOnlyFinding(id string) bool {
+	if strings.HasPrefix(id, "obf-") {
+		return true
+	}
+	switch id {
+	case "deob-layers", "deob-mixed-techniques", "deob-xor-payload",
+		"deob-compressed-payload", "deob-high-entropy-blob":
+		return true
+	}
+	return false
+}
+
 // scoreInspectReport builds a transparent verdict: the score is the sum of the
 // strongest findings' weights (capped at 100), a known IOC match adds 40, and
 // every contributing finding is listed in Factors. There is no hidden model.
@@ -372,13 +393,26 @@ func scoreInspectReport(r *InspectReport) {
 	fs := append([]InspectFinding(nil), r.Findings...)
 	sort.SliceStable(fs, func(i, j int) bool { return fs[i].Weight > fs[j].Weight })
 	score := 0
+	obfSum := 0
 	for i, f := range fs {
 		if f.Weight == 0 {
 			continue
 		}
 		if i < 10 { // only the top contributors count, so many weak hits cannot add up to a verdict
-			score += f.Weight
-			r.Factors = append(r.Factors, fmt.Sprintf("%s (+%d)", f.Title, f.Weight))
+			w := f.Weight
+			if isObfuscationOnlyFinding(f.ID) {
+				// Obfuscation on its own is a weak signal and several analyzers
+				// measure the same thing, so they share one budget.
+				if room := InspectObfuscationCap - obfSum; w > room {
+					w = room
+				}
+				if w <= 0 {
+					continue
+				}
+				obfSum += w
+			}
+			score += w
+			r.Factors = append(r.Factors, fmt.Sprintf("%s (+%d)", f.Title, w))
 		}
 	}
 	if len(r.KnownIOCs) > 0 {
