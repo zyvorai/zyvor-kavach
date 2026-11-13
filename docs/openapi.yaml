@@ -948,6 +948,48 @@ paths:
           application/json:
             schema: {type: object, description: "{events: [lab events] (1..1000)}"}
       responses: {'200': {description: "{rule, evaluated, matched, matches[], findings_recorded: 0}"}, '404': {description: Not found}}
+  /v1/rules/health:
+    get:
+      summary: Per-rule health computed from stored findings (hits 24h/7d/30d, distinct hosts, last fired, trend, share, noisy score, silent). Ordered by lifecycle state then noisy score
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: state, in: query, schema: {type: string, enum: [draft, testing, production, retired]}}
+        - {name: source, in: query, schema: {type: string, enum: [custom, embedded, builtin]}}
+        - {name: silent, in: query, schema: {type: string, enum: ['1']}}
+        - {name: noisy, in: query, schema: {type: string, enum: ['1']}}
+        - {name: limit, in: query, schema: {type: integer}}
+      responses: {'200': {description: "{mode, count, noisy_threshold, rules[]}"}, '401': {description: Unauthorized}}
+  /v1/rules/health/{id}:
+    get:
+      summary: Health of one rule plus recent finding ids
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: "{health, recent_finding_ids[]}"}, '404': {description: Unknown rule}}
+  /v1/rules/lifecycle/{id}:
+    get:
+      summary: Lifecycle state of a rule (default production when never set)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: "{lifecycle, explicit, states[]}"}}
+    put:
+      summary: Set a rule's lifecycle state. Affects reporting/ordering only, except testing, which records hits as shadow findings outside the main findings list. Journaled in the rule history
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object, required: [state], properties: {state: {type: string, enum: [draft, testing, production, retired]}, note: {type: string}}}
+      responses: {'200': {description: Saved}, '400': {description: Bad state}, '404': {description: Unknown rule}}
+  /v1/rules/history/{id}:
+    get:
+      summary: Hash-chained change history for a rule (custom rule create/update/delete, lifecycle changes) with chain verification
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: "{rule, count, chain_ok, broken_at_seq, entries[]}"}}
   /v1/content/export:
     post:
       summary: Export rules as a JSON pack (read-only). Filter by source (custom default, embedded, all), ids, tactic, technique, os, batch, q, event_type

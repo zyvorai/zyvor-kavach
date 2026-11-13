@@ -10,6 +10,7 @@ All files sit next to the findings store path (`<store>` below), are written ato
 | `<store>.workspace.json` | Saved searches, notes and the hash-chained analyst journal (alert-rule changes are journaled here) |
 | `<store>.deception.json` | Deception canaries and trips |
 | `<store>.customcontent.json` | Customer-authored detection content rules (full rule JSON including samples; see `docs/custom-content.md`). Every rule is re-validated at startup; rules that no longer pass are skipped |
+| `<store>.rulelifecycle.json` | Rule lifecycle states (draft/testing/production/retired), the hash-chained rule change history (custom rule edits and lifecycle changes; capped at 5000 entries) and up to 500 shadow findings from rules in `testing`. Lifecycle only affects reporting and ordering, plus the shadow recording; see `docs/rule-health.md` |
 | credential registry file | Agent enrollment and last heartbeat; fleet health is derived from it, so stale detection survives restarts |
 
 Backup: copy these files while the server is stopped, or at any time (writes are atomic renames).

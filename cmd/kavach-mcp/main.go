@@ -64,6 +64,9 @@ func buildServer(c *client, allowMutations bool) (*mcpserver.Server, error) {
 	if err := registerGlobalSearchTools(srv, c); err != nil {
 		return nil, err
 	}
+	if err := registerRuleHealthTools(srv, c); err != nil {
+		return nil, err
+	}
 	if allowMutations {
 		if err := registerMutateTools(srv, c); err != nil {
 			return nil, err

@@ -225,6 +225,11 @@ type customImportItem struct {
 
 // put validates rules and, unless validateOnly, stores every valid one (rejected rules are reported).
 func (c *customStore) put(rules []ContentRule, validateOnly bool) []customImportItem {
+	return c.putAs("", rules, validateOnly)
+}
+
+// putAs is put with the acting principal recorded in the rule change history (rule_health.go).
+func (c *customStore) putAs(actor string, rules []ContentRule, validateOnly bool) []customImportItem {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	items := make([]customImportItem, len(rules))
@@ -272,6 +277,9 @@ func (c *customStore) put(rules []ContentRule, validateOnly bool) []customImport
 	for i := range items {
 		if items[i].Status == "valid" {
 			items[i].Status = "imported"
+			if staged[items[i].ID] != nil {
+				ruleChanged(actor, items[i].ID, prev[items[i].ID], staged[items[i].ID])
+			}
 		}
 	}
 	return items
@@ -361,7 +369,7 @@ func RegisterCustomContent(mux *http.ServeMux, token string, store *Store) {
 			customJSON(w, 400, map[string]any{"error": "invalid rule JSON: " + err.Error(), "errors": []string{err.Error()}})
 			return
 		}
-		it := cs.put([]ContentRule{rule}, false)[0]
+		it := cs.putAs(customActor(r), []ContentRule{rule}, false)[0]
 		if it.Status != "imported" {
 			code := 400
 			if strings.Contains(strings.Join(it.Errors, " "), "embedded content rule") {
@@ -402,6 +410,7 @@ func RegisterCustomContent(mux *http.ServeMux, token string, store *Store) {
 			return
 		}
 		cs.apply()
+		ruleChanged(customActor(r), id, prev[id], nil)
 		customJSON(w, 200, map[string]any{"status": "deleted", "id": id})
 	}))
 
@@ -516,7 +525,7 @@ func RegisterCustomContent(mux *http.ServeMux, token string, store *Store) {
 				customJSON(w, 400, map[string]any{"error": "pack has no rules"})
 				return
 			}
-			items = cs.put(p.Rules, validateOnly)
+			items = cs.putAs(customActor(r), p.Rules, validateOnly)
 		case "sigma":
 			res, err := sigmaConvertDocument(b)
 			if err != nil {
@@ -538,7 +547,7 @@ func RegisterCustomContent(mux *http.ServeMux, token string, store *Store) {
 				}
 			}
 			if len(rules) > 0 {
-				for k, it := range cs.put(rules, validateOnly) {
+				for k, it := range cs.putAs(customActor(r), rules, validateOnly) {
 					i := idx[k]
 					items[i].Status, items[i].Errors = it.Status, it.Errors
 				}

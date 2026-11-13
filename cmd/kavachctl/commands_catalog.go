@@ -197,5 +197,10 @@ func allCLICommands() []cliCommand {
 		{Name: "content-coverage", Args: []string{"content", "coverage"}},
 		// global_search.go: cross-entity search.
 		{Name: "search", Args: []string{"search", "T1059", "--type", "technique"}},
+
+		// rules_health.go: detection rule health and lifecycle.
+		{Name: "rules-health", Args: []string{"rules", "health"}},
+		{Name: "rules-lifecycle", Args: []string{"rules", "lifecycle", "demo"}, Optional: true},
+		{Name: "rules-history", Args: []string{"rules", "history", "demo"}, Optional: true},
 	}
 }
