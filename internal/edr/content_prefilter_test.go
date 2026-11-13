@@ -119,7 +119,7 @@ func TestContentPrefilterEquivalence(t *testing.T) {
 	rnd := rand.New(rand.NewSource(20260101))
 	genRules, randEvents, shippedStride := 500, 1500, 1
 	if raceEnabled { // cost is rules x events x 2 evaluations; the full corpus runs in the non-race job
-		genRules, randEvents, shippedStride = 100, 300, 3
+		genRules, randEvents, shippedStride = 100, 300, 5
 	}
 	for i := 0; i < genRules; i++ {
 		rules = append(rules, compileTestRule(t, fmt.Sprintf("gen-%d", i), "process", randTree(rnd, 0)))

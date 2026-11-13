@@ -256,7 +256,7 @@ func TestMLSimilarityEvaluation(t *testing.T) {
 			if strings.TrimSpace(p.Command) == "" {
 				continue
 			}
-			if nth++; raceEnabled && nth%3 != 0 { // every third sample under -race; all of them otherwise
+			if nth++; raceEnabled && nth%5 != 0 { // every fifth sample under -race; all of them otherwise
 				continue
 			}
 			for _, v := range mlVariants(p.Command) {
