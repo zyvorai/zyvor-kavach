@@ -287,7 +287,7 @@ func TestSimilarityDeterministicAndBounded(t *testing.T) {
 }
 
 func TestSimilarityWorstCaseSizeRuntime(t *testing.T) {
-	if testing.Short() {
+	if testing.Short() || simRaceBuild {
 		t.Skip("short")
 	}
 	big := make([]byte, InspectMaxBytes)
