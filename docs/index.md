@@ -16,7 +16,7 @@ Every document in `docs/`, grouped by area. Kavach is observation-only: it recor
 | Adversary profile files / profiles | 3 / 101 |
 | Validation scenarios (plus 11 declared not testable) | 204 |
 | Competitive backlog items implemented / partial / total | 4 / 9 / 31 |
-| Markdown docs in `docs/` | 46 |
+| Markdown docs in `docs/` | 47 |
 | Binaries in `cmd/` | 4 (kavach, kavach-mcp, kavachctl, netra-bridge) |
 
 Refresh with `ruby docs/tools/inventory.rb --write`. Counts are read from the files, not typed by hand.
