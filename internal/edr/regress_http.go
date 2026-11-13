@@ -2,6 +2,7 @@
 package edr
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -79,6 +80,7 @@ func RegisterRegression(mux *http.ServeMux, token string, store *Store) *regress
 	s := newRegressSvc(store)
 	regressActive.Store(s)
 	s.Start()
+	RegisterStopper("regression", func(ctx context.Context) error { StopRegression(); return nil })
 
 	mux.HandleFunc("GET /v1/regression/status", func(w http.ResponseWriter, r *http.Request) {
 		if !requireAuth(w, r, token) {

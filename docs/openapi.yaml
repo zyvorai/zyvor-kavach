@@ -2312,6 +2312,68 @@ paths:
       responses:
         "200": { description: "Report bytes" }
         "404": { description: "Report not found" }
+  /v1/regression/status:
+    get:
+      summary: "Detection regression tracking: runner state, last run, next run, history size"
+      responses:
+        "200": { description: "Status; mode observe-only" }
+  /v1/regression/history:
+    get:
+      summary: "Stored regression snapshots, newest first (capped at 90)"
+      parameters:
+        - { name: limit, in: query, schema: { type: integer } }
+      responses:
+        "200": { description: "Snapshots with per-tactic coverage, benign false positives and runtime" }
+  /v1/regression/diff:
+    get:
+      summary: "Diff between two regression snapshots (regressions, improvements, added/removed scenarios, likely causes)"
+      parameters:
+        - { name: from, in: query, schema: { type: string }, description: "seq or 'previous' (default previous)" }
+        - { name: to, in: query, schema: { type: string }, description: "seq or 'latest' (default latest)" }
+      responses:
+        "200": { description: "Diff; each regression carries a likely_cause hint" }
+        "404": { description: "Fewer than two snapshots" }
+  /v1/regression/trend:
+    get:
+      summary: "Measured coverage over time per tactic"
+      parameters:
+        - { name: window, in: query, schema: { type: string }, description: "7d, 30d or a Go duration" }
+      responses:
+        "200": { description: "Per-tactic series" }
+  /v1/regression/run:
+    post:
+      summary: "Run the validation scenarios now (admin or session); records a snapshot and may record a regression-detected finding"
+      x-auth: admin-or-session
+      responses:
+        "200": { description: "The new snapshot and its diff" }
+        "409": { description: "A run is already in progress" }
+  /v1/regression/config:
+    get:
+      summary: "Regression runner configuration"
+      responses:
+        "200": { description: "enabled, time (UTC HH:MM), max_runtime_sec, alert thresholds" }
+    put:
+      summary: "Update regression runner configuration (admin or session)"
+      x-auth: admin-or-session
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+        description: "enabled, time, max_runtime_sec (5..300), alert_min_regressions, alert_medium_at, alert_on_benign_fp"
+      responses:
+        "200": { description: "Updated configuration" }
+        "400": { description: "Invalid value" }
+  /v1/regression/gate:
+    get:
+      summary: "CI gate: pass/fail on measured coverage, regressions and benign false positives (HTTP 200 pass, 412 fail)"
+      parameters:
+        - { name: min_detected, in: query, schema: { type: number }, description: "Percent of claimed techniques measured Detected" }
+        - { name: max_regressions, in: query, schema: { type: integer } }
+        - { name: max_false_positives, in: query, schema: { type: integer } }
+      responses:
+        "200": { description: "Gate passed, with per-check detail" }
+        "400": { description: "Bad parameters" }
+        "412": { description: "Gate failed, or no run recorded yet (fails closed)" }
   /v1/fleet/slo:
     get:
       summary: "Fleet SLO report (heartbeat freshness, continuity, coverage)"
