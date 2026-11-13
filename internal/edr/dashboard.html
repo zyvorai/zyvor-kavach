@@ -3342,6 +3342,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
           <button type="button" role="tab" data-in-mode="script" aria-selected="false">Script</button>
           <button type="button" role="tab" data-in-mode="cmdline" aria-selected="false">Command line</button>
           <button type="button" role="tab" data-in-mode="domain" aria-selected="false">Domain</button>
+          <button type="button" role="tab" data-in-mode="config" aria-selected="false">Config</button>
         </div>
         <div class="work-panel">
           <div id="in-mode-file">
@@ -3363,6 +3364,12 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
           <div id="in-mode-domain" hidden>
             <label class="hint" for="in-domain">Domain to score (it is parsed only, never resolved or contacted)</label>
             <input class="input-field" id="in-domain" type="text" spellcheck="false" autocomplete="off" placeholder="example.com">
+          </div>
+          <div id="in-mode-config" hidden>
+            <label class="hint" for="in-config-name">File name (optional, helps identify the format, for example sshd_config)</label>
+            <input class="input-field" id="in-config-name" type="text" spellcheck="false" autocomplete="off">
+            <label class="hint" for="in-config">Paste a configuration file. It is parsed only: nothing is executed, included, fetched or applied.</label>
+            <textarea class="input-field lab-code" id="in-config" spellcheck="false" autocomplete="off"></textarea>
           </div>
           <div class="px-actions"><button type="button" class="primary" id="in-run">Analyze</button><button type="button" class="secondary" id="in-clear">Clear</button></div>
         </div>
@@ -6436,9 +6443,39 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     if (n >= 1024) return (n / 1024).toFixed(1) + ' KiB';
     return n + ' bytes';
   }
+  function inRenderConfig(box, rep) {
+    const a = (rep.meta || {})['config-assess.summary'] || {};
+    const v = el('div', '', 'work-panel');
+    v.appendChild(el('h3', 'Configuration assessment'));
+    const row = el('div', '', 'ui-row');
+    row.appendChild(uiTag('no verdict', 'not_enough_data'));
+    row.appendChild(el('span', 'A configuration check reports each policy, not whether the file is malicious. There is no overall score.', 'hint'));
+    v.appendChild(row);
+    uiMeta(v, ['Format: ' + (a.format || rep.format || 'not identified'), 'Size: ' + inFmtBytes(rep.size || 0), rep.name ? 'Name: ' + rep.name : '', 'Time: ' + fmtTime(rep.time)]);
+    if (!a.format) { uiNote(v, 'The configuration format was not recognised, so no policy was applied. Try giving a file name such as sshd_config.', true); box.appendChild(v); return; }
+    if (a.parse_error) uiNote(v, 'The file could not be fully parsed: ' + a.parse_error, true);
+    const c = a.counts || {};
+    uiMeta(v, ['Pass: ' + (c.pass ?? 0), 'Fail: ' + (c.fail ?? 0), 'Unknown: ' + (c.unknown ?? 0), 'Not applicable: ' + (c.not_applicable ?? 0), 'Compliance: ' + (typeof a.compliance_pct === 'number' ? a.compliance_pct + '% of pass and fail only' : 'unknown (nothing passed or failed)'), 'Policies for this format: ' + (a.policies_for_format ?? '?'), 'Policies for other formats: ' + (a.policies_other_formats ?? '?')]);
+    if (a.note) uiNote(v, a.note, true);
+    (a.parse_notes || []).forEach((n) => uiNote(v, 'Parse note: ' + n));
+    const rs = a.results || [];
+    if (!rs.length) v.appendChild(el('p', 'No policy results were returned.', 'hint'));
+    else {
+      const tb = uiTable(v, ['Status', 'Severity', 'Policy', 'Area', 'Why', 'Remediation (advice only)']);
+      rs.forEach((r) => {
+        const why = el('div', '');
+        why.appendChild(el('span', r.reason || (r.status === 'unknown' ? 'Not determinable from this file.' : '')));
+        (r.evidence || []).forEach((e) => why.appendChild(el('div', e, 'hint')));
+        if (r.absence_note) why.appendChild(el('div', r.absence_note, 'hint'));
+        tableRow(tb, [uiTag(r.status, r.status), r.severity, r.title + ' (' + r.policy_id + ')', r.area || '', why, r.remediation || '—']);
+      });
+    }
+    box.appendChild(v);
+  }
   function inRender(box, rep) {
     box.removeAttribute('aria-busy');
     box.replaceChildren();
+    if (rep.kind === 'config') { inRenderConfig(box, rep); return; }
     const v = el('div', '', 'work-panel');
     v.appendChild(el('h3', 'Verdict'));
     const row = el('div', '', 'ui-row');
@@ -6601,11 +6638,12 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       await inPost('/v1/inspect/file?name=' + encodeURIComponent(inFile.name), { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: buf }, inFile.name);
       return;
     }
-    const id = { script: 'in-script', cmdline: 'in-cmdline', domain: 'in-domain' }[inMode];
+    const id = { script: 'in-script', cmdline: 'in-cmdline', domain: 'in-domain', config: 'in-config' }[inMode];
     const text = $(id).value;
     if (!text.trim()) { setMsg('in-msg', 'Enter something to analyze.', true); $(id).focus(); return; }
     if (new Blob([text]).size > 4 * 1024 * 1024) { setMsg('in-msg', 'Text is over the 4 MiB limit.', true); return; }
-    await inPost('/v1/inspect/' + inMode, pgJSON({ text }), inMode);
+    const cfgName = inMode === 'config' ? $('in-config-name').value.trim() : '';
+    await inPost('/v1/inspect/' + inMode + (cfgName ? '?name=' + encodeURIComponent(cfgName) : ''), pgJSON({ text }), inMode);
   }
   async function inLoadReports() {
     const tb = $('in-rep-rows');
@@ -6614,7 +6652,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       const r = await pgApi('/v1/inspect/reports?limit=50');
       inReports = (r && r.reports) || [];
       $('in-rep-count').textContent = inReports.length + ' recent report' + (inReports.length === 1 ? '' : 's') + '. Reports hold results only, never the submitted bytes. Select a row to open it.';
-      pxFill('in-rep-rows', 7, inReports, 'No reports yet', 'Analyze something and its report will appear here.', (b, x) => tableRow(b, [fmtTime(x.time), x.kind, x.name || '-', uiTag(x.level, inLevelCls[x.level] || ''), x.score, (x.sha256 || '').slice(0, 16) + '…', (x.findings || []).length], { onClick: () => { inTabSel('analyze'); inRender($('in-result'), x); } }));
+      pxFill('in-rep-rows', 7, inReports, 'No reports yet', 'Analyze something and its report will appear here.', (b, x) => tableRow(b, [fmtTime(x.time), x.kind, x.name || '-', uiTag(x.level === 'not_scored' ? 'no verdict' : x.level, inLevelCls[x.level] || ''), x.score, (x.sha256 || '').slice(0, 16) + '…', (x.findings || []).length], { onClick: () => { inTabSel('analyze'); inRender($('in-result'), x); } }));
     } catch (e) { pxFail('in-rep-rows', 7, 'reports', e); $('in-rep-count').textContent = ''; }
   }
   async function inLoadLimits() {
@@ -6630,7 +6668,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   function loadInspector() { inLoadLimits(); }
   const inModeSel = uiTabs('in-modes', 'data-in-mode', (m) => {
     inMode = m;
-    ['file', 'script', 'cmdline', 'domain'].forEach((k) => { $('in-mode-' + k).hidden = k !== m; });
+    ['file', 'script', 'cmdline', 'domain', 'config'].forEach((k) => { $('in-mode-' + k).hidden = k !== m; });
   });
   const inTabSel = uiTabs('in-tabs', 'data-in-tab', (t) => {
     $('in-pane-analyze').hidden = t !== 'analyze';
@@ -6639,7 +6677,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   });
   $('in-run').addEventListener('click', inRun);
   $('in-clear').addEventListener('click', () => {
-    inFile = null; $('in-file').value = ''; $('in-script').value = ''; $('in-cmdline').value = ''; $('in-domain').value = '';
+    inFile = null; $('in-file').value = ''; $('in-script').value = ''; $('in-cmdline').value = ''; $('in-domain').value = ''; $('in-config').value = ''; $('in-config-name').value = '';
     $('in-drop-title').textContent = 'Drop a file here, or press Enter to choose one';
     $('in-result').replaceChildren(); setMsg('in-msg', '', false);
   });
