@@ -297,7 +297,7 @@ func lfParsePom(data []byte) (*lfResult, error) {
 		}
 	}
 	if unresolved > 0 {
-		r.note("%d dependency version(s) use ${property} substitution: out of scope, not matched", unresolved)
+		r.note("%d dependency version(s) use property substitution (${...}): out of scope, not matched", unresolved)
 	}
 	if managed > 0 {
 		r.note("%d dependency(ies) have no version (parent/dependencyManagement not resolved): not matched", managed)

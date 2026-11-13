@@ -18,7 +18,7 @@ import (
 )
 
 func lfPurlSeg(s string) string {
-	return strings.ReplaceAll(url.PathEscape(s), ":", "%3A")
+	return strings.NewReplacer(":", "%3A", "@", "%40").Replace(url.PathEscape(s))
 }
 
 // lfPurl builds a Package URL (purl) for a component.
