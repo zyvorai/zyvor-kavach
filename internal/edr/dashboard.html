@@ -1404,6 +1404,12 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 .tag.draft, .tag.retired, .tag.expired { background: var(--fill-tertiary); color: var(--text-secondary); }
 .tag.testing { background: var(--warning-bg); color: var(--warning-text); }
 .tag.production { background: var(--success-bg); color: var(--success-text); }
+/* === reports and fleet SLO page === */
+.field[hidden] { display: none; }
+.tag.meeting, .tag.fresh, .tag.reporting { background: var(--success-bg); color: var(--success-text); }
+.tag.breaching, .tag.silent { background: var(--danger-bg); color: var(--danger); }
+.tag.unknown, .tag.never_seen, .tag.never_reported { background: var(--fill-tertiary); color: var(--text-secondary); }
+.rp-nr { color: var(--text-tertiary); font-style: italic; }
 </style>
 </head>
 <body>
@@ -1499,6 +1505,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
             <button type="button" data-page="provenance" role="menuitem">Provenance</button>
             <button type="button" data-page="ransomware-behaviour" role="menuitem">Ransomware behaviour</button>
             <button type="button" data-page="ttp" role="menuitem">TTP similarity</button>
+            <button type="button" data-page="reports" role="menuitem">Reports and SLO</button>
             <button type="button" data-page="automation" role="menuitem">Automation</button>
             <button type="button" data-page="chains" role="menuitem">Attack chains</button>
             <button type="button" data-page="feedback" role="menuitem">Feedback</button>
@@ -3798,6 +3805,43 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       <div id="au-hist-out"></div>
     </section>
     <!-- === end automation page === -->
+    <!-- === reports and fleet SLO page === -->
+    <section id="page-reports" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Reports and SLO</p>
+        <h1>Scheduled reports, and how the fleet is meeting its targets.</h1>
+        <p class="lede">Reports are rendered on a schedule and stored locally for you to fetch. Fleet SLOs use only what agents already send; anything an agent does not report is shown as not reported, never estimated.</p>
+      </header>
+      <p class="work-msg" id="rp-msg" role="status"></p>
+
+      <h2>Scheduled reports</h2>
+      <div class="nx-note bh-caveat" id="rp-notes" role="note"><strong>Delivery and privacy</strong><ul><li>Pull-only: Kavach stores rendered reports locally and never emails or pushes them.</li></ul></div>
+      <div id="rp-sched-out"></div>
+      <div class="work-panel" role="group" aria-labelledby="rp-form-title">
+        <h3 id="rp-form-title">New scheduled report</h3>
+        <div class="work-grid">
+          <div class="field"><label for="rp-name">Name</label><input class="input-field" id="rp-name" maxlength="80" autocomplete="off"></div>
+          <div class="field"><label for="rp-tpl">Template</label><select class="select-field" id="rp-tpl"></select></div>
+          <div class="field"><label for="rp-freq">Frequency</label><select class="select-field" id="rp-freq"><option value="hourly">Hourly</option><option value="daily" selected>Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></div>
+          <div class="field" id="rp-f-time"><label for="rp-time">Time (UTC, HH:MM)</label><input class="input-field" id="rp-time" type="time" value="06:00"></div>
+          <div class="field" id="rp-f-min"><label for="rp-min">Minute past the hour</label><input class="input-field" id="rp-min" type="number" min="0" max="59" value="0"></div>
+          <div class="field" id="rp-f-wd"><label for="rp-wd">Weekday</label><select class="select-field" id="rp-wd"><option value="mon">Monday</option><option value="tue">Tuesday</option><option value="wed">Wednesday</option><option value="thu">Thursday</option><option value="fri">Friday</option><option value="sat">Saturday</option><option value="sun">Sunday</option></select></div>
+          <div class="field" id="rp-f-dom"><label for="rp-dom">Day of month (1 to 31)</label><input class="input-field" id="rp-dom" type="number" min="1" max="31" value="1"></div>
+          <div class="field"><label for="rp-fmt">Format</label><select class="select-field" id="rp-fmt"><option value="markdown">Markdown</option><option value="json">JSON</option><option value="csv">CSV</option></select></div>
+          <div class="field"><label for="rp-ret">Reports kept</label><input class="input-field" id="rp-ret" type="number" min="1" max="100" value="7"></div>
+          <div class="field"><label for="rp-since">Look back (hours, optional)</label><input class="input-field" id="rp-since" type="number" min="1" placeholder="template default"></div>
+          <div class="field"><label for="rp-sev">Minimum severity (optional)</label><select class="select-field" id="rp-sev"><option value="">Template default</option><option value="info">Info</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option></select></div>
+        </div>
+        <p class="hint" id="rp-host-warn" role="note"></p>
+        <div class="px-actions"><button type="button" id="rp-create">Create schedule</button></div>
+      </div>
+      <div id="rp-runs-out" aria-live="polite"></div>
+
+      <h2>Fleet SLO</h2>
+      <div class="px-actions"><button type="button" class="secondary" id="rp-slo-reload">Reload SLO status</button></div>
+      <div id="rp-slo-out"></div>
+    </section>
+    <!-- === end reports and fleet SLO page === -->
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
@@ -3882,8 +3926,8 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage', 'huntseq': 'Sequence hunt', 'vulnprio': 'Vulnerability priority', 'feedback': 'Feedback', 'chains': 'Attack chains', 'automation': 'Automation' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation', 'reports'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage', 'huntseq': 'Sequence hunt', 'vulnprio': 'Vulnerability priority', 'feedback': 'Feedback', 'chains': 'Attack chains', 'automation': 'Automation', 'reports': 'Reports and SLO' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -4006,7 +4050,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation', 'reports']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -4066,6 +4110,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     if (current === 'provenance' && typeof loadProvenance === 'function') loadProvenance();
     if (current === 'ransomware-behaviour' && typeof loadRansomwareBehaviour === 'function') loadRansomwareBehaviour();
     if (current === 'ttp' && typeof loadTtp === 'function') loadTtp();
+    if (current === 'reports' && typeof loadReports === 'function') loadReports();
     if (current === 'automation' && typeof loadAutomation === 'function') loadAutomation();
     if (current === 'chains' && typeof loadChains === 'function') loadChains();
     if (current === 'feedback' && typeof loadFeedback === 'function') loadFeedback();
@@ -8416,8 +8461,176 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   auKindSync();
   /* === end automation page === */
 
+  /* === reports and fleet SLO page === */
+  let rpHostTpls = [];
+  function rpFreqSync() {
+    const f = $('rp-freq').value;
+    $('rp-f-min').hidden = f !== 'hourly';
+    $('rp-f-time').hidden = f === 'hourly';
+    $('rp-f-wd').hidden = f !== 'weekly';
+    $('rp-f-dom').hidden = f !== 'monthly';
+  }
+  function rpHostWarnSync() {
+    const w = $('rp-host-warn');
+    w.textContent = rpHostTpls.includes($('rp-tpl').value) ? 'Warning: this template includes host names. Anyone who can fetch the archived report sees them. Host names are masked only where they look like IP addresses.' : '';
+    w.classList.toggle('nx-warn', !!w.textContent);
+  }
+  async function rpDownload(run) {
+    try {
+      const t = await rxText('/v1/reports/archive/' + encodeURIComponent(run.run_id));
+      const ext = run.format === 'json' ? '.json' : run.format === 'csv' ? '.csv' : '.md';
+      rxSave(run.run_id + ext, t, run.format === 'json' ? 'application/json' : run.format === 'csv' ? 'text/csv' : 'text/markdown');
+      setMsg('rp-msg', 'Downloaded ' + run.run_id + (run.sha256 ? ' (sha256 ' + run.sha256.slice(0, 12) + '…).' : '.'), false);
+    } catch (e) { setMsg('rp-msg', 'Could not download the report: ' + e.message, true); }
+  }
+  async function rpRuns(s) {
+    const box = $('rp-runs-out');
+    uiLoading(box, 'Loading runs…');
+    try {
+      const r = await pgApi('/v1/reports/scheduled/' + encodeURIComponent(s.id) + '/runs');
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      box.appendChild(el('h3', 'Archive for ' + (s.name || s.id)));
+      const runs = (r.runs || []).slice().reverse();
+      if (!runs.length) { box.appendChild(el('p', 'No reports have been generated yet.', 'hint')); return; }
+      const tb = uiTable(box, ['Run', 'Time', 'Trigger', 'Status', 'Size', 'Redacted', 'Download']);
+      runs.forEach((x) => tableRow(tb, [x.run_id, fmtTime(x.generated_at), x.trigger, x.error ? uiTag(x.status, 'failed') : uiTag(x.status, x.status === 'ok' ? 'verified' : 'failed'), x.bytes + ' bytes', x.redacted ? 'yes' : 'no',
+        x.status === 'ok' ? pgBtn('Download', 'secondary', () => rpDownload(x), 'Download report ' + x.run_id) : (x.error || 'unavailable')]));
+    } catch (e) { uiError(box, 'report runs', e, () => rpRuns(s)); }
+  }
+  async function rpRunNow(s) {
+    setMsg('rp-msg', 'Generating ' + (s.name || s.id) + '…', false);
+    try {
+      const run = await pgApi('/v1/reports/scheduled/' + encodeURIComponent(s.id) + '/run', { method: 'POST' });
+      setMsg('rp-msg', 'Generated ' + run.run_id + ' (' + run.status + ').', run.status !== 'ok');
+      rpLoadSched();
+      rpRuns(s);
+    } catch (e) { setMsg('rp-msg', 'Run failed: ' + e.message, true); }
+  }
+  async function rpToggle(s) {
+    const body = { name: s.name || '', template: s.template, params: s.params || {}, frequency: s.frequency, retention: s.retention, format: s.format, enabled: !s.enabled };
+    if (s.frequency === 'hourly') body.minute = s.minute; else body.time = String(s.hour).padStart(2, '0') + ':' + String(s.minute).padStart(2, '0');
+    if (s.weekday) body.weekday = s.weekday;
+    if (s.day_of_month) body.day_of_month = s.day_of_month;
+    try {
+      await pgApi('/v1/reports/scheduled/' + encodeURIComponent(s.id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      setMsg('rp-msg', (s.name || s.id) + (s.enabled ? ' paused.' : ' enabled.'), false);
+      rpLoadSched();
+    } catch (e) { setMsg('rp-msg', 'Could not update schedule: ' + e.message, true); }
+  }
+  async function rpDelete(s) {
+    try {
+      await pgApi('/v1/reports/scheduled/' + encodeURIComponent(s.id), { method: 'DELETE' });
+      setMsg('rp-msg', 'Schedule deleted.', false);
+      $('rp-runs-out').replaceChildren();
+      rpLoadSched();
+    } catch (e) { setMsg('rp-msg', 'Could not delete: ' + e.message, true); }
+  }
+  function rpWhen(s) {
+    const hhmm = String(s.hour).padStart(2, '0') + ':' + String(s.minute).padStart(2, '0') + ' UTC';
+    if (s.frequency === 'hourly') return 'hourly at minute ' + s.minute;
+    if (s.frequency === 'weekly') return 'weekly, ' + s.weekday + ' ' + hhmm;
+    if (s.frequency === 'monthly') return 'monthly, day ' + s.day_of_month + ' ' + hhmm;
+    return 'daily ' + hhmm;
+  }
+  async function rpLoadSched() {
+    const box = $('rp-sched-out');
+    uiLoading(box);
+    try {
+      const [r, tpls] = await Promise.all([pgApi('/v1/reports/scheduled'), pgApi('/v1/reports/templates').catch(() => [])]);
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      rpHostTpls = r.templates_with_host_names || [];
+      const notes = [r.delivery, r.redaction].filter(Boolean);
+      if (rpHostTpls.length) notes.push('Templates that include host names: ' + rpHostTpls.join(', ') + '.');
+      if (notes.length) bhCaveat($('rp-notes'), 'Delivery and privacy', notes);
+      const sel = $('rp-tpl'), cur = sel.value;
+      sel.replaceChildren();
+      (Array.isArray(tpls) ? tpls : []).forEach((t) => { const o = el('option', t.title + (rpHostTpls.includes(t.id) ? ' (includes host names)' : '')); o.value = t.id; sel.appendChild(o); });
+      if (cur) sel.value = cur;
+      $('rp-create').disabled = !sel.options.length;
+      rpHostWarnSync();
+      const l = r.limits || {};
+      uiMeta(box, ['Limits: ' + (l.max_schedules ?? '?') + ' schedules, ' + (l.max_retention ?? '?') + ' reports kept each, ' + (l.run_timeout_seconds ?? '?') + ' s per run']);
+      const ss = r.schedules || [];
+      if (!ss.length) { uiEmpty(box, 'No scheduled reports', 'Create one below. Reports are stored locally for you to download.'); return; }
+      const tb = uiTable(box, ['Name', 'Template', 'When', 'Format', 'Keeps', 'Next run', 'Last run', 'State', 'Actions']);
+      ss.forEach((s) => {
+        const acts = el('div', '', 'px-actions');
+        acts.appendChild(pgBtn('Archive', 'secondary', () => rpRuns(s), 'Show archive for ' + (s.name || s.id)));
+        acts.appendChild(pgBtn('Run now', 'secondary', () => rpRunNow(s), 'Run ' + (s.name || s.id) + ' now'));
+        acts.appendChild(pgBtn(s.enabled ? 'Pause' : 'Enable', 'secondary', () => rpToggle(s), (s.enabled ? 'Pause ' : 'Enable ') + (s.name || s.id)));
+        acts.appendChild(pxConfirm('Delete', 'Delete this schedule?', 'Delete', () => rpDelete(s)));
+        tableRow(tb, [s.name || s.id, s.template + (rpHostTpls.includes(s.template) ? ' (host names)' : ''), rpWhen(s), s.format, s.retention, s.enabled ? pxTime(s.next_run) : 'paused', pxTime(s.last_run), s.last_status ? uiTag(s.last_status, s.last_status === 'ok' ? 'verified' : 'failed') : 'never run', acts]);
+      });
+    } catch (e) { uiError(box, 'scheduled reports', e, rpLoadSched); }
+  }
+  async function rpCreate() {
+    const f = $('rp-freq').value;
+    const body = { name: $('rp-name').value.trim(), template: $('rp-tpl').value, frequency: f, format: $('rp-fmt').value, retention: parseInt($('rp-ret').value, 10), params: {} };
+    if (!body.template) { setMsg('rp-msg', 'Choose a template.', true); return; }
+    if (!(body.retention >= 1 && body.retention <= 100)) { setMsg('rp-msg', 'Reports kept must be 1 to 100.', true); $('rp-ret').focus(); return; }
+    if (f === 'hourly') { const m = parseInt($('rp-min').value, 10); if (!(m >= 0 && m <= 59)) { setMsg('rp-msg', 'Minute must be 0 to 59.', true); return; } body.minute = m; }
+    else { if (!$('rp-time').value) { setMsg('rp-msg', 'Choose a time.', true); return; } body.time = $('rp-time').value; }
+    if (f === 'weekly') body.weekday = $('rp-wd').value;
+    if (f === 'monthly') { const d = parseInt($('rp-dom').value, 10); if (!(d >= 1 && d <= 31)) { setMsg('rp-msg', 'Day of month must be 1 to 31.', true); return; } body.day_of_month = d; }
+    if ($('rp-since').value.trim()) body.params.since_hours = $('rp-since').value.trim();
+    if ($('rp-sev').value) body.params.min_severity = $('rp-sev').value;
+    try {
+      const s = await pgApi('/v1/reports/scheduled', pgJSON(body));
+      setMsg('rp-msg', 'Schedule created: ' + (s.name || s.id) + '.', false);
+      $('rp-name').value = '';
+      rpLoadSched();
+    } catch (e) { setMsg('rp-msg', 'Could not create schedule: ' + e.message, true); }
+  }
+  function rpPct(v) { return typeof v === 'number' ? v.toFixed(2) + '%' : 'unknown'; }
+  function rpIndicatorRow(tb, name, i) {
+    tableRow(tb, [name, (i.target_pct ?? '?') + '%', rpPct(i.compliance_pct), uiTag(i.status || 'unknown', i.status || 'unknown'), (i.good_samples ?? 0) + ' of ' + (i.judged_samples ?? 0) + ' judged', typeof i.error_budget_remaining_pct === 'number' ? i.error_budget_remaining_pct.toFixed(1) + '%' : 'unknown', i.note || '']);
+  }
+  function rpLoadSlo() {
+    const box = $('rp-slo-out');
+    uiLoading(box);
+    return pgApi('/v1/fleet/slo').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      const t = r.targets || {}, f = r.fleet || {};
+      uiMeta(box, ['Generated: ' + fmtTime(r.generated_at), 'Window: ' + (t.window_hours ?? '?') + ' h', 'Enrolled active agents: ' + (f.enrolled_active_agents ?? 0), 'Fresh heartbeat now: ' + (f.agents_with_fresh_heartbeat_now ?? 0)]);
+      (r.notes || []).forEach((n) => uiNote(box, n));
+      if (!(f.enrolled_active_agents > 0)) { uiEmpty(box, 'No enrolled agents', 'There is nothing to measure until an agent enrolls. Targets are shown below.'); }
+      box.appendChild(el('h3', 'Fleet indicators vs targets'));
+      const tb = uiTable(box, ['Indicator', 'Target', 'Measured', 'Status', 'Samples', 'Error budget left', 'Note']);
+      if (f.heartbeat) rpIndicatorRow(tb, 'Heartbeat freshness (within ' + (t.heartbeat_fresh_minutes ?? '?') + ' min)', f.heartbeat);
+      if (f.continuity) rpIndicatorRow(tb, 'Telemetry continuity (gap over ' + (t.continuity_gap_minutes ?? '?') + ' min)', f.continuity);
+      box.appendChild(el('h3', 'Telemetry coverage'));
+      const ct = uiTable(box, ['Category', 'Agents reporting', 'Coverage', 'Target', 'Status']);
+      (r.coverage || []).forEach((c) => tableRow(ct, [c.category, c.agents_reporting + ' of ' + c.agents_enrolled, rpPct(c.coverage_pct), (c.target_pct ?? '?') + '%', uiTag(c.status, c.status)]));
+      box.appendChild(el('h3', 'Breaches'));
+      if (!(r.breaches || []).length) box.appendChild(el('p', 'No breaches in the window.', 'hint'));
+      else { const bt = uiTable(box, ['Agent', 'Indicator', 'Kind', 'Detail', 'Value']); r.breaches.forEach((b) => tableRow(bt, [b.agent || 'fleet', b.indicator, b.kind, b.detail, typeof b.value === 'number' ? b.value + '%' : '—'])); }
+      box.appendChild(el('h3', 'Agents'));
+      if (!(r.agents || []).length) box.appendChild(el('p', 'No agents.', 'hint'));
+      else {
+        const at = uiTable(box, ['Agent', 'State', 'Heartbeat now', 'Heartbeat SLO', 'Continuity SLO', 'Telemetry', 'Queued', 'Sensor']);
+        r.agents.forEach((a) => {
+          const cats = Object.keys(a.categories || {}).map((k) => k + ': ' + a.categories[k]).join(', ');
+          const fp = a.footprint || {};
+          tableRow(at, [a.host, a.state, uiTag(a.heartbeat_current, a.heartbeat_current), rpPct((a.heartbeat || {}).compliance_pct) + ' (' + ((a.heartbeat || {}).status || 'unknown') + ')', rpPct((a.continuity || {}).compliance_pct) + ' (' + ((a.continuity || {}).status || 'unknown') + ')', cats, fp.queued_items ?? '—', fp.sensor || 'not reported by agent']);
+        });
+      }
+      box.appendChild(el('h3', 'Not reported by agent'));
+      box.appendChild(el('p', 'These footprint measures are not sent by agents today, so no value is shown or estimated.', 'hint'));
+      const nr = el('div', '', 'bh-chips');
+      (r.not_reported_by_agent || []).forEach((n) => nr.appendChild(uiTag(n.replace(/_/g, ' ') + ': not reported by agent', 'not_enough_data')));
+      box.appendChild(nr);
+    }).catch((e) => uiError(box, 'fleet SLO status', e, rpLoadSlo));
+  }
+  function loadReports() { rpLoadSched(); rpLoadSlo(); }
+  $('rp-freq').addEventListener('change', rpFreqSync);
+  $('rp-tpl').addEventListener('change', rpHostWarnSync);
+  $('rp-create').addEventListener('click', rpCreate);
+  $('rp-slo-reload').addEventListener('click', rpLoadSlo);
+  rpFreqSync();
+  /* === end reports and fleet SLO page === */
+
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '.': 'huntseq', '\'': 'vulnprio', '`': 'feedback', '\\': 'chains', '!': 'automation', '/': 'search' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '.': 'huntseq', '\'': 'vulnprio', '`': 'feedback', '\\': 'chains', '!': 'automation', '@': 'reports', '/': 'search' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
