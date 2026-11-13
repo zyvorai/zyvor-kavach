@@ -79,6 +79,12 @@ func buildServer(c *client, allowMutations bool) (*mcpserver.Server, error) {
 	if err := registerAdversaryTools(srv, c); err != nil {
 		return nil, err
 	}
+	if err := registerInspectTools(srv, c); err != nil {
+		return nil, err
+	}
+	if err := registerMLTools(srv, c); err != nil {
+		return nil, err
+	}
 	if allowMutations {
 		if err := registerMutateTools(srv, c); err != nil {
 			return nil, err
