@@ -1447,6 +1447,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
             <button type="button" data-page="inspector" role="menuitem">Inspector</button>
             <button type="button" data-page="provenance" role="menuitem">Provenance</button>
             <button type="button" data-page="ransomware-behaviour" role="menuitem">Ransomware behaviour</button>
+            <button type="button" data-page="ttp" role="menuitem">TTP similarity</button>
           </div>
         </div>
       </div>
@@ -3362,6 +3363,37 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     </section>
     <!-- === end ransomware behaviour page === -->
 
+    <!-- === ttp similarity page === -->
+    <section id="page-ttp" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">TTP similarity</p>
+        <h1>Which public profiles do these techniques resemble?</h1>
+        <p class="lede">Compare the techniques seen on a host, or a list you type, with summaries of public adversary reporting. The result is a prompt to hunt, never a conclusion about who is responsible.</p>
+      </header>
+      <div class="nx-note bh-caveat" id="tp-caveat" role="note">
+        <strong>Similarity is not attribution (always applies)</strong>
+        <ul><li>A high score means the techniques resemble a public profile, not that the same actor is responsible.</li><li>Techniques are shared across many actors, and commodity techniques appear in most profiles, so overlap is weak evidence.</li><li>Profiles are incomplete summaries and may be stale. Adversaries can imitate one another.</li></ul>
+      </div>
+      <p class="work-msg" id="tp-msg" role="status"></p>
+      <div class="nx-tabs" role="tablist" aria-label="Input type" id="tp-modes">
+        <button type="button" role="tab" data-tp-mode="host" aria-selected="true">By host</button>
+        <button type="button" role="tab" data-tp-mode="techniques" aria-selected="false">By technique list</button>
+      </div>
+      <div class="toolbar-pill nx-filters bh-fields">
+        <div id="tp-in-host" class="bh-fields">
+          <label class="hint" for="tp-host">Host</label>
+          <input class="input-field" id="tp-host" type="text" placeholder="Host name" autocomplete="off" spellcheck="false" maxlength="256">
+        </div>
+        <div id="tp-in-techs" class="bh-fields" hidden>
+          <label class="hint" for="tp-techs">Techniques, comma separated</label>
+          <input class="input-field" id="tp-techs" type="text" placeholder="T1059, T1003, T1021.001" autocomplete="off" spellcheck="false">
+        </div>
+        <button type="button" id="tp-go">Compare</button>
+      </div>
+      <div id="tp-out" aria-live="polite"><p class="hint">Enter a host or a technique list. At least 3 distinct techniques are needed before any profile is ranked.</p></div>
+    </section>
+    <!-- === end ttp similarity page === -->
+
     <!-- === models page === -->
     <section id="page-models" class="page" hidden>
       <header class="page-hero">
@@ -3589,8 +3621,8 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -3713,7 +3745,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -3772,6 +3804,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     if (current === 'inspector' && typeof loadInspector === 'function') loadInspector();
     if (current === 'provenance' && typeof loadProvenance === 'function') loadProvenance();
     if (current === 'ransomware-behaviour' && typeof loadRansomwareBehaviour === 'function') loadRansomwareBehaviour();
+    if (current === 'ttp' && typeof loadTtp === 'function') loadTtp();
   }
 
   function fmtTime(v) {
@@ -6224,6 +6257,128 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   });
   /* === end inspector page === */
 
+  /* === ttp similarity page === */
+  let tpMode = 'host';
+  const tpConfCls = { not_enough_evidence: 'not_enough_data', low: 'suspicious', moderate: 'unverified', hint_only: 'not_enough_data' };
+  const tpTechRe = /^T\d{4}(\.\d{3})?$/;
+  function tpCaveats(list) {
+    if ((list || []).length) bhCaveat($('tp-caveat'), 'Similarity is not attribution (always applies)', list);
+  }
+  function tpObserved(box, obs, source) {
+    box.appendChild(el('h3', 'Observed techniques (' + obs.length + ', from ' + (source || '-') + ')'));
+    if (!obs.length) { box.appendChild(el('p', 'No techniques were observed for this input. For a host, that means no finding on it maps to an ATT&CK technique.', 'hint')); return; }
+    const tb = uiTable(box, ['Technique', 'Name', 'Tactic', 'Findings', 'First seen']);
+    obs.forEach((o) => tableRow(tb, [o.technique, o.name || '-', o.tactic || '-', o.findings || '-', pxTime(o.first_seen)]));
+  }
+  function tpSimilar(box, r) {
+    box.appendChild(el('h3', 'Similar public profiles'));
+    const conf = r.confidence || 'unknown';
+    const row = el('div', '', 'ui-row');
+    row.appendChild(el('span', 'Confidence: '));
+    row.appendChild(uiTag(conf, tpConfCls[conf] || ''));
+    row.appendChild(el('span', 'Distinct techniques after roll-up: ' + (r.distinct_techniques ?? '-')));
+    box.appendChild(row);
+    box.appendChild(el('p', 'Reason: ' + (r.confidence_reason || 'none given'), 'nx-note'));
+    if (r.method) box.appendChild(el('p', 'Method: ' + r.method, 'hint'));
+    const ms = r.matches || [];
+    if (conf === 'not_enough_evidence') { uiNote(box, 'not_enough_evidence: fewer than 3 distinct techniques, so no profiles are ranked. Collect more observations rather than reading anything into this input.', true); return; }
+    if (!ms.length) { box.appendChild(el('p', 'No profile shares a technique with this input.', 'hint')); return; }
+    const tb = uiTable(box, ['Profile', 'Kind', 'Score', 'TF-IDF cosine', 'Weighted Jaccard', 'Overlapping techniques', 'Techniques in profile but not observed']);
+    ms.forEach((m) => {
+      const bar = el('div', '', 'tp-bar');
+      bar.setAttribute('role', 'img');
+      bar.setAttribute('aria-label', 'Score ' + bhNum(m.score, 3));
+      const fill = el('span', ''); fill.style.width = Math.max(0, Math.min(100, (m.score || 0) * 100)) + '%';
+      bar.appendChild(fill);
+      const sc = el('div', '', 'cell-stack'); sc.appendChild(el('span', bhNum(m.score, 3))); sc.appendChild(bar);
+      const miss = m.missing_techniques || [];
+      tableRow(tb, [(m.name || m.id) + ' (' + m.id + ')', m.kind || '-', sc, bhNum(m.tfidf_cosine, 3), bhNum(m.weighted_jaccard, 3), (m.overlap || []).join(', ') || '-', miss.length ? miss.slice(0, 12).join(', ') + (miss.length > 12 ? ' … +' + (miss.length - 12) + ' more' : '') : '-']);
+    });
+    box.appendChild(el('p', 'Overlap is weak evidence: many actors, criminals and red teams share techniques, and profiles are summaries of public reporting.', 'hint'));
+  }
+  function tpNext(box, r) {
+    box.appendChild(el('h3', 'Hints to hunt for'));
+    box.appendChild(el('p', r.label || 'Hints to hunt for, derived from co-occurrence in similar public profiles. Not a prediction.', 'hint'));
+    if (r.confidence === 'not_enough_evidence') { uiNote(box, 'not_enough_evidence: too few distinct techniques to derive hints.', true); return; }
+    const hs = r.hints || [];
+    if (!hs.length) { box.appendChild(el('p', 'No hints were produced.', 'hint')); return; }
+    if (r.hint_basis) box.appendChild(el('p', 'Basis: ' + r.hint_basis, 'hint'));
+    const tb = uiTable(box, ['Technique', 'Tactic', 'Supporting profiles', 'Weight', 'Common to most profiles']);
+    hs.forEach((h) => tableRow(tb, [h.technique, h.tactic || '-', h.supporting_profiles, bhNum(h.weight, 3), h.commodity ? 'yes (weak signal)' : 'no']));
+  }
+  function tpChains(box, r) {
+    box.appendChild(el('h3', 'Kill-chain progression'));
+    const seq = r.sequence || [];
+    if (!seq.length) { box.appendChild(el('p', 'No observed techniques for this host, so there is no progression to show.', 'hint')); return; }
+    uiMeta(box, ['Observed techniques: ' + (r.observed_techniques ?? seq.length), r.earliest_tactic ? 'Earliest tactic: ' + r.earliest_tactic : '', r.latest_tactic ? 'Latest tactic: ' + r.latest_tactic : '']);
+    box.appendChild(el('h4', 'Tactics reached, in kill-chain order'));
+    if ((r.tactics_reached || []).length) bhChips(box, r.tactics_reached, true); else box.appendChild(el('p', 'None.', 'hint'));
+    if (r.killchain_order_check) box.appendChild(el('p', r.killchain_order_check, 'hint'));
+    const gaps = r.gaps_worth_hunting || [];
+    box.appendChild(el('h4', 'Gaps worth hunting'));
+    if (r.gap_note) box.appendChild(el('p', r.gap_note, 'nx-note'));
+    if (!gaps.length) box.appendChild(el('p', 'No gaps between the earliest and latest tactic reached.', 'hint'));
+    else {
+      const tb = uiTable(box, ['Tactic with no observed technique', 'Techniques to hunt for']);
+      gaps.forEach((g) => tableRow(tb, [g.tactic, (g.hunt_techniques || []).join(', ') || '-']));
+    }
+  }
+  function tpRun() {
+    const out = $('tp-out');
+    let qs, host = '';
+    if (tpMode === 'host') {
+      host = $('tp-host').value.trim();
+      if (!host) { setMsg('tp-msg', 'Enter a host name.', true); $('tp-host').focus(); return; }
+      qs = 'host=' + encodeURIComponent(host);
+    } else {
+      const ids = $('tp-techs').value.split(',').map((x) => x.trim().toUpperCase()).filter((x) => x);
+      if (!ids.length) { setMsg('tp-msg', 'Enter at least one technique id, such as T1059, T1003.', true); $('tp-techs').focus(); return; }
+      const bad = ids.find((x) => !tpTechRe.test(x));
+      if (bad) { setMsg('tp-msg', 'Not a technique id: ' + bad.slice(0, 20) + '. Use T1234 or T1234.001, separated by commas.', true); $('tp-techs').focus(); return; }
+      if (ids.length > 100) { setMsg('tp-msg', 'At most 100 techniques.', true); return; }
+      qs = 'techniques=' + encodeURIComponent(ids.join(','));
+    }
+    setMsg('tp-msg', '', false);
+    uiLoading(out, 'Comparing…');
+    const calls = [pgApi('/v1/ttp/similar?' + qs), pgApi('/v1/ttp/next?' + qs)];
+    if (tpMode === 'host') calls.push(pgApi('/v1/ttp/chains?host=' + encodeURIComponent(host)));
+    Promise.allSettled(calls).then((res) => {
+      out.removeAttribute('aria-busy');
+      out.replaceChildren();
+      const [sim, nxt, chn] = res;
+      if (sim.status === 'rejected') { uiError(out, 'the similarity result', sim.reason, tpRun); return; }
+      const r = sim.value || {};
+      tpCaveats(r.caveats);
+      const a = el('div', '', 'work-panel');
+      uiMeta(a, ['Mode: ' + (r.mode || 'observe-only'), 'Profiles compared: ' + (r.profiles ?? '-')]);
+      tpObserved(a, r.observed || [], r.source);
+      out.appendChild(a);
+      const b = el('div', '', 'work-panel');
+      tpSimilar(b, r);
+      out.appendChild(b);
+      const c = el('div', '', 'work-panel');
+      if (nxt.status === 'rejected') c.appendChild(el('p', 'Hints could not be loaded: ' + nxt.reason.message, 'hint')); else tpNext(c, nxt.value || {});
+      out.appendChild(c);
+      const d = el('div', '', 'work-panel');
+      if (tpMode !== 'host') { d.appendChild(el('h3', 'Kill-chain progression')); d.appendChild(el('p', 'Progression needs a host, because it uses the time order of that host\'s findings. A technique list has no times.', 'hint')); }
+      else if (chn.status === 'rejected') d.appendChild(el('p', 'Progression could not be loaded: ' + chn.reason.message, 'hint'));
+      else tpChains(d, chn.value || {});
+      out.appendChild(d);
+    });
+  }
+  const tpModeSel = uiTabs('tp-modes', 'data-tp-mode', (m) => {
+    tpMode = m;
+    $('tp-in-host').hidden = m !== 'host';
+    $('tp-in-techs').hidden = m !== 'techniques';
+  });
+  function loadTtp() {
+    pgApi('/v1/ttp/similar?techniques=T1059').then((r) => tpCaveats(r && r.caveats)).catch(() => {});
+  }
+  $('tp-go').addEventListener('click', tpRun);
+  $('tp-host').addEventListener('keydown', (e) => { if (e.key === 'Enter') tpRun(); });
+  $('tp-techs').addEventListener('keydown', (e) => { if (e.key === 'Enter') tpRun(); });
+  /* === end ttp similarity page === */
+
   /* === ransomware behaviour page === */
   let rbThr = null;
   const rbLevelCls = { none: 'clean', watch: 'suspicious', alert: 'malicious-likely' };
@@ -7036,7 +7191,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   /* === end cert advisories page === */
 
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', '/': 'search' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', '/': 'search' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
