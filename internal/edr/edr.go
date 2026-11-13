@@ -518,6 +518,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	RegisterHuntPacks(mux, token, store)
 	RegisterQueryLibrary(mux, token, analystWS)
 	RegisterGlobalSearch(mux, token, store, analystWS)
+	RegisterInspect(mux, token)
 	mux.HandleFunc("GET /metrics", func(w http.ResponseWriter, r *http.Request) {
 		if !requireAuth(w, r, token) {
 			return
