@@ -163,6 +163,7 @@ type Dispatcher struct {
 	Backoff  time.Duration
 
 	startOnce sync.Once
+	wg        sync.WaitGroup
 
 	// ws, when set, receives hash-chained journal entries for rule changes.
 	ws *Workspace
@@ -215,7 +216,9 @@ func (d *Dispatcher) saveLocked() error {
 // Start runs the poll loop until ctx is done (idempotent).
 func (d *Dispatcher) Start(ctx context.Context) {
 	d.startOnce.Do(func() {
+		d.wg.Add(1)
 		go func() {
+			defer d.wg.Done()
 			t := time.NewTicker(d.Interval)
 			defer t.Stop()
 			for {
@@ -385,7 +388,9 @@ func (d *Dispatcher) Deliveries() []AlertDelivery {
 // RegisterAlerts wires /v1/alerts/rules and /v1/alerts/deliveries and starts the dispatcher.
 func RegisterAlerts(mux *http.ServeMux, token string, store *Store) *Dispatcher {
 	d := NewDispatcher(store)
-	d.Start(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
+	d.Start(ctx)
+	store.OnClose(func() { cancel(); d.wg.Wait() })
 	registerAlertRoutes(mux, token, d)
 	return d
 }

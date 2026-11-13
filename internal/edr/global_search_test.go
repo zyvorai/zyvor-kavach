@@ -12,7 +12,7 @@ import (
 
 func searchTestStore(t *testing.T) *Store {
 	t.Helper()
-	st, err := NewStore(t.TempDir()+"/f.jsonl", 20000)
+	st, err := testStore(t, t.TempDir()+"/f.jsonl", 20000)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -12,7 +12,7 @@ import (
 
 func customSetup(t *testing.T, dir string) (*http.ServeMux, *Store) {
 	t.Helper()
-	st, err := NewStore(filepath.Join(dir, "f.jsonl"), 100)
+	st, err := testStore(t, filepath.Join(dir, "f.jsonl"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}

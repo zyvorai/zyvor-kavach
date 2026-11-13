@@ -101,7 +101,7 @@ func TestRiskEndpointsEmptyAndAuth(t *testing.T) {
 
 func TestHostRiskGaugeBounded(t *testing.T) {
 	now := time.Now()
-	s, err := NewStore(filepath.Join(t.TempDir(), "f.jsonl"), 100)
+	s, err := testStore(t, filepath.Join(t.TempDir(), "f.jsonl"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}

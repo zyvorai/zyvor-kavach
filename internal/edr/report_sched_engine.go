@@ -70,6 +70,7 @@ type rsEngine struct {
 	sem      chan struct{}
 	stop     chan struct{}
 	stopOnce sync.Once
+	wg       sync.WaitGroup
 	timeout  time.Duration
 	maxBytes int
 	maxFiles int
@@ -444,7 +445,9 @@ func (e *rsEngine) pruneLocked() {
 // Start runs one catch-up tick immediately, then ticks every rsTick on a
 // single goroutine. Stop ends it.
 func (e *rsEngine) Start() {
+	e.wg.Add(1)
 	go func() {
+		defer e.wg.Done()
 		e.tick(e.clock().UTC())
 		t := time.NewTicker(rsTick)
 		defer t.Stop()
@@ -460,7 +463,11 @@ func (e *rsEngine) Start() {
 }
 
 // Stop ends the scheduler goroutine.
-func (e *rsEngine) Stop() { e.stopOnce.Do(func() { close(e.stop) }) }
+// Stop ends the tick goroutine and waits for it (an in-flight tick finishes first).
+func (e *rsEngine) Stop() {
+	e.stopOnce.Do(func() { close(e.stop) })
+	e.wg.Wait()
+}
 
 // ---------------- rendering ----------------
 

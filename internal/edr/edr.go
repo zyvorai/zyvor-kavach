@@ -248,6 +248,48 @@ type Store struct {
 	path          string
 	findings      []Finding
 	max           int
+	closeMu       sync.Mutex
+	closers       []func()
+	closed        bool
+}
+
+// OnClose registers fn to run (LIFO) when the store is closed. Background workers that write
+// files next to the store register their stop-and-wait here so they never outlive it. If the
+// store is already closed fn runs immediately.
+func (s *Store) OnClose(fn func()) {
+	s.closeMu.Lock()
+	if s.closed {
+		s.closeMu.Unlock()
+		fn()
+		return
+	}
+	s.closers = append(s.closers, fn)
+	s.closeMu.Unlock()
+}
+
+// Close stops every background worker attached to the store and waits for it. It is idempotent.
+// The daemon never calls it (workers live for the process); tests call it before removing the
+// store directory so no goroutine writes into a deleted or half-deleted tree.
+func (s *Store) Close() {
+	s.closeMu.Lock()
+	s.closed = true
+	fns := s.closers
+	s.closers = nil
+	s.closeMu.Unlock()
+	for i := len(fns) - 1; i >= 0; i-- {
+		fns[i]()
+	}
+}
+
+// goBG runs fn on a goroutine that Close stops (stop is closed) and waits for.
+func (s *Store) goBG(fn func(stop <-chan struct{})) {
+	stop := make(chan struct{})
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		fn(stop)
+	}()
+	s.OnClose(func() { close(stop); <-done })
 }
 
 func NewStore(path string, max int) (*Store, error) {

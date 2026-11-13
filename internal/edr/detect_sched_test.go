@@ -40,7 +40,7 @@ type schedEnv struct {
 func newSchedEnv(t *testing.T) *schedEnv {
 	t.Helper()
 	dir := t.TempDir()
-	st, err := NewStore(filepath.Join(dir, "f.jsonl"), 1000)
+	st, err := testStore(t, filepath.Join(dir, "f.jsonl"), 1000)
 	if err != nil {
 		t.Fatal(err)
 	}

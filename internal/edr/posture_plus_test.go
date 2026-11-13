@@ -24,7 +24,7 @@ type postureFixture struct {
 func newPostureFixture(t *testing.T) *postureFixture {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "f.jsonl")
-	s, err := NewStore(path, 50)
+	s, err := testStore(t, path, 50)
 	if err != nil {
 		t.Fatal(err)
 	}

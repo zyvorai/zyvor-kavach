@@ -140,7 +140,7 @@ func TestSynthesizeRefusesGeneric(t *testing.T) {
 }
 
 func TestSynthesizeEndpointReadOnly(t *testing.T) {
-	store, err := NewStore(filepath.Join(t.TempDir(), "f.jsonl"), 100)
+	store, err := testStore(t, filepath.Join(t.TempDir(), "f.jsonl"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -209,7 +209,7 @@ func TestSynthesizeEndpointReadOnly(t *testing.T) {
 }
 
 func TestPriorityAndBeaconEndpoints(t *testing.T) {
-	store, err := NewStore(filepath.Join(t.TempDir(), "f.jsonl"), 1000)
+	store, err := testStore(t, filepath.Join(t.TempDir(), "f.jsonl"), 1000)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -248,8 +248,7 @@ func TestPriorityAndBeaconEndpoints(t *testing.T) {
 	if !names["beaconing"] || !names["severity"] || names["rarity"] || names["asset_criticality"] {
 		t.Fatalf("unexpected factor set (rarity and asset must be omitted): %v", names)
 	}
-	MLRarityProvider = func(host, exe, parent string) (float64, bool) { return 1, true }
-	defer func() { MLRarityProvider = nil }()
+	defer setMLRarityProvider(func(host, exe, parent string) (float64, bool) { return 1, true })()
 	p2 := get("/v1/ml/priority?host=h1")["priorities"].([]any)[0].(map[string]any)
 	if p2["score"].(float64) <= p["score"].(float64)-0.001 {
 		t.Fatalf("a rarity of 1 must not lower the score: %v vs %v", p2["score"], p["score"])

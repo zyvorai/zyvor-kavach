@@ -380,6 +380,7 @@ func RegisterRuleHealth(mux *http.ServeMux, token string, store *Store) {
 	s := &ruleService{path: store.path + ".rulelifecycle.json", store: store, now: time.Now}
 	s.load()
 	ruleSvc.Store(s)
+	store.OnClose(func() { ruleSvc.CompareAndSwap(s, nil) })
 	s.routes(mux, token)
 }
 

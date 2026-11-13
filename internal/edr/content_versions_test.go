@@ -90,7 +90,7 @@ func TestHistoryCapAndRecord(t *testing.T) {
 }
 
 func TestContentVersionEndpoints(t *testing.T) {
-	st, err := NewStore(filepath.Join(t.TempDir(), "f.jsonl"), 100)
+	st, err := testStore(t, filepath.Join(t.TempDir(), "f.jsonl"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}

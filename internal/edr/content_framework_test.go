@@ -217,7 +217,7 @@ func TestContentEvaluationCreatesFindings(t *testing.T) {
 		t.Fatalf("attack matrix content coverage wrong")
 	}
 	// End to end through the store.
-	st, err := NewStore(t.TempDir()+"/f.jsonl", 100)
+	st, err := testStore(t, t.TempDir()+"/f.jsonl", 100)
 	if err != nil {
 		t.Fatal(err)
 	}

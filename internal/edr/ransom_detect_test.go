@@ -327,7 +327,7 @@ func TestRansomKnownEvasions(t *testing.T) {
 }
 
 func TestRansomHTTP(t *testing.T) {
-	store, err := NewStore("", 100)
+	store, err := testStore(t, "", 100)
 	if err != nil {
 		t.Fatal(err)
 	}

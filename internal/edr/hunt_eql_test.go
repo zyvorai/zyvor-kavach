@@ -733,7 +733,7 @@ func TestSeqHTTP(t *testing.T) {
 func mustJSON(v any) []byte { b, _ := json.Marshal(v); return b }
 
 func TestSeqRegisteredOnAPI(t *testing.T) {
-	store, err := NewStore(t.TempDir()+"/e.jsonl", 100)
+	store, err := testStore(t, t.TempDir()+"/e.jsonl", 100)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -27,7 +27,7 @@ func requestM4(t *testing.T, server *httptest.Server, path, token string, payloa
 }
 func TestAgentEnrollmentHostScopeAndRevocation(t *testing.T) {
 	dir := t.TempDir()
-	store, err := NewStore(filepath.Join(dir, "findings.jsonl"), 20)
+	store, err := testStore(t, filepath.Join(dir, "findings.jsonl"), 20)
 	if err != nil {
 		t.Fatal(err)
 	}

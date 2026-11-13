@@ -281,7 +281,7 @@ func TestProvLineageSourceOverride(t *testing.T) {
 }
 
 func TestProvHTTP(t *testing.T) {
-	st, err := NewStore(filepath.Join(t.TempDir(), "f.jsonl"), 100000)
+	st, err := testStore(t, filepath.Join(t.TempDir(), "f.jsonl"), 100000)
 	if err != nil {
 		t.Fatal(err)
 	}

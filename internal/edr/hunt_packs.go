@@ -242,13 +242,18 @@ func RegisterHuntPacks(mux *http.ServeMux, token string, store *Store) {
 		h.path = store.path + ".hunts"
 	}
 	h.load()
-	go func() {
+	store.goBG(func(stop <-chan struct{}) {
 		t := time.NewTicker(10 * time.Second)
 		defer t.Stop()
-		for now := range t.C {
-			h.tick(store, now.UTC())
+		for {
+			select {
+			case <-stop:
+				return
+			case now := <-t.C:
+				h.tick(store, now.UTC())
+			}
 		}
-	}()
+	})
 	out := func(w http.ResponseWriter, v any) {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(v)

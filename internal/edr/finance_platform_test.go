@@ -11,7 +11,7 @@ import (
 )
 
 func TestFinancePlatformRoutes(t *testing.T) {
-	store, err := NewStore(filepath.Join(t.TempDir(), "findings.jsonl"), 100)
+	store, err := testStore(t, filepath.Join(t.TempDir(), "findings.jsonl"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +86,7 @@ func TestFinanceInsuranceSurface(t *testing.T) {
 		t.Fatalf("motor-insurance=%d", len(financeMotorInsurance()))
 	}
 
-	store, err := NewStore(filepath.Join(t.TempDir(), "findings.jsonl"), 100)
+	store, err := testStore(t, filepath.Join(t.TempDir(), "findings.jsonl"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}

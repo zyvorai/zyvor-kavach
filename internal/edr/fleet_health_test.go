@@ -18,7 +18,7 @@ const fleetHTestToken = "fleet-health-admin-secret-token"
 func fleetHSeed(t *testing.T) (http.Handler, *Store, *CredentialRegistry, time.Time) {
 	t.Helper()
 	dir := t.TempDir()
-	store, err := NewStore(filepath.Join(dir, "f.jsonl"), 100)
+	store, err := testStore(t, filepath.Join(dir, "f.jsonl"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -169,7 +169,7 @@ func TestFleetHealthHost(t *testing.T) {
 }
 
 func TestFleetHealthEmptyFleet(t *testing.T) {
-	store, err := NewStore(filepath.Join(t.TempDir(), "f.jsonl"), 10)
+	store, err := testStore(t, filepath.Join(t.TempDir(), "f.jsonl"), 10)
 	if err != nil {
 		t.Fatal(err)
 	}

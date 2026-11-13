@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"sync/atomic"
 	"time"
 )
 
@@ -14,7 +15,22 @@ import (
 // It returns a rarity in 0..1 (1 = never seen on this fleet) for the (host, exe, parent) lineage
 // and ok=false when it has no opinion. When nil or not ok, the rarity factor is omitted from the
 // priority score and the remaining weights are renormalised.
-var MLRarityProvider func(host, exe, parent string) (float64, bool)
+type mlRarityFn func(host, exe, parent string) (float64, bool)
+
+// mlRarityProvider is the registered hook (atomic: registrations race with request handlers).
+var mlRarityProvider atomic.Pointer[mlRarityFn]
+
+// setMLRarityProvider installs fn (nil clears) and returns a func that clears it only if it is
+// still the installed provider, so closing an old store never removes a newer registration.
+func setMLRarityProvider(fn mlRarityFn) (clear func()) {
+	if fn == nil {
+		mlRarityProvider.Store(nil)
+		return func() {}
+	}
+	p := &fn
+	mlRarityProvider.Store(p)
+	return func() { mlRarityProvider.CompareAndSwap(p, nil) }
+}
 
 // RegisterMLNet wires the network/synthesis/priority ML endpoints (all authenticated, all
 // read-only): GET /v1/ml/beacons, POST /v1/ml/synthesize, GET /v1/ml/priority.
@@ -106,14 +122,14 @@ func (c *priorityCtx) score(f Finding) PriorityResult {
 		vals["rule_trust"] = PriorityFactor{"rule_trust", 1 - float64(h.NoisyScore)/100, 0.15,
 			"rule noisiness " + strconv.Itoa(h.NoisyScore) + "/100 (rule health), lifecycle " + h.State + "; noisy rules rank lower"}
 	}
-	if FeedbackRuleTrust != nil { // analyst-derived trust, when enough verdicts exist (feedback_http.go)
-		if t, ok := FeedbackRuleTrust(f.Rule); ok {
+	if ft := feedbackRuleTrust.Load(); ft != nil { // analyst-derived trust, when enough verdicts exist (feedback_http.go)
+		if t, ok := (*ft)(f.Rule); ok {
 			vals["rule_trust"] = PriorityFactor{"rule_trust", clamp01(t), 0.15, "analyst verdicts: shrunk precision " + f2(t) + " for this rule (advisory)"}
 		}
 	}
 	var rarityNote string
-	if MLRarityProvider != nil {
-		if v, ok := MLRarityProvider(f.Host, f.Evidence.Executable, f.Evidence.ParentExe); ok {
+	if rp := mlRarityProvider.Load(); rp != nil {
+		if v, ok := (*rp)(f.Host, f.Evidence.Executable, f.Evidence.ParentExe); ok {
 			vals["rarity"] = PriorityFactor{"rarity", clamp01(v), 0.20, "lineage rarity from the local similarity model"}
 		} else {
 			rarityNote = "rarity: the lineage model has no opinion for this process"

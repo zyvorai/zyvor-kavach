@@ -232,7 +232,7 @@ func TestSyslogShutdownNoLeak(t *testing.T) {
 }
 
 func TestSyslogImpersonationProtection(t *testing.T) {
-	st, err := NewStore(filepath.Join(t.TempDir(), "f.jsonl"), 100)
+	st, err := testStore(t, filepath.Join(t.TempDir(), "f.jsonl"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -262,7 +262,7 @@ func TestSyslogImpersonationProtection(t *testing.T) {
 }
 
 func TestSyslogEndToEndNetworkIngest(t *testing.T) {
-	st, _ := NewStore(filepath.Join(t.TempDir(), "f.jsonl"), 100)
+	st, _ := testStore(t, filepath.Join(t.TempDir(), "f.jsonl"), 100)
 	mux := http.NewServeMux()
 	RegisterTelemetryRoutes(mux, "tok", st, nil)
 	m, _ := ParseSyslog("<134>date=2024-11-13 time=10:00:00 devname=fw1 type=traffic srcip=10.0.0.5 dstip=203.0.113.9 dstport=443 action=deny", time.Now())

@@ -632,11 +632,16 @@ func (e *mlEngine) maybeSave() {
 	e.mu.Unlock()
 }
 
-func (e *mlEngine) run() {
+func (e *mlEngine) run(stop <-chan struct{}) {
 	t := time.NewTicker(mlPollEvery)
 	defer t.Stop()
-	for range t.C {
-		e.poll()
+	for {
+		select {
+		case <-stop:
+			return
+		case <-t.C:
+			e.poll()
+		}
 	}
 }
 

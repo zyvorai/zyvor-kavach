@@ -34,6 +34,11 @@ func RegisterScheduledDetections(mux *http.ServeMux, token string, store *Store,
 	schedSvc.Store(s)
 	s.routes(mux, token)
 	s.start()
+	store.OnClose(func() {
+		s.Stop()
+		schedSvc.CompareAndSwap(s, nil)
+		excSvc.CompareAndSwap(exc, nil)
+	})
 }
 
 type detInput struct {

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"sync/atomic"
 	"time"
 )
 
@@ -15,7 +16,20 @@ import (
 // trust in a rule: the shrunk precision, only when the rule has at least the
 // minimum number of decided verdicts. The priority score uses it in place of
 // the noisiness-based trust and falls back to it otherwise.
-var FeedbackRuleTrust func(rule string) (float64, bool)
+type feedbackTrustFn func(rule string) (float64, bool)
+
+var feedbackRuleTrust atomic.Pointer[feedbackTrustFn]
+
+// setFeedbackRuleTrust installs fn (nil clears) and returns an owner-checked clear func.
+func setFeedbackRuleTrust(fn feedbackTrustFn) (clear func()) {
+	if fn == nil {
+		feedbackRuleTrust.Store(nil)
+		return func() {}
+	}
+	p := &fn
+	feedbackRuleTrust.Store(p)
+	return func() { feedbackRuleTrust.CompareAndSwap(p, nil) }
+}
 
 func (s *feedbackSvc) ruleTrust(rule string) (float64, bool) {
 	labels := consolidate(s.snapshot())
@@ -72,7 +86,7 @@ func fbTopRules(m map[string]int, n int) []fbCount {
 // other endpoint is a read. Nothing here edits rules, suppressions or hosts.
 func RegisterFeedback(mux *http.ServeMux, token string, store *Store) *feedbackSvc {
 	svc := newFeedbackSvc(store)
-	FeedbackRuleTrust = svc.ruleTrust
+	store.OnClose(setFeedbackRuleTrust(svc.ruleTrust))
 
 	mux.HandleFunc("POST /v1/feedback", func(w http.ResponseWriter, r *http.Request) {
 		admin, ok := requireAdminOrSession(w, r, token)

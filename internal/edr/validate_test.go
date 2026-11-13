@@ -88,7 +88,7 @@ func TestValScenarioSchemaRejects(t *testing.T) {
 // Replay must leave the live store, its ledger and every process-wide detection list untouched.
 func TestValReplayIsolation(t *testing.T) {
 	dir := t.TempDir()
-	store, err := NewStore(filepath.Join(dir, "findings.jsonl"), 100)
+	store, err := testStore(t, filepath.Join(dir, "findings.jsonl"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -299,7 +299,7 @@ func TestRSRenderPanicIsContained(t *testing.T) {
 func rsAPI(t *testing.T) (http.Handler, *Store, string) {
 	t.Helper()
 	dir := t.TempDir()
-	store, err := NewStore(filepath.Join(dir, "f.jsonl"), 100)
+	store, err := testStore(t, filepath.Join(dir, "f.jsonl"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -395,7 +395,7 @@ func TestRSAPIFlowAndArchive(t *testing.T) {
 
 func TestRSRenderRedactionAndFormats(t *testing.T) {
 	dir := t.TempDir()
-	store, err := NewStore(filepath.Join(dir, "f.jsonl"), 100)
+	store, err := testStore(t, filepath.Join(dir, "f.jsonl"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -15,7 +15,7 @@ const evTok = "0123456789abcdef"
 
 func evSetup(t *testing.T) (http.Handler, *Store, *IncidentStore) {
 	t.Helper()
-	s, err := NewStore(filepath.Join(t.TempDir(), "f.jsonl"), 100)
+	s, err := testStore(t, filepath.Join(t.TempDir(), "f.jsonl"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -12,7 +12,7 @@ func TestHuntPacks(t *testing.T) {
 	if len(huntPacks) < 25 {
 		t.Fatalf("packs=%d", len(huntPacks))
 	}
-	store, err := NewStore(t.TempDir()+"/f.jsonl", 100)
+	store, err := testStore(t, t.TempDir()+"/f.jsonl", 100)
 	if err != nil {
 		t.Fatal(err)
 	}

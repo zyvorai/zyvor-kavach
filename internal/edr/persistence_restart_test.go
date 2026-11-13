@@ -23,7 +23,7 @@ func dropFeedIOCs(id string) {
 }
 
 func TestIntelFeedsRestartRoundTrip(t *testing.T) {
-	st, err := NewStore(filepath.Join(t.TempDir(), "f.jsonl"), 50)
+	st, err := testStore(t, filepath.Join(t.TempDir(), "f.jsonl"), 50)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,7 +57,7 @@ func TestIntelFeedsRestartRoundTrip(t *testing.T) {
 }
 
 func TestIntelFeedsCorruptFile(t *testing.T) {
-	st, _ := NewStore(filepath.Join(t.TempDir(), "f.jsonl"), 50)
+	st, _ := testStore(t, filepath.Join(t.TempDir(), "f.jsonl"), 50)
 	if err := os.WriteFile(st.path+".intel.json", []byte("{not json"), 0600); err != nil {
 		t.Fatal(err)
 	}
@@ -83,7 +83,7 @@ func TestAlertRulesRestartAndJournal(t *testing.T) {
 }
 
 func TestAlertRulesCorruptFile(t *testing.T) {
-	st, _ := NewStore(filepath.Join(t.TempDir(), "f.jsonl"), 50)
+	st, _ := testStore(t, filepath.Join(t.TempDir(), "f.jsonl"), 50)
 	_ = os.WriteFile(st.path+".alerts.json", []byte("garbage"), 0600)
 	if d := NewDispatcher(st); len(d.rules) != 0 {
 		t.Fatal("expected empty")
@@ -91,7 +91,7 @@ func TestAlertRulesCorruptFile(t *testing.T) {
 }
 
 func TestTuningRestartAndCorruptFiles(t *testing.T) {
-	st, _ := NewStore(filepath.Join(t.TempDir(), "f.jsonl"), 50)
+	st, _ := testStore(t, filepath.Join(t.TempDir(), "f.jsonl"), 50)
 	s := newTuneService(st, nil)
 	s.st.History = append(s.st.History,
 		TuningRecord{ID: "tun-rt", ExclusionID: "ex-rt", Pattern: "p", Status: "active"},

@@ -9,7 +9,7 @@ import (
 )
 
 func telHandler(t *testing.T) http.Handler {
-	store, err := NewStore(filepath.Join(t.TempDir(), "f.jsonl"), 50)
+	store, err := testStore(t, filepath.Join(t.TempDir(), "f.jsonl"), 50)
 	if err != nil {
 		t.Fatal(err)
 	}

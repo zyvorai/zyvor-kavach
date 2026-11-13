@@ -406,7 +406,7 @@ func TestMLBaselineColdStartGuard(t *testing.T) {
 func mlSetup(t *testing.T) (*http.ServeMux, *Store, string) {
 	t.Helper()
 	dir := t.TempDir()
-	st, err := NewStore(filepath.Join(dir, "f.jsonl"), 20000)
+	st, err := testStore(t, filepath.Join(dir, "f.jsonl"), 20000)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -436,7 +436,7 @@ func TestMLAuth(t *testing.T) {
 }
 
 func TestMLIncrementalHookReplayResetPersistence(t *testing.T) {
-	st, err := NewStore(filepath.Join(t.TempDir(), "f.jsonl"), 20000)
+	st, err := testStore(t, filepath.Join(t.TempDir(), "f.jsonl"), 20000)
 	if err != nil {
 		t.Fatal(err)
 	}

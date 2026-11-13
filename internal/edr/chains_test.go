@@ -18,7 +18,7 @@ type chainEnv struct {
 
 func newChainEnv(t *testing.T) *chainEnv {
 	t.Helper()
-	store, err := NewStore(filepath.Join(t.TempDir(), "f.jsonl"), 1000)
+	store, err := testStore(t, filepath.Join(t.TempDir(), "f.jsonl"), 1000)
 	if err != nil {
 		t.Fatal(err)
 	}
