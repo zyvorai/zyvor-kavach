@@ -296,11 +296,11 @@ func complianceScoreCmd(out io.Writer, args []string) error {
 	}
 	fmt.Fprintf(out, "Overall posture: %d (grade %s)  [%s]\n\n", intFrom(m, "overall"), strFrom(m, "grade"), strFrom(m, "mode"))
 	tw := tabwriter.NewWriter(out, 0, 2, 2, ' ', 0)
-	fmt.Fprintln(tw, "FRAMEWORK\tSCORE\tGRADE\tFAILING")
+	fmt.Fprintln(tw, "ID\tFRAMEWORK\tSCORE\tGRADE\tFAILING")
 	fws, _ := m["frameworks"].([]any)
 	for _, f := range fws {
 		fm, _ := f.(map[string]any)
-		fmt.Fprintf(tw, "%s\t%d\t%s\t%d\n", strFrom(fm, "framework"), intFrom(fm, "score"), strFrom(fm, "grade"), intFrom(fm, "failing"))
+		fmt.Fprintf(tw, "%s\t%s\t%d\t%s\t%d\n", strFrom(fm, "id"), strFrom(fm, "framework"), intFrom(fm, "score"), strFrom(fm, "grade"), intFrom(fm, "failing"))
 	}
 	return tw.Flush()
 }

@@ -11,7 +11,7 @@ All endpoints are read-only. Kavach observes; it never contains.
 | `GET /livez` · `/readyz` | none | Probes (Helm uses both) |
 | `GET /metrics` | bearer/session | Prometheus: findings by severity, agents online, request counts and latency |
 | `GET /v1/attack/matrix` | bearer/session | MITRE ATT&CK tactics → techniques, rule coverage, observed hits |
-| `GET /v1/compliance/score` | bearer/session | Overall grade + per-framework score (CIS, NIST CSF, SOC2, ISO 27001) |
+| `GET /v1/compliance/score` | bearer/session | Overall grade + per-framework score (CIS, NIST CSF, SOC2, ISO 27001, plus the worldwide catalogs in docs/regional-frameworks.md) |
 | `GET /v1/stream` | bearer/session | Server-Sent Events, `event: finding` with a detection payload |
 
 ```bash

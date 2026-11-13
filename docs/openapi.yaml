@@ -1080,21 +1080,21 @@ paths:
         score (null when not_observable) and reason.
       security: [{bearerAuth: []}]
       parameters:
-        - {name: framework, in: query, description: Framework id from the evidence catalog; adds per-control rows, schema: {type: string, enum: [cis-v8, nist-csf-2, soc2, iso27001, rbi, cert-in, dpdp, pci-dss-4, hipaa, nist-800-53]}}
+        - {name: framework, in: query, description: Framework id from the evidence catalog; adds per-control rows, schema: {type: string, enum: [cis-v8, nist-csf-2, soc2, iso27001, rbi, cert-in, dpdp, pci-dss-4, hipaa, nist-800-53, nis2, dora, gdpr-32, uk-cyber-essentials, au-essential-eight, au-ism, sg-ccop, sg-mas-trm, jp-meti-nisc, sa-nca-ecc, ae-ia, br-lgpd, za-popia, us-cmmc-l2, us-fedramp-moderate, ca-cccs, kr-ismsp, hk-hkma]}}
       responses: {'200': {description: OK}, '400': {description: Unknown framework}}
   /v1/compliance/controls:
     get:
       summary: Control-level compliance status with live evidence counts (observe-only, not certification)
       security: [{bearerAuth: []}]
       parameters:
-        - {name: framework, in: query, schema: {type: string, enum: [cis-v8, nist-csf-2, soc2, iso27001, rbi, cert-in, dpdp]}}
+        - {name: framework, in: query, schema: {type: string, enum: [cis-v8, nist-csf-2, soc2, iso27001, rbi, cert-in, dpdp, pci-dss-4, hipaa, nist-800-53, nis2, dora, gdpr-32, uk-cyber-essentials, au-essential-eight, au-ism, sg-ccop, sg-mas-trm, jp-meti-nisc, sa-nca-ecc, ae-ia, br-lgpd, za-popia, us-cmmc-l2, us-fedramp-moderate, ca-cccs, kr-ismsp, hk-hkma]}}
       responses: {'200': {description: OK}, '400': {description: Unknown framework}}
   /v1/compliance/evidence:
     get:
       summary: Auditor-ready evidence pack (JSON or printable escaped HTML) with scope and limitations
       security: [{bearerAuth: []}]
       parameters:
-        - {name: framework, in: query, schema: {type: string, enum: [cis-v8, nist-csf-2, soc2, iso27001, rbi, cert-in, dpdp]}}
+        - {name: framework, in: query, schema: {type: string, enum: [cis-v8, nist-csf-2, soc2, iso27001, rbi, cert-in, dpdp, pci-dss-4, hipaa, nist-800-53, nis2, dora, gdpr-32, uk-cyber-essentials, au-essential-eight, au-ism, sg-ccop, sg-mas-trm, jp-meti-nisc, sa-nca-ecc, ae-ia, br-lgpd, za-popia, us-cmmc-l2, us-fedramp-moderate, ca-cccs, kr-ismsp, hk-hkma]}}
         - {name: format, in: query, schema: {type: string, enum: [json, html]}}
       responses: {'200': {description: OK}, '400': {description: Bad framework or format}}
   /v1/compliance/cert-in-clock:
