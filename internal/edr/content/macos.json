@@ -8,7 +8,7 @@
    "tactic": "Persistence",
    "technique": "T1543.004",
    "technique_name": "Create or Modify System Process: Launch Daemon",
-   "severity": "high",
+   "severity": "medium",
    "os": "macos",
    "event_type": "file",
    "match": {
@@ -25,6 +25,22 @@
        "create",
        "modify"
       ]
+     },
+     {
+      "not": {
+       "any": [
+        {
+         "field": "path",
+         "op": "regex",
+         "pattern": "/com\\.(apple|microsoft|docker|google|jamfsoftware|jamf|crowdstrike|adobe|dropbox|sentinelone|backblaze|zoom|zoomus|1password|agilebits|vmware|oracle|cisco|paloaltonetworks|sophos|malwarebytes|objective-see|logitech)[^/]*\\.plist$"
+        },
+        {
+         "field": "path",
+         "op": "regex",
+         "pattern": "/com\\.(elgato|parallels|mozilla|slack|tailscale|wireguard|openvpn|nordvpn|keybase|spotify|obsproject|teamviewer|anydesk)[^/]*\\.plist$"
+        }
+       ]
+      }
      }
     ]
    },
@@ -132,6 +148,22 @@
        "create",
        "modify"
       ]
+     },
+     {
+      "not": {
+       "any": [
+        {
+         "field": "path",
+         "op": "regex",
+         "pattern": "/com\\.(apple|microsoft|docker|google|jamfsoftware|jamf|crowdstrike|adobe|dropbox|sentinelone|backblaze|zoom|zoomus|1password|agilebits|vmware|oracle|cisco|paloaltonetworks|sophos|malwarebytes|objective-see|logitech)[^/]*\\.plist$"
+        },
+        {
+         "field": "path",
+         "op": "regex",
+         "pattern": "/com\\.(elgato|parallels|mozilla|slack|tailscale|wireguard|openvpn|nordvpn|keybase|spotify|obsproject|teamviewer|anydesk)[^/]*\\.plist$"
+        }
+       ]
+      }
      }
     ]
    },
@@ -592,6 +624,13 @@
        "create",
        "modify"
       ]
+     },
+     {
+      "not": {
+       "field": "path",
+       "op": "regex",
+       "pattern": "/etc/sudoers\\.d/(90-cloud-init-users|README|10-installer|99-vagrant|vagrant)$"
+      }
      }
     ]
    },
@@ -728,7 +767,7 @@
    "tactic": "Persistence",
    "technique": "T1021.004",
    "technique_name": "Remote Services: SSH",
-   "severity": "medium",
+   "severity": "low",
    "os": "macos",
    "event_type": "file",
    "match": {
@@ -779,7 +818,7 @@
    "tactic": "Defense Evasion",
    "technique": "T1548",
    "technique_name": "Abuse Elevation Control Mechanism",
-   "severity": "high",
+   "severity": "low",
    "os": "macos",
    "event_type": "file",
    "match": {
@@ -898,6 +937,13 @@
        "create",
        "modify"
       ]
+     },
+     {
+      "not": {
+       "field": "path",
+       "op": "regex",
+       "pattern": "/(backblaze|crowdstrike|sentinel|vmware|vbox|virtualbox|paragon|tuxera|osxfuse|macfuse|nvidia|logitech|wacom|karabiner|sophos|symantec|carbonblack|cisco|jamf|apple[a-z0-9]*)[^/]*\\.kext(/|$)"
+      }
      }
     ]
    },
@@ -949,6 +995,13 @@
        "create",
        "modify"
       ]
+     },
+     {
+      "not": {
+       "field": "path",
+       "op": "regex",
+       "pattern": "/com\\.(apple|crowdstrike|microsoft|sentinelone|cisco|jamf|docker|google|objective-see|paloaltonetworks|sophos|vmware|tailscale|wireguard|logitech)[^/]*\\.systemextension"
+      }
      }
     ]
    },
@@ -2447,6 +2500,13 @@
       "field": "command",
       "op": "regex",
       "pattern": "\\s-[a-z]*d"
+     },
+     {
+      "not": {
+       "field": "command",
+       "op": "regex",
+       "pattern": "\\s/applications/[^/]+\\.app/?(\\s|$)"
+      }
      }
     ]
    },
@@ -3003,7 +3063,7 @@
    "tactic": "Credential Access",
    "technique": "T1555.001",
    "technique_name": "Credentials from Password Stores: Keychain",
-   "severity": "high",
+   "severity": "medium",
    "os": "macos",
    "event_type": "process",
    "match": {
@@ -3022,6 +3082,13 @@
       "field": "command",
       "op": "regex",
       "pattern": "\\s-p\\s"
+     },
+     {
+      "not": {
+       "field": "command",
+       "op": "regex",
+       "pattern": "[^\\s/]*(build|ci|runner|temp|tmp|signing|release)[^\\s/]*\\.keychain"
+      }
      }
     ]
    },
@@ -4892,6 +4959,13 @@
       "field": "command",
       "op": "regex",
       "pattern": "-target\\s+/(\\s|$)"
+     },
+     {
+      "not": {
+       "field": "command",
+       "op": "regex",
+       "pattern": "-pkg\\s+\\S*(chrome|firefox|zoom|slack|docker|node|python|xcode|microsoft|office|teams|vscode|dropbox|1password|jamf|crowdstrike|falcon|adobe)[^/\\s]*\\.pkg"
+      }
      }
     ]
    },
@@ -6600,7 +6674,7 @@
    "tactic": "Credential Access",
    "technique": "T1552.005",
    "technique_name": "Unsecured Credentials: Cloud Instance Metadata API",
-   "severity": "medium",
+   "severity": "low",
    "os": "any",
    "event_type": "network",
    "match": {

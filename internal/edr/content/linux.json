@@ -731,7 +731,7 @@
    "tactic": "Persistence",
    "technique": "T1053.003",
    "technique_name": "Scheduled Task/Job: Cron",
-   "severity": "medium",
+   "severity": "low",
    "os": "linux",
    "event_type": "file",
    "match": {
@@ -745,6 +745,22 @@
       "field": "operation",
       "op": "regex",
       "pattern": "^(create|modify)$"
+     },
+     {
+      "not": {
+       "any": [
+        {
+         "field": "path",
+         "op": "regex",
+         "pattern": "/etc/cron\\.(d|hourly|daily|weekly|monthly)/(certbot|logrotate|apt-compat|dpkg|man-db|e2scrub_all|popularity-contest|anacron|0anacron|0hourly|mdadm|cracklib-runtime|bsdmainutils|google-chrome|fstrim|apport|zfs-linux)[^/]*$"
+        },
+        {
+         "field": "path",
+         "op": "regex",
+         "pattern": "/etc/cron\\.(d|hourly|daily|weekly|monthly)/(plocate|mlocate|raid-check|php|ntpsec|sendmail|unattended-upgrades|update-notifier-common|aide|rkhunter|tmpreaper|munin|cron-apt|clamav-freshclam|spamassassin)[^/]*$"
+        }
+       ]
+      }
      }
     ]
    },
@@ -826,7 +842,7 @@
    "tactic": "Persistence",
    "technique": "T1543.002",
    "technique_name": "Create or Modify System Process: Systemd Service",
-   "severity": "medium",
+   "severity": "low",
    "os": "linux",
    "event_type": "file",
    "match": {
@@ -840,6 +856,13 @@
       "field": "operation",
       "op": "regex",
       "pattern": "^(create|modify)$"
+     },
+     {
+      "not": {
+       "field": "path",
+       "op": "regex",
+       "pattern": "^/(usr/)?lib/systemd/system/"
+      }
      }
     ]
    },
@@ -1668,6 +1691,13 @@
       "field": "operation",
       "op": "regex",
       "pattern": "^(create|modify)$"
+     },
+     {
+      "not": {
+       "field": "path",
+       "op": "regex",
+       "pattern": "/etc/update-motd\\.d/\\d\\d-(header|help-text|motd-news|fwupd|updates-available|release-upgrade|contract-ua-esm-status|unattended-upgrades|esm-announce|esm|landscape-sysinfo|reboot-required|fsck-at-reboot|livepatch|hwe-eol|overlayroot|sysinfo|cloudguest)$"
+      }
      }
     ]
    },
@@ -1854,7 +1884,7 @@
    "tactic": "Privilege Escalation",
    "technique": "T1548.003",
    "technique_name": "Abuse Elevation Control Mechanism: Sudo and Sudo Caching",
-   "severity": "medium",
+   "severity": "low",
    "os": "linux",
    "event_type": "file",
    "match": {
@@ -4580,7 +4610,7 @@
    "tactic": "Discovery",
    "technique": "T1046",
    "technique_name": "Network Service Discovery",
-   "severity": "medium",
+   "severity": "low",
    "os": "linux",
    "event_type": "process",
    "match": {

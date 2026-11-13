@@ -1961,7 +1961,14 @@
      {
       "field": "command",
       "op": "regex",
-      "pattern": "(https?://|\\s-(o|u|p|-url)\\s|\\d+\\.\\d+\\.\\d+\\.\\d+)"
+      "pattern": "(https?://|\\s-(o|u|p|-url)\\s|\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b)"
+     },
+     {
+      "not": {
+       "field": "executable",
+       "op": "regex",
+       "pattern": "^[a-z]:\\\\programdata\\\\(microsoft\\\\windows defender|package cache|chocolatey|docker|crowdstrike|sentinelone)\\\\"
+      }
      }
     ]
    },
@@ -2304,7 +2311,7 @@
    "tactic": "Execution",
    "technique": "T1059.006",
    "technique_name": "Python",
-   "severity": "medium",
+   "severity": "low",
    "os": "linux",
    "event_type": "process",
    "match": {
@@ -2872,6 +2879,13 @@
       "field": "command",
       "op": "regex",
       "pattern": "(/c\\s+\\S*(cmd|powershell|mshta)|-a\\s+\\S*\\.(exe|dll))"
+     },
+     {
+      "not": {
+       "field": "command",
+       "op": "regex",
+       "pattern": "/c\\s+\\\"?(cmd(\\.exe)?\\s+/c\\s+)?(del|erase|echo|type|copy|move|rd|rmdir)\\b"
+      }
      }
     ]
    },
@@ -3222,7 +3236,7 @@
    "tactic": "Persistence",
    "technique": "T1053.003",
    "technique_name": "Cron",
-   "severity": "medium",
+   "severity": "low",
    "os": "linux",
    "event_type": "file",
    "match": {
@@ -3239,6 +3253,22 @@
        "create",
        "modify"
       ]
+     },
+     {
+      "not": {
+       "any": [
+        {
+         "field": "path",
+         "op": "regex",
+         "pattern": "/etc/cron\\.(d|hourly|daily|weekly|monthly)/(certbot|logrotate|apt-compat|dpkg|man-db|e2scrub_all|popularity-contest|anacron|0anacron|0hourly|mdadm|cracklib-runtime|bsdmainutils|google-chrome|fstrim|apport|zfs-linux)[^/]*$"
+        },
+        {
+         "field": "path",
+         "op": "regex",
+         "pattern": "/etc/cron\\.(d|hourly|daily|weekly|monthly)/(plocate|mlocate|raid-check|php|ntpsec|sendmail|unattended-upgrades|update-notifier-common|aide|rkhunter|tmpreaper|munin|cron-apt|clamav-freshclam|spamassassin)[^/]*$"
+        }
+       ]
+      }
      }
     ]
    },
@@ -3278,7 +3308,7 @@
    "tactic": "Persistence",
    "technique": "T1543.002",
    "technique_name": "Systemd Service",
-   "severity": "medium",
+   "severity": "low",
    "os": "linux",
    "event_type": "file",
    "match": {
@@ -3294,6 +3324,13 @@
       "patterns": [
        "create"
       ]
+     },
+     {
+      "not": {
+       "field": "path",
+       "op": "regex",
+       "pattern": "^/(usr/)?lib/systemd/system/"
+      }
      }
     ]
    },
@@ -3325,7 +3362,7 @@
    "tactic": "Persistence",
    "technique": "T1037.004",
    "technique_name": "RC Scripts",
-   "severity": "medium",
+   "severity": "low",
    "os": "linux",
    "event_type": "file",
    "match": {
@@ -3442,6 +3479,13 @@
        "create",
        "modify"
       ]
+     },
+     {
+      "not": {
+       "field": "path",
+       "op": "regex",
+       "pattern": "/etc/sudoers\\.d/(90-cloud-init-users|README|10-installer|99-vagrant|vagrant)$"
+      }
      }
     ]
    },
@@ -3473,7 +3517,7 @@
    "tactic": "Persistence",
    "technique": "T1556.003",
    "technique_name": "Pluggable Authentication Modules",
-   "severity": "high",
+   "severity": "low",
    "os": "linux",
    "event_type": "file",
    "match": {
@@ -3715,7 +3759,7 @@
    "tactic": "Persistence",
    "technique": "T1543.004",
    "technique_name": "Launch Daemon",
-   "severity": "high",
+   "severity": "medium",
    "os": "macos",
    "event_type": "file",
    "match": {
@@ -3731,6 +3775,22 @@
       "patterns": [
        "create"
       ]
+     },
+     {
+      "not": {
+       "any": [
+        {
+         "field": "path",
+         "op": "regex",
+         "pattern": "/com\\.(microsoft|docker|google|jamfsoftware|jamf|crowdstrike|adobe|dropbox|sentinelone|backblaze|zoom|zoomus|1password|agilebits|vmware|oracle|cisco|paloaltonetworks|sophos|malwarebytes|objective-see|logitech)[^/]*\\.plist$"
+        },
+        {
+         "field": "path",
+         "op": "regex",
+         "pattern": "/com\\.(elgato|parallels|mozilla|slack|tailscale|wireguard|openvpn|nordvpn|keybase|spotify|obsproject|teamviewer|anydesk)[^/]*\\.plist$"
+        }
+       ]
+      }
      }
     ]
    },
@@ -3762,7 +3822,7 @@
    "tactic": "Persistence",
    "technique": "T1546.004",
    "technique_name": "Unix Shell Configuration Modification",
-   "severity": "medium",
+   "severity": "low",
    "os": "macos",
    "event_type": "file",
    "match": {
@@ -3873,6 +3933,13 @@
       "patterns": [
        "create"
       ]
+     },
+     {
+      "not": {
+       "field": "path",
+       "op": "regex",
+       "pattern": "\\\\(onenote|onedrive|microsoft teams|teams|slack|spotify|zoom|dropbox|discord|skype|outlook|cisco[^\\\\]*|webex|1password|nordvpn|steam|adobe[^\\\\]*|google[^\\\\]*|logitech[^\\\\]*|nvidia[^\\\\]*|realtek[^\\\\]*)[^\\\\]*\\.lnk$"
+      }
      }
     ]
    },
@@ -3904,7 +3971,7 @@
    "tactic": "Persistence",
    "technique": "T1053.005",
    "technique_name": "Scheduled Task",
-   "severity": "high",
+   "severity": "low",
    "os": "windows",
    "event_type": "file",
    "match": {
@@ -3920,6 +3987,13 @@
       "patterns": [
        "create"
       ]
+     },
+     {
+      "not": {
+       "field": "path",
+       "op": "regex",
+       "pattern": "\\\\tasks\\\\(microsoft\\\\|googleupdatetask|microsoftedgeupdatetask|adobe|onedrive|mozilla|opera|dropbox|npcapwatchdog|ccleaner|apple|java|intel|optimize start menu cache|user_feed_synchronization|\\.net framework)"
+      }
      }
     ]
    },
@@ -4062,6 +4136,13 @@
       "patterns": [
        "create"
       ]
+     },
+     {
+      "not": {
+       "field": "path",
+       "op": "regex",
+       "pattern": "^[a-z]:\\\\programdata\\\\(package cache|chocolatey|microsoft\\\\(windows defender|windowsapps)|docker|crowdstrike|sentinelone|veeam)\\\\"
+      }
      }
     ]
    },
@@ -6046,7 +6127,7 @@
    "tactic": "Discovery",
    "technique": "T1046",
    "technique_name": "Network Service Discovery",
-   "severity": "medium",
+   "severity": "low",
    "os": "any",
    "event_type": "process",
    "match": {
@@ -6318,9 +6399,29 @@
    "os": "any",
    "event_type": "network",
    "match": {
-    "field": "destination",
-    "op": "regex",
-    "pattern": ":(4444|4443|31337|1337|6666|1234|8089|50050)$"
+    "all": [
+     {
+      "field": "destination",
+      "op": "regex",
+      "pattern": ":(4444|4443|31337|1337|6666|1234|8089|50050)$"
+     },
+     {
+      "not": {
+       "all": [
+        {
+         "field": "destination",
+         "op": "regex",
+         "pattern": ":8089$"
+        },
+        {
+         "field": "destination",
+         "op": "regex",
+         "pattern": "^(10\\.|192\\.168\\.|172\\.(1[6-9]|2\\d|3[01])\\.|127\\.|169\\.254\\.|22[4-9]\\.|23\\d\\.|localhost)"
+        }
+       ]
+      }
+     }
+    ]
    },
    "tags": [
     "behavioural",
@@ -6517,9 +6618,20 @@
    "os": "any",
    "event_type": "network",
    "match": {
-    "field": "destination",
-    "op": "regex",
-    "pattern": "^\\d+\\.\\d+\\.\\d+\\.\\d+:(3306|5432|1433|27017|6379|9200|11211)$"
+    "all": [
+     {
+      "field": "destination",
+      "op": "regex",
+      "pattern": "^\\d+\\.\\d+\\.\\d+\\.\\d+:(3306|5432|1433|27017|6379|9200|11211)$"
+     },
+     {
+      "not": {
+       "field": "destination",
+       "op": "regex",
+       "pattern": "^(10\\.|192\\.168\\.|172\\.(1[6-9]|2\\d|3[01])\\.|127\\.|169\\.254\\.|22[4-9]\\.|23\\d\\.|localhost)"
+      }
+     }
+    ]
    },
    "tags": [
     "behavioural",
@@ -6555,9 +6667,20 @@
    "os": "any",
    "event_type": "network",
    "match": {
-    "field": "destination",
-    "op": "regex",
-    "pattern": "^\\d+\\.\\d+\\.\\d+\\.\\d+:(853|5353|5355)$"
+    "all": [
+     {
+      "field": "destination",
+      "op": "regex",
+      "pattern": "^\\d+\\.\\d+\\.\\d+\\.\\d+:(853|5353|5355)$"
+     },
+     {
+      "not": {
+       "field": "destination",
+       "op": "regex",
+       "pattern": "^(10\\.|192\\.168\\.|172\\.(1[6-9]|2\\d|3[01])\\.|127\\.|169\\.254\\.|22[4-9]\\.|23\\d\\.|localhost)"
+      }
+     }
+    ]
    },
    "tags": [
     "behavioural",
@@ -6593,9 +6716,20 @@
    "os": "any",
    "event_type": "network",
    "match": {
-    "field": "destination",
-    "op": "regex",
-    "pattern": "^\\d+\\.\\d+\\.\\d+\\.\\d+:(23|2323|69|512|513|514)$"
+    "all": [
+     {
+      "field": "destination",
+      "op": "regex",
+      "pattern": "^\\d+\\.\\d+\\.\\d+\\.\\d+:(23|2323|69|512|513|514)$"
+     },
+     {
+      "not": {
+       "field": "destination",
+       "op": "regex",
+       "pattern": "^(10\\.|192\\.168\\.|172\\.(1[6-9]|2\\d|3[01])\\.|127\\.|169\\.254\\.|22[4-9]\\.|23\\d\\.|localhost)"
+      }
+     }
+    ]
    },
    "tags": [
     "behavioural",
@@ -6669,9 +6803,20 @@
    "os": "any",
    "event_type": "network",
    "match": {
-    "field": "destination",
-    "op": "regex",
-    "pattern": ":(2375|10250|10255|2379)$"
+    "all": [
+     {
+      "field": "destination",
+      "op": "regex",
+      "pattern": ":(2375|10250|10255|2379)$"
+     },
+     {
+      "not": {
+       "field": "destination",
+       "op": "regex",
+       "pattern": "^(127\\.|localhost|\\[::1\\])"
+      }
+     }
+    ]
    },
    "tags": [
     "behavioural",
