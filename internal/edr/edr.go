@@ -489,6 +489,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	metrics := NewMetrics()
 	RegisterHealth(mux, store)
 	RegisterATTACK(mux, token, store)
+	RegisterTTP(mux, token, store)
 	RegisterAdversaries(mux, token, store)
 	RegisterStream(mux, token, store)
 	RegisterRiskTrends(mux, token, store)
