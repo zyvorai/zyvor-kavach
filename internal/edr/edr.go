@@ -522,6 +522,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	RegisterQueryLibrary(mux, token, analystWS)
 	RegisterGlobalSearch(mux, token, store, analystWS)
 	RegisterInspect(mux, token)
+	RegisterInspectSimilar(mux, token)
 	RegisterMLBehaviour(mux, token, store)
 	RegisterRansomDetect(mux, token, store)
 	mux.HandleFunc("GET /metrics", func(w http.ResponseWriter, r *http.Request) {
