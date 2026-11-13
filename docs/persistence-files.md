@@ -21,3 +21,5 @@ All files sit next to the findings store path (`<store>` below), are written ato
 | credential registry file | Agent enrollment and last heartbeat; fleet health is derived from it, so stale detection survives restarts |
 
 Backup: copy these files while the server is stopped, or at any time (writes are atomic renames).
+
+- `<store>.casetemplates.json`: custom case templates, per-case workflow (checklist, applied template), chain-to-case links and a hash-chained journal of workflow actions.
