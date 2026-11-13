@@ -122,7 +122,10 @@ type sloEngine struct {
 }
 
 func newSLOEngine(storePath string) *sloEngine {
-	e := &sloEngine{path: storePath + sloExt, cfg: sloDefaults(), series: map[string][]sloPoint{}, stop: make(chan struct{})}
+	// lastP starts now, not at the zero time: otherwise the first background
+	// sample persists immediately, writing a file from a goroutine the instant
+	// the server (or a test) starts.
+	e := &sloEngine{path: storePath + sloExt, cfg: sloDefaults(), series: map[string][]sloPoint{}, stop: make(chan struct{}), lastP: time.Now()}
 	if b, err := os.ReadFile(e.path); err == nil {
 		var f struct {
 			Config sloConfig             `json:"config"`
