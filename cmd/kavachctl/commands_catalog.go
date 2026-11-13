@@ -103,7 +103,7 @@ func allCLICommands() []cliCommand {
 		{Name: "export-findings-ocsf", Args: []string{"export", "findings", "--format", "ocsf"}},
 		{Name: "export-iocs", Args: []string{"export", "iocs"}},
 		{Name: "export-layer", Args: []string{"export", "layer"}},
-		{Name: "export-report",Args: []string{"export", "report", "--format", "json"}},
+		{Name: "export-report", Args: []string{"export", "report", "--format", "json"}},
 		{Name: "notes-list", Args: []string{"notes", "list", "--finding", "f1"}},
 		{Name: "notes-add", Args: []string{"notes", "add", "--finding", "f1", "text"}, Mutating: true},
 		{Name: "saved-searches-list", Args: []string{"saved-searches", "list"}},
