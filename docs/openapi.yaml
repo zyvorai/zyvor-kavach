@@ -2374,6 +2374,55 @@ paths:
         "200": { description: "Gate passed, with per-check detail" }
         "400": { description: "Bad parameters" }
         "412": { description: "Gate failed, or no run recorded yet (fails closed)" }
+  /v1/evidence/import:
+    post:
+      summary: "Import offline triage output (ps, ss/netstat, cron, schtasks, history, ...) as an isolated evidence case replayed through the detection engines (admin or session)"
+      x-auth: admin-or-session
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object }
+          multipart/form-data:
+            schema: { type: object }
+        description: "JSON {case, host, collected_at, artefacts:[{name, format, content}]} or multipart with the same fields; max 64 artefacts, 4 MiB each, 32 MiB total"
+      responses:
+        "201": { description: "The new case: artefact inventory, would-fire findings, timeline, IOCs. Findings are NOT added to the live store" }
+        "400": { description: "No artefacts, too many artefacts, or invalid body" }
+        "413": { description: "Request larger than 32 MiB" }
+        "429": { description: "Too many imports in progress" }
+  /v1/evidence/cases:
+    get:
+      summary: "List evidence import cases (capped ring of 20)"
+      responses:
+        "200": { description: "Cases with counts, supported formats and a note" }
+  /v1/evidence/cases/{id}:
+    get:
+      summary: "One evidence case; ?download=1 exports it as JSON"
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: download, in: query, schema: { type: string } }
+      responses:
+        "200": { description: "The case" }
+        "404": { description: "Unknown case" }
+    delete:
+      summary: "Delete an evidence case (admin or session)"
+      x-auth: admin-or-session
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Deleted" }
+        "404": { description: "Unknown case" }
+  /v1/evidence/cases/{id}/promote:
+    post:
+      summary: "Promote a case's would-fire findings into the live store, tagged evidence-import (admin token only; once per case)"
+      x-auth: admin-token
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Findings ingested" }
+        "403": { description: "Needs the admin token" }
+        "404": { description: "Unknown case" }
+        "409": { description: "Already promoted" }
   /v1/fleet/slo:
     get:
       summary: "Fleet SLO report (heartbeat freshness, continuity, coverage)"
@@ -2543,6 +2592,42 @@ paths:
       responses:
         "200": { description: "Inspection report" }
         "400": { description: "Empty input or invalid JSON" }
+        "413": { description: "Input larger than the inspect limit" }
+  /v1/inspect/lockfile:
+    post:
+      summary: "Inspect a dependency lockfile or package list (parse-only software composition analysis; matches components against locally loaded advisories, no network)"
+      requestBody:
+        content:
+          application/octet-stream:
+            schema: { type: string, format: binary }
+        description: "raw lockfile bytes (package-lock.json, yarn.lock, pnpm-lock.yaml, requirements.txt, Pipfile.lock, poetry.lock, Cargo.lock, go.mod, go.sum, Gemfile.lock, composer.lock, pom.xml, gradle lockfile, packages.lock.json, dpkg -l, rpm -qa, apk info -v); optional ?name= for format detection"
+      responses:
+        "200": { description: "Inspection report with sca-* findings and a CycloneDX SBOM in meta lockfile.sbom" }
+        "400": { description: "Empty input" }
+        "413": { description: "Input larger than the inspect limit" }
+  /v1/inspect/url:
+    post:
+      summary: "Inspect a URL (parse-only lexical analysis; never fetches or resolves anything)"
+      requestBody:
+        content:
+          text/plain:
+            schema: { type: string }
+        description: "the URL as raw text or {\"text\": ...}"
+      responses:
+        "200": { description: "Inspection report with url-* findings" }
+        "400": { description: "Empty input or invalid JSON" }
+        "413": { description: "Input larger than the inspect limit" }
+  /v1/inspect/email:
+    post:
+      summary: "Inspect a raw email (.eml): headers, reported SPF/DKIM/DMARC results, body URLs, attachments run through the file analyzers; DKIM is not recomputed"
+      requestBody:
+        content:
+          application/octet-stream:
+            schema: { type: string, format: binary }
+        description: "raw RFC 5322 message bytes"
+      responses:
+        "200": { description: "Inspection report with email-* findings" }
+        "400": { description: "Empty input" }
         "413": { description: "Input larger than the inspect limit" }
   /v1/inspect/reports:
     get:
