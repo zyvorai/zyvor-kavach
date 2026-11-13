@@ -1416,6 +1416,15 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 .tag.modified { background: var(--warning-bg); color: var(--warning-text); }
 /* === syslog status page === */
 .sl-pre { font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; margin: 4px 0; font-family: var(--font-mono, ui-monospace, monospace); }
+/* === competitive page === */
+.cp-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin: 0 0 12px; font-size: 13px; color: var(--text-secondary); }
+.tag.cp-has { background: var(--success-bg); color: var(--success-text); }
+.tag.cp-partial { background: var(--warning-bg); color: var(--warning-text); }
+.tag.cp-nd { background: var(--fill-tertiary); color: var(--text-secondary); }
+.tag.cp-oos { background: var(--info-bg); color: var(--apple-link); }
+.cp-cell { min-width: 120px; }
+.cp-cell .hint { display: block; margin-top: 4px; font-size: 12px; }
+.tag.cp-unverified { background: var(--warning-bg); color: var(--warning-text); border: 1px dashed var(--warning-text); }
 </style>
 </head>
 <body>
@@ -1511,6 +1520,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
             <button type="button" data-page="provenance" role="menuitem">Provenance</button>
             <button type="button" data-page="ransomware-behaviour" role="menuitem">Ransomware behaviour</button>
             <button type="button" data-page="ttp" role="menuitem">TTP similarity</button>
+            <button type="button" data-page="competitive" role="menuitem">Competitive</button>
             <button type="button" data-page="syslog" role="menuitem">Syslog</button>
             <button type="button" data-page="versions" role="menuitem">Content versions</button>
             <button type="button" data-page="reports" role="menuitem">Reports and SLO</button>
@@ -3906,6 +3916,24 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       <div id="sl-parse-out" aria-live="polite"></div>
     </section>
     <!-- === end syslog status page === -->
+    <!-- === competitive page === -->
+    <section id="page-competitive" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Competitive</p>
+        <h1>How Kavach compares on public documentation, and what to build next.</h1>
+        <p class="lede">A feature matrix built only from vendors' public documentation. It is not a benchmark and not a test of any product.</p>
+      </header>
+      <div class="nx-note bh-caveat" id="cp-note" role="note"><strong>How to read this (always apply)</strong><ul><li>Loading the matrix's own note from the server.</li></ul></div>
+      <p class="work-msg" id="cp-msg" role="status"></p>
+      <div class="cp-legend" id="cp-legend"></div>
+      <h2>Matrix</h2>
+      <div id="cp-matrix-out"></div>
+      <h2>Backlog</h2>
+      <div id="cp-backlog-out"></div>
+      <h2>Sources</h2>
+      <div id="cp-src-out"></div>
+    </section>
+    <!-- === end competitive page === -->
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
@@ -3990,8 +4018,8 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation', 'reports', 'versions', 'syslog'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage', 'huntseq': 'Sequence hunt', 'vulnprio': 'Vulnerability priority', 'feedback': 'Feedback', 'chains': 'Attack chains', 'automation': 'Automation', 'reports': 'Reports and SLO', 'versions': 'Content versions', 'syslog': 'Syslog' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation', 'reports', 'versions', 'syslog', 'competitive'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage', 'huntseq': 'Sequence hunt', 'vulnprio': 'Vulnerability priority', 'feedback': 'Feedback', 'chains': 'Attack chains', 'automation': 'Automation', 'reports': 'Reports and SLO', 'versions': 'Content versions', 'syslog': 'Syslog', 'competitive': 'Competitive' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -4114,7 +4142,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation', 'reports', 'versions', 'syslog']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation', 'reports', 'versions', 'syslog', 'competitive']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -4174,6 +4202,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     if (current === 'provenance' && typeof loadProvenance === 'function') loadProvenance();
     if (current === 'ransomware-behaviour' && typeof loadRansomwareBehaviour === 'function') loadRansomwareBehaviour();
     if (current === 'ttp' && typeof loadTtp === 'function') loadTtp();
+    if (current === 'competitive' && typeof loadCompetitive === 'function') loadCompetitive();
     if (current === 'syslog' && typeof loadSyslog === 'function') loadSyslog();
     if (current === 'versions' && typeof loadVersions === 'function') loadVersions();
     if (current === 'reports' && typeof loadReports === 'function') loadReports();
@@ -8868,8 +8897,66 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   $('sl-parse').addEventListener('click', slParse);
   /* === end syslog status page === */
 
+  /* === competitive page === */
+  const cpCls = { 'Has': 'cp-has', 'Partial': 'cp-partial', 'Not documented': 'cp-nd', 'Out of scope by design': 'cp-oos' };
+  const cpLabel = { 'Out of scope by design': 'Out of scope' };
+  function cpChip(status) { return uiTag(cpLabel[status] || status, cpCls[status] || 'cp-nd'); }
+  function cpCell(c, isKavach) {
+    const d = el('div', '', 'cp-cell');
+    d.appendChild(cpChip(c.status));
+    if (!isKavach && !c.verified) { d.appendChild(document.createTextNode(' ')); d.appendChild(uiTag('UNVERIFIED', 'cp-unverified')); }
+    if (c.note) d.appendChild(el('span', c.note, 'hint'));
+    if ((c.sources || []).length) d.appendChild(el('span', 'Sources: ' + c.sources.join(', '), 'hint'));
+    return d;
+  }
+  function loadCompetitive() {
+    const mb = $('cp-matrix-out'), bb = $('cp-backlog-out'), sb = $('cp-src-out');
+    [mb, bb, sb].forEach((b) => uiLoading(b));
+    pgApi('/v1/world/competitive').then((m) => {
+      m = m || {};
+      bhCaveat($('cp-note'), 'How to read this (always apply)', [m.note || 'No note from the server.', 'Last researched: ' + (m.last_researched || 'unknown') + '.', 'UNVERIFIED means a competitor cell is not confirmed against a cited public source. Treat it as unconfirmed.', 'Out of scope means Kavach does not do this by design (it is observe-only).']);
+      const lg = $('cp-legend');
+      lg.replaceChildren();
+      (m.status_values || []).forEach((s) => lg.appendChild(cpChip(s)));
+      lg.appendChild(uiTag('UNVERIFIED', 'cp-unverified'));
+      // matrix
+      mb.removeAttribute('aria-busy'); mb.replaceChildren();
+      const prods = m.products || [], areas = m.areas || [];
+      if (!prods.length || !areas.length) uiEmpty(mb, 'No matrix', 'The server returned no products or areas.');
+      else {
+        const tb = uiTable(mb, ['Area'].concat(prods.map((p) => p.name)));
+        areas.forEach((a) => {
+          const row = (m.matrix || {})[a.id] || {};
+          tableRow(tb, [a.name].concat(prods.map((p) => row[p.id] ? cpCell(row[p.id], p.id === 'kavach') : 'no data')));
+        });
+      }
+      // backlog
+      bb.removeAttribute('aria-busy'); bb.replaceChildren();
+      const bl = m.backlog || [];
+      if (!bl.length) uiEmpty(bb, 'No backlog', 'The server returned no backlog items.');
+      else {
+        uiMeta(bb, [bl.length + ' candidate items. Each states whether current telemetry is enough and whether it conflicts with observe-only.']);
+        const tb = uiTable(bb, ['#', 'Title', 'What', 'Why', 'Data needed', 'Telemetry sufficient', 'Effort', 'Risk', 'Conflicts with observe-only', 'Competitors']);
+        bl.forEach((b) => tableRow(tb, [b.id, b.title, b.what, b.why || '', b.data_needed, b.telemetry_sufficient || 'unknown', b.effort, b.risk || '', b.conflicts_with_observation_only, b.competitors || '']));
+      }
+      // sources
+      sb.removeAttribute('aria-busy'); sb.replaceChildren();
+      const ss = m.sources || [];
+      if (!ss.length) sb.appendChild(el('p', 'No sources listed.', 'hint'));
+      else {
+        const tb = uiTable(sb, ['Id', 'Title', 'Link', 'Accessed']);
+        ss.forEach((s) => {
+          let link = el('span', s.url || '');
+          if (/^https?:\/\//i.test(s.url || '')) { link = document.createElement('a'); link.href = s.url; link.textContent = s.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; }
+          tableRow(tb, [s.id, s.title, link, s.accessed]);
+        });
+      }
+    }).catch((e) => { [mb, bb, sb].forEach((b, i) => uiError(b, i === 0 ? 'the competitive matrix' : 'this section', e, loadCompetitive)); });
+  }
+  /* === end competitive page === */
+
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '.': 'huntseq', '\'': 'vulnprio', '`': 'feedback', '\\': 'chains', '!': 'automation', '@': 'reports', '#': 'versions', '$': 'syslog', '/': 'search' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '.': 'huntseq', '\'': 'vulnprio', '`': 'feedback', '\\': 'chains', '!': 'automation', '@': 'reports', '#': 'versions', '$': 'syslog', '%': 'competitive', '/': 'search' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
