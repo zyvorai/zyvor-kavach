@@ -59,6 +59,9 @@ func run(args []string) error {
 	if handled, err := gsDispatch(args, os.Stdout); handled {
 		return err
 	}
+	if handled, err := cfDispatch(args, os.Stdout); handled {
+		return err
+	}
 	if handled, err := advDispatch(args, os.Stdout); handled {
 		return err
 	}

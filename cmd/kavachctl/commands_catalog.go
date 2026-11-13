@@ -201,6 +201,11 @@ func allCLICommands() []cliCommand {
 		// global_search.go: cross-entity search.
 		{Name: "search", Args: []string{"search", "T1059", "--type", "technique"}},
 
+		// cert_feeds.go: worldwide CERT advisory feeds (opt-in server side).
+		{Name: "advisories-list", Args: []string{"advisories", "list", "--limit", "5"}},
+		{Name: "advisories-status", Args: []string{"advisories", "status"}},
+		{Name: "advisories-refresh", Args: []string{"advisories", "refresh"}, Mutating: true, Optional: true},
+
 		// rules_health.go: detection rule health and lifecycle.
 		{Name: "rules-health", Args: []string{"rules", "health"}},
 		{Name: "rules-lifecycle", Args: []string{"rules", "lifecycle", "demo"}, Optional: true},
