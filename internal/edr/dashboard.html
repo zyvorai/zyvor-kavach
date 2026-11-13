@@ -1296,6 +1296,35 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 .md-pane .nx-filters label { display: inline-flex; align-items: center; gap: 6px; min-height: var(--hit-min); }
 .md-method { margin: 0 0 12px; }
 
+/* === provenance, ransomware-behaviour, ttp pages === */
+.bh-svg { width: 100%; max-width: 560px; height: auto; display: block; }
+.bh-svg text { fill: var(--text-secondary); font-size: 9px; font-family: var(--font); }
+.bh-caveat { margin: 0 0 12px; border-color: var(--warning-border); background: var(--warning-bg); color: var(--warning-text); }
+.bh-caveat ul { margin: 6px 0 0; padding-left: 20px; }
+.bh-caveat li { margin: 3px 0; overflow-wrap: anywhere; }
+.bh-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0; }
+.bh-arrow { color: var(--text-tertiary); }
+.bh-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--text-secondary); margin: 6px 0; }
+.bh-fields { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 12px; }
+.bh-fields select, .bh-fields input { max-width: 100%; }
+.prv-n-process { fill: var(--apple-blue); }
+.prv-n-destination { fill: var(--warning-text); }
+.prv-n-file { fill: var(--text-secondary); }
+.prv-n-hit { stroke: var(--danger); stroke-width: 3; }
+.prv-n-start { stroke: var(--text-primary); stroke-width: 2; }
+.prv-e { stroke: var(--text-tertiary); fill: none; stroke-width: 1.2; }
+.prv-e-connect { stroke-dasharray: 5 3; }
+.prv-e-file { stroke-dasharray: 1.5 3; }
+.prv-arrow { fill: var(--text-tertiary); }
+.prv-detail { margin-top: 12px; border-color: var(--apple-blue); }
+.rb-bar { fill: var(--text-tertiary); }
+.rb-bar-watch { fill: var(--warning-text); }
+.rb-bar-alert { fill: var(--danger); }
+.rb-axis { stroke: var(--hairline-1); }
+.rb-thr { stroke: var(--danger); stroke-dasharray: 4 3; }
+.tp-bar { height: 8px; border-radius: 4px; background: var(--fill-tertiary); overflow: hidden; min-width: 80px; }
+.tp-bar > span { display: block; height: 100%; background: var(--apple-blue); }
+
 /* === regulatory clocks page === */
 .rg-fields { border: 1px solid var(--hairline-1); border-radius: var(--radius-md); margin: 0 0 12px; padding: 8px 12px; min-width: 0; }
 .rg-opt { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; min-height: var(--hit-min); overflow-wrap: anywhere; }
@@ -1416,6 +1445,9 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
             <button type="button" data-page="regulatory" role="menuitem">Regulatory clocks</button>
             <button type="button" data-page="models" role="menuitem">Models</button>
             <button type="button" data-page="inspector" role="menuitem">Inspector</button>
+            <button type="button" data-page="provenance" role="menuitem">Provenance</button>
+            <button type="button" data-page="ransomware-behaviour" role="menuitem">Ransomware behaviour</button>
+            <button type="button" data-page="ttp" role="menuitem">TTP similarity</button>
           </div>
         </div>
       </div>
@@ -3274,6 +3306,94 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     </section>
     <!-- === end inspector page === -->
 
+    <!-- === provenance page === -->
+    <section id="page-provenance" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Provenance</p>
+        <h1>Follow a suspicious chain, with its gaps in view.</h1>
+        <p class="lede">Findings grouped into ranked stories over a process graph built from polled telemetry. It is a lead for investigation, not a verdict, and it observes only.</p>
+      </header>
+      <div class="nx-note bh-caveat" id="prv-limits" role="note">
+        <strong>Limitations (always apply)</strong>
+        <ul><li>This is a process-lifetime graph rebuilt from polled process, network and file telemetry. It is not a kernel audit graph.</li><li>Most file events carry no writing process, so file activity is largely absent. Polling can miss short-lived processes, so chains can have gaps.</li></ul>
+      </div>
+      <p class="work-msg" id="prv-msg" role="status"></p>
+      <div class="toolbar-pill nx-filters bh-fields">
+        <label class="hint" for="prv-host">Host</label>
+        <select class="input-field" id="prv-host"><option value="">All hosts</option></select>
+        <label class="hint" for="prv-min">Minimum score</label>
+        <input class="input-field" id="prv-min" type="number" min="0" step="0.5" value="1">
+        <button type="button" id="prv-go">Load stories</button>
+      </div>
+      <div id="prv-stories-out"></div>
+      <div class="work-panel prv-detail" id="prv-detail" role="region" aria-labelledby="prv-detail-title" tabindex="-1" hidden>
+        <div class="ui-row"><h3 id="prv-detail-title">Story</h3><button type="button" class="secondary" id="prv-detail-close">Close</button></div>
+        <div id="prv-detail-out"></div>
+      </div>
+      <h2>What the graph includes and lacks</h2>
+      <div id="prv-status-out"></div>
+    </section>
+    <!-- === end provenance page === -->
+
+    <!-- === ransomware behaviour page === -->
+    <section id="page-ransomware-behaviour" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Ransomware behaviour</p>
+        <h1>File-activity patterns that look like mass encryption.</h1>
+        <p class="lede">A per-host score over sliding windows of file events. It reports and ranks; it never blocks, kills or quarantines. The separate Ransomware page is the early-warning view.</p>
+      </header>
+      <div class="nx-note bh-caveat" id="rb-caveat" role="note">
+        <strong>This detector cannot see (always apply)</strong>
+        <ul><li>It sees only file path, size and event rate. It cannot see file contents and cannot see which process did the writing.</li><li>It has known evasions: slow encryption spread over hours, an attacker who stays under the thresholds, and renames that carry only the new name.</li><li>Thresholds are heuristics tuned on synthetic traces, not fitted to this fleet. A low score does not mean a host is safe, and a high score is a lead, not proof.</li></ul>
+      </div>
+      <p class="work-msg" id="rb-msg" role="status"></p>
+      <div class="toolbar-pill nx-filters bh-fields">
+        <button type="button" id="rb-refresh">Refresh</button>
+        <label class="hint" for="rb-host">Open a host directly</label>
+        <input class="input-field" id="rb-host" type="text" placeholder="Host name" autocomplete="off" spellcheck="false">
+        <button type="button" class="secondary" id="rb-host-go">Show timeline</button>
+      </div>
+      <div id="rb-hosts-out"></div>
+      <div class="work-panel prv-detail" id="rb-detail" role="region" aria-labelledby="rb-detail-title" tabindex="-1" hidden>
+        <div class="ui-row"><h3 id="rb-detail-title">Host</h3><button type="button" class="secondary" id="rb-detail-close">Close</button></div>
+        <div id="rb-detail-out"></div>
+      </div>
+      <h2>Detector status, thresholds and blind spots</h2>
+      <div id="rb-status-out"></div>
+    </section>
+    <!-- === end ransomware behaviour page === -->
+
+    <!-- === ttp similarity page === -->
+    <section id="page-ttp" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">TTP similarity</p>
+        <h1>Which public profiles do these techniques resemble?</h1>
+        <p class="lede">Compare the techniques seen on a host, or a list you type, with summaries of public adversary reporting. The result is a prompt to hunt, never a conclusion about who is responsible.</p>
+      </header>
+      <div class="nx-note bh-caveat" id="tp-caveat" role="note">
+        <strong>Similarity is not attribution (always applies)</strong>
+        <ul><li>A high score means the techniques resemble a public profile, not that the same actor is responsible.</li><li>Techniques are shared across many actors, and commodity techniques appear in most profiles, so overlap is weak evidence.</li><li>Profiles are incomplete summaries and may be stale. Adversaries can imitate one another.</li></ul>
+      </div>
+      <p class="work-msg" id="tp-msg" role="status"></p>
+      <div class="nx-tabs" role="tablist" aria-label="Input type" id="tp-modes">
+        <button type="button" role="tab" data-tp-mode="host" aria-selected="true">By host</button>
+        <button type="button" role="tab" data-tp-mode="techniques" aria-selected="false">By technique list</button>
+      </div>
+      <div class="toolbar-pill nx-filters bh-fields">
+        <div id="tp-in-host" class="bh-fields">
+          <label class="hint" for="tp-host">Host</label>
+          <input class="input-field" id="tp-host" type="text" placeholder="Host name" autocomplete="off" spellcheck="false" maxlength="256">
+        </div>
+        <div id="tp-in-techs" class="bh-fields" hidden>
+          <label class="hint" for="tp-techs">Techniques, comma separated</label>
+          <input class="input-field" id="tp-techs" type="text" placeholder="T1059, T1003, T1021.001" autocomplete="off" spellcheck="false">
+        </div>
+        <button type="button" id="tp-go">Compare</button>
+      </div>
+      <div id="tp-out" aria-live="polite"><p class="hint">Enter a host or a technique list. At least 3 distinct techniques are needed before any profile is ranked.</p></div>
+    </section>
+    <!-- === end ttp similarity page === -->
+
     <!-- === models page === -->
     <section id="page-models" class="page" hidden>
       <header class="page-hero">
@@ -3501,8 +3621,8 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -3625,7 +3745,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -3682,6 +3802,9 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     if (current === 'regulatory' && typeof loadRegulatory === 'function') loadRegulatory();
     if (current === 'models' && typeof loadModels === 'function') loadModels();
     if (current === 'inspector' && typeof loadInspector === 'function') loadInspector();
+    if (current === 'provenance' && typeof loadProvenance === 'function') loadProvenance();
+    if (current === 'ransomware-behaviour' && typeof loadRansomwareBehaviour === 'function') loadRansomwareBehaviour();
+    if (current === 'ttp' && typeof loadTtp === 'function') loadTtp();
   }
 
   function fmtTime(v) {
@@ -6030,6 +6153,34 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       d.appendChild(el('pre', JSON.stringify(rep.meta, null, 2), 'px-pre'));
       box.appendChild(d);
     }
+    inSimilar(box, rep);
+  }
+  function inSimilar(box, rep) {
+    const p = el('div', '', 'work-panel');
+    p.appendChild(el('h3', 'Similar submissions'));
+    p.appendChild(el('p', 'Nearest earlier reports by Kavach-native digests (not compatible with ssdeep or TLSH). A match never proves maliciousness, and no match never proves safety.', 'nx-note'));
+    const out = el('div', '', '');
+    p.appendChild(out);
+    box.appendChild(p);
+    if (!rep.sha256) { out.appendChild(el('p', 'This report has no sha256, so there is nothing to compare.', 'hint')); return; }
+    const run = () => {
+      uiLoading(out, 'Looking for similar reports…');
+      uiFetchAny('/v1/inspect/similar?sha256=' + encodeURIComponent(rep.sha256)).then((r) => {
+        out.removeAttribute('aria-busy');
+        out.replaceChildren();
+        if (r.status === 404) { out.appendChild(el('p', 'This sha256 is not in the digest index (the content may not have produced a digest, or it has aged out of the capped in-memory index). No comparison is possible.', 'hint')); return; }
+        if (!r.ok) { uiError(out, 'similar submissions', new Error('HTTP ' + r.status), run); return; }
+        const b = r.body || {};
+        const ms = b.matches || [];
+        const th = b.thresholds || {};
+        uiMeta(out, ['Candidates returned: ' + (b.count ?? ms.length), th.ctph_min_score !== undefined ? 'Similar if CTPH score >= ' + th.ctph_min_score : '', th.lsh_max_distance !== undefined ? 'or LSH distance <= ' + th.lsh_max_distance : '']);
+        if (!ms.length) { out.appendChild(el('p', 'No earlier submission is comparable. Only previously analyzed content can match.', 'hint')); return; }
+        const tb = uiTable(out, ['Report', 'Time', 'CTPH score (0-100)', 'LSH distance', 'Import / symbol hash', 'Similar', 'Basis', 'sha256']);
+        ms.forEach((m) => tableRow(tb, [m.name || m.report_id || '-', fmtTime(m.time), m.ctph_score >= 0 ? m.ctph_score : 'not comparable', m.lsh_distance >= 0 ? m.lsh_distance : 'not comparable', (m.imphash_match ? 'same imphash' : '') + (m.symhash_match ? (m.imphash_match ? ', ' : '') + 'same symhash' : '') || '-', m.similar ? uiTag('similar', 'suspicious') : 'below threshold', m.basis || '-', el('span', (m.sha256 || '').slice(0, 16) + '…', 'ui-hash')]));
+        if (b.note) out.appendChild(el('p', b.note, 'hint'));
+      }).catch((e) => uiError(out, 'similar submissions', e, run));
+    };
+    run();
   }
   function inSetBusy(b) {
     inBusy = b;
@@ -6133,6 +6284,451 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     if (fs.length > 1) setMsg('in-msg', 'Only the first file is analyzed (' + fs[0].name + ').', false);
   });
   /* === end inspector page === */
+
+  /* === ttp similarity page === */
+  let tpMode = 'host';
+  const tpConfCls = { not_enough_evidence: 'not_enough_data', low: 'suspicious', moderate: 'unverified', hint_only: 'not_enough_data' };
+  const tpTechRe = /^T\d{4}(\.\d{3})?$/;
+  function tpCaveats(list) {
+    if ((list || []).length) bhCaveat($('tp-caveat'), 'Similarity is not attribution (always applies)', list);
+  }
+  function tpObserved(box, obs, source) {
+    box.appendChild(el('h3', 'Observed techniques (' + obs.length + ', from ' + (source || '-') + ')'));
+    if (!obs.length) { box.appendChild(el('p', 'No techniques were observed for this input. For a host, that means no finding on it maps to an ATT&CK technique.', 'hint')); return; }
+    const tb = uiTable(box, ['Technique', 'Name', 'Tactic', 'Findings', 'First seen']);
+    obs.forEach((o) => tableRow(tb, [o.technique, o.name || '-', o.tactic || '-', o.findings || '-', pxTime(o.first_seen)]));
+  }
+  function tpSimilar(box, r) {
+    box.appendChild(el('h3', 'Similar public profiles'));
+    const conf = r.confidence || 'unknown';
+    const row = el('div', '', 'ui-row');
+    row.appendChild(el('span', 'Confidence: '));
+    row.appendChild(uiTag(conf, tpConfCls[conf] || ''));
+    row.appendChild(el('span', 'Distinct techniques after roll-up: ' + (r.distinct_techniques ?? '-')));
+    box.appendChild(row);
+    box.appendChild(el('p', 'Reason: ' + (r.confidence_reason || 'none given'), 'nx-note'));
+    if (r.method) box.appendChild(el('p', 'Method: ' + r.method, 'hint'));
+    const ms = r.matches || [];
+    if (conf === 'not_enough_evidence') { uiNote(box, 'not_enough_evidence: fewer than 3 distinct techniques, so no profiles are ranked. Collect more observations rather than reading anything into this input.', true); return; }
+    if (!ms.length) { box.appendChild(el('p', 'No profile shares a technique with this input.', 'hint')); return; }
+    const tb = uiTable(box, ['Profile', 'Kind', 'Score', 'TF-IDF cosine', 'Weighted Jaccard', 'Overlapping techniques', 'Techniques in profile but not observed']);
+    ms.forEach((m) => {
+      const bar = el('div', '', 'tp-bar');
+      bar.setAttribute('role', 'img');
+      bar.setAttribute('aria-label', 'Score ' + bhNum(m.score, 3));
+      const fill = el('span', ''); fill.style.width = Math.max(0, Math.min(100, (m.score || 0) * 100)) + '%';
+      bar.appendChild(fill);
+      const sc = el('div', '', 'cell-stack'); sc.appendChild(el('span', bhNum(m.score, 3))); sc.appendChild(bar);
+      const miss = m.missing_techniques || [];
+      tableRow(tb, [(m.name || m.id) + ' (' + m.id + ')', m.kind || '-', sc, bhNum(m.tfidf_cosine, 3), bhNum(m.weighted_jaccard, 3), (m.overlap || []).join(', ') || '-', miss.length ? miss.slice(0, 12).join(', ') + (miss.length > 12 ? ' … +' + (miss.length - 12) + ' more' : '') : '-']);
+    });
+    box.appendChild(el('p', 'Overlap is weak evidence: many actors, criminals and red teams share techniques, and profiles are summaries of public reporting.', 'hint'));
+  }
+  function tpNext(box, r) {
+    box.appendChild(el('h3', 'Hints to hunt for'));
+    box.appendChild(el('p', r.label || 'Hints to hunt for, derived from co-occurrence in similar public profiles. Not a prediction.', 'hint'));
+    if (r.confidence === 'not_enough_evidence') { uiNote(box, 'not_enough_evidence: too few distinct techniques to derive hints.', true); return; }
+    const hs = r.hints || [];
+    if (!hs.length) { box.appendChild(el('p', 'No hints were produced.', 'hint')); return; }
+    if (r.hint_basis) box.appendChild(el('p', 'Basis: ' + r.hint_basis, 'hint'));
+    const tb = uiTable(box, ['Technique', 'Tactic', 'Supporting profiles', 'Weight', 'Common to most profiles']);
+    hs.forEach((h) => tableRow(tb, [h.technique, h.tactic || '-', h.supporting_profiles, bhNum(h.weight, 3), h.commodity ? 'yes (weak signal)' : 'no']));
+  }
+  function tpChains(box, r) {
+    box.appendChild(el('h3', 'Kill-chain progression'));
+    const seq = r.sequence || [];
+    if (!seq.length) { box.appendChild(el('p', 'No observed techniques for this host, so there is no progression to show.', 'hint')); return; }
+    uiMeta(box, ['Observed techniques: ' + (r.observed_techniques ?? seq.length), r.earliest_tactic ? 'Earliest tactic: ' + r.earliest_tactic : '', r.latest_tactic ? 'Latest tactic: ' + r.latest_tactic : '']);
+    box.appendChild(el('h4', 'Tactics reached, in kill-chain order'));
+    if ((r.tactics_reached || []).length) bhChips(box, r.tactics_reached, true); else box.appendChild(el('p', 'None.', 'hint'));
+    if (r.killchain_order_check) box.appendChild(el('p', r.killchain_order_check, 'hint'));
+    const gaps = r.gaps_worth_hunting || [];
+    box.appendChild(el('h4', 'Gaps worth hunting'));
+    if (r.gap_note) box.appendChild(el('p', r.gap_note, 'nx-note'));
+    if (!gaps.length) box.appendChild(el('p', 'No gaps between the earliest and latest tactic reached.', 'hint'));
+    else {
+      const tb = uiTable(box, ['Tactic with no observed technique', 'Techniques to hunt for']);
+      gaps.forEach((g) => tableRow(tb, [g.tactic, (g.hunt_techniques || []).join(', ') || '-']));
+    }
+  }
+  function tpRun() {
+    const out = $('tp-out');
+    let qs, host = '';
+    if (tpMode === 'host') {
+      host = $('tp-host').value.trim();
+      if (!host) { setMsg('tp-msg', 'Enter a host name.', true); $('tp-host').focus(); return; }
+      qs = 'host=' + encodeURIComponent(host);
+    } else {
+      const ids = $('tp-techs').value.split(',').map((x) => x.trim().toUpperCase()).filter((x) => x);
+      if (!ids.length) { setMsg('tp-msg', 'Enter at least one technique id, such as T1059, T1003.', true); $('tp-techs').focus(); return; }
+      const bad = ids.find((x) => !tpTechRe.test(x));
+      if (bad) { setMsg('tp-msg', 'Not a technique id: ' + bad.slice(0, 20) + '. Use T1234 or T1234.001, separated by commas.', true); $('tp-techs').focus(); return; }
+      if (ids.length > 100) { setMsg('tp-msg', 'At most 100 techniques.', true); return; }
+      qs = 'techniques=' + encodeURIComponent(ids.join(','));
+    }
+    setMsg('tp-msg', '', false);
+    uiLoading(out, 'Comparing…');
+    const calls = [pgApi('/v1/ttp/similar?' + qs), pgApi('/v1/ttp/next?' + qs)];
+    if (tpMode === 'host') calls.push(pgApi('/v1/ttp/chains?host=' + encodeURIComponent(host)));
+    Promise.allSettled(calls).then((res) => {
+      out.removeAttribute('aria-busy');
+      out.replaceChildren();
+      const [sim, nxt, chn] = res;
+      if (sim.status === 'rejected') { uiError(out, 'the similarity result', sim.reason, tpRun); return; }
+      const r = sim.value || {};
+      tpCaveats(r.caveats);
+      const a = el('div', '', 'work-panel');
+      uiMeta(a, ['Mode: ' + (r.mode || 'observe-only'), 'Profiles compared: ' + (r.profiles ?? '-')]);
+      tpObserved(a, r.observed || [], r.source);
+      out.appendChild(a);
+      const b = el('div', '', 'work-panel');
+      tpSimilar(b, r);
+      out.appendChild(b);
+      const c = el('div', '', 'work-panel');
+      if (nxt.status === 'rejected') c.appendChild(el('p', 'Hints could not be loaded: ' + nxt.reason.message, 'hint')); else tpNext(c, nxt.value || {});
+      out.appendChild(c);
+      const d = el('div', '', 'work-panel');
+      if (tpMode !== 'host') { d.appendChild(el('h3', 'Kill-chain progression')); d.appendChild(el('p', 'Progression needs a host, because it uses the time order of that host\'s findings. A technique list has no times.', 'hint')); }
+      else if (chn.status === 'rejected') d.appendChild(el('p', 'Progression could not be loaded: ' + chn.reason.message, 'hint'));
+      else tpChains(d, chn.value || {});
+      out.appendChild(d);
+    });
+  }
+  const tpModeSel = uiTabs('tp-modes', 'data-tp-mode', (m) => {
+    tpMode = m;
+    $('tp-in-host').hidden = m !== 'host';
+    $('tp-in-techs').hidden = m !== 'techniques';
+  });
+  function loadTtp() {
+    pgApi('/v1/ttp/similar?techniques=T1059').then((r) => tpCaveats(r && r.caveats)).catch(() => {});
+  }
+  $('tp-go').addEventListener('click', tpRun);
+  $('tp-host').addEventListener('keydown', (e) => { if (e.key === 'Enter') tpRun(); });
+  $('tp-techs').addEventListener('keydown', (e) => { if (e.key === 'Enter') tpRun(); });
+  /* === end ttp similarity page === */
+
+  /* === ransomware behaviour page === */
+  let rbThr = null;
+  const rbLevelCls = { none: 'clean', watch: 'suspicious', alert: 'malicious-likely' };
+  function rbFactors(parent, list) {
+    if (!(list || []).length) { parent.appendChild(el('p', 'No factor contributed.', 'hint')); return; }
+    const tb = uiTable(parent, ['Factor', 'Kind', 'Value', 'Trigger', 'Triggered', 'Points', 'Detail']);
+    list.forEach((f) => tableRow(tb, [f.name, f.kind, bhNum(f.value, 2), bhNum(f.trigger, 2), f.triggered ? uiTag('yes', 'medium') : 'no', f.points, f.detail || '-']));
+  }
+  function rbStatus() {
+    const box = $('rb-status-out');
+    uiLoading(box);
+    return pgApi('/v1/ransom/status').then((r) => {
+      r = r || {};
+      box.removeAttribute('aria-busy');
+      box.replaceChildren();
+      rbThr = r.thresholds || null;
+      if ((r.cannot_see || []).length) bhCaveat($('rb-caveat'), 'This detector cannot see (always apply)', r.cannot_see.concat(['It sees only file path, size and event rate. It has known evasions (see below).']));
+      if (r.method) box.appendChild(el('p', 'Method: ' + r.method, 'nx-note'));
+      uiMeta(box, ['Window: ' + (r.window || '-'), 'Stride: ' + (r.stride || '-'), 'Report only: ' + (r.report_only ? 'yes' : 'no'), r.alert_rule ? 'Alert rule: ' + r.alert_rule : '']);
+      if (r.note) uiNote(box, r.note, true);
+      const a = el('div', '', 'work-panel');
+      a.appendChild(el('h3', 'Indicators'));
+      a.appendChild(el('h4', 'Primary'));
+      uiList(a, r.primary || []);
+      a.appendChild(el('h4', 'Secondary'));
+      uiList(a, r.secondary || []);
+      box.appendChild(a);
+      const b = el('div', '', 'work-panel');
+      b.appendChild(el('h3', 'Cannot see'));
+      if ((r.cannot_see || []).length) uiList(b, r.cannot_see); else b.appendChild(el('p', 'The server listed nothing.', 'hint'));
+      if (r.recommended_agent_change) b.appendChild(el('p', 'Recommended agent change: ' + r.recommended_agent_change, 'hint'));
+      box.appendChild(b);
+      const t = r.thresholds || {};
+      const keys = Object.keys(t).filter((k) => k !== 'window_ns' && k !== 'stride_ns');
+      const c = el('div', '', 'work-panel');
+      c.appendChild(el('h3', 'Thresholds'));
+      c.appendChild(el('p', 'Literature-guided heuristics tuned on synthetic traces, not fitted to this fleet.', 'hint'));
+      if (keys.length) {
+        const tb = uiTable(c, ['Threshold', 'Value']);
+        keys.forEach((k) => tableRow(tb, [k.replace(/_/g, ' '), t[k]]));
+      } else c.appendChild(el('p', 'The server listed no thresholds.', 'hint'));
+      box.appendChild(c);
+    }).catch((e) => uiError(box, 'the detector status', e, rbStatus));
+  }
+  function rbLoadHosts() {
+    const box = $('rb-hosts-out');
+    $('rb-detail').hidden = true;
+    uiLoading(box, 'Loading hosts…');
+    return pgApi('/v1/ransom/hosts').then((r) => {
+      r = r || {};
+      const hs = r.hosts || [];
+      box.removeAttribute('aria-busy');
+      box.replaceChildren();
+      if (!hs.length) { uiEmpty(box, 'No hosts scored', 'No file events have been received, so there is nothing to score. This does not show that a host is safe: the detector cannot see contents.'); return; }
+      uiMeta(box, ['Hosts: ' + hs.length, 'Ranked by peak window score, highest first', 'Report only: nothing is blocked or quarantined']);
+      const tb = uiTable(box, ['Host', 'Peak score', 'Level', 'Peak window', 'Primary / secondary triggered', 'Windows', 'Alert windows', 'Factors that fired']);
+      hs.forEach((h) => {
+        const p = h.peak || {};
+        const fired = (p.factors || []).filter((f) => f.triggered).map((f) => f.name + ' (' + f.points + ')');
+        tableRow(tb, [h.host, p.score ?? '-', uiTag(p.level || 'none', rbLevelCls[p.level] || ''), pxTime(p.start), (p.primary_triggered ?? '-') + ' / ' + (p.secondary_triggered ?? '-'), h.windows, h.alert_windows, fired.join(', ') || 'none'], { onClick: () => rbOpen(h.host) });
+      });
+      box.appendChild(el('p', 'Select a row (Enter or Space on the keyboard) to see that host over time.', 'hint'));
+    }).catch((e) => uiError(box, 'ransomware behaviour hosts', e, rbLoadHosts));
+  }
+  function rbChart(ws) {
+    const W = 600, H = 170, L = 30, B = 20, T = 8;
+    const svg = bhSvg('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'bh-svg', role: 'img', 'aria-label': 'Bar chart of ' + ws.length + ' window scores over time, oldest on the left. The values are in the table below.' });
+    svg.style.maxWidth = '720px';
+    const max = Math.max(10, ...ws.map((w) => w.score || 0), (rbThr && rbThr.alert_score) || 0);
+    const ph = H - B - T, pw = W - L;
+    const y = (v) => T + ph - (v / max) * ph;
+    svg.appendChild(bhSvg('line', { x1: L, y1: H - B, x2: W, y2: H - B, class: 'rb-axis', stroke: 'currentColor', 'stroke-width': 1 }));
+    svg.appendChild(bhSvg('text', { x: L - 4, y: T + 8, 'text-anchor': 'end' }, Math.round(max)));
+    svg.appendChild(bhSvg('text', { x: L - 4, y: H - B, 'text-anchor': 'end' }, '0'));
+    const bw = pw / ws.length;
+    ws.forEach((w, i) => {
+      const h = Math.max(w.score ? 1 : 0, ph - (y(w.score || 0) - T));
+      const r = bhSvg('rect', { x: L + i * bw + Math.min(0.5, bw * 0.1), y: H - B - h, width: Math.max(1, bw - Math.min(1, bw * 0.2)), height: h, class: 'rb-bar' + (w.level === 'alert' ? ' rb-bar-alert' : w.level === 'watch' ? ' rb-bar-watch' : '') });
+      r.appendChild(bhSvg('title', {}, pxTime(w.start) + ': score ' + w.score + ', ' + (w.level || 'none')));
+      svg.appendChild(r);
+    });
+    if (rbThr && rbThr.alert_score) {
+      svg.appendChild(bhSvg('line', { x1: L, y1: y(rbThr.alert_score), x2: W, y2: y(rbThr.alert_score), class: 'rb-thr', 'stroke-width': 1 }));
+      svg.appendChild(bhSvg('text', { x: W - 2, y: y(rbThr.alert_score) - 3, 'text-anchor': 'end' }, 'alert ' + rbThr.alert_score));
+    }
+    svg.appendChild(bhSvg('text', { x: L, y: H - 5 }, pxTime(ws[0].start)));
+    svg.appendChild(bhSvg('text', { x: W, y: H - 5, 'text-anchor': 'end' }, pxTime(ws[ws.length - 1].end)));
+    return svg;
+  }
+  function rbOpen(host) {
+    const d = $('rb-detail'), out = $('rb-detail-out');
+    d.hidden = false;
+    $('rb-detail-title').textContent = 'Host ' + host;
+    uiLoading(out, 'Loading windows…');
+    d.scrollIntoView({ block: 'nearest' });
+    d.focus();
+    pgApi('/v1/ransom/host?host=' + encodeURIComponent(host)).then((r) => {
+      const ws = (r && r.windows) || [];
+      out.removeAttribute('aria-busy');
+      out.replaceChildren();
+      if (!ws.length) { uiEmpty(out, 'No windows', 'This host has no scored windows.'); return; }
+      uiMeta(out, ['Windows shown: ' + ws.length + ' (most recent 500 at most)', 'Alert windows: ' + ws.filter((w) => w.level === 'alert').length, 'Watch windows: ' + ws.filter((w) => w.level === 'watch').length]);
+      out.appendChild(rbChart(ws));
+      const lg = el('div', '', 'bh-legend');
+      ['Grey bar: none', 'Amber bar: watch', 'Red bar: alert', 'Dashed line: alert score threshold'].forEach((t) => lg.appendChild(el('span', t)));
+      out.appendChild(lg);
+      const peak = ws.reduce((a, w) => ((w.score || 0) > ((a && a.score) || 0) ? w : a), null) || ws[0];
+      out.appendChild(el('h4', 'Factors in the peak window (' + pxTime(peak.start) + ', score ' + peak.score + ')'));
+      rbFactors(out, peak.factors);
+      const det = document.createElement('details');
+      det.appendChild(el('summary', 'All windows (' + ws.length + ')'));
+      const tb = uiTable(det, ['Start', 'Events', 'Score', 'Level', 'Primary', 'Secondary']);
+      ws.slice().reverse().forEach((w) => tableRow(tb, [pxTime(w.start), w.events, w.score, uiTag(w.level || 'none', rbLevelCls[w.level] || ''), w.primary_triggered, w.secondary_triggered]));
+      out.appendChild(det);
+    }).catch((e) => uiError(out, 'the host timeline', e, () => rbOpen(host)));
+  }
+  function loadRansomwareBehaviour() { rbStatus().then(rbLoadHosts); }
+  $('rb-refresh').addEventListener('click', loadRansomwareBehaviour);
+  $('rb-host-go').addEventListener('click', () => {
+    const h = $('rb-host').value.trim();
+    if (!h) { setMsg('rb-msg', 'Enter a host name.', true); $('rb-host').focus(); return; }
+    setMsg('rb-msg', '', false);
+    rbOpen(h);
+  });
+  $('rb-host').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('rb-host-go').click(); });
+  $('rb-detail-close').addEventListener('click', () => { $('rb-detail').hidden = true; });
+  $('rb-detail').addEventListener('keydown', (e) => { if (e.key === 'Escape') $('rb-detail').hidden = true; });
+  /* === end ransomware behaviour page === */
+
+  /* === provenance page === */
+  let prvStories = [];
+  function bhSvg(tag, attrs, text) {
+    const n = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    Object.keys(attrs || {}).forEach((k) => n.setAttribute(k, String(attrs[k])));
+    if (text !== undefined && text !== null) n.textContent = String(text);
+    return n;
+  }
+  function bhNum(v, d) { return typeof v === 'number' && isFinite(v) ? String(Math.round(v * Math.pow(10, d)) / Math.pow(10, d)) : '-'; }
+  function bhCaveat(box, title, items) {
+    box.replaceChildren(el('strong', title));
+    const ul = document.createElement('ul');
+    items.forEach((x) => ul.appendChild(el('li', x)));
+    box.appendChild(ul);
+  }
+  function bhChips(parent, items, arrows) {
+    const row = el('div', '', 'bh-chips');
+    items.forEach((t, i) => {
+      if (i && arrows) row.appendChild(el('span', '→', 'bh-arrow'));
+      row.appendChild(uiTag(t, 'not_enough_data'));
+    });
+    parent.appendChild(row);
+  }
+  function prvStatus() {
+    const box = $('prv-status-out');
+    uiLoading(box);
+    return pgApi('/v1/prov/status').then((r) => {
+      r = r || {};
+      box.removeAttribute('aria-busy');
+      box.replaceChildren();
+      const sel = $('prv-host'), cur = sel.value;
+      sel.replaceChildren();
+      const all = el('option', 'All hosts'); all.value = ''; sel.appendChild(all);
+      (r.hosts || []).forEach((h) => { const o = el('option', h); o.value = h; sel.appendChild(o); });
+      sel.value = (r.hosts || []).includes(cur) ? cur : '';
+      if ((r.limitations || []).length) bhCaveat($('prv-limits'), 'Limitations (always apply)', r.limitations);
+      if (r.method) box.appendChild(el('p', 'Method: ' + r.method, 'nx-note'));
+      const inp = r.inputs || {};
+      uiMeta(box, Object.keys(inp).map((k) => k.replace(/_/g, ' ') + ': ' + inp[k]));
+      const a = el('div', '', 'work-panel');
+      a.appendChild(el('h3', 'What the graph includes'));
+      if ((r.includes || []).length) uiList(a, r.includes); else a.appendChild(el('p', 'The server listed nothing.', 'hint'));
+      box.appendChild(a);
+      const b = el('div', '', 'work-panel');
+      b.appendChild(el('h3', 'What it lacks'));
+      if ((r.lacks || []).length) uiList(b, r.lacks); else b.appendChild(el('p', 'The server listed nothing.', 'hint'));
+      box.appendChild(b);
+      const meta = [r.state ? 'State: ' + r.state : '', r.lineage_source ? 'Lineage source: ' + r.lineage_source : ''];
+      const caps = r.caps || {};
+      Object.keys(caps).forEach((k) => meta.push(k.replace(/_/g, ' ') + ': ' + caps[k]));
+      uiMeta(box, meta);
+    }).catch((e) => uiError(box, 'the provenance status', e, prvStatus));
+  }
+  function prvLoadStories() {
+    const box = $('prv-stories-out');
+    const host = $('prv-host').value;
+    const min = $('prv-min').value.trim();
+    if (min !== '' && !(Number(min) >= 0)) { setMsg('prv-msg', 'Minimum score must be a number of 0 or more.', true); $('prv-min').focus(); return; }
+    setMsg('prv-msg', '', false);
+    $('prv-detail').hidden = true;
+    uiLoading(box, 'Loading stories…');
+    const qs = [];
+    if (host) qs.push('host=' + encodeURIComponent(host));
+    if (min !== '') qs.push('min_score=' + encodeURIComponent(min));
+    return pgApi('/v1/prov/stories' + (qs.length ? '?' + qs.join('&') : '')).then((r) => {
+      r = r || {};
+      prvStories = r.stories || [];
+      box.removeAttribute('aria-busy');
+      box.replaceChildren();
+      if (!prvStories.length) { uiEmpty(box, 'No stories', 'No group of findings reached a score of ' + (r.min_score ?? min) + (host ? ' on ' + host : '') + '. That can mean nothing suspicious, or only that the graph could not link the findings (see the limitations above).'); return; }
+      uiMeta(box, ['Stories: ' + prvStories.length, 'Rarity source: ' + (r.rarity_source || '-'), 'Ranked by score, highest first']);
+      const tb = uiTable(box, ['Score', 'Host', 'Tactics reached (kill-chain order)', 'Findings', 'Ordered steps', 'First seen', 'Last seen']);
+      prvStories.forEach((s) => tableRow(tb, [bhNum(s.score, 2), s.host, (s.tactics || []).join(' → ') || '-', (s.hits || []).length, s.kill_chain_ordered_steps ?? '-', pxTime(s.first), pxTime(s.last)], { onClick: () => prvOpen(s) }));
+      box.appendChild(el('p', 'Select a row (Enter or Space on the keyboard) to open the story.', 'hint'));
+    }).catch((e) => uiError(box, 'stories', e, prvLoadStories));
+  }
+  function prvOpen(s) {
+    const d = $('prv-detail'), out = $('prv-detail-out');
+    d.hidden = false;
+    $('prv-detail-title').textContent = 'Story ' + s.id + ' on ' + s.host;
+    out.replaceChildren();
+    uiMeta(out, ['Score: ' + bhNum(s.score, 2), 'Findings: ' + (s.hits || []).length, 'Graph nodes in story: ' + (s.nodes || []).length, 'Kill-chain ordered steps: ' + (s.kill_chain_ordered_steps ?? '-'), 'Max path rarity: ' + bhNum(s.max_path_rarity_bits, 2) + ' bits', 'First: ' + pxTime(s.first), 'Last: ' + pxTime(s.last)]);
+    out.appendChild(el('h4', 'Tactics reached, in kill-chain order'));
+    if ((s.tactics || []).length) bhChips(out, s.tactics, true); else out.appendChild(el('p', 'No finding in this story maps to a tactic.', 'hint'));
+    out.appendChild(el('h4', 'Member findings'));
+    const hits = s.hits || [];
+    if (!hits.length) out.appendChild(el('p', 'No findings recorded.', 'hint'));
+    else {
+      const tb = uiTable(out, ['Time', 'Rule', 'Tactic', 'Severity', 'Finding', 'Graph']);
+      hits.forEach((h) => tableRow(tb, [pxTime(h.time), h.rule, h.tactic || '-', uiTag(h.severity || 'info'), el('span', h.finding_id, 'ui-hash'), pgBtn('Show graph', 'secondary', () => prvGraph(h.finding_id), 'Show the graph around finding ' + h.finding_id)]));
+    }
+    const rp = s.rare_paths || [];
+    out.appendChild(el('h4', 'Rare transitions on the story path'));
+    if (!rp.length) out.appendChild(el('p', 'No unusually rare transition was found. Rarity is only as good as the retained history.', 'hint'));
+    else uiList(out, rp.map((p) => bhNum(p.rarity_bits, 2) + ' bits: ' + (p.steps || []).join(' → ')));
+    out.appendChild(el('h4', 'Sub-graph around a finding'));
+    const ctl = el('div', '', 'bh-fields');
+    const lab = el('label', 'Hops either side', 'hint'); lab.setAttribute('for', 'prv-hops');
+    const sel = document.createElement('select'); sel.id = 'prv-hops'; sel.className = 'input-field';
+    [1, 2, 3, 4, 5, 6].forEach((n) => { const o = el('option', String(n)); o.value = String(n); sel.appendChild(o); });
+    sel.value = '3';
+    ctl.appendChild(lab); ctl.appendChild(sel);
+    out.appendChild(ctl);
+    const g = el('div', '', ''); g.id = 'prv-graph-out'; g.setAttribute('aria-live', 'polite');
+    out.appendChild(g);
+    if (hits.length) prvGraph(hits[0].finding_id); else uiEmpty(g, 'No graph', 'A story without findings has no starting point.');
+    d.scrollIntoView({ block: 'nearest' });
+    d.focus();
+  }
+  const PRV_DRAW_CAP = 40;
+  function prvLabel(n) {
+    const t = n.kind === 'process' ? (n.exe || n.command || 'pid ' + n.pid) : (n.label || n.id);
+    const base = String(t).replace(/\\/g, '/').split('/').filter(Boolean).pop() || String(t);
+    return base.length > 20 ? base.slice(0, 19) + '…' : base;
+  }
+  function prvGraph(fid) {
+    const box = $('prv-graph-out');
+    uiLoading(box, 'Tracing finding ' + fid + '…');
+    const hops = $('prv-hops') ? $('prv-hops').value : '3';
+    pgApi('/v1/prov/trace?finding_id=' + encodeURIComponent(fid) + '&dir=both&hops=' + encodeURIComponent(hops)).then((r) => {
+      r = r || {};
+      box.removeAttribute('aria-busy');
+      box.replaceChildren();
+      if (r.attached === false) { uiNote(box, 'Finding ' + fid + ' is not attached to a process in the graph: ' + (r.reason || 'no reason given') + '. No sub-graph can be drawn.', true); return; }
+      const nodes = r.nodes || [], edges = r.edges || [];
+      if (!nodes.length) { uiEmpty(box, 'Empty sub-graph', 'The trace returned no nodes.'); return; }
+      uiMeta(box, ['Finding: ' + fid, 'Nodes: ' + nodes.length, 'Edges: ' + edges.length, 'Hops: ' + (r.hops ?? hops), r.truncated ? 'Truncated by the server node cap (' + r.node_cap + ')' : '']);
+      const byId = {};
+      nodes.forEach((n) => { byId[n.id] = n; });
+      const order = [], seen = {};
+      const push = (n) => { if (n && !seen[n.id]) { seen[n.id] = 1; order.push(n); } };
+      push(byId[r.start]);
+      nodes.filter((n) => (n.finding_ids || []).length).forEach(push);
+      nodes.forEach(push);
+      const drawn = order.slice(0, PRV_DRAW_CAP);
+      const inDrawn = {};
+      drawn.forEach((n) => { inDrawn[n.id] = 1; });
+      if (nodes.length > drawn.length) uiNote(box, 'Showing ' + drawn.length + ' of ' + nodes.length + ' nodes (the start node and finding nodes first). The full list is in the table below.', true);
+      const W = 420, H = 340, cx = W / 2, cy = H / 2, R = 135;
+      const pos = {};
+      drawn.forEach((n, i) => {
+        if (i === 0) { pos[n.id] = [cx, cy]; return; }
+        const a = (2 * Math.PI * (i - 1)) / Math.max(1, drawn.length - 1) - Math.PI / 2;
+        pos[n.id] = [cx + R * Math.cos(a), cy + R * Math.sin(a) * 0.85];
+      });
+      const svg = bhSvg('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'bh-svg', role: 'img', 'aria-label': 'Provenance sub-graph around finding ' + fid + ': ' + drawn.length + ' nodes drawn of ' + nodes.length + ', ' + edges.length + ' edges. The same data is in the node list below.' });
+      const defs = bhSvg('defs', {});
+      const mk = bhSvg('marker', { id: 'prv-arrowhead', viewBox: '0 0 10 10', refX: '9', refY: '5', markerWidth: '6', markerHeight: '6', orient: 'auto' });
+      mk.appendChild(bhSvg('path', { d: 'M0,0 L10,5 L0,10 z', class: 'prv-arrow' }));
+      defs.appendChild(mk);
+      svg.appendChild(defs);
+      let drawnEdges = 0;
+      edges.forEach((e) => {
+        if (!inDrawn[e.from] || !inDrawn[e.to] || e.from === e.to) return;
+        const a = pos[e.from], b = pos[e.to];
+        const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1, pad = 11;
+        const ln = bhSvg('line', { x1: a[0] + dx / len * pad, y1: a[1] + dy / len * pad, x2: b[0] - dx / len * pad, y2: b[1] - dy / len * pad, class: 'prv-e prv-e-' + e.kind, 'marker-end': 'url(#prv-arrowhead)' });
+        ln.appendChild(bhSvg('title', {}, e.kind + ' edge ' + pxTime(e.time)));
+        svg.appendChild(ln);
+        drawnEdges++;
+      });
+      drawn.forEach((n) => {
+        const p = pos[n.id];
+        const cls = 'prv-n-' + n.kind + ((n.finding_ids || []).length ? ' prv-n-hit' : '') + (n.id === r.start ? ' prv-n-start' : '');
+        let shape;
+        if (n.kind === 'destination') shape = bhSvg('rect', { x: p[0] - 8, y: p[1] - 8, width: 16, height: 16, class: cls });
+        else if (n.kind === 'file') shape = bhSvg('polygon', { points: [p[0], p[1] - 10, p[0] + 10, p[1], p[0], p[1] + 10, p[0] - 10, p[1]].join(','), class: cls });
+        else shape = bhSvg('circle', { cx: p[0], cy: p[1], r: 9, class: cls });
+        shape.appendChild(bhSvg('title', {}, n.kind + ': ' + (n.command || n.exe || n.label || n.id) + ((n.finding_ids || []).length ? ' (findings: ' + n.finding_ids.join(', ') + ')' : '')));
+        svg.appendChild(shape);
+        svg.appendChild(bhSvg('text', { x: p[0], y: p[1] + 21, 'text-anchor': 'middle' }, prvLabel(n)));
+      });
+      box.appendChild(svg);
+      const lg = el('div', '', 'bh-legend');
+      ['Circle: process', 'Square: network destination', 'Diamond: file', 'Red outline: has a finding', 'Dark outline: the traced finding', 'Solid line: spawn, dashed: connect, dotted: file', 'Arrow points from cause to effect'].forEach((t) => lg.appendChild(el('span', t)));
+      box.appendChild(lg);
+      uiMeta(box, ['Edges drawn: ' + drawnEdges + ' of ' + edges.length]);
+      const miss = r.missing || {};
+      const mk2 = Object.keys(miss).filter((k) => miss[k]);
+      if (mk2.length) uiNote(box, 'Unlinked in this host graph: ' + mk2.map((k) => k.replace(/_/g, ' ') + ' ' + miss[k]).join('; ') + '.');
+      const det = document.createElement('details');
+      det.appendChild(el('summary', 'Node list (' + nodes.length + ')'));
+      const tb = uiTable(det, ['Type', 'Name', 'Pid', 'First seen', 'Findings']);
+      nodes.forEach((n) => tableRow(tb, [n.kind, n.command || n.exe || n.label || n.id, n.pid || '-', pxTime(n.first_seen), (n.finding_ids || []).join(', ') || '-']));
+      box.appendChild(det);
+    }).catch((e) => uiError(box, 'the sub-graph', e, () => prvGraph(fid)));
+  }
+  function loadProvenance() { prvStatus().then(prvLoadStories); }
+  $('prv-go').addEventListener('click', prvLoadStories);
+  $('prv-host').addEventListener('change', prvLoadStories);
+  $('prv-detail-close').addEventListener('click', () => { $('prv-detail').hidden = true; });
+  $('prv-detail').addEventListener('keydown', (e) => { if (e.key === 'Escape') $('prv-detail').hidden = true; });
+  /* === end provenance page === */
 
   /* === models page === */
   const md = { loaded: {}, tab: 'status', pending: '' };
@@ -6623,7 +7219,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   /* === end cert advisories page === */
 
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '/': 'search' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', '/': 'search' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
