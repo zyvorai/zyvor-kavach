@@ -32,7 +32,7 @@
       "tactic": "Persistence",
       "technique": "T1098.004",
       "technique_name": "Account Manipulation: SSH Authorized Keys",
-      "severity": "medium",
+      "severity": "low",
       "os": "linux",
       "event_type": "file",
       "match": {
@@ -66,8 +66,32 @@
       "event_type": "file",
       "match": {
         "all": [
-          { "field": "path", "op": "regex", "pattern": "/library/launchagents/[^/]+\\.plist$" },
-          { "field": "operation", "op": "equals", "pattern": "create" }
+          {
+            "field": "path",
+            "op": "regex",
+            "pattern": "/library/launchagents/[^/]+\\.plist$"
+          },
+          {
+            "field": "operation",
+            "op": "equals",
+            "pattern": "create"
+          },
+          {
+            "not": {
+              "any": [
+                {
+                  "field": "path",
+                  "op": "regex",
+                  "pattern": "/com\\.(apple|microsoft|docker|google|jamfsoftware|jamf|crowdstrike|adobe|dropbox|sentinelone|backblaze|zoom|zoomus|1password|agilebits|vmware|oracle|cisco|paloaltonetworks|sophos|malwarebytes|objective-see|logitech)[^/]*\\.plist$"
+                },
+                {
+                  "field": "path",
+                  "op": "regex",
+                  "pattern": "/com\\.(elgato|parallels|mozilla|slack|tailscale|wireguard|openvpn|nordvpn|keybase|spotify|obsproject|teamviewer|anydesk)[^/]*\\.plist$"
+                }
+              ]
+            }
+          }
         ]
       },
       "tags": ["macos", "launchd"],
@@ -258,7 +282,29 @@
       "severity": "medium",
       "os": "windows",
       "event_type": "registry",
-      "match": { "field": "path", "op": "regex", "pattern": "\\\\currentversion\\\\run(once)?(\\\\|$)" },
+      "match": {
+        "all": [
+          {
+            "field": "path",
+            "op": "regex",
+            "pattern": "\\\\currentversion\\\\run(once)?(\\\\|$)"
+          },
+          {
+            "not": {
+              "field": "value_data",
+              "op": "regex",
+              "pattern": "^\\\"?(%(windir|systemroot|programfiles(\\(x86\\))?|programw6432)%|[a-z]:\\\\(program files( \\(x86\\))?|windows))\\\\"
+            }
+          },
+          {
+            "not": {
+              "field": "value_data",
+              "op": "regex",
+              "pattern": "\\\\appdata\\\\(local\\\\(microsoft\\\\(onedrive|teams)|slack|discord|spotify|zoom|google|1password|whatsapp|figma|notion)|roaming\\\\(spotify|zoom|dropbox|slack|discord))\\\\"
+            }
+          }
+        ]
+      },
       "tags": ["windows", "autostart"],
       "batch": "seed-v1",
       "tests": {

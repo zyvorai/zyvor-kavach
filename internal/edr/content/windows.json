@@ -3460,6 +3460,13 @@
         ]
        }
       ]
+     },
+     {
+      "not": {
+       "field": "command",
+       "op": "regex",
+       "pattern": "/c\\s+\\\"?(cmd(\\.exe)?\\s+/c\\s+)?(del|erase|echo|type|copy|move|rd|rmdir)\\b"
+      }
      }
     ]
    },
@@ -7103,7 +7110,7 @@
    "tactic": "Discovery",
    "technique": "T1482",
    "technique_name": "Domain Trust Discovery",
-   "severity": "medium",
+   "severity": "low",
    "os": "windows",
    "event_type": "process",
    "match": {
@@ -9209,6 +9216,22 @@
         "pattern": "(-o|--output|-outfile)\\s+\\S*\\.(exe|dll|ps1|bat|scr|hta|vbs)"
        }
       ]
+     },
+     {
+      "not": {
+       "any": [
+        {
+         "field": "command",
+         "op": "regex",
+         "pattern": "https?://([a-z0-9-]+\\.)*(python\\.org|nodejs\\.org|github\\.com|githubusercontent\\.com|microsoft\\.com|visualstudio\\.com|windowsupdate\\.com|docker\\.com|mozilla\\.org|mozilla\\.net|google\\.com|git-scm\\.com|golang\\.org|go\\.dev)/"
+        },
+        {
+         "field": "command",
+         "op": "regex",
+         "pattern": "https?://([a-z0-9-]+\\.)*(rust-lang\\.org|jetbrains\\.com|7-zip\\.org|adobe\\.com|zoom\\.us|slack\\.com)/"
+        }
+       ]
+      }
      }
     ]
    },
@@ -9483,7 +9506,7 @@
    "tactic": "Impact",
    "technique": "T1485",
    "technique_name": "Data Destruction",
-   "severity": "high",
+   "severity": "low",
    "os": "windows",
    "event_type": "process",
    "match": {
@@ -9998,6 +10021,13 @@
        "create",
        "modify"
       ]
+     },
+     {
+      "not": {
+       "field": "path",
+       "op": "regex",
+       "pattern": "\\\\(onenote|onedrive|microsoft teams|teams|slack|spotify|zoom|dropbox|discord|skype|outlook|cisco[^\\\\]*|webex|1password|nordvpn|steam|adobe[^\\\\]*|google[^\\\\]*|logitech[^\\\\]*|nvidia[^\\\\]*|realtek[^\\\\]*)[^\\\\]*\\.lnk$"
+      }
      }
     ]
    },
@@ -10360,7 +10390,7 @@
    "tactic": "Persistence",
    "technique": "T1053.005",
    "technique_name": "Scheduled Task/Job: Scheduled Task",
-   "severity": "medium",
+   "severity": "low",
    "os": "windows",
    "event_type": "file",
    "match": {
@@ -10376,6 +10406,13 @@
       "patterns": [
        "create"
       ]
+     },
+     {
+      "not": {
+       "field": "path",
+       "op": "regex",
+       "pattern": "\\\\tasks\\\\(microsoft\\\\|googleupdatetask|microsoftedgeupdatetask|adobe|onedrive|mozilla|opera|dropbox|npcapwatchdog|ccleaner|apple|java|intel|optimize start menu cache|user_feed_synchronization|\\.net framework)"
+      }
      }
     ]
    },
@@ -10864,6 +10901,13 @@
        "create",
        "modify"
       ]
+     },
+     {
+      "not": {
+       "field": "path",
+       "op": "regex",
+       "pattern": "\\\\(normal\\.dotm?|personal\\.xlsb)$"
+      }
      }
     ]
    },
@@ -10957,7 +11001,7 @@
    "tactic": "Persistence",
    "technique": "T1547.012",
    "technique_name": "Boot or Logon Autostart Execution: Print Processors",
-   "severity": "high",
+   "severity": "low",
    "os": "windows",
    "event_type": "file",
    "match": {
@@ -11676,6 +11720,13 @@
        "op": "regex",
        "pattern": "^(10\\.|192\\.168\\.|172\\.(1[6-9]|2\\d|3[01])\\.|127\\.|169\\.254\\.|localhost)"
       }
+     },
+     {
+      "not": {
+       "field": "destination",
+       "op": "regex",
+       "pattern": "(^[^.:]+:\\d+$|\\.(local|internal|lan|corp|intranet|home\\.arpa|localdomain)(:\\d+)?$)"
+      }
      }
     ]
    },
@@ -11893,6 +11944,13 @@
        "field": "destination",
        "op": "regex",
        "pattern": "^(10\\.|192\\.168\\.|172\\.(1[6-9]|2\\d|3[01])\\.|127\\.|169\\.254\\.|localhost)"
+      }
+     },
+     {
+      "not": {
+       "field": "destination",
+       "op": "regex",
+       "pattern": "(^[^.:]+:\\d+$|\\.(local|internal|lan|corp|intranet|home\\.arpa|localdomain)(:\\d+)?$)"
       }
      }
     ]

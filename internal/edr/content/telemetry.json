@@ -30,6 +30,13 @@
             "field": "value_data",
             "op": "regex",
             "pattern": "\\\\(temp|appdata|users\\\\public|programdata|downloads)\\\\"
+          },
+          {
+            "not": {
+              "field": "value_data",
+              "op": "regex",
+              "pattern": "\\\\appdata\\\\(local\\\\(microsoft\\\\(onedrive|teams)|slack|discord|spotify|zoom|google|1password|whatsapp|figma|notion)|roaming\\\\(spotify|zoom|dropbox|slack|discord))\\\\"
+            }
           }
         ]
       },
@@ -184,6 +191,13 @@
               "set",
               "create"
             ]
+          },
+          {
+            "not": {
+              "field": "value_data",
+              "op": "regex",
+              "pattern": "(procexp(64)?\\.exe|vsjitdebugger\\.exe|windbg(x)?\\.exe|\\bcdb\\.exe|\\bntsd\\.exe)"
+            }
           }
         ]
       },
@@ -592,6 +606,13 @@
               "set",
               "create"
             ]
+          },
+          {
+            "not": {
+              "field": "value_name",
+              "op": "regex",
+              "pattern": "\\\\(veeam|ccmcache|ccm\\\\cache|microsoft sql server|softwaredistribution)"
+            }
           }
         ]
       },
