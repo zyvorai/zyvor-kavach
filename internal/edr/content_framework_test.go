@@ -342,3 +342,24 @@ func TestContentEvaluationScales(t *testing.T) {
 		t.Fatalf("content evaluation too slow: %v", d)
 	}
 }
+
+func TestContentFilterSeverityAndEventType(t *testing.T) {
+	if contentReg.Load() == nil {
+		if err := LoadContentPacks(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	reg := contentReg.Load()
+	hi := contentFilter(reg, map[string][]string{"severity": {"HIGH"}, "event_type": {"process"}})
+	if len(hi) == 0 {
+		t.Fatal("expected high process rules")
+	}
+	for _, r := range hi {
+		if r.Severity != "high" || r.EventType != "process" {
+			t.Fatalf("leaked %s %s/%s", r.ID, r.Severity, r.EventType)
+		}
+	}
+	if len(hi) >= len(reg.rules) {
+		t.Fatal("filter did not narrow")
+	}
+}

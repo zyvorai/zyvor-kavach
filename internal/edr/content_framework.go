@@ -567,8 +567,15 @@ func contentFilter(reg *ContentRegistry, q map[string][]string) []*ContentRule {
 		return ""
 	}
 	tactic, osf, batch, tech, text := strings.ToLower(get("tactic")), strings.ToLower(get("os")), get("batch"), strings.ToUpper(get("technique")), strings.ToLower(get("q"))
+	sev, etype := strings.ToLower(get("severity")), strings.ToLower(get("event_type"))
 	out := []*ContentRule{}
 	for _, r := range reg.rules {
+		if sev != "" && strings.ToLower(r.Severity) != sev {
+			continue
+		}
+		if etype != "" && strings.ToLower(r.EventType) != etype {
+			continue
+		}
 		if tactic != "" && strings.ToLower(r.Tactic) != tactic {
 			continue
 		}

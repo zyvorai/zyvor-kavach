@@ -1136,6 +1136,13 @@ footer {
   .apple-metric-band > div { border-bottom: 1px solid var(--hairline-1); }
   .apple-metric-band > div:last-child { border-bottom: 0; }
 }
+.cl-filters { flex-wrap: wrap; gap: 8px; }
+.cl-filters .select-field { flex: 1 1 140px; min-width: 0; }
+.cl-sample { margin: 6px 0; }
+.cl-sample summary { cursor: pointer; color: var(--text-secondary); }
+#cl-tabs { flex-wrap: wrap; }
+#cl-tabs [aria-selected="true"] { background: var(--apple-blue); color: #fff; }
+.cl-pane pre.px-pre { max-height: 320px; overflow: auto; }
 @media (max-width: 640px) {
   .apple-metric-band { grid-template-columns: 1fr; }
   .chapter { grid-template-columns: 1fr; align-items: start; }
@@ -1327,6 +1334,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
             <button type="button" data-page="cases" role="menuitem">Cases</button>
             <button type="button" data-page="huntpacks" role="menuitem">Hunt packs</button>
             <button type="button" data-page="ransomware" role="menuitem">Ransomware</button>
+            <button type="button" data-page="content" role="menuitem">Content library</button>
           </div>
         </div>
       </div>
@@ -2934,6 +2942,75 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     </section>
     <!-- === end itdr / vulns / cases / huntpacks / ransomware pages === -->
 
+    <!-- === content library page === -->
+    <section id="page-content" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Content library</p>
+        <h1>Detection content, in one place.</h1>
+        <p class="lede">Browse rules, hunt packs, queries, guidance and report templates. Read only.</p>
+      </header>
+      <p class="work-msg" id="cl-msg" role="status"></p>
+      <div class="px-actions" role="tablist" aria-label="Content library sections" id="cl-tabs">
+        <button type="button" role="tab" data-cl-tab="rules" aria-selected="true">Rules</button>
+        <button type="button" role="tab" data-cl-tab="coverage" aria-selected="false">Coverage</button>
+        <button type="button" role="tab" data-cl-tab="packs" aria-selected="false">Hunt packs</button>
+        <button type="button" role="tab" data-cl-tab="queries" aria-selected="false">Queries</button>
+        <button type="button" role="tab" data-cl-tab="guidance" aria-selected="false">Guidance</button>
+        <button type="button" role="tab" data-cl-tab="reports" aria-selected="false">Report templates</button>
+      </div>
+
+      <div id="cl-pane-rules" class="cl-pane">
+        <div class="toolbar-pill cl-filters">
+          <input class="input-field" id="cl-q" type="search" placeholder="Search id, name, tags" aria-label="Search rules" autocomplete="off">
+          <select class="select-field" id="cl-tactic" aria-label="Tactic"><option value="">All tactics</option></select>
+          <select class="select-field" id="cl-os" aria-label="Operating system"><option value="">All OS</option><option value="linux">Linux</option><option value="macos">macOS</option><option value="windows">Windows</option></select>
+          <select class="select-field" id="cl-etype" aria-label="Event type"><option value="">All event types</option></select>
+          <select class="select-field" id="cl-sev" aria-label="Severity"><option value="">All severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option><option value="info">Info</option></select>
+          <select class="select-field" id="cl-batch" aria-label="Batch"><option value="">All batches</option></select>
+        </div>
+        <p class="hint" id="cl-count" role="status"></p>
+        <div class="table-wrap">
+          <table><thead><tr><th>Rule</th><th>Severity</th><th>Tactic</th><th>Technique</th><th>OS</th><th>Event</th></tr></thead><tbody id="cl-rule-rows"></tbody></table>
+        </div>
+        <div class="work-panel" id="cl-detail" hidden>
+          <h3 id="cl-d-title"></h3>
+          <p class="hint" id="cl-d-desc"></p>
+          <p class="hint" id="cl-d-meta"></p>
+          <h4>Match</h4>
+          <pre class="px-pre" id="cl-d-match"></pre>
+          <h4>Test samples</h4>
+          <div id="cl-d-tests"></div>
+        </div>
+      </div>
+
+      <div id="cl-pane-coverage" class="cl-pane" hidden>
+        <p class="hint" id="cl-cov-sum">Loading…</p>
+        <div class="table-wrap"><h3 style="margin:0 0 12px;font-size:17px">By tactic</h3>
+          <table><thead><tr><th>Tactic</th><th>Rules</th><th>Share</th></tr></thead><tbody id="cl-cov-tactic"></tbody></table></div>
+        <div class="table-wrap"><h3 style="margin:0 0 12px;font-size:17px">By technique</h3>
+          <table><thead><tr><th>Technique</th><th>Rules</th></tr></thead><tbody id="cl-cov-tech"></tbody></table></div>
+        <div class="table-wrap"><h3 style="margin:0 0 12px;font-size:17px">By severity, OS, event type and batch</h3>
+          <table><thead><tr><th>Dimension</th><th>Value</th><th>Rules</th></tr></thead><tbody id="cl-cov-other"></tbody></table></div>
+      </div>
+
+      <div id="cl-pane-packs" class="cl-pane" hidden>
+        <div class="table-wrap"><table><thead><tr><th>Name</th><th>Technique</th><th>Tactic</th><th>Terms</th></tr></thead><tbody id="cl-pack-rows"></tbody></table></div>
+      </div>
+      <div id="cl-pane-queries" class="cl-pane" hidden>
+        <div class="toolbar-pill cl-filters"><input class="input-field" id="cl-qq" type="search" placeholder="Search queries" aria-label="Search queries" autocomplete="off"></div>
+        <div class="table-wrap"><table><thead><tr><th>Name</th><th>Tactic</th><th>Language</th><th>Query</th></tr></thead><tbody id="cl-query-rows"></tbody></table></div>
+      </div>
+      <div id="cl-pane-guidance" class="cl-pane" hidden>
+        <div class="toolbar-pill cl-filters"><input class="input-field" id="cl-gq" type="search" placeholder="Search guidance" aria-label="Search guidance" autocomplete="off"></div>
+        <div class="table-wrap"><table><thead><tr><th>Title</th><th>Kind</th><th>What it means</th></tr></thead><tbody id="cl-guid-rows"></tbody></table></div>
+        <div class="work-panel" id="cl-g-detail" hidden><h3 id="cl-g-title"></h3><div id="cl-g-body"></div></div>
+      </div>
+      <div id="cl-pane-reports" class="cl-pane" hidden>
+        <div class="table-wrap"><table><thead><tr><th>Template</th><th>Audience</th><th>Summary</th></tr></thead><tbody id="cl-rep-rows"></tbody></table></div>
+      </div>
+    </section>
+    <!-- === end content library page === -->
+
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
@@ -3004,8 +3081,8 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -3128,7 +3205,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -3176,6 +3253,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     if (current === 'cases' && typeof loadCases === 'function') loadCases();
     if (current === 'huntpacks' && typeof loadHuntPacks === 'function') loadHuntPacks();
     if (current === 'ransomware' && typeof loadRansomware === 'function') loadRansomware();
+    if (current === 'content' && typeof loadContent === 'function') loadContent();
   }
 
   function fmtTime(v) {
@@ -5227,7 +5305,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
   });
 
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
@@ -6109,6 +6187,131 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
     else pxFail('rw-lat-rows', 5, 'lateral edges', l.reason);
   }
   /* === end itdr / vulns / cases / huntpacks / ransomware pages === */
+
+  /* === content library page === */
+  let clTimer = 0;
+  const clLoaded = {};
+  function clList(a) { return Array.isArray(a) && a.length ? a.join(', ') : '-'; }
+  function clOpts(sel, values) {
+    const cur = sel.value;
+    while (sel.options.length > 1) sel.remove(1);
+    values.forEach((v) => { const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); });
+    sel.value = cur;
+  }
+  function clTab(name) {
+    document.querySelectorAll('#cl-tabs [data-cl-tab]').forEach((b) => b.setAttribute('aria-selected', b.getAttribute('data-cl-tab') === name ? 'true' : 'false'));
+    document.querySelectorAll('.cl-pane').forEach((p) => { p.hidden = p.id !== 'cl-pane-' + name; });
+    if (clLoaded[name]) return;
+    const fn = { coverage: clCoverage, packs: clPacks, queries: clQueries, guidance: clGuidance, reports: clReports }[name];
+    if (fn) fn();
+  }
+  async function clRulesLoad() {
+    const p = new URLSearchParams();
+    [['q', 'cl-q'], ['tactic', 'cl-tactic'], ['os', 'cl-os'], ['event_type', 'cl-etype'], ['severity', 'cl-sev'], ['batch', 'cl-batch']].forEach(([k, id]) => { const v = $(id).value.trim(); if (v) p.set(k, v); });
+    try {
+      const r = await pgApi('/v1/content/rules' + (p.toString() ? '?' + p.toString() : ''));
+      const rules = (r && r.rules) || [];
+      $('cl-count').textContent = rules.length + ' rule' + (rules.length === 1 ? '' : 's') + ' match' + (rules.length > 500 ? ' (showing the first 500)' : '') + '.';
+      pxFill('cl-rule-rows', 6, rules.slice(0, 500), 'No rules', 'No content rules match these filters.', (tb, x) =>
+        tableRow(tb, [x.name || x.id, rxSev(x.severity), x.tactic, x.technique, x.os, x.event_type], { onClick: () => clDetail(x.id) }));
+    } catch (e) { pxFail('cl-rule-rows', 6, 'content rules', e); }
+  }
+  function clEvent(ev) {
+    const d = el('details', '', 'cl-sample');
+    d.appendChild(el('summary', (ev && (ev.type || ev.event_type)) || 'sample'));
+    d.appendChild(el('pre', JSON.stringify(ev, null, 2), 'px-pre'));
+    return d;
+  }
+  async function clDetail(id) {
+    try {
+      const r = await pgApi('/v1/content/rules/' + encodeURIComponent(id));
+      $('cl-detail').hidden = false;
+      $('cl-d-title').textContent = (r.name || r.id) + ' (' + r.id + ')';
+      $('cl-d-desc').textContent = r.description || '';
+      $('cl-d-meta').textContent = [r.severity, r.tactic, r.technique + (r.technique_name ? ' ' + r.technique_name : ''), r.os, r.event_type, r.batch || '', clList(r.tags)].join(' · ');
+      $('cl-d-match').textContent = JSON.stringify(r.match, null, 2);
+      const box = $('cl-d-tests');
+      box.replaceChildren();
+      const t = r.tests || {};
+      [['Positive (must match)', t.positive], ['Negative (must not match)', t.negative]].forEach(([label, arr]) => {
+        box.appendChild(el('p', label + ': ' + (arr || []).length, 'hint'));
+        (arr || []).forEach((ev) => box.appendChild(clEvent(ev)));
+      });
+      if (!t.positive && !t.negative) box.appendChild(el('p', 'This rule ships no test samples.', 'hint'));
+      $('cl-detail').scrollIntoView({ block: 'nearest' });
+    } catch (e) { setMsg('cl-msg', 'Could not load rule: ' + e.message, true); }
+  }
+  async function clCoverage() {
+    try {
+      const c = await pgApi('/v1/content/coverage');
+      clLoaded.coverage = true;
+      $('cl-cov-sum').textContent = c.total_rules + ' rules (' + c.active_rules + ' active) covering ' + c.techniques_covered_count + ' techniques. Mode: ' + c.mode + '.';
+      const total = c.total_rules || 1;
+      const sorted = (m) => Object.keys(m || {}).sort((a, b) => m[b] - m[a] || a.localeCompare(b));
+      pxFill('cl-cov-tactic', 3, sorted(c.by_tactic), 'No coverage', 'No content loaded.', (tb, k) => tableRow(tb, [k, c.by_tactic[k], Math.round(100 * c.by_tactic[k] / total) + '%']));
+      pxFill('cl-cov-tech', 2, sorted(c.by_technique), 'No coverage', 'No content loaded.', (tb, k) => tableRow(tb, [k, c.by_technique[k]]));
+      const other = [];
+      [['severity', c.by_severity], ['os', c.by_os], ['event type', c.by_event_type], ['batch', c.by_batch]].forEach(([d, m]) => sorted(m).forEach((k) => other.push([d, k, m[k]])));
+      pxFill('cl-cov-other', 3, other, 'No coverage', 'No content loaded.', (tb, x) => tableRow(tb, x));
+    } catch (e) { $('cl-cov-sum').textContent = 'Could not load coverage: ' + e.message; }
+  }
+  async function clPacks() {
+    try {
+      const r = await pgApi('/v1/hunts/packs');
+      clLoaded.packs = true;
+      pxFill('cl-pack-rows', 4, r && r.packs, 'No hunt packs', 'No hunt packs are available.', (tb, x) => tableRow(tb, [x.name, x.technique, x.tactic, clList(x.terms)]));
+    } catch (e) { pxFail('cl-pack-rows', 4, 'hunt packs', e); }
+  }
+  async function clQueries() {
+    const q = $('cl-qq').value.trim();
+    try {
+      const r = await pgApi('/v1/queries/library' + (q ? '?q=' + encodeURIComponent(q) : ''));
+      clLoaded.queries = true;
+      pxFill('cl-query-rows', 4, r && r.queries, 'No queries', 'No library queries match.', (tb, x) => tableRow(tb, [x.name, x.tactic, x.language, x.query]));
+    } catch (e) { pxFail('cl-query-rows', 4, 'queries', e); }
+  }
+  async function clGuidance() {
+    const q = $('cl-gq').value.trim();
+    try {
+      const r = await pgApi('/v1/guidance' + (q ? '?q=' + encodeURIComponent(q) : ''));
+      clLoaded.guidance = true;
+      pxFill('cl-guid-rows', 3, r && r.entries, 'No guidance', 'No guidance entries match.', (tb, x) => tableRow(tb, [x.title, x.kind, x.what_it_means], { onClick: () => clGuidDetail(x) }));
+    } catch (e) { pxFail('cl-guid-rows', 3, 'guidance', e); }
+  }
+  function clGuidDetail(x) {
+    $('cl-g-detail').hidden = false;
+    $('cl-g-title').textContent = x.title;
+    const b = $('cl-g-body');
+    b.replaceChildren();
+    [['Why it matters', x.why_it_matters], ['False positives', x.false_positive_notes]].forEach(([h, v]) => { if (v) { b.appendChild(el('h4', h)); b.appendChild(el('p', v, 'hint')); } });
+    [['How to investigate', x.how_to_investigate], ['How to remediate', x.how_to_remediate]].forEach(([h, arr]) => {
+      if (arr && arr.length) { b.appendChild(el('h4', h)); const ul = el('ul'); arr.forEach((i) => ul.appendChild(el('li', i))); b.appendChild(ul); }
+    });
+    b.appendChild(el('p', 'Advisory only. Kavach does not act on these steps.', 'hint'));
+  }
+  async function clReports() {
+    try {
+      const r = await pgApi('/v1/reports/templates');
+      clLoaded.reports = true;
+      pxFill('cl-rep-rows', 3, r, 'No templates', 'No report templates are available.', (tb, x) => tableRow(tb, [x.title, x.audience, x.summary]));
+    } catch (e) { pxFail('cl-rep-rows', 3, 'report templates', e); }
+  }
+  async function loadContent() {
+    setMsg('cl-msg', '', false);
+    try {
+      const c = await pgApi('/v1/content/coverage');
+      clOpts($('cl-tactic'), Object.keys(c.by_tactic || {}).sort());
+      clOpts($('cl-etype'), Object.keys(c.by_event_type || {}).sort());
+      clOpts($('cl-batch'), Object.keys(c.by_batch || {}).sort());
+    } catch (_) {}
+    clRulesLoad();
+  }
+  ['cl-tactic', 'cl-os', 'cl-etype', 'cl-sev', 'cl-batch'].forEach((id) => $(id).addEventListener('change', clRulesLoad));
+  $('cl-q').addEventListener('input', () => { clearTimeout(clTimer); clTimer = setTimeout(clRulesLoad, 250); });
+  $('cl-qq').addEventListener('input', () => { clearTimeout(clTimer); clTimer = setTimeout(clQueries, 250); });
+  $('cl-gq').addEventListener('input', () => { clearTimeout(clTimer); clTimer = setTimeout(clGuidance, 250); });
+  document.querySelectorAll('#cl-tabs [data-cl-tab]').forEach((b) => b.addEventListener('click', () => clTab(b.getAttribute('data-cl-tab'))));
+  /* === end content library page === */
 
   const appVisible = () => !$('app').hidden;
   let lastFocus = null;
