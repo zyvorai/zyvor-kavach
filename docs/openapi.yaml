@@ -1077,15 +1077,30 @@ paths:
       responses: {'200': {description: Counts and ids}}
   /v1/export/findings:
     get:
-      summary: Download findings (csv, json, ndjson); filters severity, host, rule, since (RFC3339); max 50000 rows
+      summary: Download findings (csv, json, ndjson) or SIEM formats (ocsf, ecs, cef, leef, splunk-hec; see docs/siem-export.md); filters severity, host, rule, since (RFC3339); max 50000 rows legacy, limit up to 10000 for SIEM formats
       security: [{bearerAuth: []}]
       parameters:
-        - {name: format, in: query, schema: {type: string, enum: [csv, json, ndjson]}}
+        - {name: format, in: query, schema: {type: string, enum: [csv, json, ndjson, ocsf, ecs, cef, leef, splunk-hec]}}
+        - {name: kind, in: query, description: "SIEM formats only: findings (default) or events", schema: {type: string, enum: [findings, events]}}
+        - {name: limit, in: query, description: "SIEM formats only, 1..10000, default 1000", schema: {type: integer}}
+        - {name: cursor, in: query, description: "SIEM formats only. Opaque token from the X-Kavach-Next-Cursor response header; resumes strictly after the last record with no duplicates. Overrides since.", schema: {type: string}}
         - {name: severity, in: query, schema: {type: string}}
         - {name: host, in: query, schema: {type: string}}
         - {name: rule, in: query, schema: {type: string}}
         - {name: since, in: query, schema: {type: string, format: date-time}}
       responses: {'200': {description: Attachment}, '400': {description: Bad filter}}
+  /v1/export/iocs:
+    get:
+      summary: STIX 2.1 bundle of the enabled IOC store (pull-based)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: format, in: query, schema: {type: string, enum: [stix]}}
+      responses: {'200': {description: "application/stix+json;version=2.1 bundle"}, '400': {description: Bad format}}
+  /v1/export/attack-layer:
+    get:
+      summary: ATT&CK Navigator layer (v4.5) of detection coverage and observed hits
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Navigator layer JSON}}
   /v1/export/report:
     get:
       summary: Executive posture report (self-contained HTML or JSON)
