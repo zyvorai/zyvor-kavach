@@ -1395,6 +1395,11 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 .tag.true_positive { background: var(--success-bg); color: var(--success-text); }
 .tag.false_positive, .tag.benign_expected { background: var(--fill-tertiary); color: var(--text-secondary); }
 .tag.needs_more_data { background: var(--info-bg); color: var(--apple-link); }
+/* === attack chains and case workflow === */
+.ch-detail { margin-top: 12px; border-color: var(--apple-blue); }
+.cw-check { display: flex; gap: 10px; align-items: flex-start; min-height: var(--hit-min); padding: 4px 0; overflow-wrap: anywhere; }
+.cw-check input { margin-top: 4px; }
+.tag.overdue-sla { background: var(--danger-bg); color: var(--danger); }
 </style>
 </head>
 <body>
@@ -1490,6 +1495,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
             <button type="button" data-page="provenance" role="menuitem">Provenance</button>
             <button type="button" data-page="ransomware-behaviour" role="menuitem">Ransomware behaviour</button>
             <button type="button" data-page="ttp" role="menuitem">TTP similarity</button>
+            <button type="button" data-page="chains" role="menuitem">Attack chains</button>
             <button type="button" data-page="feedback" role="menuitem">Feedback</button>
             <button type="button" data-page="vulnprio" role="menuitem">Vulnerability priority</button>
             <button type="button" data-page="huntseq" role="menuitem">Sequence hunt</button>
@@ -3036,6 +3042,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
           <div class="field"><label for="cs-d-resolution">Resolution</label><input class="input-field" id="cs-d-resolution" type="text" autocomplete="off"></div>
           <div class="field px-actions" id="cs-d-closeslot"></div>
         </div>
+        <div class="work-panel" id="cw-panel" aria-labelledby="cw-title"><h3 id="cw-title">Workflow</h3><div id="cw-out"></div></div>
         <h3>Timeline</h3>
         <table><thead><tr><th>Time</th><th>Actor</th><th>Kind</th><th>Detail</th></tr></thead><tbody id="cs-d-tl"></tbody></table>
         <h3>Comments</h3>
@@ -3707,6 +3714,32 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       <div id="fb-recent-out"></div>
     </section>
     <!-- === end feedback page === -->
+    <!-- === attack chains page === -->
+    <section id="page-chains" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Attack chains</p>
+        <h1>Findings that belong together, and why they were grouped.</h1>
+        <p class="lede">Chains are a heuristic grouping of findings by shared evidence. They are a lead for investigation, not proof of one intrusion. Creating a case is the only action here, and it is safe to repeat.</p>
+      </header>
+      <div class="nx-note bh-caveat" id="ch-limits" role="note"><strong>Limitations (always apply)</strong><ul><li>Heuristic grouping, not proof of a single intrusion.</li></ul></div>
+      <p class="work-msg" id="ch-msg" role="status"></p>
+      <div class="toolbar-pill nx-filters bh-fields">
+        <label class="hint" for="ch-host">Host</label>
+        <input class="input-field" id="ch-host" placeholder="All hosts" size="16">
+        <label class="hint" for="ch-min">Minimum score</label>
+        <input class="input-field" id="ch-min" type="number" min="0" step="0.5" value="0">
+        <button type="button" id="ch-go">Load chains</button>
+      </div>
+      <div id="ch-list-out"></div>
+      <div class="work-panel ch-detail" id="ch-detail" role="region" aria-labelledby="ch-detail-title" tabindex="-1" hidden>
+        <div class="ui-row"><h3 id="ch-detail-title">Chain</h3><button type="button" class="secondary" id="ch-detail-close">Close</button></div>
+        <div id="ch-detail-out"></div>
+      </div>
+      <h2>Case templates</h2>
+      <p class="hint">Templates give a case a checklist and resolve deadlines. Apply one from a case's workflow panel on the Cases page.</p>
+      <div id="ch-tpl-out"></div>
+    </section>
+    <!-- === end attack chains page === -->
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
@@ -3791,8 +3824,8 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage', 'huntseq': 'Sequence hunt', 'vulnprio': 'Vulnerability priority', 'feedback': 'Feedback' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage', 'huntseq': 'Sequence hunt', 'vulnprio': 'Vulnerability priority', 'feedback': 'Feedback', 'chains': 'Attack chains' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -3915,7 +3948,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -3975,6 +4008,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     if (current === 'provenance' && typeof loadProvenance === 'function') loadProvenance();
     if (current === 'ransomware-behaviour' && typeof loadRansomwareBehaviour === 'function') loadRansomwareBehaviour();
     if (current === 'ttp' && typeof loadTtp === 'function') loadTtp();
+    if (current === 'chains' && typeof loadChains === 'function') loadChains();
     if (current === 'feedback' && typeof loadFeedback === 'function') loadFeedback();
     if (current === 'vulnprio' && typeof loadVulnPrio === 'function') loadVulnPrio();
     if (current === 'huntseq' && typeof loadHuntSeq === 'function') loadHuntSeq();
@@ -7959,8 +7993,172 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   $('fb-go').addEventListener('click', loadFeedback);
   /* === end feedback page === */
 
+  /* === attack chains and case workflow === */
+  function chSevTag(s) { return uiTag(s || 'unknown', String(s || 'low').toLowerCase()); }
+  function chWhy(c) { return (c.why_summary || []).map((x) => x.reason + ' (' + (typeof x.weight === 'number' ? x.weight.toFixed(2) : '?') + ')').join('; ') || 'no reason recorded'; }
+  function chOpenCase(id) { showPage('cases'); if (typeof csShow === 'function') csShow(id); }
+  async function chCreateCase(c, btn) {
+    btn.disabled = true;
+    setMsg('ch-msg', 'Creating case…', false);
+    try {
+      const r = await pgApi('/v1/chains/' + encodeURIComponent(c.id) + '/case', { method: 'POST' });
+      setMsg('ch-msg', (r.created ? 'Case created: ' : 'A case already exists for this chain: ') + (r.case && r.case.id) + '.', false);
+      chLoadList();
+      if (r.case && r.case.id) chOpenDetail(c.id);
+    } catch (e) { setMsg('ch-msg', 'Could not create case: ' + e.message, true); btn.disabled = false; }
+  }
+  function chOpenDetail(id) {
+    const p = $('ch-detail'), box = $('ch-detail-out');
+    p.hidden = false;
+    $('ch-detail-title').textContent = 'Chain ' + id;
+    uiLoading(box);
+    p.focus();
+    pgApi('/v1/chains/' + encodeURIComponent(id)).then((r) => {
+      const c = r.chain || {};
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      if (r.limitations) bhCaveat($('ch-limits'), 'Limitations (always apply)', r.limitations);
+      const row = el('div', '', 'ui-row');
+      row.appendChild(chSevTag(c.severity));
+      row.appendChild(el('span', 'Score ' + (typeof c.score === 'number' ? c.score.toFixed(2) : '?') + ' · ' + (c.size ?? '?') + ' findings · ' + (c.hosts || []).join(', '), 'hint'));
+      box.appendChild(row);
+      if ((r.tactics_in_order || []).length) { box.appendChild(el('p', 'Tactics in order', 'hint')); bhChips(box, r.tactics_in_order, true); }
+      uiMeta(box, ['First: ' + fmtTime(c.first), 'Last: ' + fmtTime(c.last)]);
+      box.appendChild(el('p', 'Why grouped: ' + chWhy(c), 'nx-note'));
+      const act = el('div', '', 'px-actions');
+      if (c.case_id) act.appendChild(pgBtn('Open case ' + c.case_id, 'secondary', () => chOpenCase(c.case_id)));
+      act.appendChild(pgBtn(c.case_id ? 'Create case again (returns the same case)' : 'Create case', 'secondary', function () { chCreateCase(c, this); }));
+      box.appendChild(act);
+      box.appendChild(el('h3', 'Timeline'));
+      const tb = uiTable(box, ['Time', 'Host', 'Rule', 'Severity', 'Tactic', 'Finding']);
+      (r.members || []).forEach((m) => tableRow(tb, [fmtTime(m.time), m.host, m.rule, chSevTag(m.severity), m.tactic || 'unmapped', m.id]));
+      box.appendChild(el('h3', 'Links'));
+      if (r.links_truncated) uiNote(box, 'Only the strongest ' + (r.links || []).length + ' of ' + c.link_count + ' links are shown.');
+      if (!(r.links || []).length) box.appendChild(el('p', 'No links reported.', 'hint'));
+      else {
+        const lt = uiTable(box, ['From', 'To', 'Weight', 'Reasons']);
+        r.links.forEach((l) => tableRow(lt, [l.from, l.to, typeof l.weight === 'number' ? l.weight.toFixed(2) : '?', (l.reasons || []).map((x) => x.reason + ' (' + x.weight + ')').join('; ')]));
+      }
+      if ((r.suggested_questions || []).length) {
+        box.appendChild(el('h3', 'Questions to consider'));
+        uiNote(box, r.questions_note || 'Hints only; they are not findings.');
+        uiList(box, r.suggested_questions);
+      }
+    }).catch((e) => uiError(box, 'chain detail', e, () => chOpenDetail(id)));
+  }
+  function chLoadList() {
+    const box = $('ch-list-out');
+    const min = $('ch-min').value.trim(), host = $('ch-host').value.trim();
+    if (min !== '' && !(Number(min) >= 0)) { setMsg('ch-msg', 'Minimum score must be 0 or more.', true); $('ch-min').focus(); return; }
+    setMsg('ch-msg', '', false);
+    $('ch-detail').hidden = true;
+    uiLoading(box, 'Loading chains…');
+    const qs = [];
+    if (host) qs.push('host=' + encodeURIComponent(host));
+    if (Number(min) > 0) qs.push('min_score=' + encodeURIComponent(min));
+    pgApi('/v1/chains' + (qs.length ? '?' + qs.join('&') : '')).then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      if (r.limitations) bhCaveat($('ch-limits'), 'Limitations (always apply)', r.limitations);
+      if (r.method) box.appendChild(el('p', 'Method: ' + r.method, 'nx-note'));
+      uiMeta(box, ['Showing ' + (r.returned ?? 0) + ' of ' + (r.total ?? 0)]);
+      if (!(r.chains || []).length) { uiEmpty(box, 'No chains', 'No set of findings is linked strongly enough to form a chain. That does not prove the findings are unrelated.'); return; }
+      const tb = uiTable(box, ['Chain', 'Severity', 'Score', 'Findings', 'Hosts', 'Tactics', 'Why grouped', 'Case']);
+      r.chains.forEach((c) => {
+        const b = el('button', c.id, 'secondary');
+        b.type = 'button';
+        b.setAttribute('aria-label', 'Show chain ' + c.id);
+        b.addEventListener('click', () => chOpenDetail(c.id));
+        tableRow(tb, [b, chSevTag(c.severity), typeof c.score === 'number' ? c.score.toFixed(2) : '?', c.size, (c.hosts || []).join(', '), (c.tactics || []).join(' > ') || 'none mapped', chWhy(c), c.case_id ? pgBtn(c.case_id, 'secondary', () => chOpenCase(c.case_id)) : 'none']);
+      });
+    }).catch((e) => uiError(box, 'attack chains', e, chLoadList));
+  }
+  function chLoadTemplates() {
+    const box = $('ch-tpl-out');
+    uiLoading(box);
+    pgApi('/v1/case-templates').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      const ts = Array.isArray(r) ? r : [];
+      if (!ts.length) { uiEmpty(box, 'No templates', 'The server has no case templates.'); return; }
+      const tb = uiTable(box, ['Template', 'Type', 'Default severity', 'Steps', 'Resolve SLA (hours)', 'Source']);
+      ts.forEach((t) => tableRow(tb, [t.name, t.case_type, chSevTag(t.default_severity), (t.checklist || []).length, Object.keys(t.sla_hours || {}).map((k) => k + ': ' + t.sla_hours[k]).join(', ') || 'none', t.built_in ? 'built in' : 'custom']));
+    }).catch((e) => uiError(box, 'case templates', e, chLoadTemplates));
+  }
+  function loadChains() { chLoadList(); chLoadTemplates(); }
+  $('ch-go').addEventListener('click', chLoadList);
+  $('ch-detail-close').addEventListener('click', () => { $('ch-detail').hidden = true; });
+  $('ch-detail').addEventListener('keydown', (e) => { if (e.key === 'Escape') $('ch-detail').hidden = true; });
+
+  /* case workflow panel inside the Cases view */
+  let cwCase = '', cwTpls = [];
+  async function cwLoad(id) {
+    cwCase = id;
+    const box = $('cw-out');
+    uiLoading(box);
+    try {
+      const [wf, tpls] = await Promise.all([pgApi('/v1/cases/' + encodeURIComponent(id) + '/workflow'), pgApi('/v1/case-templates').catch(() => [])]);
+      if (id !== cwCase) return;
+      cwTpls = Array.isArray(tpls) ? tpls : [];
+      cwRender(box, wf);
+    } catch (e) { uiError(box, 'the case workflow', e, () => cwLoad(id)); }
+  }
+  async function cwAct(path, body, okMsg) {
+    try {
+      const wf = await pgApi('/v1/cases/' + encodeURIComponent(cwCase) + path, pgJSON(body));
+      setMsg('cs-msg', okMsg, false);
+      cwRender($('cw-out'), wf);
+    } catch (e) { setMsg('cs-msg', 'Workflow update failed: ' + e.message, true); }
+  }
+  function cwRender(box, wf) {
+    box.removeAttribute('aria-busy'); box.replaceChildren();
+    const prog = wf.checklist_progress || {};
+    uiMeta(box, ['Template: ' + (wf.template_name || 'none applied'), 'Checklist: ' + (prog.done ?? 0) + ' of ' + (prog.total ?? 0) + ' done', 'Assignee: ' + (wf.assignee || 'unassigned')]);
+    const sla = wf.template_sla;
+    if (sla) {
+      const row = el('div', '', 'ui-row');
+      row.appendChild(uiTag(sla.overdue ? 'overdue' : 'on track', sla.overdue ? 'overdue-sla' : 'verified'));
+      row.appendChild(el('span', 'Resolve due ' + fmtTime(sla.resolve_due) + ' (' + sla.resolve_hours + ' h): ' + uiFmtSecs((sla.remaining_minutes || 0) * 60), 'hint'));
+      box.appendChild(row);
+    } else if (wf.template_name) box.appendChild(el('p', 'This template has no resolve deadline for severity ' + wf.severity + '.', 'hint'));
+    if (wf.builtin_sla) uiMeta(box, ['Built-in SLA: ' + (wf.builtin_sla.resolve_breached ? 'resolve breached' : wf.builtin_sla.respond_breached ? 'respond breached' : (wf.builtin_sla.resolve_remaining_minutes ?? '?') + ' min left to resolve')]);
+    // template apply
+    const tr = el('div', '', 'toolbar-pill nx-filters bh-fields');
+    const sel = document.createElement('select');
+    sel.className = 'input-field';
+    sel.id = 'cw-tpl';
+    sel.setAttribute('aria-label', 'Case template');
+    cwTpls.forEach((t) => { const o = el('option', t.name + ' (' + t.case_type + ')'); o.value = t.id; if (t.id === wf.template_id) o.selected = true; sel.appendChild(o); });
+    tr.appendChild(sel);
+    const ap = pgBtn(wf.template_id ? 'Re-apply template' : 'Apply template', 'secondary', () => { if (sel.value) cwAct('/apply-template', { template_id: sel.value }, 'Template applied. Completed steps with the same text are kept.'); });
+    if (!cwTpls.length) { sel.disabled = true; ap.disabled = true; }
+    tr.appendChild(ap);
+    box.appendChild(tr);
+    // checklist
+    const items = wf.checklist || [];
+    if (!items.length) box.appendChild(el('p', 'No checklist yet. Apply a template to add one.', 'hint'));
+    items.forEach((it, i) => {
+      const lab = document.createElement('label');
+      lab.className = 'cw-check';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = !!it.done;
+      cb.addEventListener('change', () => cwAct('/checklist/' + (i + 1), { done: cb.checked }, 'Checklist step ' + (i + 1) + (cb.checked ? ' done.' : ' reopened.')));
+      lab.appendChild(cb);
+      lab.appendChild(el('span', it.text + (it.done && it.by ? ' (done by ' + it.by + (it.done_at ? ', ' + fmtTime(it.done_at) : '') + ')' : '')));
+      box.appendChild(lab);
+    });
+    // assign
+    const as = el('div', '', 'toolbar-pill nx-filters bh-fields');
+    const lbl = el('label', 'Assign to', 'hint'); lbl.setAttribute('for', 'cw-assignee');
+    const inp = document.createElement('input');
+    inp.className = 'input-field'; inp.id = 'cw-assignee'; inp.maxLength = 80; inp.value = wf.assignee || ''; inp.autocomplete = 'off';
+    as.appendChild(lbl); as.appendChild(inp);
+    as.appendChild(pgBtn('Assign', 'secondary', () => cwAct('/assign', { assignee: inp.value.trim() }, 'Assignee set.')));
+    box.appendChild(as);
+    if (wf.assignee_note) box.appendChild(el('p', wf.assignee_note, 'hint'));
+  }
+  /* === end attack chains and case workflow === */
+
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '.': 'huntseq', '\'': 'vulnprio', '`': 'feedback', '/': 'search' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '.': 'huntseq', '\'': 'vulnprio', '`': 'feedback', '\\': 'chains', '/': 'search' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
@@ -8724,6 +8922,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       const slot = $('cs-d-closeslot'); slot.replaceChildren();
       if (!closed) slot.appendChild(pxConfirm('Close case', 'Close with the resolution entered?', 'Close case', csCloseCase));
       pxFill('cs-d-tl', 4, c.timeline, 'No timeline', 'Nothing recorded yet.', (tb, x) => tableRow(tb, [pxTime(x.time), x.actor, x.kind, x.detail]));
+      if (typeof cwLoad === 'function') cwLoad(id);
       pxFill('cs-d-cm', 3, c.comments, 'No comments', 'Add the first comment below.', (tb, x) => tableRow(tb, [pxTime(x.time), x.author, x.text]));
     } catch (e) { setMsg('cs-msg', 'Could not load case: ' + e.message, true); }
   }
