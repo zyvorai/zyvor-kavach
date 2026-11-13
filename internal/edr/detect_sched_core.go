@@ -664,6 +664,21 @@ func (s *schedService) start() {
 	}()
 }
 
+// Shutdown stops the scheduler (waiting for the goroutine, bounded by ctx) and persists definitions.
+func (s *schedService) Shutdown(ctx context.Context) error {
+	done := make(chan struct{})
+	go func() { s.Stop(); close(done) }()
+	select {
+	case <-done:
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.saveLocked()
+	return nil
+}
+
 // Stop ends the scheduler goroutine and waits for it.
 func (s *schedService) Stop() {
 	s.once.Do(func() { close(s.stop) })

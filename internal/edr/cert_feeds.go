@@ -329,12 +329,15 @@ func (f *certFeeds) Start() {
 	}
 	f.started = true
 	f.mu.Unlock()
+	lctx := LifecycleContext()
+	lc.bg.Add(1)
 	go func() {
-		for {
-			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+		defer lc.bg.Done()
+		for lctx.Err() == nil {
+			ctx, cancel := context.WithTimeout(lctx, 10*time.Minute)
 			f.Refresh(ctx)
 			cancel()
-			time.Sleep(cfInterval)
+			lcSleep(lctx, cfInterval)
 		}
 	}()
 }

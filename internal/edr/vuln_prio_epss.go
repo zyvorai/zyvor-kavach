@@ -308,12 +308,15 @@ func (f *vpEPSSFeed) Start() {
 	}
 	f.started = true
 	f.mu.Unlock()
+	lctx := LifecycleContext()
+	lc.bg.Add(1)
 	go func() {
-		for {
-			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+		defer lc.bg.Done()
+		for lctx.Err() == nil {
+			ctx, cancel := context.WithTimeout(lctx, 2*time.Minute)
 			f.Refresh(ctx)
 			cancel()
-			time.Sleep(vpEPSSInterval)
+			lcSleep(lctx, vpEPSSInterval)
 		}
 	}()
 }

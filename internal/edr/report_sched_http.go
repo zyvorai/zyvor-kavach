@@ -56,6 +56,7 @@ func RegisterReportSched(mux *http.ServeMux, token string, store *Store, registr
 		return rsRenderTemplate(t, s, now, store, registry)
 	}
 	eng.Start()
+	RegisterStopper("report-sched", eng.Shutdown)
 	RegisterFleetSLO(mux, token, store, registry)
 
 	out := func(w http.ResponseWriter, code int, v any) {

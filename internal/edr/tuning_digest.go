@@ -458,7 +458,9 @@ func (s *tuneService) tick(ctx context.Context) {
 }
 
 func (s *tuneService) start(ctx context.Context, every time.Duration) {
+	lc.bg.Add(1)
 	go func() {
+		defer lc.bg.Done()
 		t := time.NewTicker(every)
 		defer t.Stop()
 		for {
@@ -491,7 +493,7 @@ func tuneActor(admin bool) string {
 // RegisterTuningDigest wires the tuning advisor and digest routes and starts the scheduler.
 func RegisterTuningDigest(mux *http.ServeMux, token string, store *Store, disp *Dispatcher) {
 	s := newTuneService(store, disp)
-	s.start(context.Background(), time.Minute)
+	s.start(LifecycleContext(), time.Minute)
 	s.routes(mux, token)
 }
 

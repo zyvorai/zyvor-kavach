@@ -215,7 +215,9 @@ func (d *Dispatcher) saveLocked() error {
 // Start runs the poll loop until ctx is done (idempotent).
 func (d *Dispatcher) Start(ctx context.Context) {
 	d.startOnce.Do(func() {
+		lc.bg.Add(1)
 		go func() {
+			defer lc.bg.Done()
 			t := time.NewTicker(d.Interval)
 			defer t.Stop()
 			for {
@@ -385,7 +387,7 @@ func (d *Dispatcher) Deliveries() []AlertDelivery {
 // RegisterAlerts wires /v1/alerts/rules and /v1/alerts/deliveries and starts the dispatcher.
 func RegisterAlerts(mux *http.ServeMux, token string, store *Store) *Dispatcher {
 	d := NewDispatcher(store)
-	d.Start(context.Background())
+	d.Start(LifecycleContext())
 	registerAlertRoutes(mux, token, d)
 	return d
 }

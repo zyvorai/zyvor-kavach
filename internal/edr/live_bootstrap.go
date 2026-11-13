@@ -63,7 +63,9 @@ func (d *DomainInventory) persistAsync() {
 	if path == "" {
 		return
 	}
+	lc.bg.Add(1)
 	go func() {
+		defer lc.bg.Done()
 		if err := d.Save(path); err != nil {
 			log.Printf("inventory persist: %v", err)
 		}

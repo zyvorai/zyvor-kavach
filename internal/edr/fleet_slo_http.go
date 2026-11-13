@@ -56,7 +56,9 @@ func RegisterFleetSLO(mux *http.ServeMux, token string, store *Store, registry *
 		}
 		return registry.Status(now, fleetHOnlineAfter)
 	}
+	eng.done = make(chan struct{})
 	go func() {
+		defer close(eng.done)
 		t := time.NewTicker(sloStep)
 		defer t.Stop()
 		for {
@@ -69,6 +71,7 @@ func RegisterFleetSLO(mux *http.ServeMux, token string, store *Store, registry *
 			}
 		}
 	}()
+	RegisterStopper("fleet-slo", eng.Shutdown)
 	out := func(w http.ResponseWriter, v any) {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(v)

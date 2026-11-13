@@ -4,6 +4,7 @@
 package edr
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -29,11 +30,13 @@ func RegisterScheduledDetections(mux *http.ServeMux, token string, store *Store,
 	}
 	exc := newExceptionService(path, time.Now)
 	excSvc.Store(exc)
+	RegisterStopper("exceptions", func(context.Context) error { exc.flush(); return nil })
 	registerExceptionRoutes(mux, token, exc)
 	s := newSchedService(store, ws, time.Now)
 	schedSvc.Store(s)
 	s.routes(mux, token)
 	s.start()
+	RegisterStopper("scheduled-detections", s.Shutdown)
 }
 
 type detInput struct {

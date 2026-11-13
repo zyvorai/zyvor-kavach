@@ -1,6 +1,7 @@
 package edr
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -242,13 +243,22 @@ func RegisterHuntPacks(mux *http.ServeMux, token string, store *Store) {
 		h.path = store.path + ".hunts"
 	}
 	h.load()
+	hctx := LifecycleContext()
+	lc.bg.Add(1)
 	go func() {
+		defer lc.bg.Done()
 		t := time.NewTicker(10 * time.Second)
 		defer t.Stop()
-		for now := range t.C {
-			h.tick(store, now.UTC())
+		for {
+			select {
+			case <-hctx.Done():
+				return
+			case now := <-t.C:
+				h.tick(store, now.UTC())
+			}
 		}
 	}()
+	RegisterStopper("hunt-packs", func(context.Context) error { h.mu.Lock(); defer h.mu.Unlock(); h.saveLocked(); return nil })
 	out := func(w http.ResponseWriter, v any) {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(v)

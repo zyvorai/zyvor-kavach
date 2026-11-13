@@ -192,7 +192,9 @@ func (f *IntelFeeds) saveLocked() error {
 // Start polls due feeds until ctx is done (idempotent).
 func (f *IntelFeeds) Start(ctx context.Context) {
 	f.startOnce.Do(func() {
+		lc.bg.Add(1)
 		go func() {
+			defer lc.bg.Done()
 			f.poll(ctx)
 			t := time.NewTicker(f.Tick)
 			defer t.Stop()
@@ -562,7 +564,7 @@ func (f *IntelFeeds) statuses() []FeedStatus {
 // RegisterIntelFeeds wires /v1/intel/feeds and starts the fetcher.
 func RegisterIntelFeeds(mux *http.ServeMux, token string, store *Store) *IntelFeeds {
 	f := NewIntelFeeds(store)
-	f.Start(context.Background())
+	f.Start(LifecycleContext())
 	registerIntelRoutes(mux, token, f)
 	return f
 }
