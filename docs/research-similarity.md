@@ -198,3 +198,7 @@ distance scales over 0-100 scores, but it does not validate their numbers.
   the numbers; treat them as starting points to re-tune on real submissions.
 - The index is in memory only (1024 digests, lost on restart); the report ring
   holds 200 reports.
+
+## Analyzer window (added after integration)
+
+The `similarity` analyzer digests only the first 8 MiB of a submitted file (`SimAnalyzerWindow`) and records the limit `similarity:digest-window` in the report when it does. Without this, a 24 to 32 MiB input exceeded the analyzer's 5-second budget under the race detector (the digests are about 10x slower there, and a busy host is slower too), which surfaced as `similarity: timed out`. Consequence: two large files that differ only after the first 8 MiB can look identical to the digests. Structural hashes (imphash, symbol hash) are unaffected for normal binaries, whose headers and import tables sit near the start.

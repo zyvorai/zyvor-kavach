@@ -154,15 +154,27 @@ func simNearest(q SimDigests, self string, limit int, onlySimilar bool) []SimMat
 	return res
 }
 
+// SimAnalyzerWindow is how many leading bytes of a submitted file the
+// similarity analyzer digests. Larger files are digested on this prefix only,
+// so two large files that differ only after the window can look identical;
+// the report says so with the limit "similarity:digest-window".
+const SimAnalyzerWindow = 8 << 20
+
 func init() {
 	RegisterAnalyzer("similarity", []string{InspectKindFile}, func(ctx context.Context, in InspectInput, b *InspectBuilder) error {
 		if len(in.Data) == 0 {
 			return nil
 		}
-		d := computeDigestsCtx(ctx, in.Data)
-		if len(in.Data) > InspectMaxBytes {
-			b.LimitHit("digest-truncated")
+		// Digest only a bounded prefix so the analyzer stays inside its time
+		// budget whatever the input size (the digests are about 10x slower under
+		// the race detector, and a busy host is slower too). Headers, import
+		// tables and symbol tables sit near the start of PE/ELF/Mach-O files.
+		data := in.Data
+		if len(data) > SimAnalyzerWindow {
+			data = data[:SimAnalyzerWindow]
+			b.LimitHit("digest-window")
 		}
+		d := computeDigestsCtx(ctx, data)
 		b.Meta("digests", d)
 		self, rid := b.r.SHA256, b.r.ID
 		for _, m := range simNearest(d, self, 3, true) {
