@@ -32,7 +32,7 @@ type URLParts struct {
 
 const urlMaxLen = 8192
 
-func isURLScheme(s string) bool {
+func urlIsScheme(s string) bool {
 	if s == "" {
 		return false
 	}
@@ -67,7 +67,7 @@ func ParseURLTolerant(in string) URLParts {
 	s = sb.String()
 	p.Cleaned = s
 	rest := s
-	if i := strings.IndexByte(s, ':'); i > 0 && isURLScheme(s[:i]) {
+	if i := strings.IndexByte(s, ':'); i > 0 && urlIsScheme(s[:i]) {
 		p.Scheme = strings.ToLower(s[:i])
 		rest = s[i+1:]
 	}
@@ -105,8 +105,8 @@ func ParseURLTolerant(in string) URLParts {
 			host, p.Port = auth[:i], auth[i+1:]
 		}
 		p.Host = strings.ToLower(strings.TrimSuffix(host, "."))
-		p.HostDec = strings.ToLower(pctDecodeOnce(p.Host))
-		p.IPForm, p.IPCanon = classifyIPHost(p.HostDec)
+		p.HostDec = strings.ToLower(urlPctDecodeOnce(p.Host))
+		p.IPForm, p.IPCanon = urlClassifyIPHost(p.HostDec)
 		rest = tail
 	} else if p.Scheme == "" {
 		// scheme-less "host/path": treat the first segment as a host when it
@@ -127,7 +127,7 @@ func ParseURLTolerant(in string) URLParts {
 	return p
 }
 
-func pctDecodeOnce(s string) string {
+func urlPctDecodeOnce(s string) string {
 	if !strings.Contains(s, "%") {
 		return s
 	}
@@ -145,10 +145,10 @@ func pctDecodeOnce(s string) string {
 	return sb.String()
 }
 
-// classifyIPHost recognises every form a browser's IPv4 parser accepts:
+// urlClassifyIPHost recognises every form a browser's IPv4 parser accepts:
 // dotted decimal, a single 32-bit decimal or hex number, and dotted parts
 // written in octal (leading 0) or hex (0x). Returns form and canonical text.
-func classifyIPHost(h string) (form, canon string) {
+func urlClassifyIPHost(h string) (form, canon string) {
 	if h == "" {
 		return "", ""
 	}

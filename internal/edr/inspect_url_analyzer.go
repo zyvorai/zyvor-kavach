@@ -29,7 +29,7 @@ type urlResult struct {
 	Parts    URLParts
 }
 
-func scratchBuilder(name string) *InspectBuilder {
+func inspScratchBuilder(name string) *InspectBuilder {
 	return &InspectBuilder{r: &InspectReport{}, analyzer: name, seenIOC: map[string]bool{}}
 }
 
@@ -53,9 +53,9 @@ func analyzeURL(ctx context.Context, in InspectInput, b *InspectBuilder) error {
 }
 
 var (
-	reDoublePct  = regexp.MustCompile(`(?i)%25[0-9a-f]{2}`)
-	reUnreserved = regexp.MustCompile(`%(?:3[0-9]|4[1-9a-f]|5[0-9a]|6[1-9a-f]|7[0-9a])`)
-	reScriptish  = regexp.MustCompile(`(?i)<script|onerror\s*=|onload\s*=|<iframe|document\.(cookie|location|write)|eval\(|atob\(`)
+	em_reDoublePct  = regexp.MustCompile(`(?i)%25[0-9a-f]{2}`)
+	em_reUnreserved = regexp.MustCompile(`%(?:3[0-9]|4[1-9a-f]|5[0-9a]|6[1-9a-f]|7[0-9a])`)
+	em_reScriptish  = regexp.MustCompile(`(?i)<script|onerror\s*=|onload\s*=|<iframe|document\.(cookie|location|write)|eval\(|atob\(`)
 )
 
 var urlPathKeywords = []string{"login", "signin", "sign-in", "verify", "secure", "account", "update", "confirm", "password", "wallet", "banking", "webscr", "authenticate", "suspend", "recover", "unlock", "billing"}
@@ -88,7 +88,7 @@ func urlCollect(ctx context.Context, raw string, depth int) urlResult {
 	case "javascript", "vbscript":
 		add("url-scheme-script", p.Scheme+": URL runs script when opened", "high", 60, truncStr(p.Path, 150))
 		if depth == 0 && ctx.Err() == nil {
-			foldScript(ctx, &res, "url-js", pctDecodeOnce(p.Path))
+			urlFoldScript(ctx, &res, "url-js", urlPctDecodeOnce(p.Path))
 		}
 		return res
 	case "data":
@@ -100,14 +100,14 @@ func urlCollect(ctx context.Context, raw string, depth int) urlResult {
 				decoded = string(d)
 			}
 		} else {
-			decoded = pctDecodeOnce(body)
+			decoded = urlPctDecodeOnce(body)
 		}
 		switch {
 		case strings.HasPrefix(lm, "text/html") || strings.HasPrefix(lm, "application/xhtml") || strings.HasPrefix(lm, "image/svg"):
-			if reScriptish.MatchString(decoded) {
+			if em_reScriptish.MatchString(decoded) {
 				add("url-data-html-script", "data: URL carries HTML/SVG with script", "high", 55, truncStr(decoded, 120))
 				if depth == 0 && ctx.Err() == nil {
-					foldScript(ctx, &res, "url-data", decoded)
+					urlFoldScript(ctx, &res, "url-data", decoded)
 				}
 			} else {
 				add("url-data-html", "data: URL carries an HTML document (used to host phishing pages without a server)", "medium", 25, truncStr(decoded, 120))
@@ -128,7 +128,7 @@ func urlCollect(ctx context.Context, raw string, depth int) urlResult {
 
 	// Authority tricks.
 	if p.UserInfo != "" {
-		ui := strings.ToLower(pctDecodeOnce(p.UserInfo))
+		ui := strings.ToLower(urlPctDecodeOnce(p.UserInfo))
 		if i := strings.IndexByte(ui, ':'); i >= 0 && !strings.Contains(ui[:i], ".") {
 			// user:password form; the password part may hold the lookalike
 			ui = ui[i+1:] + " " + ui[:i]
@@ -187,7 +187,7 @@ func urlCollect(ctx context.Context, raw string, depth int) urlResult {
 	} else if host != "" {
 		// Reuse the domain analyzer on the host (punycode, mixed script,
 		// typosquat, DGA shape, suspicious TLD, brand). Offline.
-		sb := scratchBuilder("domain")
+		sb := inspScratchBuilder("domain")
 		_ = analyzeDomain(ctx, InspectInput{Kind: InspectKindDomain, Text: host}, sb)
 		for _, f := range sb.r.Findings {
 			f.ID = "url-host-" + strings.TrimPrefix(f.ID, "dom-")
@@ -212,13 +212,13 @@ func urlCollect(ctx context.Context, raw string, depth int) urlResult {
 
 	// Path / query lexical features.
 	full := p.Path + "?" + p.Query
-	if reDoublePct.MatchString(full) {
+	if em_reDoublePct.MatchString(full) {
 		add("url-double-encoding", "Percent-encoding applied twice (%25xx)", "low", 10, truncStr(full, 100))
 	}
-	if n := len(reUnreserved.FindAllString(full, -1)); n >= 3 {
+	if n := len(em_reUnreserved.FindAllString(full, -1)); n >= 3 {
 		add("url-encoded-plain-chars", fmt.Sprintf("%d letters/digits percent-encoded needlessly", n), "low", 8, truncStr(full, 100))
 	}
-	dp := strings.ToLower(pctDecodeOnce(pctDecodeOnce(p.Path)))
+	dp := strings.ToLower(urlPctDecodeOnce(urlPctDecodeOnce(p.Path)))
 	if strings.Contains(dp, "../") || strings.Contains(dp, "..\\") || strings.HasSuffix(dp, "/..") {
 		add("url-path-traversal", "Path contains ../ traversal", "low", 8, truncStr(p.Path, 100))
 	}
@@ -239,7 +239,7 @@ func urlCollect(ctx context.Context, raw string, depth int) urlResult {
 	blob := false
 	for _, kv := range strings.FieldsFunc(p.Query, func(r rune) bool { return r == '&' || r == ';' }) {
 		k, v, _ := strings.Cut(kv, "=")
-		dv := pctDecodeOnce(pctDecodeOnce(v))
+		dv := urlPctDecodeOnce(urlPctDecodeOnce(v))
 		if !blob && len(dv) >= 64 && shannon(dv) >= 4.2 && !strings.Contains(dv, "://") {
 			blob = true
 			add("url-query-blob", fmt.Sprintf("Query parameter %q holds a %d-char high-entropy blob", truncStr(k, 20), len(dv)), "info", 6, truncStr(dv, 60))
@@ -273,10 +273,10 @@ func urlCollect(ctx context.Context, raw string, depth int) urlResult {
 	return res
 }
 
-// foldScript runs the registered script analyzers on extracted code and folds
+// urlFoldScript runs the registered script analyzers on extracted code and folds
 // the findings in (ids prefixed). It reuses the deobfuscation engine and byte
 // rules through RunAnalyzers; nothing is executed.
-func foldScript(ctx context.Context, res *urlResult, prefix, code string) {
+func urlFoldScript(ctx context.Context, res *urlResult, prefix, code string) {
 	if len(code) > 256<<10 {
 		code = code[:256<<10]
 	}
