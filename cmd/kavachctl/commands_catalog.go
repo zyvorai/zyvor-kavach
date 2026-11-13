@@ -103,7 +103,7 @@ func allCLICommands() []cliCommand {
 		{Name: "export-findings-ocsf", Args: []string{"export", "findings", "--format", "ocsf"}},
 		{Name: "export-iocs", Args: []string{"export", "iocs"}},
 		{Name: "export-layer", Args: []string{"export", "layer"}},
-		{Name: "export-report",Args: []string{"export", "report", "--format", "json"}},
+		{Name: "export-report", Args: []string{"export", "report", "--format", "json"}},
 		{Name: "notes-list", Args: []string{"notes", "list", "--finding", "f1"}},
 		{Name: "notes-add", Args: []string{"notes", "add", "--finding", "f1", "text"}, Mutating: true},
 		{Name: "saved-searches-list", Args: []string{"saved-searches", "list"}},
@@ -202,6 +202,12 @@ func allCLICommands() []cliCommand {
 		{Name: "search", Args: []string{"search", "T1059", "--type", "technique"}},
 
 		// inspect.go / ml.go: artifact inspector and local ML models.
+		{Name: "prov-status", Args: []string{"prov", "status"}},
+		{Name: "prov-stories", Args: []string{"prov", "stories"}},
+		{Name: "ransom-status", Args: []string{"ransom", "status"}},
+		{Name: "ransom-hosts", Args: []string{"ransom", "hosts"}},
+		{Name: "ttp-chains", Args: []string{"ttp", "chains", "--host", "demo"}, Optional: true},
+		{Name: "ttp-similar", Args: []string{"ttp", "similar", "--techniques", "T1059,T1003,T1021"}},
 		{Name: "inspect-analyzers", Args: []string{"inspect", "analyzers"}},
 		{Name: "inspect-reports", Args: []string{"inspect", "reports", "--limit", "5"}},
 		{Name: "inspect-domain", Args: []string{"inspect", "domain", "example.com"}, Mutating: true},
