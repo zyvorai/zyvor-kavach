@@ -1414,6 +1414,8 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 .tag.added { background: var(--success-bg); color: var(--success-text); }
 .tag.removed { background: var(--danger-bg); color: var(--danger); }
 .tag.modified { background: var(--warning-bg); color: var(--warning-text); }
+/* === syslog status page === */
+.sl-pre { font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; margin: 4px 0; font-family: var(--font-mono, ui-monospace, monospace); }
 </style>
 </head>
 <body>
@@ -1509,6 +1511,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
             <button type="button" data-page="provenance" role="menuitem">Provenance</button>
             <button type="button" data-page="ransomware-behaviour" role="menuitem">Ransomware behaviour</button>
             <button type="button" data-page="ttp" role="menuitem">TTP similarity</button>
+            <button type="button" data-page="syslog" role="menuitem">Syslog</button>
             <button type="button" data-page="versions" role="menuitem">Content versions</button>
             <button type="button" data-page="reports" role="menuitem">Reports and SLO</button>
             <button type="button" data-page="automation" role="menuitem">Automation</button>
@@ -3871,6 +3874,31 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       <div id="vr-log-out"></div>
     </section>
     <!-- === end content versions page === -->
+    <!-- === syslog status page === -->
+    <section id="page-syslog" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Syslog</p>
+        <h1>What the syslog listener received, parsed and dropped.</h1>
+        <p class="lede">The listener is off by default and only observes: nothing is ever written back to senders. Use the parse tester to see how a line would be read. It is a dry run and ingests nothing.</p>
+      </header>
+      <p class="work-msg" id="sl-msg" role="status"></p>
+      <div class="px-actions"><button type="button" class="secondary" id="sl-reload">Reload</button></div>
+      <h2>Status</h2>
+      <div id="sl-status-out"></div>
+      <h2>Unparsed samples</h2>
+      <div id="sl-samples-out"></div>
+      <h2>Parse tester</h2>
+      <div class="nx-note" role="note">Dry run: nothing is ingested. Do not paste secrets; the line is sent to this server only.</div>
+      <label for="sl-line" class="hint">Syslog line (up to 8 KiB)</label>
+      <textarea class="input-field hs-query" id="sl-line" rows="4" spellcheck="false" maxlength="8192" placeholder="&lt;34&gt;Oct 11 22:14:15 host sshd[1]: Failed password for root from 10.0.0.5 port 22 ssh2"></textarea>
+      <div class="toolbar-pill nx-filters bh-fields">
+        <label class="hint" for="sl-sender">Sender IP (optional)</label>
+        <input class="input-field" id="sl-sender" size="16" autocomplete="off">
+        <button type="button" id="sl-parse">Parse (dry run)</button>
+      </div>
+      <div id="sl-parse-out" aria-live="polite"></div>
+    </section>
+    <!-- === end syslog status page === -->
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
@@ -3955,8 +3983,8 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation', 'reports', 'versions'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage', 'huntseq': 'Sequence hunt', 'vulnprio': 'Vulnerability priority', 'feedback': 'Feedback', 'chains': 'Attack chains', 'automation': 'Automation', 'reports': 'Reports and SLO', 'versions': 'Content versions' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation', 'reports', 'versions', 'syslog'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage', 'huntseq': 'Sequence hunt', 'vulnprio': 'Vulnerability priority', 'feedback': 'Feedback', 'chains': 'Attack chains', 'automation': 'Automation', 'reports': 'Reports and SLO', 'versions': 'Content versions', 'syslog': 'Syslog' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -4079,7 +4107,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation', 'reports', 'versions']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation', 'reports', 'versions', 'syslog']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -4139,6 +4167,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     if (current === 'provenance' && typeof loadProvenance === 'function') loadProvenance();
     if (current === 'ransomware-behaviour' && typeof loadRansomwareBehaviour === 'function') loadRansomwareBehaviour();
     if (current === 'ttp' && typeof loadTtp === 'function') loadTtp();
+    if (current === 'syslog' && typeof loadSyslog === 'function') loadSyslog();
     if (current === 'versions' && typeof loadVersions === 'function') loadVersions();
     if (current === 'reports' && typeof loadReports === 'function') loadReports();
     if (current === 'automation' && typeof loadAutomation === 'function') loadAutomation();
@@ -8731,8 +8760,78 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   $('vr-cmp').addEventListener('click', vrCompare);
   /* === end content versions page === */
 
+  /* === syslog status page === */
+  function slCounts(box, title, m, emptyText) {
+    box.appendChild(el('h3', title));
+    const keys = Object.keys(m || {});
+    if (!keys.length) { box.appendChild(el('p', emptyText, 'hint')); return; }
+    const tb = uiTable(box, ['Name', 'Count']);
+    keys.sort((a, b) => m[b] - m[a]).forEach((k) => tableRow(tb, [k, m[k]]));
+  }
+  function slLoadStatus() {
+    const box = $('sl-status-out');
+    uiLoading(box);
+    return pgApi('/v1/syslog/status').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      const row = el('div', '', 'ui-row');
+      row.appendChild(uiTag(r.enabled ? 'listening' : 'disabled', r.enabled ? 'verified' : 'not_enough_data'));
+      if (r.note) row.appendChild(el('span', r.note, 'hint'));
+      box.appendChild(row);
+      if (r.error) uiNote(box, 'Start error: ' + r.error, true);
+      if (r.warning) uiNote(box, r.warning, true);
+      if (!r.enabled) { uiEmpty(box, 'Syslog listener is off', 'It is disabled by default. Counters appear once it is enabled by the operator.'); return; }
+      uiMeta(box, ['Listeners: ' + ((r.listeners || []).join(', ') || 'none'), 'Allowlist: ' + ((r.allowlist || []).join(', ') || 'none'), 'Received: ' + r.received, 'Unparsed: ' + r.unparsed, 'Parsed without an event: ' + r.parsed_without_event, 'Rate limited: ' + r.rate_limited, 'Queue: ' + r.queue_len]);
+      const l = r.limits || {};
+      uiMeta(box, Object.keys(l).map((k) => k.replace(/_/g, ' ') + ': ' + l[k]));
+      slCounts(box, 'Dropped, by reason', r.dropped_by_reason, 'Nothing has been dropped.');
+      slCounts(box, 'Parsed, by format', r.parsed_by_format, 'Nothing has been parsed.');
+      slCounts(box, 'Events produced, by type', r.events_by_type, 'No events have been produced.');
+      const ls = r.last_message_by_source || {};
+      box.appendChild(el('h3', 'Last message by source'));
+      if (!Object.keys(ls).length) box.appendChild(el('p', 'No sources have sent anything.', 'hint'));
+      else { const tb = uiTable(box, ['Source', 'Last message']); Object.keys(ls).forEach((k) => tableRow(tb, [k, fmtTime(ls[k])])); }
+    }).catch((e) => uiError(box, 'syslog status', e, slLoadStatus));
+  }
+  function slLoadSamples() {
+    const box = $('sl-samples-out');
+    uiLoading(box);
+    return pgApi('/v1/syslog/samples').then((r) => {
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      if (r.note) uiNote(box, r.note);
+      if (!(r.samples || []).length) { box.appendChild(el('p', 'No unparsed lines held.', 'hint')); return; }
+      r.samples.forEach((s) => box.appendChild(el('pre', s, 'sl-pre')));
+    }).catch((e) => uiError(box, 'syslog samples', e, slLoadSamples));
+  }
+  async function slParse() {
+    const line = $('sl-line').value;
+    const box = $('sl-parse-out');
+    if (!line.trim()) { setMsg('sl-msg', 'Paste a syslog line first.', true); $('sl-line').focus(); return; }
+    setMsg('sl-msg', '', false);
+    uiLoading(box, 'Parsing…');
+    $('sl-parse').disabled = true;
+    try {
+      const r = await pgApi('/v1/syslog/parse', pgJSON({ line: line, sender: $('sl-sender').value.trim() }));
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      const row = el('div', '', 'ui-row');
+      row.appendChild(uiTag(r.parsed ? 'parsed' : 'not recognised', r.parsed ? 'verified' : 'failed'));
+      row.appendChild(el('span', r.note || 'Dry run: nothing was ingested.', 'hint'));
+      box.appendChild(row);
+      const m = r.message || {};
+      uiMeta(box, ['Format: ' + (m.format || 'unknown'), 'Facility: ' + m.facility, 'Severity: ' + m.severity, 'Host: ' + (m.host || 'none'), 'App: ' + (m.app || 'none')]);
+      box.appendChild(el('pre', JSON.stringify(m, null, 1), 'sl-pre'));
+      box.appendChild(el('h3', 'Events it would produce (' + (r.events || []).length + ')'));
+      if (!(r.events || []).length) box.appendChild(el('p', 'No event would be produced from this line.', 'hint'));
+      (r.events || []).forEach((e) => { box.appendChild(el('p', e.type + ' (' + e.shape + ')', 'hint')); box.appendChild(el('pre', JSON.stringify(e.telemetry || e.network || {}, null, 1), 'sl-pre')); });
+    } catch (e) { uiError(box, 'the parse result', e, slParse); }
+    finally { $('sl-parse').disabled = false; }
+  }
+  function loadSyslog() { slLoadStatus(); slLoadSamples(); }
+  $('sl-reload').addEventListener('click', loadSyslog);
+  $('sl-parse').addEventListener('click', slParse);
+  /* === end syslog status page === */
+
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '.': 'huntseq', '\'': 'vulnprio', '`': 'feedback', '\\': 'chains', '!': 'automation', '@': 'reports', '#': 'versions', '/': 'search' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '.': 'huntseq', '\'': 'vulnprio', '`': 'feedback', '\\': 'chains', '!': 'automation', '@': 'reports', '#': 'versions', '$': 'syslog', '/': 'search' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
