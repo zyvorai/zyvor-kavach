@@ -331,6 +331,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	registerDashboard(mux, token, store)
 	RegisterFileRoutes(mux, token, store, registry)
 	RegisterTelemetryRoutes(mux, token, store, registry)
+	registerHuntSeq(mux, token, store)
 	incidents, incidentErr := NewIncidentStore(store)
 	if incidentErr != nil {
 		panic(incidentErr)
