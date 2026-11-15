@@ -297,8 +297,24 @@ func run(args []string) error {
 		return request("GET", p, nil)
 
 	default:
+		if u, ok := groupUsage[args[0]]; ok {
+			return fmt.Errorf("%s", u)
+		}
 		return fmt.Errorf("unknown command %q (try: kavachctl --help)", args[0])
 	}
+}
+
+// groupUsage maps grouped commands (those that need a subcommand) to their usage line. A bare
+// group, or a subcommand no dispatcher claims, prints this and exits non-zero instead of the
+// misleading "unknown command". TestGroupedCommandsPrintUsage guards the list.
+var groupUsage = map[string]string{
+	"validate":   validateUsage,
+	"vulns":      vulnsUsage + " | software|advisories|findings|exposure|top [--host H]",
+	"reports":    "usage: kavachctl reports scheduled ... | archive ...",
+	"coverage":   "usage: kavachctl coverage blindspots|telemetry [--json]",
+	"case":       "usage: kavachctl case list|show|create|update|comment|close|export|assign|apply-template|checklist|workflow|journal ...",
+	"containers": "usage: kavachctl containers risk [--json]",
+	"ransomware": "usage: kavachctl ransomware risk|host HOST [--json]",
 }
 
 func sectorsCmd(args []string) error {

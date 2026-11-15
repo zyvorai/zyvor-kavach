@@ -19,6 +19,14 @@ jobs:
       with: {go-version: '1.27', cache: true}
     - run: go test -race ./...
     - run: go vet ./...
+  go-full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with: {go-version: '1.27', cache: true}
+    - run: go test ./...
   image:
     runs-on: ubuntu-latest
     timeout-minutes: 15

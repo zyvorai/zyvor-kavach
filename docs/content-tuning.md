@@ -1,6 +1,7 @@
 # Content rule tuning: benign false-positive guard
 
-This documents the benign-event corpus that every embedded content rule (716 rules in
+This documents the benign-event corpus that every embedded content rule (the rule total is the generated
+"Detection rules" row in [index.md](index.md#feature-inventory), read from
 `internal/edr/content/*.json`) is checked against, the tuning applied when rules fired on it, and
 what this guard does and does not prove.
 
@@ -120,7 +121,7 @@ executables were removed from file and network events to match the live event sh
 
 - The corpus is 1,611 hand-written events, not production telemetry. Passing it is evidence against
   gross false positives, not proof of low noise on a real fleet. Rules never exercised by a corpus
-  event (most of the 716, which target attacker tradecraft) are untested by this guard, and a clean run does
+  event (most of them, which target attacker tradecraft) are untested by this guard, and a clean run does
   not measure detection quality (false negatives).
 - Allow-lists are name-based. An attacker who names a LaunchDaemon `com.microsoft.x.plist`, a Run
   value under `Program Files`, a task `GoogleUpdateTaskMachineUA`, or downloads from github.com
