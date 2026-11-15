@@ -1113,6 +1113,51 @@ paths:
       summary: Open high/critical incidents against the 6-hour CERT-In window (informational)
       security: [{bearerAuth: []}]
       responses: {'200': {description: OK}}
+  /v1/posture/trend:
+    get:
+      summary: Posture trend snapshots (counts only; capped history persisted in <store>.posturetrend.json)
+      security: [{bearerAuth: []}]
+      parameters:
+        - { name: days, in: query, schema: { type: integer, minimum: 1, maximum: 400 } }
+      responses: {'200': {description: snapshots oldest to newest}, '400': {description: Bad days}}
+  /v1/posture/trend/diff:
+    get:
+      summary: Difference between the snapshots at or before two dates (UTC)
+      security: [{bearerAuth: []}]
+      parameters:
+        - { name: from, in: query, required: true, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+      responses: {'200': {description: from, to and delta}, '400': {description: Bad date}, '404': {description: No snapshot that old}}
+  /v1/posture/trend/config:
+    get:
+      summary: Snapshot interval and enabled flag
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: config}}
+    put:
+      summary: Set snapshot interval_hours (1..168) and enabled (admin token only)
+      security: [{bearerAuth: []}]
+      x-auth: admin-token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, properties: { interval_hours: { type: integer }, enabled: { type: boolean } } }
+      responses: {'200': {description: saved}, '400': {description: Invalid}, '403': {description: Admin token required}}
+  /v1/reports/digest:
+    get:
+      summary: Executive weekly digest; every statement lists its measured factors. Pull-only, never emailed
+      security: [{bearerAuth: []}]
+      parameters:
+        - { name: days, in: query, schema: { type: integer, minimum: 1, maximum: 90 } }
+        - { name: format, in: query, schema: { type: string, enum: [json, md, html] } }
+      responses: {'200': {description: digest}, '400': {description: Bad parameter}}
+  /v1/compliance/auditor-bundle:
+    get:
+      summary: Auditor evidence zip (compliance evidence, content versions, lab measurement, config-assessment catalogue, caveats, SHA-256 manifest). Built in memory, secrets removed. manifest=1 returns only the manifest as JSON
+      security: [{bearerAuth: []}]
+      parameters:
+        - { name: manifest, in: query, schema: { type: string, enum: ["1"] } }
+      responses: {'200': {description: application/zip or manifest JSON}}
   /v1/regulatory/regimes:
     get:
       summary: Regional incident/breach reporting regimes catalog (informational, not legal advice; Kavach does not file reports). Each entry has a verified flag; unverified rules say UNVERIFIED in notes

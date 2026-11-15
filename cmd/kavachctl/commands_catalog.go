@@ -265,6 +265,8 @@ func allCLICommands() []cliCommand {
 		{Name: "regulatory-regimes", Args: []string{"regulatory", "regimes"}},
 		{Name: "regulatory-clocks", Args: []string{"regulatory", "clocks"}},
 		{Name: "regulatory-profile", Args: []string{"regulatory", "profile"}},
+		{Name: "posture-trend", Args: []string{"posture-trend"}},
+		{Name: "digest", Args: []string{"digest"}},
 		{Name: "rules-lifecycle", Args: []string{"rules", "lifecycle", "demo"}, Optional: true},
 		{Name: "rules-history", Args: []string{"rules", "history", "demo"}, Optional: true},
 
