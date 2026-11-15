@@ -1,0 +1,61 @@
+{
+ "area": "permissions",
+ "policies": [
+  {
+   "id": "perm-dockerfile-chmod-777",
+   "title": "Dockerfile makes files world-writable",
+   "description": "Checks that no RUN chmod grants write to everyone.",
+   "rationale": "World-writable files in an image let any process in the container alter them.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "dockerfile"
+    ]
+   },
+   "check": {
+    "key": "df.run",
+    "op": "not_regex",
+    "value": "(?i)chmod\\s+(-\\S+\\s+)*(0?777|a\\+[rx]*w|o\\+[rx]*w|ugo\\+w|a=rwx)"
+   },
+   "on_absent": "pass",
+   "absence_note": "No RUN instruction, nothing to flag.",
+   "remediation": "Use the narrowest mode (for example 755 for directories, 644 for files) and the right owner.",
+   "references": [
+    "Dockerfile reference (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "FROM alpine:3.20\nRUN chmod -R 777 /app\n",
+   "negative": "FROM alpine:3.20\nRUN chmod -R 755 /app\n"
+  },
+  {
+   "id": "perm-k8s-volume-mode",
+   "title": "Kubernetes volume default mode is world-writable",
+   "description": "Checks that Secret/ConfigMap volumes do not use mode 0777 or 0666 (YAML octal may be shown in decimal: 511 or 438).",
+   "rationale": "Secret contents readable by every user in the pod widen the blast radius of one compromised process.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "k8s"
+    ]
+   },
+   "check": {
+    "key_regex": "defaultmode$",
+    "op": "not_regex",
+    "value": "^(0?777|511|0?666|438)$"
+   },
+   "on_absent": "pass",
+   "absence_note": "No defaultMode set; the platform default applies.",
+   "remediation": "Use 0400 or 0440 for secrets.",
+   "references": [
+    "Kubernetes Secret volume projection (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "apiVersion: v1\nkind: Pod\nspec:\n  containers:\n  - name: a\n    image: a:1\n  volumes:\n  - name: s\n    secret:\n      secretName: x\n      defaultMode: 0777\n",
+   "negative": "apiVersion: v1\nkind: Pod\nspec:\n  containers:\n  - name: a\n    image: a:1\n  volumes:\n  - name: s\n    secret:\n      secretName: x\n      defaultMode: 0400\n"
+  }
+ ]
+}

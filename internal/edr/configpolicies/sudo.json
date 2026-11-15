@@ -1,0 +1,284 @@
+{
+ "area": "sudo",
+ "policies": [
+  {
+   "id": "sudo-nopasswd-all",
+   "title": "A sudoers rule grants all commands without a password",
+   "description": "Checks that no rule combines NOPASSWD with the command ALL.",
+   "rationale": "Passwordless full root removes the re-authentication barrier after any account compromise.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "sudoers"
+    ]
+   },
+   "check": {
+    "key": "rule.nopasswd_all",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No such rule means nothing to flag.",
+   "remediation": "Require a password, or list only the specific commands that need NOPASSWD.",
+   "references": [
+    "sudoers(5) manual page concepts (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)",
+    "ATT&CK T1548.003 (hint)"
+   ],
+   "positive": "admin ALL=(ALL) NOPASSWD: ALL\n",
+   "negative": "admin ALL=(ALL) ALL\n"
+  },
+  {
+   "id": "sudo-any-user",
+   "title": "A sudoers rule applies to every user",
+   "description": "Checks that no rule has ALL as its user.",
+   "rationale": "A rule for ALL users hands the granted rights to every account on the system.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "sudoers"
+    ]
+   },
+   "check": {
+    "key": "rule.who",
+    "op": "not_equals",
+    "value": "ALL"
+   },
+   "on_absent": "pass",
+   "absence_note": "No rule lines means nothing to flag.",
+   "remediation": "Name the users or groups that need the rights.",
+   "references": [
+    "sudoers(5) manual page concepts (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "ALL ALL=(ALL) ALL\n",
+   "negative": "%wheel ALL=(ALL) ALL\n"
+  },
+  {
+   "id": "sudo-no-authenticate",
+   "title": "sudo authentication is switched off with !authenticate",
+   "description": "Checks that Defaults !authenticate is not used.",
+   "rationale": "It disables the password prompt for the scope it covers.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "sudoers"
+    ]
+   },
+   "check": {
+    "key_regex": "^defaults(_scoped)?\\.authenticate$",
+    "op": "not_equals",
+    "value": "false"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is to authenticate.",
+   "remediation": "Remove the !authenticate default.",
+   "references": [
+    "sudoers(5) manual page concepts (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "Defaults !authenticate\n",
+   "negative": "Defaults use_pty\n"
+  },
+  {
+   "id": "sudo-env-reset",
+   "title": "sudo does not reset the environment",
+   "description": "Checks that Defaults !env_reset is not used.",
+   "rationale": "Inherited variables such as LD_PRELOAD can subvert a privileged command.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "sudoers"
+    ]
+   },
+   "check": {
+    "key_regex": "^defaults(_scoped)?\\.env_reset$",
+    "op": "not_equals",
+    "value": "false"
+   },
+   "on_absent": "pass",
+   "absence_note": "env_reset is on by default in modern sudo (UNVERIFIED).",
+   "remediation": "Remove !env_reset.",
+   "references": [
+    "sudoers(5) manual page concepts (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "Defaults !env_reset\n",
+   "negative": "Defaults env_reset\n"
+  },
+  {
+   "id": "sudo-use-pty",
+   "title": "sudo does not run commands in a pseudo-terminal",
+   "description": "Checks that Defaults use_pty is set.",
+   "rationale": "A pty prevents a background process from injecting input into the terminal after sudo exits.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "sudoers"
+    ]
+   },
+   "check": {
+    "key": "defaults.use_pty",
+    "op": "equals",
+    "value": "true"
+   },
+   "on_absent": "fail",
+   "absence_note": "The default is not guaranteed to be on across versions (UNVERIFIED): treated as a failure.",
+   "remediation": "Add: Defaults use_pty",
+   "references": [
+    "sudoers(5) manual page concepts (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "Defaults !use_pty\n",
+   "negative": "Defaults use_pty\n"
+  },
+  {
+   "id": "sudo-timestamp-timeout",
+   "title": "sudo credential cache lasts long or forever",
+   "description": "Checks that timestamp_timeout is between 0 and 15 minutes.",
+   "rationale": "A long cache lets any process of the user run sudo unprompted.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "sudoers"
+    ]
+   },
+   "check": {
+    "key": "defaults.timestamp_timeout",
+    "op": "regex",
+    "value": "^(0|[1-9]|1[0-5])(\\.\\d+)?$"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is a few minutes (5 per my recollection, UNVERIFIED), within the 15-minute bound used here.",
+   "remediation": "Set Defaults timestamp_timeout=5 (or 0).",
+   "references": [
+    "sudoers(5) manual page concepts (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "Defaults timestamp_timeout=-1\n",
+   "negative": "Defaults timestamp_timeout=5\n"
+  },
+  {
+   "id": "sudo-env-keep",
+   "title": "sudo keeps dangerous environment variables",
+   "description": "Checks that env_keep does not preserve loader or interpreter search variables.",
+   "rationale": "Those variables let the caller inject code into a root process.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "sudoers"
+    ]
+   },
+   "check": {
+    "key_regex": "^defaults(_scoped)?\\.env_keep$",
+    "op": "not_regex",
+    "value": "(?i)\\b(LD_PRELOAD|LD_LIBRARY_PATH|PYTHONPATH|PERL5LIB|RUBYLIB|BASH_ENV|IFS)\\b"
+   },
+   "on_absent": "pass",
+   "absence_note": "No env_keep entries.",
+   "remediation": "Remove them from env_keep.",
+   "references": [
+    "sudoers(5) manual page concepts (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "Defaults env_keep += \"LD_PRELOAD\"\n",
+   "negative": "Defaults env_keep += \"LANG LC_ALL\"\n"
+  },
+  {
+   "id": "sudo-target-password",
+   "title": "sudo asks for the target or root password",
+   "description": "Checks that targetpw, rootpw and runaspw are not enabled.",
+   "rationale": "Sharing the root password defeats per-user accountability.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "sudoers"
+    ]
+   },
+   "check": {
+    "key_regex": "^defaults(_scoped)?\\.(targetpw|rootpw|runaspw)$",
+    "op": "not_equals",
+    "value": "true"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default asks for the invoking user's password.",
+   "remediation": "Remove these defaults.",
+   "references": [
+    "sudoers(5) manual page concepts (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "Defaults rootpw\n",
+   "negative": "Defaults env_reset\nDefaults !rootpw\n"
+  },
+  {
+   "id": "sudo-nopasswd-shell",
+   "title": "NOPASSWD is granted for a shell, editor or interpreter",
+   "description": "Checks that passwordless commands are not programs that can spawn a shell (a public GTFOBins-style concept).",
+   "rationale": "Such a command is a root shell in disguise.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "sudoers"
+    ]
+   },
+   "check": {
+    "key": "rule.nopasswd_cmd",
+    "op": "not_regex",
+    "value": "(?i)(^|/)(sh|bash|dash|zsh|vi|vim|nano|less|more|man|find|awk|perl|python[0-9.]*|ruby|env|tar|rsync|nmap|docker)(\\s|$)"
+   },
+   "on_absent": "pass",
+   "absence_note": "No NOPASSWD commands.",
+   "remediation": "Grant narrowly scoped, non-interactive commands, or require a password.",
+   "references": [
+    "sudoers(5) manual page concepts (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "ops ALL=(root) NOPASSWD: /usr/bin/vim\n",
+   "negative": "ops ALL=(root) NOPASSWD: /usr/bin/systemctl restart nginx\n"
+  },
+  {
+   "id": "sudo-wildcard-command",
+   "title": "A sudoers command contains a wildcard",
+   "description": "Checks that granted commands are not wildcarded.",
+   "rationale": "Wildcards in arguments can be widened by the caller to run unintended things.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "sudoers"
+    ]
+   },
+   "check": {
+    "key": "rule.wildcard_cmd",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No wildcard commands.",
+   "remediation": "Spell out exact commands and arguments.",
+   "references": [
+    "sudoers(5) manual page concepts (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "ops ALL=(root) /usr/bin/cat /var/log/*\n",
+   "negative": "ops ALL=(root) /usr/bin/journalctl -u nginx\n"
+  }
+ ]
+}

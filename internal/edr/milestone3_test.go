@@ -13,7 +13,7 @@ import (
 
 func TestDashboardAuthAndSummary(t *testing.T) {
 	token := strings.Repeat("x", 32)
-	store, err := NewStore(filepath.Join(t.TempDir(), "findings.jsonl"), 100)
+	store, err := testStore(t, filepath.Join(t.TempDir(), "findings.jsonl"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +52,7 @@ func TestDashboardAuthAndSummary(t *testing.T) {
 	}
 }
 func TestProcessStartPreventsPIDReuseCorrelation(t *testing.T) {
-	store, _ := NewStore(filepath.Join(t.TempDir(), "db"), 50)
+	store, _ := testStore(t, filepath.Join(t.TempDir(), "db"), 50)
 	now := time.Now().UTC()
 	e := Event{ID: "e1", Host: "h", PID: 500, ProcessStart: "100", Time: now, Executable: "/bin/bash", Command: "bash"}
 	if _, err := store.Ingest(e); err != nil {

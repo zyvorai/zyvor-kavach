@@ -74,7 +74,7 @@ func TestAddBusinessDays(t *testing.T) {
 func regSetup(t *testing.T) (http.Handler, *Store, *IncidentStore, string) {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "f.jsonl")
-	s, err := NewStore(path, 100)
+	s, err := testStore(t, path, 100)
 	if err != nil {
 		t.Fatal(err)
 	}
