@@ -13,7 +13,7 @@ import (
 
 func TestM5HeartbeatFleetAndPersistence(t *testing.T) {
 	dir := t.TempDir()
-	store, err := NewStore(filepath.Join(dir, "findings.jsonl"), 20)
+	store, err := testStore(t, filepath.Join(dir, "findings.jsonl"), 20)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -127,7 +127,7 @@ func TestM5HeartbeatPayloadBoundsAndQueuePending(t *testing.T) {
 		t.Fatalf("queued %d %v", n, err)
 	}
 	// Malformed input is rejected at the API layer.
-	store, _ := NewStore(filepath.Join(t.TempDir(), "findings.jsonl"), 10)
+	store, _ := testStore(t, filepath.Join(t.TempDir(), "findings.jsonl"), 10)
 	srv := httptest.NewServer(APIWithCredentials("a-very-long-admin-secret", store, registry))
 	defer srv.Close()
 	req, _ := http.NewRequest("POST", srv.URL+"/v1/agents/heartbeat", bytes.NewBufferString("not json"))

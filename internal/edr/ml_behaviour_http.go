@@ -2,6 +2,7 @@
 package edr
 
 import (
+	"context"
 	"math"
 	"net/http"
 	"sort"
@@ -238,7 +239,9 @@ func (e *mlEngine) baseline(host string, store *Store, now time.Time) map[string
 func RegisterMLBehaviour(mux *http.ServeMux, token string, store *Store) {
 	eng := newMLEngine(store)
 	go eng.run()
-	MLRarityProvider = eng.rarity // feeds the lineage model into /v1/ml/priority
+	RegisterStopper("ml-behaviour", eng.Shutdown)
+	clearRarity := setMLRarityProvider(eng.rarity) // feeds the lineage model into /v1/ml/priority
+	RegisterStopper("ml-rarity-hook", func(context.Context) error { clearRarity(); return nil })
 	mux.HandleFunc("GET /v1/ml/status", func(w http.ResponseWriter, r *http.Request) {
 		if !requireAuth(w, r, token) {
 			return

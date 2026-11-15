@@ -13,7 +13,7 @@ import (
 
 func TestFalconPlatformRoutes(t *testing.T) {
 	dir := t.TempDir()
-	store, err := NewStore(filepath.Join(dir, "findings.jsonl"), 100)
+	store, err := testStore(t, filepath.Join(dir, "findings.jsonl"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}

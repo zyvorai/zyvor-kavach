@@ -241,10 +241,7 @@ func cefSeverity(s string) int {
 }
 
 func ruleMitre(rule string) (tactic, technique, id string, ok bool) {
-	m, ok := contentMITREAll()[rule]
-	if !ok {
-		m, ok = ruleMITRE[rule]
-	}
+	m, ok := mitreFor(rule)
 	return m.Tactic, m.Technique, m.ID, ok
 }
 

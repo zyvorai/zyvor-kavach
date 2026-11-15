@@ -1,0 +1,382 @@
+{
+ "area": "audit",
+ "policies": [
+  {
+   "id": "audit-immutable",
+   "title": "Audit rules are not locked (-e 2)",
+   "description": "Checks that the final rule enables immutable mode.",
+   "rationale": "An attacker with root could otherwise switch auditing off without a reboot.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "auditd"
+    ]
+   },
+   "check": {
+    "key": "enable",
+    "op": "equals",
+    "value": "2"
+   },
+   "on_absent": "fail",
+   "absence_note": "Without -e 2 the rules can be changed at runtime: treated as a failure.",
+   "remediation": "Put -e 2 as the last line (note: changes then need a reboot).",
+   "references": [
+    "Linux audit subsystem rule syntax (auditctl/audit.rules, public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)",
+    "ATT&CK T1562.012 (hint)"
+   ],
+   "positive": "-w /etc/passwd -p wa -k id\n",
+   "negative": "-w /etc/passwd -p wa -k id\n-e 2\n"
+  },
+  {
+   "id": "audit-passwd",
+   "title": "Not audited: changes to /etc/passwd",
+   "description": "Checks that this rules file audits changes to /etc/passwd.",
+   "rationale": "Account additions are a common persistence step.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "auditd"
+    ]
+   },
+   "check": {
+    "key": "watch",
+    "op": "regex",
+    "value": "^-w\\s+/etc/passwd\\b",
+    "occ": "any"
+   },
+   "on_absent": "fail",
+   "absence_note": "A rules file is assessed on its own: absence means this file does not audit it (it may be audited in another rules.d file, which is not visible): treated as a failure.",
+   "remediation": "Add a matching audit rule (for example -w <path> -p wa -k <tag>, or an -a syscall rule).",
+   "references": [
+    "Linux audit subsystem rule syntax (auditctl/audit.rules, public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "-w /etc/shadow -p wa\n",
+   "negative": "-w /etc/passwd -p wa -k identity\n"
+  },
+  {
+   "id": "audit-shadow",
+   "title": "Not audited: changes to /etc/shadow",
+   "description": "Checks that this rules file audits changes to /etc/shadow.",
+   "rationale": "Password hash changes should leave a trail.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "auditd"
+    ]
+   },
+   "check": {
+    "key": "watch",
+    "op": "regex",
+    "value": "^-w\\s+/etc/shadow\\b",
+    "occ": "any"
+   },
+   "on_absent": "fail",
+   "absence_note": "A rules file is assessed on its own: absence means this file does not audit it (it may be audited in another rules.d file, which is not visible): treated as a failure.",
+   "remediation": "Add a matching audit rule (for example -w <path> -p wa -k <tag>, or an -a syscall rule).",
+   "references": [
+    "Linux audit subsystem rule syntax (auditctl/audit.rules, public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "-w /etc/passwd -p wa\n",
+   "negative": "-w /etc/shadow -p wa -k identity\n"
+  },
+  {
+   "id": "audit-group",
+   "title": "Not audited: changes to /etc/group",
+   "description": "Checks that this rules file audits changes to /etc/group.",
+   "rationale": "Group membership grants privileges.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "auditd"
+    ]
+   },
+   "check": {
+    "key": "watch",
+    "op": "regex",
+    "value": "^-w\\s+/etc/group\\b",
+    "occ": "any"
+   },
+   "on_absent": "fail",
+   "absence_note": "A rules file is assessed on its own: absence means this file does not audit it (it may be audited in another rules.d file, which is not visible): treated as a failure.",
+   "remediation": "Add a matching audit rule (for example -w <path> -p wa -k <tag>, or an -a syscall rule).",
+   "references": [
+    "Linux audit subsystem rule syntax (auditctl/audit.rules, public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "-w /etc/passwd -p wa\n",
+   "negative": "-w /etc/group -p wa -k identity\n"
+  },
+  {
+   "id": "audit-sudoers",
+   "title": "Not audited: changes to sudoers",
+   "description": "Checks that this rules file audits changes to sudoers.",
+   "rationale": "Privilege grants are a common persistence step.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "auditd"
+    ]
+   },
+   "check": {
+    "key": "watch",
+    "op": "regex",
+    "value": "^-w\\s+/etc/sudoers",
+    "occ": "any"
+   },
+   "on_absent": "fail",
+   "absence_note": "A rules file is assessed on its own: absence means this file does not audit it (it may be audited in another rules.d file, which is not visible): treated as a failure.",
+   "remediation": "Add a matching audit rule (for example -w <path> -p wa -k <tag>, or an -a syscall rule).",
+   "references": [
+    "Linux audit subsystem rule syntax (auditctl/audit.rules, public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "-w /etc/passwd -p wa\n",
+   "negative": "-w /etc/sudoers -p wa -k scope\n-w /etc/sudoers.d/ -p wa -k scope\n"
+  },
+  {
+   "id": "audit-sshd-config",
+   "title": "Not audited: changes to the SSH daemon configuration",
+   "description": "Checks that this rules file audits changes to the ssh daemon configuration.",
+   "rationale": "Remote-access settings should not change silently.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "auditd"
+    ]
+   },
+   "check": {
+    "key": "watch",
+    "op": "regex",
+    "value": "^-w\\s+/etc/ssh/sshd_config",
+    "occ": "any"
+   },
+   "on_absent": "fail",
+   "absence_note": "A rules file is assessed on its own: absence means this file does not audit it (it may be audited in another rules.d file, which is not visible): treated as a failure.",
+   "remediation": "Add a matching audit rule (for example -w <path> -p wa -k <tag>, or an -a syscall rule).",
+   "references": [
+    "Linux audit subsystem rule syntax (auditctl/audit.rules, public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "-w /etc/passwd -p wa\n",
+   "negative": "-w /etc/ssh/sshd_config -p wa -k sshd\n"
+  },
+  {
+   "id": "audit-audit-config",
+   "title": "Not audited: changes to the audit configuration",
+   "description": "Checks that this rules file audits changes to the audit configuration.",
+   "rationale": "Tampering with audit settings is a defence-evasion step.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "auditd"
+    ]
+   },
+   "check": {
+    "key": "watch",
+    "op": "regex",
+    "value": "^-w\\s+/etc/(audit|libaudit\\.conf)",
+    "occ": "any"
+   },
+   "on_absent": "fail",
+   "absence_note": "A rules file is assessed on its own: absence means this file does not audit it (it may be audited in another rules.d file, which is not visible): treated as a failure.",
+   "remediation": "Add a matching audit rule (for example -w <path> -p wa -k <tag>, or an -a syscall rule).",
+   "references": [
+    "Linux audit subsystem rule syntax (auditctl/audit.rules, public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "-w /etc/passwd -p wa\n",
+   "negative": "-w /etc/audit/ -p wa -k auditconfig\n"
+  },
+  {
+   "id": "audit-login-records",
+   "title": "Not audited: login record files",
+   "description": "Checks that this rules file audits login record files.",
+   "rationale": "Editing login records hides access history.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "auditd"
+    ]
+   },
+   "check": {
+    "key": "watch",
+    "op": "regex",
+    "value": "^-w\\s+/var/log/(lastlog|faillog|wtmp|btmp|tallylog)",
+    "occ": "any"
+   },
+   "on_absent": "fail",
+   "absence_note": "A rules file is assessed on its own: absence means this file does not audit it (it may be audited in another rules.d file, which is not visible): treated as a failure.",
+   "remediation": "Add a matching audit rule (for example -w <path> -p wa -k <tag>, or an -a syscall rule).",
+   "references": [
+    "Linux audit subsystem rule syntax (auditctl/audit.rules, public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "-w /etc/passwd -p wa\n",
+   "negative": "-w /var/log/wtmp -p wa -k logins\n"
+  },
+  {
+   "id": "audit-time-change",
+   "title": "Not audited: system time changes",
+   "description": "Checks that this rules file audits system time changes.",
+   "rationale": "Changing the clock can break log correlation.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "auditd"
+    ]
+   },
+   "check": {
+    "key": "syscall",
+    "op": "regex",
+    "value": "(adjtimex|settimeofday|clock_settime)",
+    "occ": "any"
+   },
+   "on_absent": "fail",
+   "absence_note": "A rules file is assessed on its own: absence means this file does not audit it (it may be audited in another rules.d file, which is not visible): treated as a failure.",
+   "remediation": "Add a matching audit rule (for example -w <path> -p wa -k <tag>, or an -a syscall rule).",
+   "references": [
+    "Linux audit subsystem rule syntax (auditctl/audit.rules, public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "-w /etc/passwd -p wa\n",
+   "negative": "-a always,exit -F arch=b64 -S adjtimex -S settimeofday -k time\n"
+  },
+  {
+   "id": "audit-kernel-modules",
+   "title": "Not audited: kernel module loading",
+   "description": "Checks that this rules file audits kernel module loading.",
+   "rationale": "Kernel modules are a rootkit route.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "auditd"
+    ]
+   },
+   "check": {
+    "key": "syscall",
+    "op": "regex",
+    "value": "(init_module|finit_module|delete_module)",
+    "occ": "any"
+   },
+   "on_absent": "fail",
+   "absence_note": "A rules file is assessed on its own: absence means this file does not audit it (it may be audited in another rules.d file, which is not visible): treated as a failure.",
+   "remediation": "Add a matching audit rule (for example -w <path> -p wa -k <tag>, or an -a syscall rule).",
+   "references": [
+    "Linux audit subsystem rule syntax (auditctl/audit.rules, public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "-w /etc/passwd -p wa\n",
+   "negative": "-a always,exit -F arch=b64 -S init_module -S finit_module -S delete_module -k modules\n"
+  },
+  {
+   "id": "audit-file-deletion",
+   "title": "Not audited: file deletion and rename by users",
+   "description": "Checks that this rules file audits file deletion and rename by users.",
+   "rationale": "Deletion is how evidence is removed.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "auditd"
+    ]
+   },
+   "check": {
+    "key": "syscall",
+    "op": "regex",
+    "value": "\\b(unlink|unlinkat|rename|renameat)\\b",
+    "occ": "any"
+   },
+   "on_absent": "fail",
+   "absence_note": "A rules file is assessed on its own: absence means this file does not audit it (it may be audited in another rules.d file, which is not visible): treated as a failure.",
+   "remediation": "Add a matching audit rule (for example -w <path> -p wa -k <tag>, or an -a syscall rule).",
+   "references": [
+    "Linux audit subsystem rule syntax (auditctl/audit.rules, public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "-w /etc/passwd -p wa\n",
+   "negative": "-a always,exit -F arch=b64 -S unlink -S unlinkat -S rename -S renameat -F auid>=1000 -k delete\n"
+  },
+  {
+   "id": "audit-permission-changes",
+   "title": "Not audited: permission and ownership changes",
+   "description": "Checks that this rules file audits permission and ownership changes.",
+   "rationale": "Permission changes can open files to other users.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "auditd"
+    ]
+   },
+   "check": {
+    "key": "syscall",
+    "op": "regex",
+    "value": "\\b(chmod|fchmod|fchmodat|chown|fchown|setxattr)\\b",
+    "occ": "any"
+   },
+   "on_absent": "fail",
+   "absence_note": "A rules file is assessed on its own: absence means this file does not audit it (it may be audited in another rules.d file, which is not visible): treated as a failure.",
+   "remediation": "Add a matching audit rule (for example -w <path> -p wa -k <tag>, or an -a syscall rule).",
+   "references": [
+    "Linux audit subsystem rule syntax (auditctl/audit.rules, public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "-w /etc/passwd -p wa\n",
+   "negative": "-a always,exit -F arch=b64 -S chmod -S fchmod -S chown -k perm_mod\n"
+  },
+  {
+   "id": "audit-access-denied",
+   "title": "Not audited: unsuccessful file access attempts",
+   "description": "Checks that this rules file audits unsuccessful file access attempts.",
+   "rationale": "Repeated denials reveal probing.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "auditd"
+    ]
+   },
+   "check": {
+    "key": "syscall",
+    "op": "regex",
+    "value": "(EACCES|EPERM)",
+    "occ": "any"
+   },
+   "on_absent": "fail",
+   "absence_note": "A rules file is assessed on its own: absence means this file does not audit it (it may be audited in another rules.d file, which is not visible): treated as a failure.",
+   "remediation": "Add a matching audit rule (for example -w <path> -p wa -k <tag>, or an -a syscall rule).",
+   "references": [
+    "Linux audit subsystem rule syntax (auditctl/audit.rules, public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "-w /etc/passwd -p wa\n",
+   "negative": "-a always,exit -F arch=b64 -S open -S openat -F exit=-EACCES -k access\n"
+  }
+ ]
+}

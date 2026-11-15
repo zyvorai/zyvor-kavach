@@ -61,7 +61,7 @@ func TestDetectIOCIOAExclusion(t *testing.T) {
 }
 func TestStoreAndAPI(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "f.jsonl")
-	s, err := NewStore(path, 10)
+	s, err := testStore(t, path, 10)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,7 +82,7 @@ func TestStoreAndAPI(t *testing.T) {
 	if len(s.List()) != 1 {
 		t.Fatalf("findings: %+v", s.List())
 	}
-	next, err := NewStore(path, 10)
+	next, err := testStore(t, path, 10)
 	if err != nil || len(next.List()) != 1 {
 		t.Fatalf("persist: %v", err)
 	}

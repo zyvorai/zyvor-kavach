@@ -77,7 +77,7 @@ type Incident struct {
 }
 
 func findingTechnique(f Finding) string {
-	if m, ok := mitreFor(f.Rule); ok {
+	if m, ok := mitreForFinding(f); ok {
 		return m.ID
 	}
 	return ""
