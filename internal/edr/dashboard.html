@@ -1416,6 +1416,19 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 .tag.modified { background: var(--warning-bg); color: var(--warning-text); }
 /* === syslog status page === */
 .sl-pre { font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; margin: 4px 0; font-family: var(--font-mono, ui-monospace, monospace); }
+/* === posture trend / digest / auditor bundle pages === */
+.pt-spark { width: 100%; max-width: 640px; height: 72px; display: block; margin: 0 0 12px; }
+.pt-spark polyline { fill: none; stroke: var(--apple-link); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.pt-spark line { stroke: var(--hairline-1); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.pt-up { color: var(--success-text); }
+.pt-down { color: var(--danger); }
+.pt-filters { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end; margin: 0 0 12px; }
+.pt-filters label { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 13px; color: var(--text-secondary); }
+.dg-stmt { margin: 0 0 12px; padding: 0 0 12px; border-bottom: 1px solid var(--hairline-1); overflow-wrap: anywhere; }
+.dg-stmt:last-child { border-bottom: 0; }
+.dg-factors { margin: 6px 0 0; padding: 0 0 0 18px; color: var(--text-secondary); font-size: 13px; }
+.ab-hash { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; word-break: break-all; }
+
 /* === competitive page === */
 .cp-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin: 0 0 12px; font-size: 13px; color: var(--text-secondary); }
 .tag.cp-has { background: var(--success-bg); color: var(--success-text); }
@@ -1515,6 +1528,9 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
             <button type="button" data-page="search" role="menuitem">Search</button>
             <button type="button" data-page="advisories" role="menuitem">CERT advisories</button>
             <button type="button" data-page="regulatory" role="menuitem">Regulatory clocks</button>
+            <button type="button" data-page="trend" role="menuitem">Posture trend</button>
+            <button type="button" data-page="digest" role="menuitem">Executive digest</button>
+            <button type="button" data-page="auditor" role="menuitem">Auditor bundle</button>
             <button type="button" data-page="models" role="menuitem">Models</button>
             <button type="button" data-page="inspector" role="menuitem">Inspector</button>
             <button type="button" data-page="provenance" role="menuitem">Provenance</button>
@@ -3934,6 +3950,63 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       <div id="cp-src-out"></div>
     </section>
     <!-- === end competitive page === -->
+
+    <!-- === posture trend page === -->
+    <section id="page-trend" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Posture trend</p>
+        <h1>See whether posture is getting better or worse.</h1>
+        <p class="lede">Counts-only snapshots of compliance score, ATT&amp;CK coverage, findings by severity, SLO budget and rule health. Read only: nothing is sent anywhere.</p>
+      </header>
+      <p class="nx-note" id="pt-note" role="note">Snapshots are taken while Kavach runs, so gaps mean it was stopped. History is capped.</p>
+      <p class="work-msg" id="pt-msg" role="status"></p>
+      <div class="pt-filters">
+        <label>Look back (days)<input type="number" class="input-field" id="pt-days" min="1" max="400" value="30"></label>
+        <button type="button" class="secondary" id="pt-refresh">Refresh</button>
+      </div>
+      <div id="pt-out"></div>
+      <h2>Compare two dates</h2>
+      <div class="pt-filters">
+        <label>From<input type="date" class="input-field" id="pt-from"></label>
+        <label>To (optional)<input type="date" class="input-field" id="pt-to"></label>
+        <button type="button" class="secondary" id="pt-diff-go">Compare</button>
+      </div>
+      <div id="pt-diff-out"></div>
+    </section>
+    <!-- === end posture trend page === -->
+
+    <!-- === executive digest page === -->
+    <section id="page-digest" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Executive digest</p>
+        <h1>A weekly summary where every statement shows its evidence.</h1>
+        <p class="lede">Each sentence lists the measured factors behind it. Anything Kavach could not measure is listed as not assessed. Pull only: Kavach never emails it.</p>
+      </header>
+      <p class="work-msg" id="dg-msg" role="status"></p>
+      <div class="pt-filters">
+        <label>Compare against (days ago)<input type="number" class="input-field" id="dg-days" min="1" max="90" value="7"></label>
+        <button type="button" class="secondary" id="dg-refresh">Refresh</button>
+        <button type="button" class="secondary" id="dg-md">Download Markdown</button>
+        <button type="button" class="secondary" id="dg-html">Download printable HTML</button>
+        <button type="button" class="secondary" id="dg-json">Download JSON</button>
+      </div>
+      <div id="dg-out"></div>
+    </section>
+    <!-- === end executive digest page === -->
+
+    <!-- === auditor bundle page === -->
+    <section id="page-auditor" class="page" hidden>
+      <header class="page-hero">
+        <p class="apple-eyebrow">Auditor bundle</p>
+        <h1>One zip of evidence with a hash for every file.</h1>
+        <p class="lede">Compliance evidence, content versions, lab measurement, configuration assessment catalogue and caveats, with a SHA-256 manifest. Built in memory; secrets and tokens are removed.</p>
+      </header>
+      <div class="nx-note nx-warn bh-caveat" id="ab-caveat" role="note"><strong>Caveats (always apply)</strong><ul><li>Loading from the server.</li></ul></div>
+      <p class="work-msg" id="ab-msg" role="status"></p>
+      <div class="px-actions"><button type="button" class="primary" id="ab-download">Download bundle (zip)</button><button type="button" class="secondary" id="ab-refresh">Refresh manifest</button><span class="hint" id="ab-meta"></span></div>
+      <div id="ab-out"></div>
+    </section>
+    <!-- === end auditor bundle page === -->
   </main>
   <footer>© Zyvor · Kavach · Sister to Netra · Security without compromise.</footer>
 </div>
@@ -4018,8 +4091,8 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation', 'reports', 'versions', 'syslog', 'competitive'];
-  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage', 'huntseq': 'Sequence hunt', 'vulnprio': 'Vulnerability priority', 'feedback': 'Feedback', 'chains': 'Attack chains', 'automation': 'Automation', 'reports': 'Reports and SLO', 'versions': 'Content versions', 'syslog': 'Syslog', 'competitive': 'Competitive' };
+  const pages = ['overview', 'detect', 'detections', 'hunt', 'timeline', 'incidents', 'hosts', 'fleet', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'ai', 'world', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'modules', 'integrations', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation', 'reports', 'versions', 'syslog', 'competitive', 'trend', 'digest', 'auditor'];
+  const pageLabels = { overview: 'Overview', detect: 'Detect', detections: 'Detections', hunt: 'Hunt', timeline: 'Timeline', incidents: 'Incidents', hosts: 'Hosts', fleet: 'Fleet', prevent: 'Prevent', intel: 'Intel', identity: 'Identity', spotlight: 'Spotlight', overwatch: 'OverWatch', response: 'Response', ops: 'Ops', ai: 'AI Hub', world: 'World', observe: 'Observe', ebpf: 'eBPF', alerts: 'Alerts', risk: 'Risk', soc: 'SOC', posture: 'Posture', finance: 'Finance', sectors: 'Sectors', modules: 'Modules', integrations: 'Integrations', lab: 'Detection lab', feeds: 'Intel feeds', evidence: 'Evidence', fleethealth: 'Fleet health', prevalence: 'Prevalence', canaries: 'Canaries', governance: 'Governance', tuning: 'Tuning', itdr: 'Identity threats', vulns: 'Vulnerabilities', cases: 'Cases', huntpacks: 'Hunt packs', ransomware: 'Ransomware', content: 'Content library', adversaries: 'Adversaries', rulehealth: 'Rule health', export: 'Export', search: 'Search', inspector: 'Inspector', models: 'Models', regulatory: 'Regulatory clocks', advisories: 'CERT advisories', provenance: 'Provenance', 'ransomware-behaviour': 'Ransomware behaviour', ttp: 'TTP similarity', 'coverage': 'Coverage', 'huntseq': 'Sequence hunt', 'vulnprio': 'Vulnerability priority', 'feedback': 'Feedback', 'chains': 'Attack chains', 'automation': 'Automation', 'reports': 'Reports and SLO', 'versions': 'Content versions', 'syslog': 'Syslog', 'competitive': 'Competitive', 'trend': 'Posture trend', 'digest': 'Executive digest', 'auditor': 'Auditor bundle' };
   let current = 'overview';
   let theme = localStorage.getItem('kavach-theme') || 'light';
   let cache = { findings: [], incidents: [], fleet: [], process: [], network: [], detections: [], hosts: [] };
@@ -4142,7 +4215,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     return res.json();
   }
 
-  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation', 'reports', 'versions', 'syslog', 'competitive']);
+  const browsePages = new Set(['timeline', 'prevent', 'intel', 'identity', 'spotlight', 'overwatch', 'response', 'ops', 'modules', 'integrations', 'observe', 'ebpf', 'alerts', 'risk', 'soc', 'posture', 'finance', 'sectors', 'lab', 'feeds', 'evidence', 'fleethealth', 'prevalence', 'canaries', 'governance', 'tuning', 'itdr', 'vulns', 'cases', 'huntpacks', 'ransomware', 'content', 'adversaries', 'rulehealth', 'export', 'search', 'inspector', 'models', 'regulatory', 'advisories', 'provenance', 'ransomware-behaviour', 'ttp', 'coverage', 'huntseq', 'vulnprio', 'feedback', 'chains', 'automation', 'reports', 'versions', 'syslog', 'competitive', 'trend', 'digest', 'auditor']);
 
   function closeBrowse() {
     const browse = $('nav-browse');
@@ -4203,6 +4276,9 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     if (current === 'ransomware-behaviour' && typeof loadRansomwareBehaviour === 'function') loadRansomwareBehaviour();
     if (current === 'ttp' && typeof loadTtp === 'function') loadTtp();
     if (current === 'competitive' && typeof loadCompetitive === 'function') loadCompetitive();
+    if (current === 'trend' && typeof loadTrend === 'function') loadTrend();
+    if (current === 'digest' && typeof loadDigest === 'function') loadDigest();
+    if (current === 'auditor' && typeof loadAuditor === 'function') loadAuditor();
     if (current === 'syslog' && typeof loadSyslog === 'function') loadSyslog();
     if (current === 'versions' && typeof loadVersions === 'function') loadVersions();
     if (current === 'reports' && typeof loadReports === 'function') loadReports();
@@ -8955,8 +9031,145 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   }
   /* === end competitive page === */
 
+  /* === posture trend / digest / auditor bundle pages === */
+  function ptSpark(snaps) {
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('class', 'pt-spark');
+    svg.setAttribute('viewBox', '0 0 100 40');
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', 'Compliance score over time, scale 0 to 100');
+    const base = document.createElementNS(NS, 'line');
+    ['x1', 'y1', 'x2', 'y2'].forEach((a, i) => base.setAttribute(a, ['0', '40', '100', '40'][i]));
+    svg.appendChild(base);
+    if (snaps.length > 1) {
+      const pts = snaps.map((s, i) => (i * 100 / (snaps.length - 1)).toFixed(2) + ',' + (40 - Math.max(0, Math.min(100, s.compliance_score)) * 0.4).toFixed(2));
+      const pl = document.createElementNS(NS, 'polyline');
+      pl.setAttribute('points', pts.join(' '));
+      svg.appendChild(pl);
+    }
+    return svg;
+  }
+  function ptDelta(n) {
+    if (n == null) return el('span', 'n/a');
+    const v = Math.round(n * 100) / 100;
+    return el('span', (v > 0 ? '+' : '') + v, v > 0 ? 'pt-up' : (v < 0 ? 'pt-down' : ''));
+  }
+  async function ptLoad() {
+    const box = $('pt-out');
+    uiLoading(box);
+    const days = Math.max(1, Math.min(400, Number($('pt-days').value) || 30));
+    try {
+      const r = await pgApi('/v1/posture/trend?days=' + days);
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      $('pt-note').textContent = (r.note || '') + ' Every ' + r.interval_hours + ' h' + (r.enabled ? '' : ' (automatic snapshots are turned off)') + '; up to ' + r.history_cap + ' kept.';
+      const snaps = r.snapshots || [];
+      if (!snaps.length) { uiEmpty(box, 'No snapshots yet', 'The first snapshot is taken shortly after Kavach starts. Check back soon.'); return; }
+      box.appendChild(ptSpark(snaps));
+      const tb = uiTable(box, ['Time', 'Compliance', 'ATT&CK tactics', 'Findings (crit / high / med / low)', 'Heartbeat budget', 'Rules silent / noisy']);
+      snaps.slice().reverse().forEach((s) => {
+        const f = s.findings_by_severity || {};
+        tableRow(tb, [fmtTime(s.time), s.compliance_score + ' (' + (s.compliance_grade || '-') + ')', s.attack_tactics_covered + ' / ' + s.attack_tactics_total,
+          s.findings_total + ' (' + [f.critical || 0, f.high || 0, f.medium || 0, f.low || 0].join(' / ') + ')',
+          s.slo_heartbeat_budget_remaining_pct == null ? 'not measured' : s.slo_heartbeat_budget_remaining_pct + '%', s.rules_silent + ' / ' + s.rules_noisy]);
+      });
+    } catch (e) { uiError(box, 'posture trend', e, ptLoad); }
+  }
+  async function ptDiff() {
+    const box = $('pt-diff-out');
+    const from = $('pt-from').value, to = $('pt-to').value;
+    if (!from) { setMsg('pt-msg', 'Pick a From date.', true); return; }
+    setMsg('pt-msg', '', false);
+    uiLoading(box);
+    try {
+      const r = await pgApi('/v1/posture/trend/diff?from=' + encodeURIComponent(from) + (to ? '&to=' + encodeURIComponent(to) : ''));
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      uiMeta(box, ['From snapshot ' + fmtTime(r.from.time), 'To snapshot ' + fmtTime(r.to.time)]);
+      const d = r.delta || {};
+      const tb = uiTable(box, ['Measure', 'Change']);
+      [['Compliance score', d.compliance_score], ['ATT&CK tactics covered', d.attack_tactics_covered], ['Findings total', d.findings_total],
+        ['Heartbeat budget (points)', d.slo_heartbeat_budget_remaining_pct], ['Continuity budget (points)', d.slo_continuity_budget_remaining_pct],
+        ['Rules silent', d.rules_silent], ['Rules noisy', d.rules_noisy]].forEach((x) => tableRow(tb, [x[0], ptDelta(x[1])]));
+      Object.keys(d.findings_by_severity || {}).sort().forEach((k) => tableRow(tb, ['Findings: ' + k, ptDelta(d.findings_by_severity[k])]));
+      Object.keys(d.framework_scores || {}).sort().forEach((k) => tableRow(tb, ['Framework score: ' + k, ptDelta(d.framework_scores[k])]));
+    } catch (e) { uiError(box, 'the comparison', e, ptDiff); }
+  }
+  function loadTrend() { ptLoad(); }
+  $('pt-refresh').addEventListener('click', ptLoad);
+  $('pt-diff-go').addEventListener('click', ptDiff);
+
+  async function dgFetch(fmt) {
+    const days = Math.max(1, Math.min(90, Number($('dg-days').value) || 7));
+    const res = await fetch('/v1/reports/digest?format=' + fmt + '&days=' + days, { credentials: 'same-origin' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.text();
+  }
+  async function dgLoad() {
+    const box = $('dg-out');
+    uiLoading(box);
+    try {
+      const d = JSON.parse(await dgFetch('json'));
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      uiMeta(box, ['Generated ' + fmtTime(d.generated_at), 'Period ' + d.period_days + ' days', d.baseline_snapshot_time ? 'Baseline ' + fmtTime(d.baseline_snapshot_time) : 'No baseline snapshot yet']);
+      const ps = el('div', '', 'work-panel');
+      ps.appendChild(el('h3', 'Summary'));
+      (d.statements || []).forEach((s) => {
+        const w = el('div', '', 'dg-stmt');
+        w.appendChild(el('p', s.text));
+        const ul = el('ul', '', 'dg-factors');
+        (s.factors || []).forEach((f) => ul.appendChild(el('li', f.name + ' = ' + f.value + ' (' + f.source + ')')));
+        w.appendChild(ul);
+        ps.appendChild(w);
+      });
+      box.appendChild(ps);
+      if ((d.not_assessed || []).length) { const p = el('div', '', 'work-panel'); p.appendChild(el('h3', 'Not assessed')); uiList(p, d.not_assessed); box.appendChild(p); }
+      const c = el('div', '', 'nx-note bh-caveat'); bhCaveat(c, 'Caveats', d.caveats || []); box.appendChild(c);
+    } catch (e) { uiError(box, 'the digest', e, dgLoad); }
+  }
+  async function dgDownload(fmt, name, type) {
+    try { rxSave(name, await dgFetch(fmt), type); setMsg('dg-msg', 'Downloaded ' + name + '.', false); } catch (e) { setMsg('dg-msg', 'Could not download: ' + e.message, true); }
+  }
+  function loadDigest() { dgLoad(); }
+  $('dg-refresh').addEventListener('click', dgLoad);
+  $('dg-md').addEventListener('click', () => dgDownload('md', 'kavach-digest.md', 'text/markdown'));
+  $('dg-html').addEventListener('click', () => dgDownload('html', 'kavach-digest.html', 'text/html'));
+  $('dg-json').addEventListener('click', () => dgDownload('json', 'kavach-digest.json', 'application/json'));
+
+  async function abLoad() {
+    const box = $('ab-out');
+    uiLoading(box, 'Building manifest…');
+    try {
+      const m = await pgApi('/v1/compliance/auditor-bundle?manifest=1');
+      box.removeAttribute('aria-busy'); box.replaceChildren();
+      bhCaveat($('ab-caveat'), 'Caveats (always apply)', m.caveats || []);
+      $('ab-meta').textContent = 'Manifest built ' + fmtTime(m.generated_at) + '. ' + (m.redacted_fields || 0) + ' secret-like fields removed.';
+      const tb = uiTable(box, ['File', 'Bytes', 'SHA-256', 'Note']);
+      (m.files || []).forEach((f) => tableRow(tb, [f.path, f.bytes, el('span', f.sha256, 'ab-hash'), f.note || '']));
+      box.appendChild(el('p', 'The zip also holds MANIFEST.json and MANIFEST.sha256. Verify after unzipping with sha256sum -c MANIFEST.sha256.', 'hint'));
+    } catch (e) { uiError(box, 'the bundle manifest', e, abLoad); }
+  }
+  async function abDownload() {
+    setMsg('ab-msg', 'Building bundle…', false);
+    try {
+      const res = await fetch('/v1/compliance/auditor-bundle', { credentials: 'same-origin' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const blob = await res.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'kavach-auditor-bundle.zip';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      setMsg('ab-msg', 'Bundle downloaded.', false);
+    } catch (e) { setMsg('ab-msg', 'Could not download: ' + e.message, true); }
+  }
+  function loadAuditor() { abLoad(); }
+  $('ab-refresh').addEventListener('click', abLoad);
+  $('ab-download').addEventListener('click', abDownload);
+  /* === end posture trend / digest / auditor bundle pages === */
+
   // --- Command palette, shortcuts, help, hash routing ---
-  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '.': 'huntseq', '\'': 'vulnprio', '`': 'feedback', '\\': 'chains', '!': 'automation', '@': 'reports', '#': 'versions', '$': 'syslog', '%': 'competitive', '/': 'search' };
+  const gKeys = { o: 'overview', d: 'detect', t: 'detections', h: 'hunt', i: 'incidents', s: 'hosts', f: 'fleet', a: 'ai', w: 'world', v: 'observe', e: 'ebpf', n: 'alerts', k: 'risk', x: 'soc', p: 'posture', m: 'modules', l: 'timeline', b: 'lab', u: 'feeds', c: 'evidence', r: 'fleethealth', y: 'prevalence', j: 'canaries', z: 'governance', q: 'tuning', g: 'itdr', 1: 'vulns', 2: 'cases', 3: 'huntpacks', 4: 'ransomware', 5: 'content', 6: 'adversaries', 7: 'rulehealth', 8: 'export', 9: 'inspector', 0: 'models', '-': 'regulatory', '=': 'advisories', '[': 'provenance', ']': 'ransomware-behaviour', ';': 'ttp', ',': 'coverage', '.': 'huntseq', '\'': 'vulnprio', '`': 'feedback', '\\': 'chains', '!': 'automation', '@': 'reports', '#': 'versions', '$': 'syslog', '%': 'competitive', '/': 'search', '^': 'trend', '&': 'digest', '*': 'auditor' };
   /* === lab/feeds/evidence pages: shared helper === */
   // Like wsFetch, but surfaces {"error": "..."} JSON bodies as the message.
   async function pgApi(path, opts) {
