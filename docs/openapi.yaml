@@ -2540,7 +2540,7 @@ paths:
         content:
           application/octet-stream:
             schema: { type: string }
-        description: "raw bytes (application/octet-stream); ?name= optional"
+        description: "raw bytes (application/octet-stream); ?name= optional. Also analysed: Windows shortcuts (lnk-*), ISO 9660 images (iso-*, disk-image-unlisted), VBA macros in OLE2/OOXML (vba-*); see docs/artifact-analyzers.md"
       responses:
         "200": { description: "Inspection report" }
         "400": { description: "Empty input or invalid JSON" }
@@ -2588,7 +2588,7 @@ paths:
         content:
           text/plain:
             schema: { type: string }
-        description: "raw text or {\"text\": ...} (configuration file, parse-only)"
+        description: "raw text or {\"text\": ...} (configuration file, parse-only; also GitHub Actions and GitLab CI YAML and extra Kubernetes/Dockerfile checks (cfgx-*); report level is always not_scored"
       responses:
         "200": { description: "Inspection report" }
         "400": { description: "Empty input or invalid JSON" }

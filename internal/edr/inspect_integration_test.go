@@ -57,8 +57,9 @@ func TestInspectEndToEnd(t *testing.T) {
 
 	names := InspectAnalyzerNames()
 	want := map[string][]string{
-		InspectKindFile:    {"byte-patterns", "file-archive", "file-binary", "file-document", "file-strings"},
-		InspectKindScript:  {"byte-patterns", "deobfuscation"},
+		InspectKindFile:    {"byte-patterns", "file-archive", "file-binary", "file-document", "file-strings", "file-lnk", "file-diskimage", "file-vba"},
+		InspectKindScript:  {"byte-patterns", "deobfuscation", "script-static"},
+		InspectKindConfig:  {"config-assess", "config-extra"},
 		InspectKindCmdline: {"deobfuscation"},
 		InspectKindDomain:  {"domain"},
 	}
