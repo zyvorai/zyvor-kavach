@@ -73,6 +73,7 @@ retained findings (`limit`, default 50).
 | beaconing | 0.20 | beacon score/100 for the finding's `(host, destination)` |
 | asset_criticality | 0.15 | `(criticality-1)/4` from `/v1/posture/assets` |
 | rule_trust | 0.15 | `1 - noisy_score/100` from rule health (`BuildRuleHealth`) |
+| dns_anomaly, user_behaviour, peer_outlier, rule_fatigue | 0.10 / 0.08 / 0.07 / 0.05 | optional factors from the extended models, see `docs/local-models.md#extended-models-dns-tunnelingdga-user-baseline-peer-outliers-alert-fatigue`; omitted with a reason when the model has no opinion |
 
 Score = weighted mean of the factors that are present, x100; absent factors are listed under
 `omitted` and the remaining weights renormalised (`coverage` shows the weight actually used).

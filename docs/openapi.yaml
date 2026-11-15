@@ -2705,6 +2705,40 @@ paths:
         - { name: exclude_private, in: query, schema: { type: string }, description: "1 or true" }
       responses:
         "200": { description: "Beacon candidates" }
+  /v1/ml/dns:
+    get:
+      summary: "DNS/domain tunneling and DGA-burst windows per host (local statistical model)"
+      parameters:
+        - { name: host, in: query, schema: { type: string }, description: "One host with flagged windows; omit for a ranked host list" }
+        - { name: limit, in: query, schema: { type: integer }, description: "1-200, default 20" }
+      responses:
+        "200": { description: "{method, model, status, sample_count, flags[], open_window} or {hosts[]}; status not_enough_data below 50 lookups" }
+  /v1/ml/users:
+    get:
+      summary: "Per-user behaviour baseline: logon hour, new host, rare process (local statistical model)"
+      parameters:
+        - { name: user, in: query, schema: { type: string }, description: "Auth user name or uid:N for process-derived identities; omit for a list" }
+        - { name: limit, in: query, schema: { type: integer }, description: "1-200, default 20" }
+      responses:
+        "200": { description: "{method, model, status, sub_models{sample_count,min_samples,status}, recent_anomalies[]}" }
+  /v1/ml/peers:
+    get:
+      summary: "Peer-group outlier score: host process/destination mix against fleet peers (local statistical model)"
+      parameters:
+        - { name: host, in: query, schema: { type: string }, description: "One host with per-view divergence and most distinct items; omit for a ranked list" }
+        - { name: limit, in: query, schema: { type: integer }, description: "1-200, default 20" }
+      responses:
+        "200": { description: "{method, model, status, views[], max_z, outlier, score}; not_enough_data below 5 ready hosts" }
+  /v1/ml/fatigue:
+    get:
+      summary: "Alert-fatigue advisor: rules to consider retuning, from rule health and analyst feedback (advisory, changes nothing)"
+      parameters:
+        - { name: rule, in: query, schema: { type: string }, description: "One rule" }
+        - { name: candidates, in: query, schema: { type: string }, description: "1 = only retune candidates" }
+        - { name: limit, in: query, schema: { type: integer }, description: "1-200, default 25" }
+      responses:
+        "200": { description: "{method, model, status, rules[] with fatigue_score, factors, omitted, suggestions}; rules under 10 hits in 30 days are not_enough_data" }
+        "404": { description: "Rule has no findings" }
   /v1/ml/priority:
     get:
       summary: "Advisory finding priority score (does not change /v1/ai/score)"

@@ -88,7 +88,9 @@ func fbTopRules(m map[string]int, n int) []fbCount {
 func RegisterFeedback(mux *http.ServeMux, token string, store *Store) *feedbackSvc {
 	svc := newFeedbackSvc(store)
 	clearTrust := setFeedbackRuleTrust(svc.ruleTrust)
-	RegisterStopper("feedback-trust-hook", func(context.Context) error { clearTrust(); return nil })
+	snap := svc.snapshot
+	feedbackSnapshotFn.Store(&snap)
+	RegisterStopper("feedback-trust-hook", func(context.Context) error { clearTrust(); feedbackSnapshotFn.CompareAndSwap(&snap, nil); return nil })
 
 	mux.HandleFunc("POST /v1/feedback", func(w http.ResponseWriter, r *http.Request) {
 		admin, ok := requireAdminOrSession(w, r, token)

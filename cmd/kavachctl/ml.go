@@ -23,6 +23,10 @@ const mlUsage = `usage: kavachctl ml <command>
   baseline --host H                             per-host hourly activity baseline
   beacons [--min-events N] [--exclude-private] [--host H] [--limit N] [--min-score S]
   synthesize (--finding ID | --command TEXT) [--out FILE]   draft a rule (nothing is saved)
+  dns [--host H] [--limit N]                    DNS/domain tunneling and DGA-burst windows
+  users [--user U] [--limit N]                  per-user logon-hour / new-host / rare-process baseline
+  peers [--host H] [--limit N]                  peer-group outlier score
+  fatigue [--rule R] [--candidates] [--limit N] rules to consider retuning (advisory)
   priority (--finding ID | --host H) [--limit N]            fused triage priority
   reset [--yes]                                 clear learned ML state (mutating)
   replay [--yes]                                relearn from the retained store (mutating)`
@@ -54,7 +58,7 @@ func mlRun(out io.Writer, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("%s", mlUsage)
 	}
-	pos, f, b := omParse(args[1:], "host", "limit", "min-events", "min-score", "finding", "command", "out")
+	pos, f, b := omParse(args[1:], "host", "limit", "min-events", "min-score", "finding", "command", "out", "user", "rule")
 	j := b["json"]
 	switch args[0] {
 	case "status":
@@ -99,6 +103,37 @@ func mlRun(out io.Writer, args []string) error {
 		return mlBeacons(out, p, j)
 	case "synthesize":
 		return mlSynthesize(out, f, j)
+	case "dns":
+		return mlGeneric(out, omQuery("/v1/ml/dns", f, "host", "limit"), j)
+	case "peers":
+		return mlGeneric(out, omQuery("/v1/ml/peers", f, "host", "limit"), j)
+	case "users":
+		v := url.Values{}
+		for _, k := range []string{"user", "limit"} {
+			if f[k] != "" {
+				v.Set(k, f[k])
+			}
+		}
+		p := "/v1/ml/users"
+		if e := v.Encode(); e != "" {
+			p += "?" + e
+		}
+		return mlGeneric(out, p, j)
+	case "fatigue":
+		v := url.Values{}
+		for _, k := range []string{"rule", "limit"} {
+			if f[k] != "" {
+				v.Set(k, f[k])
+			}
+		}
+		if b["candidates"] {
+			v.Set("candidates", "1")
+		}
+		p := "/v1/ml/fatigue"
+		if e := v.Encode(); e != "" {
+			p += "?" + e
+		}
+		return mlGeneric(out, p, j)
 	case "priority":
 		if (f["finding"] == "") == (f["host"] == "") {
 			return fmt.Errorf("usage: kavachctl ml priority (--finding ID | --host H) [--limit N]")
