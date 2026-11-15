@@ -17,6 +17,9 @@ import (
 type DomainInventory struct {
 	mu   sync.Mutex
 	rows map[string][]map[string]any
+	// path is where async persistence writes (set by BootstrapLivePlatform; KAVACH_INVENTORY
+	// overrides). Guarded by mu. Persist goroutines are tracked by the lifecycle registry.
+	path string
 }
 
 var Live = &DomainInventory{rows: map[string][]map[string]any{}}

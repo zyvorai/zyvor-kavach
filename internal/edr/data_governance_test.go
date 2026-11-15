@@ -65,7 +65,7 @@ func govSeed(t *testing.T) (*httptest.Server, *Store, string) {
 	ws := workspaceData{Notes: []Note{{ID: "n1", FindingID: "f0", Author: "bob", Text: "contacted alice@example.com", Created: now}}}
 	wb, _ := json.Marshal(ws)
 	_ = os.WriteFile(path+".workspace.json", wb, 0o600)
-	s, err := NewStore(path, 100)
+	s, err := testStore(t, path, 100)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -148,7 +148,7 @@ func TestGovRetentionPreviewApplyAndGuard(t *testing.T) {
 	if len(s.List()) != 1 || len(s.networkEvents) != 1 || len(s.fileEvents) != 1 || len(s.recentEvents) != 1 {
 		t.Fatalf("memory not purged: %d", len(s.List()))
 	}
-	s2, err := NewStore(path, 100)
+	s2, err := testStore(t, path, 100)
 	if err != nil {
 		t.Fatal(err)
 	}

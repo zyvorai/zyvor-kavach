@@ -76,7 +76,7 @@ func TestCEFEscaping(t *testing.T) {
 
 func siemTestAPI(t *testing.T) (http.Handler, *Store) {
 	t.Helper()
-	store, err := NewStore(filepath.Join(t.TempDir(), "f.jsonl"), 100)
+	store, err := testStore(t, filepath.Join(t.TempDir(), "f.jsonl"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}

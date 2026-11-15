@@ -51,7 +51,7 @@ func TestFileSensorBaselineAndMassDetection(t *testing.T) {
 }
 func TestFileIngressScopedAndDeduplicated(t *testing.T) {
 	dir := t.TempDir()
-	store, err := NewStore(filepath.Join(dir, "findings"), 100)
+	store, err := testStore(t, filepath.Join(dir, "findings"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,7 +82,7 @@ func TestFileIngressScopedAndDeduplicated(t *testing.T) {
 	if resp.StatusCode != 401 {
 		t.Fatalf("cross host status %d", resp.StatusCode)
 	}
-	store2, err := NewStore(filepath.Join(dir, "findings"), 100)
+	store2, err := testStore(t, filepath.Join(dir, "findings"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,7 +93,7 @@ func TestFileIngressScopedAndDeduplicated(t *testing.T) {
 func TestIncidentTransitionPersistence(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "findings")
-	store, err := NewStore(path, 50)
+	store, err := testStore(t, path, 50)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -109,7 +109,7 @@ func TestIncidentTransitionPersistence(t *testing.T) {
 	if resp.StatusCode != 200 {
 		t.Fatal(resp.StatusCode)
 	}
-	restored, err := NewStore(path, 50)
+	restored, err := testStore(t, path, 50)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -128,7 +128,7 @@ func TestIncidentTransitionPersistence(t *testing.T) {
 }
 func TestFileSpoolRetry(t *testing.T) {
 	dir := t.TempDir()
-	store, err := NewStore(filepath.Join(dir, "findings"), 100)
+	store, err := testStore(t, filepath.Join(dir, "findings"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}

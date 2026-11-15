@@ -288,7 +288,7 @@ func TestLabRuleCapAndNoPromotion(t *testing.T) {
 }
 
 func TestLabEventCap(t *testing.T) {
-	s, err := NewStore(t.TempDir()+"/f.jsonl", labMaxEvents+10)
+	s, err := testStore(t, t.TempDir()+"/f.jsonl", labMaxEvents+10)
 	if err != nil {
 		t.Fatal(err)
 	}

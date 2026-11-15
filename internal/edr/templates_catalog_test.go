@@ -36,7 +36,7 @@ func TestBuiltinPlaybooksSafe(t *testing.T) {
 }
 
 func TestReportTemplatesRenderEmpty(t *testing.T) {
-	store, err := NewStore(filepath.Join(t.TempDir(), "f.jsonl"), 10)
+	store, err := testStore(t, filepath.Join(t.TempDir(), "f.jsonl"), 10)
 	if err != nil {
 		t.Fatal(err)
 	}

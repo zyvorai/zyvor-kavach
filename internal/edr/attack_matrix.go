@@ -39,13 +39,8 @@ func BuildATTACKMatrix(findings []Finding) map[string]any {
 		idx[name] = t
 		order = append(order, t)
 	}
-	all := make(map[string]struct{ Tactic, Technique, ID string }, len(ruleMITRE))
-	for r, m := range ruleMITRE {
-		all[r] = m
-	}
-	for r, m := range contentMITREAll() { // live content-pack rules count toward coverage
-		all[r] = m
-	}
+	// Built-in, live content-pack and enabled IOA rules (with a technique) count toward coverage.
+	all := allRuleMITRE()
 	rules := make([]string, 0, len(all))
 	for r := range all {
 		rules = append(rules, r)
@@ -80,9 +75,30 @@ func BuildATTACKMatrix(findings []Finding) map[string]any {
 		}
 	}
 	total := 0
+	unmappedSet := map[string]struct{}{}
+	unmappedHits := 0
+	// Built-in rules that can fire but have no ATT&CK entry are listed explicitly, never guessed.
+	for _, r := range EmittedRuleNames {
+		if _, ok := all[r]; ok {
+			continue
+		}
+		if _, ok := mitreFor(r); ok {
+			continue
+		}
+		switch r {
+		case "custom-rule", "ioc-generic", "ioa-generic": // catalogue placeholders, not real rule ids
+			continue
+		}
+		unmappedSet[r] = struct{}{}
+	}
 	for _, f := range findings {
 		m, ok := all[f.Rule]
 		if !ok {
+			m, ok = mitreForFinding(f)
+		}
+		if !ok {
+			unmappedSet[f.Rule] = struct{}{}
+			unmappedHits++
 			continue
 		}
 		if x := tech[m.Tactic+"|"+m.ID]; x != nil {
@@ -91,6 +107,11 @@ func BuildATTACKMatrix(findings []Finding) map[string]any {
 			total++
 		}
 	}
+	unmapped := make([]string, 0, len(unmappedSet))
+	for r := range unmappedSet {
+		unmapped = append(unmapped, r)
+	}
+	sort.Strings(unmapped)
 	covered := 0
 	for _, t := range order {
 		if t.Covered {
@@ -104,6 +125,10 @@ func BuildATTACKMatrix(findings []Finding) map[string]any {
 		"total":         len(order),
 		"coverage_pct":  covered * 100 / len(order),
 		"observed_hits": total,
+		// unmapped_rules: rules with no ATT&CK technique (built-in rules that can fire plus rule ids
+		// seen in findings). They are excluded from coverage and hits rather than defaulted.
+		"unmapped_rules": unmapped,
+		"unmapped_hits":  unmappedHits,
 		"mode":          "observe-only",
 	}
 }
