@@ -62,7 +62,7 @@ func TestInspectToolsReadOnlyModeAndSchemas(t *testing.T) {
 	c, _ := recorder(t)
 	ro := listToolsJSON(t, c, false)
 	for _, n := range []string{"inspect_script", "inspect_cmdline", "inspect_domain", "inspect_file_b64", "inspect_reports", "inspect_analyzers",
-		"ml_status", "ml_lineage", "ml_similar", "ml_baseline", "ml_beacons", "ml_synthesize", "ml_priority"} {
+		"ml_status", "ml_lineage", "ml_similar", "ml_baseline", "ml_beacons", "ml_synthesize", "ml_priority", "ml_dns", "ml_users", "ml_peers", "ml_fatigue"} {
 		if ro[n] == nil {
 			t.Fatalf("%s missing in read-only mode", n)
 		}
@@ -177,6 +177,10 @@ func TestMLToolsRequests(t *testing.T) {
 		{"ml_beacons", `{"min_events":"8","exclude_private":"1"}`},
 		{"ml_synthesize", `{"command":"curl x | sh"}`},
 		{"ml_priority", `{"finding_id":"f1"}`},
+		{"ml_dns", `{"host":"h1"}`},
+		{"ml_users", `{"user":"bob"}`},
+		{"ml_peers", `{"host":"h1"}`},
+		{"ml_fatigue", `{"candidates":"1"}`},
 	}
 	for _, cl := range calls {
 		if o := callTool(t, c, false, cl.name, cl.args); !strings.Contains(o, "ok") {
@@ -192,6 +196,10 @@ func TestMLToolsRequests(t *testing.T) {
 		{"GET", "/v1/ml/beacons?exclude_private=1&min_events=8"},
 		{"POST", "/v1/ml/synthesize"},
 		{"GET", "/v1/ml/priority?finding_id=f1"},
+		{"GET", "/v1/ml/dns?host=h1"},
+		{"GET", "/v1/ml/users?user=bob"},
+		{"GET", "/v1/ml/peers?host=h1"},
+		{"GET", "/v1/ml/fatigue?candidates=1"},
 	}
 	if len(reqs) != len(wantReq) {
 		t.Fatalf("got %d requests", len(reqs))

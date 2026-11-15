@@ -288,6 +288,9 @@ func RegisterMLBehaviour(mux *http.ServeMux, token string, store *Store) {
 			return
 		}
 		eng.reset()
+		if h := mlExtResetHook.Load(); h != nil {
+			(*h)()
+		}
 		writeJSON(w, map[string]any{"method": mlMethod, "status": "reset"})
 	})
 	mux.HandleFunc("POST /v1/ml/learn/replay", func(w http.ResponseWriter, r *http.Request) {
@@ -295,6 +298,9 @@ func RegisterMLBehaviour(mux *http.ServeMux, token string, store *Store) {
 			return
 		}
 		n := eng.replay()
+		if h := mlExtReplayHook.Load(); h != nil {
+			(*h)()
+		}
 		writeJSON(w, map[string]any{"method": mlMethod, "status": "replayed", "events_replayed": n, "source": "retained store"})
 	})
 }

@@ -90,10 +90,12 @@ type priorityCtx struct {
 	health  map[string]RuleHealth
 	beacons map[string]BeaconSeries // host|destination
 	assets  map[string]PostureAsset
+	fb      map[string]RulePrecision // analyst verdict precision per rule (alert-fatigue factor)
+	peer    map[string]*mlPeerResult // lazily computed peer-group results
 }
 
 func newPriorityCtx(store *Store, findings []Finding) *priorityCtx {
-	c := &priorityCtx{health: map[string]RuleHealth{}, beacons: map[string]BeaconSeries{}, assets: map[string]PostureAsset{}}
+	c := &priorityCtx{health: map[string]RuleHealth{}, beacons: map[string]BeaconSeries{}, assets: map[string]PostureAsset{}, fb: feedbackPrecisionByRule()}
 	for _, h := range BuildRuleHealth(findings, nil, nil, time.Now()) {
 		c.health[h.Rule] = h
 	}
@@ -161,6 +163,13 @@ func (c *priorityCtx) score(f Finding) PriorityResult {
 			sum += p.Value * w.Weight
 			wsum += w.Weight
 		}
+	}
+	if hk := mlExtFactorHook.Load(); hk != nil { // optional local-model factors (ml_ext_engine.go)
+		xf, xo := (*hk)(f, c)
+		for _, p := range xf {
+			vals[p.Name] = p
+		}
+		res.Omitted = append(res.Omitted, xo...)
 	}
 	for _, n := range []string{rarityNote, beaconNote, assetNote} {
 		if n != "" {
