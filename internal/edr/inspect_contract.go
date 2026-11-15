@@ -121,7 +121,7 @@ type InspectReport struct {
 // Builder is handed to analyzers to add results; it enforces the caps so an
 // analyzer cannot grow a report without bound.
 type InspectBuilder struct {
-	mu       sync.Mutex
+	mu       *sync.Mutex // shared by every per-analyzer view of one report
 	r        *InspectReport
 	analyzer string
 	seenIOC  map[string]bool
@@ -329,7 +329,8 @@ func RunAnalyzers(ctx context.Context, in InspectInput) *InspectReport {
 	}
 	inspectMu.RUnlock()
 
-	b := &InspectBuilder{r: r, seenIOC: map[string]bool{}}
+	shared := &InspectBuilder{mu: &sync.Mutex{}, r: r, seenIOC: map[string]bool{}}
+	b := shared
 	for _, a := range list {
 		if tctx.Err() != nil {
 			b.mu.Lock()
@@ -337,10 +338,16 @@ func RunAnalyzers(ctx context.Context, in InspectInput) *InspectReport {
 			b.mu.Unlock()
 			break
 		}
-		b.analyzer = a.name
+		// A per-analyzer view: an analyzer abandoned after a timeout keeps its own
+		// name instead of racing with the next iteration.
+		view := &InspectBuilder{mu: shared.mu, r: r, analyzer: a.name, seenIOC: shared.seenIOC}
+		shared.mu.Lock()
 		r.Analyzers = append(r.Analyzers, a.name)
-		if err := runSafely(tctx, a, in, b); err != nil {
+		shared.mu.Unlock()
+		if err := runSafely(tctx, a, in, view); err != nil {
+			shared.mu.Lock()
 			r.Errors = append(r.Errors, a.name+": "+err.Error())
+			shared.mu.Unlock()
 		}
 	}
 	b.mu.Lock()

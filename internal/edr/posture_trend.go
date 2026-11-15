@@ -150,12 +150,13 @@ func (e *postureEngine) due(now time.Time) bool {
 }
 
 func (e *postureEngine) start() {
+	firstDelay := postureFirstDelay // read once, before the goroutine starts
 	go func() {
 		defer close(e.done)
 		select {
 		case <-e.stop:
 			return
-		case <-time.After(postureFirstDelay):
+		case <-time.After(firstDelay):
 		}
 		t := time.NewTicker(time.Minute)
 		defer t.Stop()

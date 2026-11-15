@@ -56,6 +56,7 @@ Refresh with `ruby docs/tools/inventory.rb --write`. Counts are read from the fi
 - [artifact-analyzers.md](artifact-analyzers.md): LNK, ISO, VBA macro, script and CI/config inspector analyzers.
 - [config-assessment.md](config-assessment.md): configuration assessment policies via the inspector.
 - [lockfile-inspection.md](lockfile-inspection.md): dependency-file inspection, CycloneDX SBOM and advisory matching.
+- [posture-reports.md](posture-reports.md): posture trend snapshots, executive digest and the auditor evidence bundle.
 - [url-email-inspection.md](url-email-inspection.md): parse-only URL and e-mail analyzers.
 - [evidence-import.md](evidence-import.md): offline evidence import into an isolated case (the import half of backlog item 16; no collector ships).
 - [regression-tracking.md](regression-tracking.md): scheduled re-runs of validation scenarios and coverage regression alerts.

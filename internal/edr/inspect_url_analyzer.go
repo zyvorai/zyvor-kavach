@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"sync"
 )
 
 // URLPhishThreshold is the report score at or above which the evaluation counts
@@ -30,7 +31,7 @@ type urlResult struct {
 }
 
 func inspScratchBuilder(name string) *InspectBuilder {
-	return &InspectBuilder{r: &InspectReport{}, analyzer: name, seenIOC: map[string]bool{}}
+	return &InspectBuilder{mu: &sync.Mutex{}, r: &InspectReport{}, analyzer: name, seenIOC: map[string]bool{}}
 }
 
 func analyzeURL(ctx context.Context, in InspectInput, b *InspectBuilder) error {
