@@ -9,7 +9,6 @@ import (
 
 // Rules that have no honest ATT&CK technique today. They must surface as unmapped, not as a guess.
 var intentionallyUnmapped = map[string]bool{
-	"ransomware-churn":         true, // weak canary-path churn signal; no single technique
 	"identity-from-finding":    true, // identity event derived from findings, not a Finding rule
 	"custom-rule":              true, // placeholder for operator-authored custom-* rules
 	"ioc-generic":              true, // placeholder for operator-added IOC types
@@ -185,7 +184,7 @@ func TestMatrixReportsUnmappedRules(t *testing.T) {
 	}
 	m := BuildATTACKMatrix(fs)
 	un := m["unmapped_rules"].([]string)
-	if !contains(un, "zz-unknown-rule") || !contains(un, "ransomware-churn") || !contains(un, "identity-from-finding") {
+	if !contains(un, "zz-unknown-rule") || !contains(un, "identity-from-finding") {
 		t.Fatalf("unmapped_rules incomplete: %v", un)
 	}
 	for _, r := range []string{"unsafe-permissions", "persistence-attempt", "script-inline-execution", "root-history-clear", "ioc-domain", "ioa-ioa-1"} {

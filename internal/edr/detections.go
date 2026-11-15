@@ -38,6 +38,7 @@ var ruleMITRE = map[string]struct{ Tactic, Technique, ID string }{
 	"download-chmod-execute":     {"Defense Evasion", "Masquerading", "T1036"},
 	"ransomware-burst":           {"Impact", "Data Encrypted for Impact", "T1486"},
 	"ransomware-extension-burst": {"Impact", "Data Encrypted for Impact", "T1486"},
+	"ransomware-churn":           {"Impact", "Data Encrypted for Impact", "T1486"},
 	"mass-file-activity":         {"Impact", "Data Destruction", "T1485"},
 	"netra-denied-process":       {"Command and Control", "Application Layer Protocol", "T1071"},
 	"ioc-hash-match":             {"Execution", "User Execution", "T1204"},
