@@ -53,6 +53,7 @@ Refresh with `ruby docs/tools/inventory.rb --write`. Counts are read from the fi
 - [adversary-profiles.md](adversary-profiles.md): embedded public threat-group and ransomware profiles.
 - [regional-threats.md](regional-threats.md): regional threat landscape rules and profiles.
 - [domain-inspector.md](domain-inspector.md): the domain analyzer and shared domain helpers.
+- [artifact-analyzers.md](artifact-analyzers.md): LNK, ISO, VBA macro, script and CI/config inspector analyzers.
 - [config-assessment.md](config-assessment.md): configuration assessment policies via the inspector.
 - [lockfile-inspection.md](lockfile-inspection.md): dependency-file inspection, CycloneDX SBOM and advisory matching.
 - [url-email-inspection.md](url-email-inspection.md): parse-only URL and e-mail analyzers.
