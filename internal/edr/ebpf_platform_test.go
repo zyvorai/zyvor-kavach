@@ -11,7 +11,7 @@ import (
 )
 
 func TestEBPFPlatformRoutes(t *testing.T) {
-	store, err := NewStore(filepath.Join(t.TempDir(), "findings.jsonl"), 100)
+	store, err := testStore(t, filepath.Join(t.TempDir(), "findings.jsonl"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}

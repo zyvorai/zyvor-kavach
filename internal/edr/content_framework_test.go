@@ -3,9 +3,11 @@ package edr
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -40,20 +42,32 @@ var benignBaseline = []LabEvent{
 	{Destination: "registry.npmjs.org:443"},
 }
 
+var (
+	testRegOnce sync.Once
+	testReg     *ContentRegistry
+	testRegErr  error
+)
+
+// loadTestRegistry returns the embedded registry, built once per test binary. Callers must treat
+// it as read-only (tests that need a mutable registry build their own with buildContentRegistry).
 func loadTestRegistry(t *testing.T) *ContentRegistry {
 	t.Helper()
-	packs, err := embeddedContentPacks()
-	if err != nil {
-		t.Fatal(err)
+	testRegOnce.Do(func() {
+		packs, err := embeddedContentPacks()
+		if err != nil {
+			testRegErr = err
+			return
+		}
+		if len(packs) == 0 {
+			testRegErr = errors.New("no embedded content packs")
+			return
+		}
+		testReg, testRegErr = buildContentRegistry(packs)
+	})
+	if testRegErr != nil {
+		t.Fatalf("content packs failed validation:\n%v", testRegErr)
 	}
-	if len(packs) == 0 {
-		t.Fatal("no embedded content packs")
-	}
-	reg, err := buildContentRegistry(packs)
-	if err != nil {
-		t.Fatalf("content packs failed validation:\n%v", err)
-	}
-	return reg
+	return testReg
 }
 
 // TestContentHarness gates every embedded rule: schema, regex compilation, samples, benign baseline.
@@ -217,7 +231,7 @@ func TestContentEvaluationCreatesFindings(t *testing.T) {
 		t.Fatalf("attack matrix content coverage wrong")
 	}
 	// End to end through the store.
-	st, err := NewStore(t.TempDir()+"/f.jsonl", 100)
+	st, err := testStore(t, t.TempDir()+"/f.jsonl", 100)
 	if err != nil {
 		t.Fatal(err)
 	}

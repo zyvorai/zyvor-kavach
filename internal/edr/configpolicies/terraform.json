@@ -1,0 +1,507 @@
+{
+ "area": "terraform",
+ "policies": [
+  {
+   "id": "terraform-s3-public-acl",
+   "title": "S3 bucket uses a public ACL",
+   "description": "Checks that no bucket ACL is public or authenticated-read.",
+   "rationale": "Public buckets are a leading cause of data exposure.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "terraform"
+    ],
+    "hints": [
+     "line-level parsing only: no variables, modules or expressions are evaluated"
+    ]
+   },
+   "check": {
+    "key_regex": "^aws_s3_bucket(_acl)?\\.acl$",
+    "op": "not_regex",
+    "value": "(?i)^(public-read|public-read-write|authenticated-read)$"
+   },
+   "on_absent": "pass",
+   "absence_note": "No ACL set.",
+   "remediation": "Use private ACLs and explicit policies.",
+   "references": [
+    "Terraform language: resources and attributes (public)",
+    "Public cloud storage/network exposure concepts"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)",
+    "ATT&CK T1530 (hint)"
+   ],
+   "positive": "resource \"aws_s3_bucket\" \"b\" {\n  acl = \"public-read\"\n}\n",
+   "negative": "resource \"aws_s3_bucket\" \"b\" {\n  acl = \"private\"\n}\n"
+  },
+  {
+   "id": "terraform-s3-public-access-block",
+   "title": "S3 public access block is switched off",
+   "description": "Checks that no public-access-block setting is false.",
+   "rationale": "These switches are the account-level safety net against accidental exposure.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "terraform"
+    ],
+    "hints": [
+     "line-level parsing only: no variables, modules or expressions are evaluated"
+    ]
+   },
+   "check": {
+    "key_regex": "^aws_s3_bucket_public_access_block\\.(block_public_acls|block_public_policy|ignore_public_acls|restrict_public_buckets)$",
+    "op": "not_equals",
+    "value": "false"
+   },
+   "on_absent": "pass",
+   "absence_note": "No block resource.",
+   "remediation": "Set all four to true.",
+   "references": [
+    "Terraform language: resources and attributes (public)",
+    "Public cloud storage/network exposure concepts"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "resource \"aws_s3_bucket_public_access_block\" \"b\" {\n  block_public_acls = false\n}\n",
+   "negative": "resource \"aws_s3_bucket_public_access_block\" \"b\" {\n  block_public_acls = true\n}\n"
+  },
+  {
+   "id": "terraform-sg-admin-ports-open",
+   "title": "Security group opens SSH or RDP to the world",
+   "description": "Checks that no ingress rule exposes port 22 or 3389 to 0.0.0.0/0 or ::/0.",
+   "rationale": "Administrative ports open to the internet are scanned and brute forced constantly.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "terraform"
+    ],
+    "hints": [
+     "line-level parsing only: no variables, modules or expressions are evaluated"
+    ]
+   },
+   "check": {
+    "key_regex": "^(aws_security_group(\\.ingress|_rule)|aws_vpc_security_group_ingress_rule)\\.summary$",
+    "op": "not_regex",
+    "value": "((0\\.0\\.0\\.0/0|::/0).*(from_port|to_port)=(22|3389)\\b|(from_port|to_port)=(22|3389)\\b.*::/0)"
+   },
+   "on_absent": "pass",
+   "absence_note": "No ingress rules. (An egress rule to these ports can be a false fail: the line-level parser cannot always tell.)",
+   "remediation": "Restrict the source to a VPN or bastion range.",
+   "references": [
+    "Terraform language: resources and attributes (public)",
+    "Public cloud storage/network exposure concepts"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)",
+    "ATT&CK T1133 (hint)"
+   ],
+   "positive": "resource \"aws_security_group\" \"s\" {\n  ingress {\n    from_port = 22\n    to_port = 22\n    protocol = \"tcp\"\n    cidr_blocks = [\"0.0.0.0/0\"]\n  }\n}\n",
+   "negative": "resource \"aws_security_group\" \"s\" {\n  ingress {\n    from_port = 22\n    to_port = 22\n    protocol = \"tcp\"\n    cidr_blocks = [\"10.0.0.0/8\"]\n  }\n}\n"
+  },
+  {
+   "id": "terraform-sg-all-ports-open",
+   "title": "Security group opens every port to the world",
+   "description": "Checks that no ingress rule allows all ports from the world.",
+   "rationale": "It removes the network layer as a defence.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "terraform"
+    ],
+    "hints": [
+     "line-level parsing only: no variables, modules or expressions are evaluated"
+    ]
+   },
+   "check": {
+    "key_regex": "^(aws_security_group(\\.ingress|_rule)|aws_vpc_security_group_ingress_rule)\\.summary$",
+    "op": "not_regex",
+    "value": "(0\\.0\\.0\\.0/0.*from_port=0\\b.*to_port=(0|65535)\\b|from_port=0\\b.*::/0.*to_port=(0|65535)\\b)"
+   },
+   "on_absent": "pass",
+   "absence_note": "No ingress rules.",
+   "remediation": "Open only the required ports.",
+   "references": [
+    "Terraform language: resources and attributes (public)",
+    "Public cloud storage/network exposure concepts"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "resource \"aws_security_group_rule\" \"r\" {\n  type = \"ingress\"\n  from_port = 0\n  to_port = 0\n  protocol = \"-1\"\n  cidr_blocks = [\"0.0.0.0/0\"]\n}\n",
+   "negative": "resource \"aws_security_group_rule\" \"r\" {\n  type = \"ingress\"\n  from_port = 443\n  to_port = 443\n  protocol = \"tcp\"\n  cidr_blocks = [\"0.0.0.0/0\"]\n}\n"
+  },
+  {
+   "id": "terraform-azure-nsg-any",
+   "title": "Azure NSG rule allows any port from anywhere",
+   "description": "Checks that no inbound allow rule uses a wildcard port and a wildcard source.",
+   "rationale": "It exposes every listening service.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "terraform"
+    ],
+    "hints": [
+     "line-level parsing only: no variables, modules or expressions are evaluated"
+    ]
+   },
+   "check": {
+    "key_regex": "^azurerm_network_security_(rule|group\\.security_rule)\\.summary$",
+    "op": "not_regex",
+    "value": "(?i)access=Allow.*destination_port_range=\\*.*direction=Inbound.*source_address_prefix=(\\*|0\\.0\\.0\\.0/0|internet|any)(\\s|$)"
+   },
+   "on_absent": "pass",
+   "absence_note": "No NSG rules.",
+   "remediation": "Restrict the port range and source.",
+   "references": [
+    "Terraform language: resources and attributes (public)",
+    "Public cloud storage/network exposure concepts"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "resource \"azurerm_network_security_rule\" \"r\" {\n  access = \"Allow\"\n  direction = \"Inbound\"\n  destination_port_range = \"*\"\n  source_address_prefix = \"*\"\n}\n",
+   "negative": "resource \"azurerm_network_security_rule\" \"r\" {\n  access = \"Allow\"\n  direction = \"Inbound\"\n  destination_port_range = \"443\"\n  source_address_prefix = \"10.0.0.0/8\"\n}\n"
+  },
+  {
+   "id": "terraform-gcp-firewall-world",
+   "title": "GCP firewall allows traffic from the whole internet",
+   "description": "Checks that firewall source_ranges does not include 0.0.0.0/0 (ports are not examined at this level).",
+   "rationale": "Open sources should be a conscious choice for public services only.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "terraform"
+    ],
+    "hints": [
+     "line-level parsing only: no variables, modules or expressions are evaluated"
+    ]
+   },
+   "check": {
+    "key": "google_compute_firewall.source_ranges",
+    "op": "not_regex",
+    "value": "0\\.0\\.0\\.0/0"
+   },
+   "on_absent": "pass",
+   "absence_note": "No source_ranges set.",
+   "remediation": "Narrow the ranges.",
+   "references": [
+    "Terraform language: resources and attributes (public)",
+    "Public cloud storage/network exposure concepts"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "resource \"google_compute_firewall\" \"f\" {\n  source_ranges = [\"0.0.0.0/0\"]\n}\n",
+   "negative": "resource \"google_compute_firewall\" \"f\" {\n  source_ranges = [\"10.0.0.0/8\"]\n}\n"
+  },
+  {
+   "id": "terraform-gcs-public-member",
+   "title": "Cloud Storage grants access to all users",
+   "description": "Checks that bucket IAM does not use allUsers or allAuthenticatedUsers.",
+   "rationale": "These principals mean the entire internet or any Google account.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "terraform"
+    ],
+    "hints": [
+     "line-level parsing only: no variables, modules or expressions are evaluated"
+    ]
+   },
+   "check": {
+    "key_regex": "^google_storage_bucket_iam_(member|binding)\\.(member|members)$",
+    "op": "not_regex",
+    "value": "(allUsers|allAuthenticatedUsers)"
+   },
+   "on_absent": "pass",
+   "absence_note": "No IAM member resources.",
+   "remediation": "Grant named principals only.",
+   "references": [
+    "Terraform language: resources and attributes (public)",
+    "Public cloud storage/network exposure concepts"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "resource \"google_storage_bucket_iam_member\" \"m\" {\n  member = \"allUsers\"\n}\n",
+   "negative": "resource \"google_storage_bucket_iam_member\" \"m\" {\n  member = \"user:a@example.com\"\n}\n"
+  },
+  {
+   "id": "terraform-azure-storage-public",
+   "title": "Azure storage account allows public blob access",
+   "description": "Checks that public blob access is not enabled.",
+   "rationale": "Public containers expose data to anyone.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "terraform"
+    ],
+    "hints": [
+     "line-level parsing only: no variables, modules or expressions are evaluated"
+    ]
+   },
+   "check": {
+    "key_regex": "^azurerm_storage_account\\.(allow_nested_items_to_be_public|allow_blob_public_access)$",
+    "op": "not_equals",
+    "value": "true"
+   },
+   "on_absent": "pass",
+   "absence_note": "Not set; the provider/platform default applies (UNVERIFIED), so not flagged.",
+   "remediation": "Set allow_nested_items_to_be_public = false.",
+   "references": [
+    "Terraform language: resources and attributes (public)",
+    "Public cloud storage/network exposure concepts"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "resource \"azurerm_storage_account\" \"s\" {\n  allow_nested_items_to_be_public = true\n}\n",
+   "negative": "resource \"azurerm_storage_account\" \"s\" {\n  allow_nested_items_to_be_public = false\n}\n"
+  },
+  {
+   "id": "terraform-azure-storage-transport",
+   "title": "Azure storage account allows insecure transport",
+   "description": "Checks that HTTPS-only is not disabled and TLS 1.0 is not the minimum.",
+   "rationale": "Plain HTTP or TLS 1.0 can be intercepted or downgraded.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "terraform"
+    ],
+    "hints": [
+     "line-level parsing only: no variables, modules or expressions are evaluated"
+    ]
+   },
+   "check": {
+    "not": {
+     "any": [
+      {
+       "key_regex": "^azurerm_storage_account\\.(enable_https_traffic_only|https_traffic_only_enabled)$",
+       "op": "equals",
+       "value": "false",
+       "occ": "any"
+      },
+      {
+       "key": "azurerm_storage_account.min_tls_version",
+       "op": "regex",
+       "value": "^TLS1_0$",
+       "occ": "any"
+      }
+     ]
+    }
+   },
+   "on_absent": "pass",
+   "absence_note": "Not set; platform default applies (UNVERIFIED), so not flagged.",
+   "remediation": "Enable HTTPS-only and set min_tls_version to TLS1_2.",
+   "references": [
+    "Terraform language: resources and attributes (public)",
+    "Public cloud storage/network exposure concepts"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "resource \"azurerm_storage_account\" \"s\" {\n  min_tls_version = \"TLS1_0\"\n}\n",
+   "negative": "resource \"azurerm_storage_account\" \"s\" {\n  min_tls_version = \"TLS1_2\"\n}\n"
+  },
+  {
+   "id": "terraform-rds-unencrypted",
+   "title": "RDS instance storage is not encrypted",
+   "description": "Checks that storage_encrypted is true.",
+   "rationale": "Unencrypted storage exposes data in snapshots and on lost media.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "terraform"
+    ],
+    "hints": [
+     "line-level parsing only: no variables, modules or expressions are evaluated"
+    ]
+   },
+   "check": {
+    "key": "aws_db_instance.storage_encrypted",
+    "op": "equals",
+    "value": "true"
+   },
+   "on_absent": "fail",
+   "absence_note": "Default is false: treated as a failure.",
+   "remediation": "Set storage_encrypted = true.",
+   "references": [
+    "Terraform language: resources and attributes (public)",
+    "Public cloud storage/network exposure concepts"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "resource \"aws_db_instance\" \"d\" {\n  engine = \"mysql\"\n}\n",
+   "negative": "resource \"aws_db_instance\" \"d\" {\n  storage_encrypted = true\n}\n",
+   "applies_when": {
+    "key": "resource.aws_db_instance",
+    "op": "present"
+   }
+  },
+  {
+   "id": "terraform-rds-public",
+   "title": "RDS instance is publicly accessible",
+   "description": "Checks that publicly_accessible is not true.",
+   "rationale": "Databases should be reachable only from application networks.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "terraform"
+    ],
+    "hints": [
+     "line-level parsing only: no variables, modules or expressions are evaluated"
+    ]
+   },
+   "check": {
+    "key": "aws_db_instance.publicly_accessible",
+    "op": "not_equals",
+    "value": "true"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is false.",
+   "remediation": "Set publicly_accessible = false.",
+   "references": [
+    "Terraform language: resources and attributes (public)",
+    "Public cloud storage/network exposure concepts"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "resource \"aws_db_instance\" \"d\" {\n  publicly_accessible = true\n}\n",
+   "negative": "resource \"aws_db_instance\" \"d\" {\n  publicly_accessible = false\n}\n"
+  },
+  {
+   "id": "terraform-hardcoded-credential",
+   "title": "A credential is written literally in the configuration",
+   "description": "Checks that access keys, passwords and tokens are not quoted string literals.",
+   "rationale": "Literals end up in version control and state files.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "terraform"
+    ],
+    "hints": [
+     "line-level parsing only: no variables, modules or expressions are evaluated"
+    ]
+   },
+   "check": {
+    "not": {
+     "key_regex": "(^|[._])(access_key|secret_key|password|master_password|admin_password|client_secret|auth_token)#lit$",
+     "op": "regex",
+     "value": ".",
+     "occ": "any"
+    }
+   },
+   "on_absent": "pass",
+   "absence_note": "No literal credential attributes.",
+   "remediation": "Reference a variable, a secrets manager or the provider's environment.",
+   "references": [
+    "Terraform language: resources and attributes (public)",
+    "Public cloud storage/network exposure concepts"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "provider \"aws\" {\n  secret_key = \"AKIAEXAMPLE\"\n}\n",
+   "negative": "provider \"aws\" {\n  secret_key = var.aws_secret\n}\n"
+  },
+  {
+   "id": "terraform-lb-http-listener",
+   "title": "Load balancer listener uses plain HTTP",
+   "description": "Checks that listeners use HTTPS/TLS (an HTTP listener that only redirects is a legitimate exception).",
+   "rationale": "Plain HTTP exposes traffic to interception.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "terraform"
+    ],
+    "hints": [
+     "line-level parsing only: no variables, modules or expressions are evaluated"
+    ]
+   },
+   "check": {
+    "key_regex": "^aws_a?lb_listener\\.protocol$",
+    "op": "not_regex",
+    "value": "(?i)^HTTP$"
+   },
+   "on_absent": "pass",
+   "absence_note": "No listener.",
+   "remediation": "Terminate TLS and redirect HTTP to HTTPS.",
+   "references": [
+    "Terraform language: resources and attributes (public)",
+    "Public cloud storage/network exposure concepts"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "resource \"aws_lb_listener\" \"l\" {\n  protocol = \"HTTP\"\n}\n",
+   "negative": "resource \"aws_lb_listener\" \"l\" {\n  protocol = \"HTTPS\"\n}\n"
+  },
+  {
+   "id": "terraform-iam-wildcard-action",
+   "title": "IAM policy allows every action",
+   "description": "Checks that inline IAM policy documents do not allow Action \"*\".",
+   "rationale": "Full-wildcard actions grant administrative power.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "terraform"
+    ],
+    "hints": [
+     "line-level parsing only: no variables, modules or expressions are evaluated"
+    ]
+   },
+   "check": {
+    "key_regex": "^aws_iam_(role_)?policy\\.(policy|assume_role_policy)$",
+    "op": "not_regex",
+    "value": "(?i)\\\"?action\\\"?\\s*[:=]\\s*(\\[\\s*)?\\\"\\*\\\""
+   },
+   "on_absent": "pass",
+   "absence_note": "No inline IAM policy text.",
+   "remediation": "Grant the specific actions needed.",
+   "references": [
+    "Terraform language: resources and attributes (public)",
+    "Public cloud storage/network exposure concepts"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "resource \"aws_iam_policy\" \"p\" {\n  policy = <<EOF\n{\"Statement\":[{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}]}\nEOF\n}\n",
+   "negative": "resource \"aws_iam_policy\" \"p\" {\n  policy = <<EOF\n{\"Statement\":[{\"Effect\":\"Allow\",\"Action\":\"s3:GetObject\",\"Resource\":\"*\"}]}\nEOF\n}\n"
+  },
+  {
+   "id": "terraform-cloudfront-http",
+   "title": "CloudFront allows plain HTTP viewers",
+   "description": "Checks that viewer_protocol_policy is not allow-all.",
+   "rationale": "Plain HTTP exposes traffic to interception.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "terraform"
+    ],
+    "hints": [
+     "line-level parsing only: no variables, modules or expressions are evaluated"
+    ]
+   },
+   "check": {
+    "key_regex": "viewer_protocol_policy$",
+    "op": "not_equals",
+    "value": "allow-all"
+   },
+   "on_absent": "pass",
+   "absence_note": "Not set.",
+   "remediation": "Use redirect-to-https or https-only.",
+   "references": [
+    "Terraform language: resources and attributes (public)",
+    "Public cloud storage/network exposure concepts"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "resource \"aws_cloudfront_distribution\" \"d\" {\n  default_cache_behavior {\n    viewer_protocol_policy = \"allow-all\"\n  }\n}\n",
+   "negative": "resource \"aws_cloudfront_distribution\" \"d\" {\n  default_cache_behavior {\n    viewer_protocol_policy = \"redirect-to-https\"\n  }\n}\n"
+  }
+ ]
+}

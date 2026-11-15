@@ -1,0 +1,506 @@
+{
+ "area": "web",
+ "policies": [
+  {
+   "id": "web-hsts",
+   "title": "HTTPS site does not send Strict-Transport-Security",
+   "description": "Checks that the Strict-Transport-Security response header is configured.",
+   "rationale": "Without HSTS a first plain-HTTP request can be intercepted and downgraded.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "nginx",
+     "apache"
+    ]
+   },
+   "check": {
+    "key": "header.strict-transport-security",
+    "op": "regex",
+    "value": "(?i)max-age=\\s*(1[5-9]\\d{6}|[2-9]\\d{7}|\\d{9,})"
+   },
+   "on_absent": "fail",
+   "absence_note": "The response header is not set anywhere in the submitted file: treated as a failure (it may be set by an include or an upstream proxy, which is not visible).",
+   "remediation": "Add the header with max-age of at least about six months.",
+   "references": [
+    "MDN HTTP security headers (public)",
+    "OWASP Secure Headers Project concept (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "server {\n listen 443 ssl;\n}\n",
+   "negative": "server {\n listen 443 ssl;\n add_header Strict-Transport-Security \"max-age=31536000; includeSubDomains\" always;\n}\n",
+   "applies_when": {
+    "key": "tls.enabled",
+    "op": "present"
+   },
+   "more_samples": [
+    {
+     "format": "apache",
+     "positive": "SSLEngine on\n",
+     "negative": "SSLEngine on\nHeader always set Strict-Transport-Security \"max-age=31536000\"\n"
+    }
+   ]
+  },
+  {
+   "id": "web-nosniff",
+   "title": "Missing X-Content-Type-Options: nosniff",
+   "description": "Checks that the X-Content-Type-Options response header is configured.",
+   "rationale": "Browsers may otherwise guess a dangerous content type for an upload or response.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "nginx",
+     "apache"
+    ]
+   },
+   "check": {
+    "key": "header.x-content-type-options",
+    "op": "regex",
+    "value": "(?i)^nosniff"
+   },
+   "on_absent": "fail",
+   "absence_note": "The response header is not set anywhere in the submitted file: treated as a failure (it may be set by an include or an upstream proxy, which is not visible).",
+   "remediation": "Add the header with the value nosniff.",
+   "references": [
+    "MDN HTTP security headers (public)",
+    "OWASP Secure Headers Project concept (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "server {\n listen 80;\n}\n",
+   "negative": "server {\n listen 80;\n add_header X-Content-Type-Options nosniff;\n}\n",
+   "more_samples": [
+    {
+     "format": "apache",
+     "positive": "ServerName a\n",
+     "negative": "Header always set X-Content-Type-Options nosniff\n"
+    }
+   ]
+  },
+  {
+   "id": "web-framing",
+   "title": "No clickjacking protection header",
+   "description": "Checks that the X-Frame-Options or CSP frame-ancestors response header is configured.",
+   "rationale": "A page that can be framed by other sites can be used for clickjacking.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "nginx",
+     "apache"
+    ]
+   },
+   "check": {
+    "any": [
+     {
+      "key": "header.x-frame-options",
+      "op": "regex",
+      "value": "(?i)^(deny|sameorigin)"
+     },
+     {
+      "key": "header.content-security-policy",
+      "op": "regex",
+      "value": "(?i)frame-ancestors"
+     }
+    ]
+   },
+   "on_absent": "fail",
+   "absence_note": "The response header is not set anywhere in the submitted file: treated as a failure (it may be set by an include or an upstream proxy, which is not visible).",
+   "remediation": "Set X-Frame-Options DENY/SAMEORIGIN or a CSP frame-ancestors directive.",
+   "references": [
+    "MDN HTTP security headers (public)",
+    "OWASP Secure Headers Project concept (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "server {\n listen 80;\n}\n",
+   "negative": "server {\n listen 80;\n add_header X-Frame-Options SAMEORIGIN;\n}\n",
+   "more_samples": [
+    {
+     "format": "apache",
+     "positive": "ServerName a\n",
+     "negative": "Header always set X-Frame-Options DENY\n"
+    }
+   ]
+  },
+  {
+   "id": "web-csp",
+   "title": "No Content-Security-Policy header",
+   "description": "Checks that the Content-Security-Policy response header is configured.",
+   "rationale": "A CSP limits what injected script can do.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "nginx",
+     "apache"
+    ]
+   },
+   "check": {
+    "key": "header.content-security-policy",
+    "op": "present"
+   },
+   "on_absent": "fail",
+   "absence_note": "The response header is not set anywhere in the submitted file: treated as a failure (it may be set by an include or an upstream proxy, which is not visible).",
+   "remediation": "Define a policy suited to the application, starting in report-only mode if needed.",
+   "references": [
+    "MDN HTTP security headers (public)",
+    "OWASP Secure Headers Project concept (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "server {\n listen 80;\n}\n",
+   "negative": "server {\n listen 80;\n add_header Content-Security-Policy \"default-src 'self'\";\n}\n",
+   "more_samples": [
+    {
+     "format": "apache",
+     "positive": "ServerName a\n",
+     "negative": "Header always set Content-Security-Policy \"default-src 'self'\"\n"
+    }
+   ]
+  },
+  {
+   "id": "web-nginx-tls-protocols",
+   "title": "nginx enables obsolete TLS/SSL protocol versions",
+   "description": "Checks that ssl_protocols excludes SSLv2/3, TLS 1.0 and TLS 1.1.",
+   "rationale": "Old protocol versions have known downgrade and cipher weaknesses; major browsers dropped them.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "nginx"
+    ]
+   },
+   "check": {
+    "key": "ssl_protocols",
+    "op": "not_regex",
+    "value": "(?i)(sslv2|sslv3|tlsv1(\\s|$)|tlsv1\\.1)"
+   },
+   "on_absent": "unknown",
+   "absence_note": "ssl_protocols not set: the default depends on the nginx version and OpenSSL build, so the result is unknown.",
+   "remediation": "Set ssl_protocols TLSv1.2 TLSv1.3;",
+   "references": [
+    "nginx ngx_http_ssl_module (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "server {\n listen 443 ssl;\n ssl_protocols TLSv1 TLSv1.2;\n}\n",
+   "negative": "server {\n listen 443 ssl;\n ssl_protocols TLSv1.2 TLSv1.3;\n}\n",
+   "applies_when": {
+    "key": "tls.enabled",
+    "op": "present"
+   }
+  },
+  {
+   "id": "web-nginx-tls-ciphers",
+   "title": "nginx enables weak cipher suites",
+   "description": "Checks that ssl_ciphers does not positively enable NULL, EXPORT, RC4, DES or MD5 suites (negations such as !aNULL are fine).",
+   "rationale": "These suites give no or trivially breakable encryption.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "nginx"
+    ]
+   },
+   "check": {
+    "key": "ssl_ciphers",
+    "op": "not_regex",
+    "value": "(^|:)(NULL|aNULL|eNULL|EXPORT|LOW|RC4|MD5|DES|3DES)\\b"
+   },
+   "on_absent": "pass",
+   "absence_note": "ssl_ciphers not set: nginx uses its built-in default list.",
+   "remediation": "Use a vetted modern list and keep !aNULL:!MD5 style exclusions.",
+   "references": [],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "server {\n listen 443 ssl;\n ssl_ciphers RC4:HIGH;\n}\n",
+   "negative": "server {\n listen 443 ssl;\n ssl_ciphers HIGH:!aNULL:!MD5;\n}\n",
+   "applies_when": {
+    "key": "tls.enabled",
+    "op": "present"
+   }
+  },
+  {
+   "id": "web-nginx-server-tokens",
+   "title": "nginx reveals its version",
+   "description": "Checks that server_tokens is off.",
+   "rationale": "Version banners help attackers pick exploits.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "nginx"
+    ]
+   },
+   "check": {
+    "key": "server_tokens",
+    "op": "equals",
+    "value": "off"
+   },
+   "on_absent": "fail",
+   "absence_note": "Default is on (version shown in headers and error pages): treated as a failure.",
+   "remediation": "Set server_tokens off;",
+   "references": [],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "http {\n server_tokens on;\n}\n",
+   "negative": "http {\n server_tokens off;\n}\n"
+  },
+  {
+   "id": "web-nginx-autoindex",
+   "title": "nginx directory listing is enabled",
+   "description": "Checks that autoindex is not on.",
+   "rationale": "Listings expose files nobody meant to publish.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "nginx"
+    ]
+   },
+   "check": {
+    "key": "autoindex",
+    "op": "not_equals",
+    "value": "on"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is off.",
+   "remediation": "Remove autoindex on;",
+   "references": [],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "server {\n location / { autoindex on; }\n}\n",
+   "negative": "server {\n location / { autoindex off; }\n}\n"
+  },
+  {
+   "id": "web-nginx-body-size",
+   "title": "nginx request body size is unlimited",
+   "description": "Checks that client_max_body_size is not 0 (unlimited).",
+   "rationale": "Unlimited uploads allow disk and memory exhaustion.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "nginx"
+    ]
+   },
+   "check": {
+    "key": "client_max_body_size",
+    "op": "not_regex",
+    "value": "^0[kKmMgG]?$"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is 1m.",
+   "remediation": "Set a realistic limit.",
+   "references": [],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "http {\n client_max_body_size 0;\n}\n",
+   "negative": "http {\n client_max_body_size 10m;\n}\n"
+  },
+  {
+   "id": "web-nginx-user-root",
+   "title": "nginx workers run as root",
+   "description": "Checks that the user directive is not root.",
+   "rationale": "A bug in a worker would hand the attacker root.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "nginx"
+    ]
+   },
+   "check": {
+    "key": "user",
+    "op": "not_regex",
+    "value": "^root\\b"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default user is nobody (or the build default) when unset.",
+   "remediation": "Use an unprivileged account such as www-data or nginx.",
+   "references": [],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "user root;\nevents {}\n",
+   "negative": "user www-data;\nevents {}\n"
+  },
+  {
+   "id": "web-apache-tls-protocols",
+   "title": "Apache enables obsolete TLS/SSL protocol versions",
+   "description": "Checks that SSLProtocol disables SSLv3, TLS 1.0 and TLS 1.1.",
+   "rationale": "Old protocol versions have known weaknesses.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "apache"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "key": "sslprotocol",
+      "op": "not_regex",
+      "value": "(?i)(^|\\s)\\+(sslv2|sslv3|tlsv1|tlsv1\\.1)(\\s|$)"
+     },
+     {
+      "any": [
+       {
+        "key": "sslprotocol",
+        "op": "not_regex",
+        "value": "(?i)(^|\\s)all(\\s|$)"
+       },
+       {
+        "all": [
+         {
+          "key": "sslprotocol",
+          "op": "regex",
+          "value": "(?i)-sslv3"
+         },
+         {
+          "key": "sslprotocol",
+          "op": "regex",
+          "value": "(?i)-tlsv1(\\s|$)"
+         },
+         {
+          "key": "sslprotocol",
+          "op": "regex",
+          "value": "(?i)-tlsv1\\.1"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "on_absent": "unknown",
+   "absence_note": "SSLProtocol not set: the default depends on the Apache/OpenSSL versions, so the result is unknown. The meaning of 'all' in recent versions is UNVERIFIED, so it is only accepted when the old versions are also removed.",
+   "remediation": "Use SSLProtocol -all +TLSv1.2 +TLSv1.3 (or all -SSLv3 -TLSv1 -TLSv1.1).",
+   "references": [
+    "Apache mod_ssl SSLProtocol directive (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "SSLEngine on\nSSLProtocol all\n",
+   "negative": "SSLEngine on\nSSLProtocol -all +TLSv1.2 +TLSv1.3\n",
+   "applies_when": {
+    "key": "tls.enabled",
+    "op": "present"
+   }
+  },
+  {
+   "id": "web-apache-tls-ciphers",
+   "title": "Apache enables weak cipher suites",
+   "description": "Checks that SSLCipherSuite does not positively enable NULL, EXPORT, RC4, DES or MD5 suites.",
+   "rationale": "These suites give no or trivially breakable encryption.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "apache"
+    ]
+   },
+   "check": {
+    "key": "sslciphersuite",
+    "op": "not_regex",
+    "value": "(^|:)(NULL|aNULL|eNULL|EXPORT|LOW|RC4|MD5|DES|3DES)\\b"
+   },
+   "on_absent": "pass",
+   "absence_note": "SSLCipherSuite not set: Apache uses its default list.",
+   "remediation": "Use a vetted modern list.",
+   "references": [],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "SSLEngine on\nSSLCipherSuite RC4:HIGH\n",
+   "negative": "SSLEngine on\nSSLCipherSuite HIGH:!aNULL:!MD5\n",
+   "applies_when": {
+    "key": "tls.enabled",
+    "op": "present"
+   }
+  },
+  {
+   "id": "web-apache-server-tokens",
+   "title": "Apache reveals detailed version information",
+   "description": "Checks that ServerTokens is Prod.",
+   "rationale": "Detailed banners help attackers pick exploits.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "apache"
+    ]
+   },
+   "check": {
+    "key": "servertokens",
+    "op": "in",
+    "values": [
+     "Prod",
+     "ProductOnly"
+    ]
+   },
+   "on_absent": "fail",
+   "absence_note": "Default is Full (UNVERIFIED in this research): treated as a failure.",
+   "remediation": "Set ServerTokens Prod.",
+   "references": [],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "ServerTokens Full\n",
+   "negative": "ServerTokens Prod\n"
+  },
+  {
+   "id": "web-apache-indexes",
+   "title": "Apache directory listing is enabled",
+   "description": "Checks that no Options line enables Indexes.",
+   "rationale": "Listings expose files nobody meant to publish.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "apache"
+    ]
+   },
+   "check": {
+    "key": "options",
+    "op": "not_regex",
+    "value": "(^|\\s)\\+?Indexes\\b"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default depends on the Options in effect (UNVERIFIED); not flagged when absent.",
+   "remediation": "Use Options -Indexes.",
+   "references": [],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "<Directory /var/www>\nOptions Indexes FollowSymLinks\n</Directory>\n",
+   "negative": "<Directory /var/www>\nOptions -Indexes +FollowSymLinks\n</Directory>\n"
+  },
+  {
+   "id": "web-apache-trace",
+   "title": "Apache TRACE method is enabled",
+   "description": "Checks that TraceEnable is off.",
+   "rationale": "TRACE echoes requests back and has been used in cross-site tracing attacks.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "apache"
+    ]
+   },
+   "check": {
+    "key": "traceenable",
+    "op": "equals",
+    "value": "off"
+   },
+   "on_absent": "fail",
+   "absence_note": "Default is on (UNVERIFIED in this research): treated as a failure.",
+   "remediation": "Set TraceEnable off.",
+   "references": [],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "TraceEnable on\n",
+   "negative": "TraceEnable off\n"
+  }
+ ]
+}
