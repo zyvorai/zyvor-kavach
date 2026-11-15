@@ -25,7 +25,7 @@ func TestQueueRetryAndIdempotence(t *testing.T) {
 	if err := q.Enqueue(e); err == nil {
 		t.Fatal("queue bound not enforced")
 	}
-	store, err := NewStore(filepath.Join(dir, "findings.jsonl"), 50)
+	store, err := testStore(t, filepath.Join(dir, "findings.jsonl"), 50)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +49,7 @@ func TestQueueRetryAndIdempotence(t *testing.T) {
 	if len(store.List()) != want {
 		t.Fatalf("expected %d findings after deduped dual flush, got %+v", want, store.List())
 	}
-	reopened, err := NewStore(filepath.Join(dir, "findings.jsonl"), 50)
+	reopened, err := testStore(t, filepath.Join(dir, "findings.jsonl"), 50)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,7 +59,7 @@ func TestQueueRetryAndIdempotence(t *testing.T) {
 }
 func TestNetworkCorrelationBothOrders(t *testing.T) {
 	for _, networkFirst := range []bool{false, true} {
-		store, err := NewStore(filepath.Join(t.TempDir(), "f.jsonl"), 100)
+		store, err := testStore(t, filepath.Join(t.TempDir(), "f.jsonl"), 100)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -88,7 +88,7 @@ func TestNetworkCorrelationBothOrders(t *testing.T) {
 	}
 }
 func TestNetworkHTTPAuthAndValidation(t *testing.T) {
-	s, _ := NewStore(filepath.Join(t.TempDir(), "findings.jsonl"), 10)
+	s, _ := testStore(t, filepath.Join(t.TempDir(), "findings.jsonl"), 10)
 	srv := httptest.NewServer(API("0123456789abcdef", s))
 	defer srv.Close()
 	n := NetworkEvent{Time: time.Now().UTC(), Host: "node", PID: 1, Verdict: "deny"}
