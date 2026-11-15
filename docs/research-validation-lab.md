@@ -319,3 +319,29 @@ benign controls fire nothing at medium or above). Floor raised from 0.60 to 0.93
   container exec, systeminfo, VM fingerprint, wallpaper, hidden tmp dirs, DGA-like names, paste-site TXT,
   WinRM remoting, LaunchAgent create) are informational and are expected to fire on
   healthy systems.
+
+## 8. Second gap pass: untested techniques (rules only)
+
+The 94 techniques the lab reports as `untested` (claimed, no scenario; `GET /v1/validate/coverage`,
+`claimed_not_measured`) were reviewed for detectability from process, file, network, registry, auth and
+module telemetry. `content/gap2.json` (batch `gap2-v1`, ids `gp2-*`) adds 97 original rules, each with
+at least one positive and one near-miss negative sample, covering 92 of those 94 technique ids (parent
+and sub-technique ids both; `T1546` and `T1562` have no rule, only their sub-techniques are covered elsewhere). 24 rules are
+severity `low` because the behavior is routine for administrators or developers (cloud CLI use, `at`,
+timers, group enumeration); the benign corpus guard (`TestContentBenignCorpus`) stays green. During
+authoring it flagged five drafts (a socat relay, `usermod -aG docker`, `cipher /w:C:\Temp`, a
+`forfiles ... del` cleanup, an installer Startup shortcut), which were narrowed or had the broad part dropped;
+the guard was not loosened.
+
+Mapping: the built-in rule `ransomware-churn` now maps to T1486 (Data Encrypted for Impact), the technique
+the guidance catalog already named for it. Four ids stay intentionally unmapped because they are
+placeholders or derived events, not detections of a behavior: `custom-rule`, `ioc-generic`,
+`ioa-generic`, `identity-from-finding`.
+
+What this does not change: the lab status of those techniques. They stay `untested` until an
+independent scenario is written for each; the pack's own samples were written by the rule author and are
+not a measurement. Several rules are string or name heuristics (tool names, command-line shapes) that a
+renamed binary evades, and none of them has been run against real attacker activity. Telemetry limits
+apply: file events carry no writer, network events carry only a destination, so the file and network
+rules are path or port heuristics. Overlap with older packs is possible (for example other
+sticky-keys, COM-hijack and Run-key rules); overlapping hits are not deduplicated.
