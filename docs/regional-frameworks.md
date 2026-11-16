@@ -57,3 +57,52 @@ Web access is unreliable (EUR-Lex, legislation.gov.uk and several regulator site
 | Hong Kong | https://www.hkma.gov.hk / https://www.pcpd.org.hk | UNVERIFIED (HKMA C-RAF not checked; PCPD breach guidance see regional-reporting.md) |
 
 Where an id is described as a "Kavach label" it is a stable local identifier, not an official clause number.
+
+## Evidence versus manual controls per framework
+
+Counted from `compliance_controls_regional.go` (`ev(...)` = evidence-based, backed by at least one Kavach signal; `mn(...)` = manual, reported as `not_observable` in `/v1/compliance/score`):
+
+| Framework id | Evidence-based | Manual | Total |
+|---|---:|---:|---:|
+| nis2 | 5 | 9 | 14 |
+| dora | 6 | 9 | 15 |
+| gdpr-32 | 4 | 4 | 8 |
+| uk-cyber-essentials | 4 | 2 | 6 |
+| au-essential-eight | 7 | 6 | 13 |
+| au-ism | 5 | 7 | 12 |
+| sg-ccop | 5 | 7 | 12 |
+| sg-mas-trm | 5 | 8 | 13 |
+| jp-meti-nisc | 5 | 7 | 12 |
+| sa-nca-ecc | 4 | 15 | 19 |
+| ae-ia | 6 | 10 | 16 |
+| br-lgpd | 4 | 5 | 9 |
+| za-popia | 6 | 3 | 9 |
+| us-cmmc-l2 | 6 | 10 | 16 |
+| us-fedramp-moderate | 6 | 13 | 19 |
+| ca-cccs | 7 | 5 | 12 |
+| kr-ismsp | 5 | 10 | 15 |
+| hk-hkma | 6 | 4 | 10 |
+| **Total** | **96** | **134** | **230** |
+
+The seven original frameworks (`cis-v8`, `nist-csf-2`, `soc2`, `iso27001`, `rbi`, `cert-in`, `dpdp`) are documented in [compliance-evidence.md](compliance-evidence.md); together with the 18 above there are 25 selectable frameworks. Signals and the pass/partial/fail derivation are the same for all of them.
+
+## Worked examples
+
+```sh
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" "http://127.0.0.1:8099/v1/compliance/score?framework=nis2"
+# {"overall":..,"grade":"..","framework":"nis2","mode":"observe-only","certification":false,
+#  "frameworks":[{"id":"nis2","controls_total":14,"observable":5,"met":..,"partial":..,"unmet":..,"not_observable":9,"score":..,"grade":".."}],
+#  "controls":[{"id":"...","framework":"nis2","title":"...","status":"not_observable","score":null,"reason":"..."}],
+#  "evidence":{...},"note":"Scores cover observable controls only; ..."}
+kavachctl compliance score --framework dora
+```
+
+## Status of verification: items still UNVERIFIED
+
+As of the 2026-11-16 pass (see [verification-log.md](verification-log.md) for per-item evidence; nothing here was upgraded without it):
+
+- `UNVERIFIED`: Australia ISM (guideline names approximate), Singapore CCoP (ids are Kavach labels), Japan METI/NISC (ids are Kavach labels), UAE IA (ids are Kavach labels), FedRAMP Moderate (family-level only), South Korea ISMS-P (ids are Kavach labels), Hong Kong HKMA C-RAF / PCPD (HKMA not checked), and the CCCS baseline controls of Canada CCCS / PIPEDA.
+- `partial`: EU NIS2 Art.21 (items (b), (c), (f) headings only), EU DORA (Art. 6 and 10 not confirmed), Australia Essential Eight (maturity entries are themes; ASD now describes a principles-based model), US CMMC / NIST SP 800-171 (CMMC family mapping not checked against DoD text), Singapore MAS TRM (page reachable, section topics unverified).
+- `verified` or `verified and corrected`: UK Cyber Essentials, EU GDPR Art.32, Brazil LGPD, South Africa POPIA, Saudi NCA ECC (one id and one title corrected).
+
+Consequence for users: control titles for the UNVERIFIED and partial rows are original summaries of public themes and may not match the current official wording or numbering; use them as orientation, not as a citation. A control marked `not_observable` is a statement about what Kavach can see, not about the organisation.

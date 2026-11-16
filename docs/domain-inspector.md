@@ -103,3 +103,17 @@ treated as registrable only when its suffix is listed, which `azurefd.net` is no
   and checked for mixed scripts but not DGA-scored.
 * The score says "looks machine-generated", not "malicious". Legitimate
   systems (CDNs, cloud hosts, tracking and mail-delivery hosts) generate such names.
+
+## Worked example
+
+```sh
+curl -s -X POST http://127.0.0.1:8099/v1/inspect/domain \
+  -H "Authorization: Bearer $KAVACH_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"text":"xk3j9qzv7w2m.example"}'
+```
+
+The response is the standard inspector report (see [artifact-analyzers.md](artifact-analyzers.md#calling-the-inspector-and-how-the-verdict-is-built)): `kind: "domain"`, `format: "domain"`, findings with ids `dom-*`, `meta` keys `domain.parse` (parsed labels, registrable domain, punycode decoding, IP-likeness) and `domain.score` (DGA score, threshold 40, the visible `Factors` list), and the registrable name as a `domain` IOC (an IP-like host is recorded as an IP IOC instead). Only the first domain is analysed per request. Labels under 6 characters and non-ASCII labels are not DGA-scored; the response then carries no `dom-dga-*` finding, which means "not scored", not "benign". The reusable Go entry point is `edr.ScoreDomain(name)`.
+
+## Limits at a glance
+
+Input 4 MiB (contract cap; only a hostname is meaningful), 5 s analyzer budget, DGA threshold 40 (`DomainDGAThreshold`), no finding above weight 35. Embedded data in `internal/edr/domaindata/`: brand list (about 105 names), partial public-suffix list (about 100 entries), suspicious-TLD list, word lists. The evaluation above was re-run for this revision and reproduces exactly (TP 323, FN 87, FP 8, TN 322).
