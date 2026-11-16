@@ -38,6 +38,7 @@ Refresh with `ruby docs/tools/inventory.rb --write`. Counts are read from the fi
 - [agent-mtls.md](agent-mtls.md): mutual TLS between agents and the controller.
 - [persistence-files.md](persistence-files.md): every on-disk state file next to the findings store.
 - [kavachctl.md](kavachctl.md): the operator CLI.
+- [cli-reference.md](cli-reference.md): surface-parity commands, MCP tools added, and the route-to-CLI parity test.
 - [mcp-integration.md](mcp-integration.md): the MCP server for AI agents.
 - [openapi.yaml](openapi.yaml): the full HTTP API contract.
 - [siem-export.md](siem-export.md): pull-based SIEM export (CEF, LEEF, OCSF, ECS, STIX, Navigator).
