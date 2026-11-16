@@ -33,8 +33,15 @@ func p4Dispatch(args []string, out io.Writer) (bool, error) {
 	case "ttp":
 		return true, ttpRun(out, args[1:])
 	case "inspect":
-		if len(args) > 1 && args[1] == "similar" {
-			return true, inspectSimilarRun(out, args[2:])
+		if len(args) > 1 {
+			switch args[1] {
+			case "similar":
+				return true, inspectSimilarRun(out, args[2:])
+			case "clusters":
+				return true, inspectClustersRun(out, args[2:])
+			case "sarif":
+				return true, inspectSarifRun(out, args[2:])
+			}
 		}
 	}
 	return false, nil

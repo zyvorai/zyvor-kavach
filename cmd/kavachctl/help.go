@@ -87,6 +87,8 @@ func printHelp(w io.Writer) {
 	row("search QUERY [--type T,...] [--limit N]", "Search findings, hosts, rules, CVEs, IOCs, cases")
 	row("inspect file|script|cmdline|domain|reports|analyzers", "Static artifact inspector (file max 32 MiB; never executed)")
 	row("inspect similar (--sha256 X | --digest D) [--limit N]", "Nearest earlier submissions by similarity digest (not maliciousness)")
+	row("inspect clusters [--min-score F] [--limit N] [--kind K]", "Group stored reports by shared IOCs/digests, with the shared factors (read-only)")
+	row("inspect sarif ID|latest", "Export one stored report as SARIF 2.1.0 to stdout (pull-only, for CI)")
 	row("inspect config PATH|-", "Config hardening assessment per policy (not a malware verdict; parse-only)")
 	row("detections scheduled list|show|create|update|delete|dryrun|run|history", "Scheduled hunts that record findings (writes admin-only; --yes)")
 	row("hunts limits [--set key=value ...]", "Hunt quotas and refusals (--set admin-only)")
