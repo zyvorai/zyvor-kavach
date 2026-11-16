@@ -85,6 +85,23 @@ Caveats: single linkage can chain two unrelated groups through one shared indica
 
 Caveats: SARIF expects source locations; an inspected artifact has none, so results carry the artifact URI only and code-scanning UIs show them at file level. `config` reports are not scored, and their findings export as notes or warnings by severity. Only reports still in the ring can be exported.
 
+## Email and phishing: `email` and `email-extra`
+
+`POST /v1/inspect/email` (authed, body capped at the 4 MiB text limit; raw `.eml` or Outlook `.msg` bytes, or JSON `{"text": ...}`). The base `email` analyzer (`inspect_email_analyzer.go`, `inspect_email_mime.go`, see `docs/url-email-inspection.md`) covers headers (reported SPF/DKIM/DMARC, Received-chain anomalies, From/Reply-To/Return-Path mismatch, display-name spoofing, homoglyph From domains through the domain analyzer), the MIME tree (depth, part, size caps), attachment listing with dangerous and double extensions, HTML body checks (link text/href mismatch, forms, scripts, hidden text) and URL extraction; attachments are decoded in memory and handed to the file and script analyzers. `email-extra` (`inspect_email_extra.go`) adds, with ATT&CK tags:
+
+| Finding id | Technique | Meaning |
+|---|---|---|
+| `email-x-att-double-ext`, `email-x-att-dangerous-ext` | T1566.001 | document-looking name ending in an executable/container/macro/HTML type; dangerous extension (weights 12 and 8, deliberately small: the base analyzer already scores the same attachment) |
+| `email-x-hidden-link`, `email-x-empty-link` | T1566.002 | anchor hidden by CSS (display:none, zero size/font, opacity 0), or with no visible text or image |
+| `email-x-qr-image-name`, `email-x-qr-image-hint`, `email-x-qr-lure-text` | T1566.002 | quishing hints: QR-like image name or tag, or "scan the QR code" wording next to an image. The image is not decoded |
+| `email-x-defanged-url` | T1566.002 | `hxxps://x[.]y` style text; the refanged URL is added as an IOC |
+| `email-x-tracking-pixel` | none | 1x1/0-size remote image (info, weight 0) |
+| `email-x-msg-detected`, `email-x-msg-attachments` | T1566.001 | Outlook `.msg` |
+
+`.msg` support is a detector only: OLE2 magic plus `__substg1.0_` / `__properties_version1.0` markers, an attachment storage count, candidate dangerous file names and URLs from an ASCII/UTF-16 string scan, and the whole file handed to the file analyzers (`email-msg-*` ids). The CFB directory is not walked, so subject, sender, headers and attachment bytes are not extracted. Nothing is fetched or executed and no bytes are stored.
+
+Caveats: regex over HTML, not a renderer (CSS in `<style>` blocks and classes is not resolved); SPF/DKIM/DMARC are only what the receiving server wrote, DKIM is not recomputed; refanging and QR checks are hints; legitimate newsletters use tracking pixels and hidden preheaders.
+
 ## Tests
 
 `internal/edr/inspect_artifacts_test.go` holds hand-built fixtures (no binary blobs are checked in): golden findings per analyzer, benign cases that must stay clean, limit tests (string caps, entry/module/blob/depth caps, directory loops, decompression cap, oversize input), a seeded mutation test and `FuzzArtifactAnalyzers` (`go test ./internal/edr -run XXX -fuzz FuzzArtifactAnalyzers -fuzztime 20s`). `inspect_integration_artifacts_test.go` drives each analyzer through the HTTP endpoints.
