@@ -31,6 +31,9 @@ state.
 | `guidance [ID] [--kind K] [--q TEXT]` | `GET /v1/guidance[/{id}]` | Advisory catalog |
 | `posture trend-config` | `GET /v1/posture/trend/config` | Read only; changing it needs the admin API |
 | `queries library [ID] [--tactic T] [--tag T] [--q TEXT]` | `GET /v1/queries/library[/{id}]` | Does not save anything |
+| `exposure report [--host H] [--min_score N]` | `GET /v1/exposure/report` | Exposed hosts from imported SBOMs and advisories (sample data until you import) |
+| `exposure advisories` | `GET /v1/exposure/advisories` | Loaded advisory set |
+| `exposure sboms [HOST]` | `GET /v1/exposure/sboms` | SBOM inventory per host |
 | `regression status` | `GET /v1/regression/status` | Latest snapshot |
 | `regression history [--limit N]` | `GET /v1/regression/history` | Newest first |
 | `regression diff [--from REF] [--to REF]` | `GET /v1/regression/diff` | REF: `latest`, `previous` or a sequence number |
