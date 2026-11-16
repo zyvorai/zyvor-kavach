@@ -24,7 +24,12 @@ func TestSimilarityAnalyzerIsWindowed(t *testing.T) {
 		t.Fatal("similarity analyzer not registered")
 	}
 	withAnalyzers(t, *sim)
-	big := make([]byte, scaleN(InspectMaxBytes, SimAnalyzerWindow+4<<20)) // race: 12 MiB, still beyond the 8 MiB window
+	if raceEnabled { // digests are ~10x slower under race; shrink the window, keep the input beyond it (docs/testing.md)
+		old := simWindow
+		simWindow = 2 << 20
+		t.Cleanup(func() { simWindow = old })
+	}
+	big := make([]byte, scaleN(InspectMaxBytes, 3<<20)) // race: 3 MiB input, beyond the 2 MiB race window
 	for i := range big {
 		big[i] = byte((i*131 + i>>7) & 0xff)
 	}

@@ -160,6 +160,9 @@ func simNearest(q SimDigests, self string, limit int, onlySimilar bool) []SimMat
 // the report says so with the limit "similarity:digest-window".
 const SimAnalyzerWindow = 8 << 20
 
+// simWindow is the window in effect; tests lower it under the race detector.
+var simWindow = SimAnalyzerWindow
+
 func init() {
 	RegisterAnalyzer("similarity", []string{InspectKindFile}, func(ctx context.Context, in InspectInput, b *InspectBuilder) error {
 		if len(in.Data) == 0 {
@@ -170,8 +173,8 @@ func init() {
 		// the race detector, and a busy host is slower too). Headers, import
 		// tables and symbol tables sit near the start of PE/ELF/Mach-O files.
 		data := in.Data
-		if len(data) > SimAnalyzerWindow {
-			data = data[:SimAnalyzerWindow]
+		if len(data) > simWindow {
+			data = data[:simWindow]
 			b.LimitHit("digest-window")
 		}
 		d := computeDigestsCtx(ctx, data)
