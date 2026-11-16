@@ -62,3 +62,19 @@ Review-candidate false flags (flag = Wilson upper bound below 0.25):
 Good rules are essentially never flagged. A truly bad rule (10 percent precision) is caught only about 39 percent of the time at 20 verdicts and 63 percent at 40: the flag is deliberately conservative, so a missing flag is not evidence a rule is good.
 
 Tamper tests confirm that editing, reordering, deleting or re-hashing any retained entry breaks the chain at or after the changed entry. The chain detects modification; it cannot stop someone with file access from recomputing the whole chain, and capped history (100,000 entries) drops the oldest entries.
+
+## Using it
+
+```sh
+kavachctl feedback record --finding F123 --verdict false_positive --note "nightly backup job" --yes
+kavachctl feedback rules --min-verdicts 5 --review-below 0.25   # per-rule precision with Wilson interval and review candidates
+kavachctl feedback summary --days 30
+kavachctl feedback verify                                       # hash-chain check
+kavachctl feedback export --redact --out feedback.json
+```
+
+HTTP: `POST /v1/feedback` (`{"finding_id","verdict","note"}`), `GET /v1/feedback`, `/v1/feedback/rules`, `/v1/feedback/summary`, `/v1/feedback/verify`, `POST /v1/feedback/export`. Retained history is capped at 100,000 entries (`maxFeedbackKept`).
+
+A practical loop: triage a finding, record the verdict, and once a rule has at least 5 decided verdicts review `feedback rules` next to `kavachctl rules health --noisy` ([rule-health.md](rule-health.md)); a rule that is both noisy and a review candidate is the best tuning target ([content-tuning.md](content-tuning.md)). The two features are independent: health uses finding volume only and feedback uses verdicts only, and nothing in either changes a rule automatically.
+
+Run the evaluation tests with `go test ./internal/edr/ -run 'TestFeedback' -v` (Wilson coverage, shrinkage versus raw, review-flag rates). Only two actors exist (`admin`, `session`), so "several analysts" is not yet modelled.

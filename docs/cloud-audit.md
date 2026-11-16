@@ -35,8 +35,36 @@ Actions have whitespace collapsed to `_` (for example `Add_member_to_role`). Per
 
 Validation lab: `internal/edr/scenarios/cloud_audit.json` holds one emulation scenario per medium-or-higher rule (T1078.004 rules are excluded because the lab declares that technique not testable; their fixtures still cover them) plus three benign negative controls. Benign corpus: `internal/edr/testdata/benign_corpus_cloud.json`, checked by `TestCloudAuditBenignCorpus` against every embedded rule.
 
+Rule counts by id prefix (read from the pack, 2026-11-16): `cld-aws-` 59, `cld-gcp-` 24, `cld-azure-` 20, `cld-okta-` 19, `cld-m365-` 19, `cld-entra-` 18. By severity: 2 critical, 63 high, 57 medium, 37 low. All rules are `event_type: process`, `os: any`, batch `cloud-audit-v1`.
+
+Scenario coverage (measured by replay): 115 of the 159 rules fire in at least one validation-lab scenario. The 37 low rules are not given scenarios, and 7 medium-or-higher rules have none because their technique, T1078.004, is declared not testable: `cld-aws-root-console-login`, `cld-aws-root-api-activity`, `cld-entra-signin-risk-high`, `cld-entra-signin-legacy-auth`, `cld-okta-session-risk-high`, `cld-okta-impersonation`, `cld-okta-threat-detected`. Those seven are covered only by their own fixtures and by `TestCloudAuditNormalizersFireRules`, which feeds raw provider records through the normalisers. Separately, 17 cloud and SaaS techniques claimed by these rules (for example T1098.002, T1114.003, T1556.006, T1578.001 to T1578.003, T1621, T1666) appear as `untested` in the validation lab coverage report.
+
+## Worked example: send a record and see a finding
+
+```sh
+curl -H "Authorization: Bearer $KAVACH_TOKEN" -X POST 'localhost:8080/v1/cloud/audit/events?source=aws' -d '{"Records":[
+ {"eventTime":"2026-02-01T10:00:00Z","eventSource":"cloudtrail.amazonaws.com","eventName":"StopLogging",
+  "awsRegion":"us-east-1","sourceIPAddress":"203.0.113.9","recipientAccountId":"111122223333",
+  "userIdentity":{"type":"IAMUser","arn":"arn:aws:iam::111122223333:user/eve"},
+  "requestParameters":{"name":"org-trail"}}]}'
+```
+
+The record normalises to `executable=aws:cloudtrail`, `command=StopLogging outcome=success ...`, `parent_exe=arn:aws:iam::111122223333:user/eve`, and fires `cld-aws-stop-logging` (T1562.008, high). The record is the one used by `TestCloudAuditNormalizersFireRules`; the response shape is `{"received":1,"normalized":1,"rejected":0,"not_evaluated":0,"findings":N,"by_source":{...}}` (exact finding count depends on which other rules match the same normalised event).
+
+## Authoring a cld- rule
+
+1. Normalise a real or documented record first: `NormalizeCloudAuditRecord` (in `cloud_audit.go`) defines the `command` string your rule sees. Find the action name and the `outcome=` token, and any `key=value` extras or `params=` text you need.
+2. Add the rule to `internal/edr/content/cloud_audit.json` with id `cld-<source>-<what>`, batch `cloud-audit-v1`, `event_type: process`, an `executable` equals match for the normalised source, a `command` regex anchored on the action (the shipped rules use `^(?:\S*[./])?(?:ActionName)\s`) and an `outcome=success` contains, plus any extras. Required by `TestCloudAuditPackShape`: at least one positive and at least three negative fixtures (wrong outcome, wrong source, benign action; add a missing-parameter negative when the rule needs a parameter).
+3. Run `go test ./internal/edr/ -run 'TestCloudAudit|TestContentHarness|TestContentBenignCorpus'`. The cloud benign corpus (`testdata/benign_corpus_cloud.json`, 71 events) must not trip any non-low rule; add routine events there when you see a near miss.
+4. Add a scenario to `internal/edr/scenarios/cloud_audit.json` (ids `emu-cld-...`, one `process` step with the normalised `executable`, `command` and `parent_exe`, `expect` the rule id) and run `go test ./internal/edr/ -run TestVal`. The shipped scenarios expect the rule id, not the technique, because the lab marks T1078.004 not testable.
+5. If you add a new source or change normalisation, add a case to `TestCloudAuditNormalizersFireRules` with a raw provider record; rule fixtures alone do not prove the normaliser produces what the rule expects.
+
 ## Limits and honesty
 
 - Rules match on the action name plus a few extracted fields; they do not understand full provider schemas. Field shapes were written from public provider documentation and have not been replayed against production exports from real tenants, so expect gaps in `params` extraction and in less common event variants.
 - Single-event rules cannot see bursts (failed sign-in storms, mass downloads); those need the auth-burst and ML analysers fed with equivalent events.
+- The fixtures, the benign corpus, the validation scenarios and the rules were all written by the same team from public documentation, so agreement between them shows consistency, not coverage of real exports.
+- Single-event rules treat each record in isolation: nothing correlates a role grant with a later use, and a rule for a routine administrative action (the low severity ones) will fire for legitimate administrators.
+- Kavach does not poll or authenticate to any cloud API; you (or your log forwarder) must send the records, so detection is only as timely as your forwarder.
+- Telemetry gaps: only the fields the normalisers extract are matchable; other fields of the original record are dropped, and `params` is truncated by the per-value length cap.
 - Time is taken from the record; records without a parseable timestamp are stamped with the receive time.

@@ -179,3 +179,15 @@ flat severity ranking, not as a detection rate.
   contaminated.
 - Retained store limits (events kept per kind) bound the history; graphs are capped at
   2000 nodes by default (5000 maximum) and truncation is reported.
+
+## Running it
+
+```sh
+kavachctl prov status                              # inputs, caps, what the graph lacks
+kavachctl prov stories [--host H] [--min-score S]  # scored attack stories
+kavachctl prov graph --host H [--limit N]
+kavachctl prov trace --finding-id ID [--dir back|fwd|both] [--hops N]
+go test ./internal/edr/ -run 'TestProvEvaluationSynthetic' -v
+```
+
+HTTP: `GET /v1/prov/status`, `/v1/prov/stories`, `/v1/prov/graph?host=`, `/v1/prov/trace?finding_id=&dir=`. Re-run on 2026-11-16: top-1 0.763 (229/300), baseline highest-severity 0.127, strata `0:[0 4] 1:[0 23] 2:[20 58] 3:[64 70] 4:[63 63] 5:[62 62] 6:[20 20]`, identical to the table above.
