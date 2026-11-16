@@ -1,7 +1,7 @@
 # Testing
 
 ```
-go test -race ./...                 # CI job: race detector, reduced statistical corpora
+go test -race -timeout 30m ./...    # CI job: race detector, reduced statistical corpora (the edr package needs more than Go's default 10m)
 go test ./...                       # full counts, no race detector
 go test -race -shuffle=on -count=3 ./internal/edr
 ```

@@ -28,6 +28,7 @@ Refresh with `ruby docs/tools/inventory.rb --write`. Counts are read from the fi
 - [architecture.md](architecture.md): controller, agents, store and how the pieces fit.
 - [use-cases.md](use-cases.md): practical SOC, IR and platform scenarios inside the observation-only contract.
 - [console.md](console.md): the web console login and layout.
+- [console-qa.md](console-qa.md): what was checked in the console in a real browser, how, and what was not.
 - [testing.md](testing.md): how correctness and the observation-only boundary are verified.
 
 ## Deployment and integration
