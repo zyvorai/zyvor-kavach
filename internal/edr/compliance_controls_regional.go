@@ -186,7 +186,7 @@ var regionalControls = []evControl{
 	mn("sa-nca-ecc", "ECC-2-3", "Information system protection (hardening)", rConfig),
 	ev("sa-nca-ecc", "ECC-2-3-malware", "Protection from malware on endpoints", "Behavioural detections.", sigDetect, sigFleet),
 	mn("sa-nca-ecc", "ECC-2-5", "Network security management", rConfig),
-	mn("sa-nca-ecc", "ECC-2-7", "Cryptography", rCrypto),
+	mn("sa-nca-ecc", "ECC-2-8", "Cryptography", rCrypto),
 	mn("sa-nca-ecc", "ECC-2-9", "Backup and recovery management", rBCP),
 	mn("sa-nca-ecc", "ECC-2-10", "Vulnerabilities management", rVuln),
 	mn("sa-nca-ecc", "ECC-2-11", "Penetration testing", rVuln),
@@ -194,7 +194,7 @@ var regionalControls = []evControl{
 	ev("sa-nca-ecc", "ECC-2-13", "Incident and threat management", "Incident workflow and alert routing.", sigWorkflow, sigAlerts),
 	mn("sa-nca-ecc", "ECC-2-14", "Physical security", rPhys),
 	mn("sa-nca-ecc", "ECC-3-1", "Cybersecurity resilience in business continuity", rBCP),
-	mn("sa-nca-ecc", "ECC-4-1", "Third-party and cloud computing security", rVendor),
+	mn("sa-nca-ecc", "ECC-4-1", "Third-party cybersecurity", rVendor),
 
 	// UAE IA
 	mn("ae-ia", "IA-M1", "Strategy and planning", rProc),

@@ -31,31 +31,29 @@ Titles are original summaries of public control themes, not quotations.
 | kr-ismsp | South Korea ISMS-P | 15 |
 | hk-hkma | Hong Kong HKMA C-RAF / PCPD | 10 |
 
-## Sources and verification (accessed 2026-11-13)
+## Sources and verification (first pass 2026-11-13, verification pass 2026-11-16)
 
-Web access during research was unreliable (timeouts, 429s, empty EUR-Lex pages). Only the items marked
-verified were confirmed by reading the page during this work; the rest were written from prior
-knowledge of the public texts and must be checked against the source before external use.
+Web access is unreliable (EUR-Lex, legislation.gov.uk and several regulator sites returned empty, 403 or timed out for direct fetches). Status values: `verified` = the point was read in the source on 2026-11-16 (directly, or as a search-result excerpt where noted); `partial` = some control themes confirmed, others not; `UNVERIFIED` = not confirmed, with the reason. Full per-item evidence is in `verification-log.md`. Control ids marked "Kavach label" are stable local identifiers, not official clause numbers.
 
 | Framework | Source | Status |
 |-----------|--------|--------|
 | UK Cyber Essentials | https://www.ncsc.gov.uk/cyberessentials/overview | verified (five controls) |
 | US NIST SP 800-171 | https://csrc.nist.gov/pubs/sp/800/171/r2/upd1/final | partially verified (page reachable, family list truncated); CMMC mapping to families not checked against DoD CMMC text |
 | Singapore MAS TRM | https://www.mas.gov.sg/regulation/guidelines/technology-risk-management-guidelines | page reachable; section topics unverified (PDF not read) |
-| EU NIS2 Art.21 | https://eur-lex.europa.eu/eli/dir/2022/2555/oj | UNVERIFIED (fetch returned empty) |
-| EU DORA | https://eur-lex.europa.eu/eli/reg/2022/2554/oj | UNVERIFIED (fetch returned empty); article numbers from memory |
-| EU GDPR Art.32 | https://eur-lex.europa.eu/eli/reg/2016/679/oj | UNVERIFIED |
-| Australia Essential Eight | https://www.cyber.gov.au/resources-business-and-government/essential-cyber-security/essential-eight | UNVERIFIED (timeout); maturity entries are themes, not exact ML text |
-| Australia ISM | https://www.cyber.gov.au/resources-business-and-government/essential-cyber-security/ism | UNVERIFIED; guideline names approximate |
+| EU NIS2 Art.21 | https://eur-lex.europa.eu/eli/dir/2022/2555/oj/eng | partial (2026-11-16): Art. 21(2) measures confirmed to exist; items (a), (d), (e), (g)-(j) described in search excerpts; (b), (c), (f) only as headings; direct EUR-Lex fetch empty |
+| EU DORA | https://eur-lex.europa.eu/eli/reg/2022/2554/oj/eng | partial (2026-11-16, search excerpts): topics of Art. 5, 8, 9, 11, 12, 13, 17, 18, 19, 24, 26, 28 consistent with the control titles; Art. 6 and 10 not confirmed (Art. 10 only a fragment) |
+| EU GDPR Art.32 | https://eur-lex.europa.eu/legal-content/EN/ALL/?uri=celex:32016R0679 | verified (2026-11-16, search excerpt): four listed measures (pseudonymisation/encryption, CIA and resilience, restoration, regular testing) |
+| Australia Essential Eight | https://www.cyber.gov.au/business-government/asds-cyber-security-frameworks/essential-eight/essential-eight-explained | partial (2026-11-16, search excerpt): the eight strategies are confirmed; maturity entries remain themes, not exact ML text. Note: ASD now publishes "Transitioning from the Essential Eight" describing a principles-based model with no target maturity level; the catalog still follows the maturity-model layout |
+| Australia ISM | https://www.cyber.gov.au/resources-business-and-government/essential-cyber-security/ism | UNVERIFIED; guideline names approximate; not checked in the 2026-11-16 pass beyond reachability |
 | Singapore CCoP | https://www.csa.gov.sg | UNVERIFIED; control ids are Kavach labels |
 | Japan | https://www.meti.go.jp / https://www.nisc.go.jp | UNVERIFIED; ids are Kavach labels |
-| Saudi NCA ECC | https://nca.gov.sa | UNVERIFIED; subdomain numbers approximate |
+| Saudi NCA ECC | https://cdn.nca.gov.sa/ar/ecc-en.pdf | verified (2026-11-16, PDF read directly) and corrected: Cryptography is 2-8 (2-7 is Data and Information Protection), so the id `ECC-2-7` became `ECC-2-8`; domain 4 is "Third-Party and Cloud Computing Cybersecurity" but 4-1 is Third-Party Cybersecurity (4-2 is cloud), so the `ECC-4-1` title was shortened. Other subdomain numbers used (1-1, 1-3, 1-5, 1-9, 1-10, 2-1 to 2-3, 2-5, 2-9 to 2-14, 3-1) match |
 | UAE IA | https://www.tdra.gov.ae / https://u.ae | UNVERIFIED; ids are Kavach labels |
-| Brazil LGPD | https://www.planalto.gov.br (Lei 13.709/2018) | UNVERIFIED; articles 37, 41, 46-50 from memory |
-| South Africa POPIA | https://inforegulator.org.za | UNVERIFIED; s19-22 from memory |
+| Brazil LGPD | https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm | verified (2026-11-16, search excerpts of Planalto and government copies): art. 37 records, 41 encarregado, 46 security measures, 47 duty after processing, 48 incident communication, 49 systems, 50 good practice and governance |
+| South Africa POPIA | https://inforegulator.org.za/wp-content/uploads/2025/08/PROTECTION-OF-PERSONAL-INFORMATION-ACT-4-OF-2013.pdf | verified (2026-11-16, Act read directly): s19(1), 19(2)(a)-(d), s20, s21 and s22 match the control titles |
 | FedRAMP Moderate | https://www.fedramp.gov | UNVERIFIED; family-level only |
-| Canada CCCS / PIPEDA | https://www.cyber.gc.ca / https://www.priv.gc.ca | UNVERIFIED |
+| Canada CCCS / PIPEDA | https://www.cyber.gc.ca / https://www.priv.gc.ca | partial: PIPEDA s10.1-10.3 breach provisions read (see regional-reporting.md); CCCS baseline controls UNVERIFIED |
 | South Korea ISMS-P | https://isms.kisa.or.kr | UNVERIFIED; ids are Kavach labels |
-| Hong Kong | https://www.hkma.gov.hk / https://www.pcpd.org.hk | UNVERIFIED |
+| Hong Kong | https://www.hkma.gov.hk / https://www.pcpd.org.hk | UNVERIFIED (HKMA C-RAF not checked; PCPD breach guidance see regional-reporting.md) |
 
 Where an id is described as a "Kavach label" it is a stable local identifier, not an official clause number.

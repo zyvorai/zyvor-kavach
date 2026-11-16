@@ -67,14 +67,18 @@ type CfgPolicy struct {
 	Check       *CfgCond `json:"check"`                  // true => pass
 	// OnAbsent says what an absent setting means: fail | pass | unknown, or
 	// "evaluate" when the check itself handles absence (present/absent ops).
-	OnAbsent    string      `json:"on_absent"`
-	AbsenceNote string      `json:"absence_note"` // documents the default that applies when absent
-	Remediation string      `json:"remediation"`  // advisory only, never applied
-	References  []string    `json:"references,omitempty"`
-	Frameworks  []string    `json:"frameworks,omitempty"` // ATT&CK / NIST hints, optional
-	Positive    string      `json:"positive"`
-	Negative    string      `json:"negative"`
-	More        []CfgSample `json:"more_samples,omitempty"`
+	OnAbsent    string `json:"on_absent"`
+	AbsenceNote string `json:"absence_note"` // documents the default that applies when absent
+	// AbsenceSource and DefaultVerifiedOn record where the default in
+	// AbsenceNote was read and when; empty means the default is unverified.
+	AbsenceSource     string      `json:"absence_source,omitempty"`
+	DefaultVerifiedOn string      `json:"default_verified_on,omitempty"`
+	Remediation       string      `json:"remediation"` // advisory only, never applied
+	References        []string    `json:"references,omitempty"`
+	Frameworks        []string    `json:"frameworks,omitempty"` // ATT&CK / NIST hints, optional
+	Positive          string      `json:"positive"`
+	Negative          string      `json:"negative"`
+	More              []CfgSample `json:"more_samples,omitempty"`
 }
 
 // CfgCond is a declarative condition: a leaf over one setting, or all/any/not.

@@ -247,7 +247,9 @@
     "value": "true"
    },
    "on_absent": "pass",
-   "absence_note": "Not set; the provider/platform default applies (UNVERIFIED), so not flagged.",
+   "absence_note": "Not set: the current azurerm provider docs (main branch, read 2026-11-16) say allow_nested_items_to_be_public defaults to false, so not flagged. Older provider versions may default differently and were not checked.",
+   "absence_source": "https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/main/website/docs/r/storage_account.html.markdown",
+   "default_verified_on": "2026-11-16",
    "remediation": "Set allow_nested_items_to_be_public = false.",
    "references": [
     "Terraform language: resources and attributes (public)",
@@ -292,7 +294,9 @@
     }
    },
    "on_absent": "pass",
-   "absence_note": "Not set; platform default applies (UNVERIFIED), so not flagged.",
+   "absence_note": "Not set: the current azurerm provider docs (main branch, read 2026-11-16) say https_traffic_only_enabled defaults to true and min_tls_version to TLS1_2 for new accounts, so not flagged. Older provider versions and existing accounts may differ and were not checked.",
+   "absence_source": "https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/main/website/docs/r/storage_account.html.markdown",
+   "default_verified_on": "2026-11-16",
    "remediation": "Enable HTTPS-only and set min_tls_version to TLS1_2.",
    "references": [
     "Terraform language: resources and attributes (public)",

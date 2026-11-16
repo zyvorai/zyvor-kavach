@@ -1160,7 +1160,7 @@ paths:
       responses: {'200': {description: application/zip or manifest JSON}}
   /v1/regulatory/regimes:
     get:
-      summary: Regional incident/breach reporting regimes catalog (informational, not legal advice; Kavach does not file reports). Each entry has a verified flag; unverified rules say UNVERIFIED in notes
+      summary: Regional incident/breach reporting regimes catalog (informational, not legal advice; Kavach does not file reports). Each entry has a verified flag, source_url, source_kind (official_fetched, official_excerpt, official_unfetched or secondary), optional sources[] and last_verified (the verified-on date); unverified rules say UNVERIFIED in notes
       security: [{bearerAuth: []}]
       parameters:
         - { name: jurisdiction, in: query, schema: { type: string } }

@@ -55,6 +55,19 @@ func TestRegulatoryCatalogValidationRejects(t *testing.T) {
 			t.Errorf("%s: expected error", name)
 		}
 	}
+	okVerified := func(kind string) string {
+		d := strings.Replace(good, `"verified":false`, `"verified":true`, 1)
+		d = strings.Replace(d, `"last_verified":""`, `"last_verified":"2026-11-16"`, 1)
+		return strings.Replace(d, `"source_kind":"secondary"`, `"source_kind":"`+kind+`"`, 1)
+	}
+	for _, kind := range []string{"official_fetched", "official_excerpt"} {
+		if _, err := LoadRegulatoryCatalog([]byte(okVerified(kind))); err != nil {
+			t.Errorf("verified %s rejected: %v", kind, err)
+		}
+	}
+	if _, err := LoadRegulatoryCatalog([]byte(okVerified("secondary"))); err == nil {
+		t.Error("verified entry with secondary source accepted")
+	}
 	dup := strings.Replace(good, `"regimes":[`, `"regimes":[`+good[strings.Index(good, "[")+1:strings.LastIndex(good, "]")]+",", 1)
 	if _, err := LoadRegulatoryCatalog([]byte(dup)); err == nil {
 		t.Error("duplicate id accepted")
@@ -201,5 +214,26 @@ func TestRegulatoryProfilePersistsAndClocks(t *testing.T) {
 	}
 	if w := regDo(mux2, "GET", "/v1/regulatory/clocks?regime=zzz", "", true); w.Code != 400 {
 		t.Fatalf("%d", w.Code)
+	}
+}
+
+func TestRegulatoryCatalogVerificationRecords(t *testing.T) {
+	regs, err := RegulatoryRegimes()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, r := range regs {
+		if r.Verified && (r.LastVerified != "2026-11-16" && r.ID != "uk-gdpr" && r.ID != "us-sec-8k-1-05" && r.ID != "us-circia") {
+			t.Errorf("%s: unexpected last_verified %q", r.ID, r.LastVerified)
+		}
+		if r.Verified && r.SourceKind == "secondary" {
+			t.Errorf("%s: verified from a secondary source", r.ID)
+		}
+	}
+	// Corrected on 2026-11-16: the Singapore final report runs from the supplementary submission, not from awareness.
+	for _, r := range regs {
+		if r.ID == "sg-cybersecurity-act" && r.Stages[2].FromStart {
+			t.Error("sg final report must not be computed from awareness")
+		}
 	}
 }

@@ -102,7 +102,9 @@
     "value": "false"
    },
    "on_absent": "pass",
-   "absence_note": "env_reset is on by default in modern sudo (UNVERIFIED).",
+   "absence_note": "env_reset is on by default (sudoers manual: \"This flag is on by default\", read 2026-11-16).",
+   "absence_source": "https://www.sudo.ws/docs/man/sudoers.man/",
+   "default_verified_on": "2026-11-16",
    "remediation": "Remove !env_reset.",
    "references": [
     "sudoers(5) manual page concepts (public)"
@@ -130,7 +132,9 @@
     "value": "true"
    },
    "on_absent": "fail",
-   "absence_note": "The default is not guaranteed to be on across versions (UNVERIFIED): treated as a failure.",
+   "absence_note": "use_pty is on by default only from sudo 1.9.14 (sudoers manual, read 2026-11-16); older versions do not default to it, so absence is treated as a failure.",
+   "absence_source": "https://www.sudo.ws/docs/man/sudoers.man/",
+   "default_verified_on": "2026-11-16",
    "remediation": "Add: Defaults use_pty",
    "references": [
     "sudoers(5) manual page concepts (public)"
@@ -158,7 +162,9 @@
     "value": "^(0|[1-9]|1[0-5])(\\.\\d+)?$"
    },
    "on_absent": "pass",
-   "absence_note": "Default is a few minutes (5 per my recollection, UNVERIFIED), within the 15-minute bound used here.",
+   "absence_note": "Default is 5 minutes (sudoers manual, read 2026-11-16), within the 15-minute bound used here.",
+   "absence_source": "https://www.sudo.ws/docs/man/sudoers.man/",
+   "default_verified_on": "2026-11-16",
    "remediation": "Set Defaults timestamp_timeout=5 (or 0).",
    "references": [
     "sudoers(5) manual page concepts (public)"

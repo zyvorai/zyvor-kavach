@@ -252,7 +252,9 @@
     "value": "yes"
    },
    "on_absent": "pass",
-   "absence_note": "Default is yes (UNVERIFIED in this research: not read from the man page).",
+   "absence_note": "Default is yes (confirmed in the OpenBSD sshd_config manual, 2026-11-16).",
+   "absence_source": "https://man.openbsd.org/sshd_config",
+   "default_verified_on": "2026-11-16",
    "remediation": "Set IgnoreRhosts yes.",
    "references": [
     "OpenSSH sshd_config(5) manual page (public)"
@@ -317,7 +319,9 @@
     "value": "^(0*[1-9]|[1-5][0-9]|60)s?$"
    },
    "on_absent": "fail",
-   "absence_note": "Default is 120 seconds (UNVERIFIED in this research), longer than the 60 s used here: treated as a failure.",
+   "absence_note": "Default is 120 seconds (confirmed in the OpenBSD sshd_config manual, 2026-11-16), longer than the 60 s used here: treated as a failure.",
+   "absence_source": "https://man.openbsd.org/sshd_config",
+   "default_verified_on": "2026-11-16",
    "remediation": "Set LoginGraceTime 30 (or up to 60).",
    "references": [
     "OpenSSH sshd_config(5) manual page (public)"
@@ -401,7 +405,9 @@
     "value": "(?i)(diffie-hellman-group1-sha1|diffie-hellman-group14-sha1|diffie-hellman-group-exchange-sha1)"
    },
    "on_absent": "pass",
-   "absence_note": "Default KEX list is modern in current OpenSSH (UNVERIFIED in this research).",
+   "absence_note": "The default KexAlgorithms list in the current OpenBSD manual contains no SHA-1 variants (confirmed 2026-11-16); older OpenSSH releases may default differently and were not checked.",
+   "absence_source": "https://man.openbsd.org/sshd_config",
+   "default_verified_on": "2026-11-16",
    "remediation": "Use curve25519-sha256 and diffie-hellman-group16-sha512 or stronger.",
    "references": [
     "OpenSSH sshd_config(5) manual page (public)"
@@ -429,7 +435,9 @@
     "value": "yes"
    },
    "on_absent": "pass",
-   "absence_note": "Default is yes (UNVERIFIED in this research).",
+   "absence_note": "Default is yes (confirmed in the OpenBSD sshd_config manual, 2026-11-16).",
+   "absence_source": "https://man.openbsd.org/sshd_config",
+   "default_verified_on": "2026-11-16",
    "remediation": "Set StrictModes yes.",
    "references": [
     "OpenSSH sshd_config(5) manual page (public)"
@@ -457,7 +465,9 @@
     "value": "2"
    },
    "on_absent": "pass",
-   "absence_note": "Modern OpenSSH has no protocol 1 and no Protocol keyword (UNVERIFIED); absent means protocol 2 only.",
+   "absence_note": "The current OpenBSD sshd_config manual documents no Protocol keyword (confirmed 2026-11-16); absent means protocol 2 only. Very old OpenSSH releases that still had protocol 1 were not checked.",
+   "absence_source": "https://man.openbsd.org/sshd_config",
+   "default_verified_on": "2026-11-16",
    "remediation": "Remove the Protocol line or set Protocol 2.",
    "references": [
     "OpenSSH sshd_config(5) manual page (public)"
