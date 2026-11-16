@@ -155,3 +155,16 @@ Negative controls:
   several. Where a rule mapping exists, its tactic is used for observed techniques.
 - Time order of findings reflects detection time, not necessarily attacker action order.
 - No claim here about attribution: the endpoints rank resemblance to public profiles only.
+
+## Using it
+
+```sh
+kavachctl ttp similar --host web-01
+kavachctl ttp similar --techniques T1566.001,T1059.001,T1003.001,T1486
+kavachctl ttp next --finding-ids F1,F2,F3
+kavachctl ttp chains --host web-01
+```
+
+HTTP: `GET /v1/ttp/similar` and `/v1/ttp/next` (one of `host=`, `finding_ids=` or `techniques=`, at most 100 techniques) and `GET /v1/ttp/chains?host=`. Re-run the evaluation with `go test ./internal/edr/ -run 'TestTTPEvaluation' -v`; on 2026-11-16 it reproduced the table above exactly (top-1 91.2%, top-3 98.8%, top-5 99.8%, 1,960 queries, 101 profiles).
+
+Adding or editing an adversary profile changes the idf weights and can move rankings and the confusion list, so re-run the evaluation after any change to `internal/edr/adversaries/*.json` (see [adversary-profiles.md](adversary-profiles.md)).

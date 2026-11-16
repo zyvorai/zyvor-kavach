@@ -104,3 +104,14 @@ Known failures (measured or by construction):
 Real-world caveat: the corpora were written by us from published descriptions and our assumptions about tools; real
 benign fleets (databases, sync clients, antivirus, VM images, build farms) will produce false positives not seen here,
 and real families vary. Treat the numbers as regression guards, not as accuracy claims.
+
+## Running it
+
+```sh
+kavachctl ransom hosts                    # per-host peak window
+kavachctl ransom host --host fs-01        # scored windows for one host
+kavachctl ransom status                   # method, thresholds, blind spots
+go test ./internal/edr/ -run 'Ransom' -v  # evaluation and evasion tests
+```
+
+Re-run on 2026-11-16: detection 240/240 (6 behaviours x 40 seeds), false positives 0/400, documented evasions 0/80 alerting, and the informational hard-benign set alerts 80/80 (`image_optimizer_inplace` 40, `snapshot_mass_prune` 40), matching the figures above. These are regression guards on generators written by the same author as the detector. This detector (`/v1/ransom/*`) is separate from the older canary and burst rules in `ransomware.go` (rule ids such as `ransomware-churn`, which maps to T1486) and from the `/v1/ransomware/*` risk endpoints.

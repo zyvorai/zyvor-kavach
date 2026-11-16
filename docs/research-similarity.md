@@ -202,3 +202,13 @@ distance scales over 0-100 scores, but it does not validate their numbers.
 ## Analyzer window (added after integration)
 
 The `similarity` analyzer digests only the first 8 MiB of a submitted file (`SimAnalyzerWindow`) and records the limit `similarity:digest-window` in the report when it does. Without this, a 24 to 32 MiB input exceeded the analyzer's 5-second budget under the race detector (the digests are about 10x slower there, and a busy host is slower too), which surfaced as `similarity: timed out`. Consequence: two large files that differ only after the first 8 MiB can look identical to the digests. Structural hashes (imphash, symbol hash) are unaffected for normal binaries, whose headers and import tables sit near the start.
+
+## Running it
+
+```sh
+go test ./internal/edr/ -run 'TestSimilarityEvaluation' -v   # prints the DETECT and FALSE-MATCH lines behind the tables
+kavachctl inspect similar --sha256 X [--limit N]             # or --digest D; HTTP: GET /v1/inspect/similar
+kavachctl inspect clusters [--min-score F] [--limit N] [--kind K]   # GET /v1/inspect/clusters
+```
+
+Re-run on 2026-11-16, the evaluation reproduced the tables (for example 0.1% point edits: CTPH 15% / LSH 100%; heavy rewrite: CTPH 71%, LSH 65%, either 90%; shared-vocabulary text: LSH 419/1770 false matches, CTPH 0). A separate behavioural-similarity test in `ml_behaviour_test.go` logs a near-miss benign false-positive rate of 0.3211 at threshold 0.70; that is a different component and is not covered by this document.

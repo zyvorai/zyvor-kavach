@@ -13,6 +13,77 @@ and after a full replay and fails on any difference.
 Every API response carries the note: "Synthetic data replayed in memory; measured on Kavach's own
 scenarios; not a guarantee against real attacks."
 
+## Current status (measured 2026-11-16)
+
+Sections 3 to 10 below are dated snapshots, kept as the record of how each pass went; their counts are not current. The numbers in this section were produced by running the lab on the shipped packs (`go test ./internal/edr/ -run 'TestVal' -v` for the gate line, plus a throwaway test that called `RunValidation` and `BuildValidationCoverage`). Re-measure with `kavachctl validate coverage` (or `GET /v1/validate/coverage`) rather than trusting this paragraph after content changes.
+
+| Measure | Value |
+|---|---|
+| Scenario files (embedded) | `singles.json` 171 (`emu-*`), `singles2.json` 87 (`val2-*`), `unix2.json` 112 (`val3-*`), `chains.json` 19 (`chain-*`), `cloud_audit.json` 118 (115 `emu-cld-*` plus 3 `benign-*`), `benign.json` 38, `benign2.json` 6, `benign3.json` 16 |
+| Scenarios | 567: 485 single, 19 chain, 63 benign (platform: 371 linux, 130 windows, 66 macos; all cloud scenarios are labelled `linux`). The loader cap is 600 |
+| Claimed techniques (built-in, IOA and content rules) | 268 |
+| Detected | 225 (83.9% of claimed) |
+| Partial / Missed | 6 / 2 |
+| Not-testable | 18 |
+| Untested (claimed, no scenario) | 17, all cloud or SaaS techniques claimed by `cld-` rules (T1069.003, T1070.008, T1098.002, T1098.005, T1114.002, T1114.003, T1484.002, T1531, T1556, T1556.006, T1564.008, T1578.001 to T1578.003, T1619, T1621, T1666) |
+| Detect rate over tested techniques | 96.5% (matrix field `tested_detection_rate_pct`) |
+| Non-benign scenarios passing | 486 of 504 = 0.964; floor 0.93 |
+| Benign controls firing at medium or above | 0 of 63 |
+| Claimed tactic coverage (matrix) | 50% |
+
+Not-testable techniques (reasons in `scenarios/not_testable.json`): T1014, T1027.002, T1030, T1055, T1055.001, T1055.009, T1055.012, T1068, T1078.003, T1078.004, T1110.002, T1204.001, T1205.002, T1221, T1550.003, T1554, T1565.001, T1573.002.
+
+Measured by tactic (Detected / claimed): Initial Access 6/7, Execution 24/28, Persistence 52/58, Privilege Escalation 12/14, Defense Evasion 58/76, Credential Access 32/38, Discovery 19/22, Lateral Movement 15/18, Collection 12/15, Command and Control 16/19, Exfiltration 9/10, Impact 11/13. Defense Evasion is the weakest (76.3%) because 10 of its 76 techniques are not testable.
+
+**Scenarios that do not currently pass (18 of 504).** The earlier sections record these areas as fixed; the current embedded replay says otherwise, so treat the earlier "all Detected" claims as superseded. Cause not investigated here (unverified): rule tuning for the benign guard and later pack changes are the likely reasons, but no bisect was run.
+
+* Missed (nothing fired): `emu-t1105-ingress-wget` (wget to a raw IP into /tmp), `emu-t1136-001-new-local-user` (`useradd -m -s /bin/bash -G sudo support`), `emu-t1560-001-archive-staging` (`tar czf /tmp/.d.tgz` of documents), `val2-t1137-001-office-template-macro-persis` (Normal.dotm, a deliberate precision gap), `val2-t1568-fast-flux-style-lookups-of-r` (deliberate precision gap).
+* Partial: `emu-t1003-001-lsass-procdump` and `chain-windows-phish-to-ransom` (only the parent T1003 fires), `emu-t1140-base64-decode-run` (fires under a neighbouring technique), `chain-linux-c2-tunnel`, `chain-linux-miner-infection`, and the `val2-` mapping disagreements already described in section 9 (`T1021`, `T1090.001`, `T1112`, `T1203`, `T1204`, `T1553.002`, `T1562.006`), plus `val3-t1552-001-tar-dotdirs`.
+
+The gate still passes because 18 of 504 is under the 7% the floor allows. Before raising the floor, fix or consciously accept these.
+
+**Rules never exercised by a scenario.** Replaying every scenario and collecting the rules that fired in non-benign scenarios gives 666 distinct rules out of 1,475. Per pack (rules / fired): `cld` 159/115, `ux2` 134/100, `gap` 46/45, `gp2` 105/70, `ioa` 153/70, `win` 201/63, `lx` 170/77, `macos` 137/55, `cloud` 195/40, `rgn` 120/11, telemetry `reg` 19/8, `auth` 10/3, `module` 9/3, `dns` 9/0 (the `macos`, `win` and `lx` keys include a few `seed` rules). So 809 rules are exercised only by their own samples. The regional pack and the Linux cloud-tooling pack are the least measured; DNS telemetry rules have no scenario at all.
+
+## Running the lab
+
+```sh
+go test ./internal/edr/ -run 'TestVal' -v           # gate: detect rate vs floor, benign false positives, schema, isolation
+go test ./internal/edr/ -run 'TestContentBenignCorpus|TestCloudAuditBenignCorpus' -v   # the benign-corpus guards
+kavachctl validate scenarios [--kind K] [--platform P] [--technique T]   # list
+kavachctl validate show ID
+kavachctl validate run --all [--include-custom]       # or --ids A,B
+kavachctl validate coverage [--include-custom]        # per technique and per tactic
+```
+
+HTTP: `GET /v1/validate/scenarios`, `GET /v1/validate/scenarios/{id}`, `POST /v1/validate/run` with `{"all":true}` or `{"ids":[...]}` (optional `include_custom`), `GET /v1/validate/coverage`. All require auth; the POST computes in memory and records nothing. The scheduled re-run and gate are in [regression-tracking.md](regression-tracking.md).
+
+## Authoring a scenario
+
+Worked example (illustrative; checked against the scenario loader and the example rule from [content-framework.md](content-framework.md), not shipped):
+
+```json
+{ "scenarios": [ {
+  "id": "ex-t1140-base64-pipe-shell",
+  "name": "Encoded payload piped to shell",
+  "description": "Synthetic. A decoded payload is piped into sh. Data only; nothing is executed.",
+  "kind": "single", "platform": "linux",
+  "tactics": ["Defense Evasion"], "techniques": ["T1140"], "benign": false,
+  "steps": [ { "type": "process", "executable": "/bin/bash",
+               "command": "bash -c 'cat /tmp/p.b64 | base64 --decode | bash'",
+               "parent_exe": "/usr/sbin/sshd" } ],
+  "expect": ["T1140"] } ] }
+```
+
+1. Pick the technique and write the behaviour from the public ATT&CK procedure description, using a different tool, flag order or path from the rule's own positive sample. If you write the scenario by reading the rule you are only re-testing the rule.
+2. Choose the file: add to an existing scenario file or create `internal/edr/scenarios/<name>.json` (embedded automatically; any `*.json` there is loaded, except `not_testable.json`, which holds the `{"not_testable": {"T1234": "reason"}}` map).
+3. Respect the schema (strict, unknown fields rejected): kebab-case unique `id` (max 64), `name` (max 120), `description` (max 1000), `kind` `single|chain|benign`, `platform` `linux|macos|windows`, `tactics` as exact ATT&CK Enterprise tactic names. A `single` lists exactly one technique; a `chain` needs at least 3 steps; non-benign scenarios need `techniques`, `tactics` and at least one expectation (scenario `expect` or a step-level `expect`); benign scenarios set `"benign": true`, `kind` `benign` and declare no techniques or expectations. Steps: `type` is `process`, `network`, `file`, `registry`, `dns`, `auth` or `module`; process needs `executable` and `command`, network `destination`, file `path` and `operation`; telemetry steps put their fields as the telemetry validator expects; `at` is an offset in seconds (0 to 86400); a step may only carry fields of its own type.
+4. Expectations: a technique id (`T1140`, which also credits a sub-technique rule firing) or a rule id (`cld-aws-stop-logging`). Expect a rule id when the technique is not testable or when you are validating one specific rule.
+5. Add a near-miss benign control in a `benign*.json` file for every new rule family: the same tool with a harmless argument. A benign control fails the run if anything at medium severity or above fires.
+6. Run `go test ./internal/edr/ -run TestVal -v`. A missing technique shows up in the `missed` or `partial` list; decide whether the rule is wrong, the scenario is wrong or the technique cannot be seen with the available telemetry. If the last, add it to `not_testable.json` with the reason, instead of loosening the scenario.
+7. Record the result honestly: if a miss is a deliberate precision trade-off, say so here (see "Still Missed" in section 9), and never lower `valDetectedFloor` without a recorded reason.
+
+The benign guard for rules (not scenarios) is `TestContentBenignCorpus`; see [content-tuning.md](content-tuning.md).
+
 ## 1. Research
 
 Sources are listed in two groups. "Opened" means the page content was actually fetched and read in this
@@ -114,13 +185,13 @@ beyond the snippets above.
   nothing at medium severity or above fires.
 * **Endpoints** (all `requireAuth`; the POST is read-only compute): `GET /v1/validate/scenarios`,
   `GET /v1/validate/scenarios/{id}`, `POST /v1/validate/run {ids|all, include_custom?}`,
-  `GET /v1/validate/coverage`.
+  `GET /v1/validate/coverage`. CLI: `kavachctl validate` (see "Running the lab" above).
 * **Regression gate** (`TestValDetectedRateFloor`): the share of non-benign scenarios whose
-  expectations are all Detected must stay at or above `valDetectedFloor` (0.93; measured 0.947 after the gap-closure
+  expectations are all Detected must stay at or above `valDetectedFloor` (0.93; measured 0.964 on 2026-11-16, 0.947 after the gap-closure
   pass, 0.649 originally), and benign false positives must stay at 0. Raise the floor as detection improves; lowering
   it needs a recorded reason here.
 
-## 3. Results (measured on the shipped packs)
+## 3. Results (original measurement, superseded by the current-status section above)
 
 | Measure | Value |
 |---|---|
@@ -297,7 +368,7 @@ the IOC alias for `ioc-sha256` maps all hash matches to T1204 (User Execution), 
 for "a known-bad hash was seen in a command line"; and the IOA mapping trusts the technique id an
 operator typed.
 
-## 7. Gap-closure pass (measured)
+## 7. Gap-closure pass (measured at the time; see the current-status section for what still holds)
 
 Before: 95 Detected, 17 Partial, 26 Missed (scenario pass rate 64.9%). After: 139 Detected, 0 Partial,
 0 Missed, 11 Not-testable, 95 Untested (scenario pass rate 94.7% of 188 non-benign scenarios; 38
@@ -421,7 +492,7 @@ rules are low severity or informational by design.
 ## 10. Linux, macOS, container and Kubernetes depth (`ux2-*`, measured)
 
 **Audit before the pass** (embedded packs, snapshot taken at the start of this work; live numbers come from
-`GET /v1/content/coverage`): 1182 rules, of which 447 are `os: linux`, 140 `macos`, 411 `windows`, 184 `any`.
+`GET /v1/content/coverage`): 1182 rules at that time (1,475 now), of which 447 were `os: linux`, 140 `macos`, 411 `windows`, 184 `any`.
 Linux rules by tactic: Credential Access 95, Defense Evasion 61, Privilege Escalation 57, Persistence 51,
 Execution 39, Impact 34, Command and Control 31, Discovery 20, Exfiltration 20, Collection 16, Lateral Movement 15,
 Initial Access 8. macOS rules by tactic: Defense Evasion 43, Persistence 34, Credential Access 21, Execution 11,

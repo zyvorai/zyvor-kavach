@@ -8,8 +8,8 @@ Short notes from a brief look at detection-engineering practice, restated in my 
 
 - **Lifecycle.** A rule should move through intake, review, test, activation, monitoring and retirement; imported content stays disabled until someone has reviewed it and named an owner. Kavach models this as `draft`, `testing`, `production`, `retired`. ([NHIMG: should detections be treated like software](https://nhimg.org/faq/should-organisations-treat-detections-like-software-or-like-static-rules/), [NHIMG: detection content drift](https://nhimg.org/faq/what-should-soc-leaders-do-when-detection-content-keeps-drifting/))
 - **Versioning and replay tests.** Version each detection artefact and its dependencies, and replay known-good and known-bad data against changes. Kavach already ships positive/negative samples and a benign baseline per rule; the change history adds a content hash and the changed fields per edit. ([NHIMG: governing detection rule changes](https://nhimg.org/faq/how-should-security-teams-govern-detection-rule-changes-without-creating-alert-f/))
-- **Suppression.** Suppressions should be time-limited, scoped to one rule and documented, otherwise noise reduction quietly turns into lost coverage; too broad hides real abuse, too narrow keeps analysts drowning. Kavach's exclusions are in `docs/content-tuning.md`; this feature adds visibility (noisy score, trend) so you can judge them. ([Pebblous: exclusion ratchet](https://blog.pebblous.ai/blog/detection-rule-exclusion-ratchet/en/), a write-up of a SigmaHQ history study whose figures I did not verify)
-- **Metrics.** Precision, recall and operational noise make tuning evidence-based; also alert fidelity and suppression rate. Kavach has no analyst verdicts per finding here, so it cannot compute precision; it reports volume-based noise only. ([Decryption Digest: maturity model](https://www.decryptiondigest.com/blog/detection-engineering-maturity-model))
+- **Suppression.** Suppressions should be time-limited, scoped to one rule and documented, otherwise noise reduction quietly turns into lost coverage; too broad hides real abuse, too narrow keeps analysts drowning. Kavach's exclusions are in [content-tuning.md](content-tuning.md); this feature adds visibility (noisy score, trend) so you can judge them. ([Pebblous: exclusion ratchet](https://blog.pebblous.ai/blog/detection-rule-exclusion-ratchet/en/), a write-up of a SigmaHQ history study whose figures I did not verify)
+- **Metrics.** Precision, recall and operational noise make tuning evidence-based; also alert fidelity and suppression rate. The health report does not use analyst verdicts (those are a separate feature, see research-feedback.md), so it cannot compute precision; it reports volume-based noise only. ([Decryption Digest: maturity model](https://www.decryptiondigest.com/blog/detection-engineering-maturity-model))
 - **Silent rules.** KPIs usually chase noisy rules, while rules that never fire (for example after a log format change) go unnoticed. Hence the explicit `silent` flag. ([Hunters: detection engineering checklist](https://www.hunters.security/hubfs/2025%20Research%20Paper/Detection%20Engineering%20Checklist%20for%20SOC%20Teams%20%20(3).pdf?hsLang=en))
 
 ## Health metrics
@@ -43,11 +43,28 @@ Setting a state needs admin token or session, requires a known rule (registry, e
 
 `GET /v1/rules/history/{id}` returns the entries for a rule and `chain_ok`. Entries are hash-chained like the analyst journal (sha256 over sequence, time, actor, rule, action, detail and the previous hash), across all rules in one chain. Recorded actions: `custom-rule.created|updated|deleted` (content hash, changed fields) and `lifecycle` (old to new state, note). Actor is `admin-token` or `session`.
 
+## Using health: a weekly review loop
+
+```sh
+kavachctl rules health --noisy --limit 20      # tune these first: score 60 or above
+kavachctl rules health --silent --limit 50     # rules with no hit and no shadow hit in the retained findings
+kavachctl rules health acme-backup-tool-from-shell   # one rule: windows, trend, hosts, shadow hits
+kavachctl rules lifecycle acme-backup-tool-from-shell --set testing --note "tuning, week 1"
+kavachctl rules history acme-backup-tool-from-shell  # who changed what, and chain_ok
+```
+
+1. Start from `--noisy`. A high score from a single host with a repeating hit often means a scheduled job: add a `not` clause on its parent or path (see [content-tuning.md](content-tuning.md) for the workflow and for the corpus-based list of low-severity rules that already fire on benign activity).
+2. Move the rule to `testing` while you change it. Its hits become `shadow_hits`, so the next review shows the effect of the edit without alerting anyone.
+3. Treat `--silent` with suspicion rather than relief. A rule that never fires may be broken (a log format change), may target telemetry you do not collect, or may simply have had no occasion. Compare against the validation lab: of 1,475 embedded rules, 666 fire in at least one non-benign scenario, so many rules are never exercised by anything but their own samples ([research-validation-lab.md](research-validation-lab.md)).
+4. Promote with `--set production` once the shadow window looks right. The history records the transition.
+
+Which rules are expected to be noisy is not guessed here: the 40 low-severity rules that fire on the benign corpus are listed in [content-tuning.md](content-tuning.md), and a rule on that list showing up at the top of `--noisy` is the expected result, not a bug.
+
 ## Limits
 
 - Counts come from the retained store (default 1000 findings), so 30-day numbers are only as deep as retention; `silent` means "no hit in retained findings", not "never fired ever".
 - Findings counted in the main list exclude `testing` hits; the ingest endpoints' returned counts still include them.
-- No analyst verdicts, so no precision or recall; the noisy score is a volume heuristic, and its weights are a judgement call.
+- Analyst verdicts live in a separate feature ([research-feedback.md](research-feedback.md)); this page's score is volume only and does not use them, so it cannot compute precision or recall; the noisy score is a volume heuristic, and its weights are a judgement call.
 - Embedded rule edits arrive with new releases, so only custom rule edits and lifecycle changes are journaled.
 - History is capped at 5000 entries; after trimming, the oldest retained entry is the chain anchor.
 - Tamper evidence only: a writer of the file can rewrite the whole chain.

@@ -86,6 +86,38 @@ Derived samples show that the conversion is self-consistent. They do not show th
 
 The output uses Sigma syntax Kavach itself can re-import; it is not guaranteed to be accepted by every Sigma toolchain (the `tests` and `kavach_*` keys are extensions, and the generated `condition` uses one selection per leaf).
 
+## Worked example: from a Sigma rule to a watched custom rule
+
+The first rule in `internal/edr/testdata/sigma/examples_ok.yml` (original, not from SigmaHQ), condensed here to flow style:
+
+```yaml
+title: Kavach Example Encoded PowerShell Launcher
+kavach_id: ex-sigma-encoded-pwsh
+level: high
+tags: [attack.execution, attack.t1059.001]
+logsource: { category: process_creation, product: windows }
+detection:
+  selection_img:    { Image|endswith: ['\powershell.exe', '\pwsh.exe'] }
+  selection_arg:    { CommandLine|contains|windash: ' -encodedcommand ' }
+  selection_parent: { ParentImage|endswith: ['\winword.exe', '\excel.exe'] }
+  condition: selection_img and selection_arg and selection_parent
+```
+
+1. Dry run (default, stores nothing): `kavachctl content import-sigma rule.yml --json`. Read `results[].status`: `converted` is good. `skipped` lists `gaps`; `noisy` lists `benign_hits` and `benign_hit_examples`; `rejected` gives the harness error.
+2. Look at `samples`: `provided` means your `tests:` block was used, `derived` means Kavach generated and verified samples from the match tree. A rule with `unverified: true` will start in `testing`.
+3. Fix gaps by rewriting the rule inside the subset (drop the unsupported field, split a rule with two techniques into two rules, replace a `|cidr` match with explicit prefixes). Fix `noisy` by adding a filter selection used with `not`.
+4. Apply with an admin token: `kavachctl content import-sigma rule.yml --apply`. The rule is stored as a custom rule (`source: custom`, batch `sigma`).
+5. Watch it: `kavachctl rules health ex-sigma-encoded-pwsh`, and set `testing` first if you want shadow findings (`kavachctl rules lifecycle ex-sigma-encoded-pwsh --set testing`).
+6. Replay the whole directory of rules you maintain in CI with the dry run (no `--apply`); a non-converted rule is visible in the JSON, so a pipeline can fail on `skipped`, `noisy` or `rejected`. (Whether `kavachctl` exits non-zero on those statuses is unverified; check the exit code in your version before relying on it.)
+
+Dry-run counts for the two fixture files: `examples_ok.yml` holds nine rules that convert; `examples_skipped.yml` holds the rejected shapes (a noisy rule, unsupported fields and modifiers, an unsupported category, an unsafe regex). The summary block in "What the report says" is the combined shape.
+
+## Honest limits of the importer
+
+* A converted rule is self-consistent, not proven against real telemetry. Field normalisation differs between Sigma backends and Kavach events carry far fewer fields than Sysmon (no hashes, no original file name, no integrity level), so many public Sigma rules will be skipped rather than imported; that is the intended behaviour.
+* The noisy guard uses the same hand-written corpus as the embedded rules (1,719 events). A rule that does not hit it can still be noisy on your fleet.
+* The benign corpus and derived samples were authored by the same team that wrote the importer.
+
 ## Fixtures
 
 `internal/edr/testdata/sigma/examples_ok.yml` (nine original rules covering windash, base64offset, quantifiers, wildcards, regex, network, file, registry, dns and a rule that starts in testing) and `examples_skipped.yml` (a noisy rule, unsupported fields and modifiers, an unsupported category and an unsafe regex). All are original and not copied from SigmaHQ.
