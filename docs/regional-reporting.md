@@ -275,3 +275,40 @@ Verified (22): eu-gdpr-art33, eu-nis2-art23, eu-dora-major-ict, uk-gdpr, uk-nis,
 UNVERIFIED (2): ae-pdpl, hk-pdpo.
 
 Regimes without a published fixed deadline (rule text only): HIPAA annual log, UAE PDPL, South Africa POPIA, Canada PIPEDA, Hong Kong PDPO, Saudi NCA ECC.
+
+## API reference and worked examples
+
+| Endpoint | Auth | Details |
+|---|---|---|
+| `GET /v1/regulatory/regimes` | bearer or session | optional `jurisdiction` (case-insensitive exact match) and `verified=true|false`; returns `{count, regimes, informational, disclaimer}` with every catalog field (`id`, `jurisdiction`, `regulator`, `name`, `trigger`, `start_event`, `applies_to`, `stages`, `source_url`, `source_kind`, `sources`, `last_verified`, `last_researched`, `verified`, `notes`) |
+| `GET /v1/regulatory/profile` | bearer or session | `{profile: {regimes, updated_at, updated_by}, ...}` |
+| `PUT /v1/regulatory/profile` | admin token or console session | body `{"regimes": ["eu-nis2-art23", ...]}` (max 16 KiB, `regimes` must be present); duplicates are collapsed; an unknown id is 400 `unknown regime id X`; saved atomically to `<store>.regulatory.json` (mode 0600); `updated_by` is `admin` or `session` |
+| `GET /v1/regulatory/clocks` | bearer or session | `regime=a,b` (comma list) overrides the saved profile; unknown id 400. With no profile and no parameter the result list is empty |
+
+A stage carries `hours` or `business_days` (business days skip weekends only, no holidays) and a `description`. In the clocks response, a stage is `computable: true` only when it has its own hour or business-day limit measured from the start; each open high/critical finding (not resolved, not a false positive) then gets `deadline`, `remaining_seconds` (negative when late) and `overdue`, sorted most urgent first. Stages that depend on another stage or on a legal determination are `computable: false` with an empty `incidents` list. Every regime entry in the clocks output has `start_event` (the legal start) and `start_proxy`, which states that Kavach measures from first detection of the finding as a conservative proxy.
+
+```sh
+curl -s -X PUT -H "Authorization: Bearer $KAVACH_ADMIN_TOKEN" -d '{"regimes":["eu-nis2-art23","in-certin-2022"]}' \
+  http://127.0.0.1:8099/v1/regulatory/profile
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" "http://127.0.0.1:8099/v1/regulatory/clocks?regime=eu-nis2-art23"
+# {"generated_at":"...","regimes":[{"regime":"eu-nis2-art23","name":"...","jurisdiction":"EU","verified":true,
+#   "start_event":"awareness","start_proxy":"first detection of the finding (conservative proxy; ...)",
+#   "stages":[{"name":"Early warning","hours":24,"business_days":0,"description":"...","computable":true,
+#              "incidents":[{"finding_id":"...","rule":"...","host":"...","severity":"high","status":"open",
+#                            "first_detected":"...","deadline":"...","remaining_seconds":41230,"overdue":false}]},
+#             {"name":"Final report","computable":false,"incidents":[]}],
+#   "notes":"...","source_url":"..."}],
+#  "informational":true,"disclaimer":"...","note":"Kavach does not file reports; ..."}
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" "http://127.0.0.1:8099/v1/regulatory/regimes?verified=false"
+# lists ae-pdpl and hk-pdpo at this revision
+```
+
+Values in the example are illustrative.
+
+## Limits
+
+- 24 regimes: 22 verified, 2 `UNVERIFIED` (`ae-pdpl`, `hk-pdpo`), counted from `regulatory_regimes.json`. No status was changed in this revision of the document; see [verification-log.md](verification-log.md) for the evidence behind each.
+- Clocks run from the first detection of an open high/critical finding, not from the legal start event (awareness, classification, materiality, reasonable belief or assessment). A late-detected incident therefore looks later than the regulator would measure, and an incident detected before the legal start looks earlier. Choose the conservative reading only as a reminder.
+- The catalog is embedded in the binary: a rule change at a regulator is not reflected until the catalog is updated and Kavach rebuilt. Several regimes carry `source_kind: official_excerpt` (official text seen through a search-result excerpt), not a directly read page.
+- Not modelled (from the verification log): DORA weekend and bank-holiday relief, HIPAA media notice, and other conditions listed in the per-regime notes above. `us-circia` is a proposed rule and informational only until it takes effect; `in-dpdp` Rule 7 is only in force about 18 months after the 13 Nov 2025 gazette.
+- Kavach never files a report, notifies an authority or sends mail.

@@ -39,3 +39,45 @@ The tree is Table 8 and Table 9 of the CISA SSVC Guide (Nov 2022), version strin
 - EPSS for a CVE that first matched after the last refresh is `unknown` until the next refresh.
 - The embedded advisory set is a small sample unless `KAVACH_CVE_FILE` or `KAVACH_VULN_FEED` is set.
 - The 0.10 EPSS threshold is a policy choice that has not been tuned or validated.
+
+## Worked examples
+
+```sh
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" "http://127.0.0.1:8099/v1/vulns/priority?host=web-01&limit=5"
+```
+
+```json
+{"tree_version":"cisa-ssvc-2022-11/table9","total":14,"count":5,
+ "ranking":"ssvc outcome, then epss (unknown last), then cvss, then cve/host/package",
+ "epss":{"...":"feed status"},
+ "items":[{"rank":1,"host":"web-01","package":"openssl","version":"3.0.1","cve":"CVE-2099-0001",
+   "ssvc_outcome":"Act","epss":0.42,"epss_percentile":0.97,"cvss":9.8,"known_exploited":true,
+   "factors":[{"decision_point":"exploitation","value":"active","source":"CISA KEV","known":true,"evidence":"..."},
+              {"decision_point":"public_wellbeing","value":"unknown","source":"...","known":false,"assumed_value":"minimal","evidence":"..."}],
+   "ssvc":{"outcome":"Act","table9_row":30,"effective_inputs":{...},"unknown_inputs":["public_wellbeing"],
+           "outcome_if_unknowns_favourable":"Act","outcome_if_unknowns_adverse":"Act","outcome_depends_on_unknowns":false,
+           "mission_and_wellbeing":"..."},
+   "explanation":["..."]}],
+ "limitations":["EPSS is a probability ...","..."]}
+```
+
+Item values are illustrative; the field names are those of `VPItem`, `vpFactor` and `SSVCResult`. `limit` outside 1-500 is 400.
+
+```sh
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" http://127.0.0.1:8099/v1/vulns/priority/CVE-2099-0001
+# {"cve":"CVE-2099-0001","tree_version":"...","hosts":2,"top_outcome":"Act","items":[...],"epss":{...},"limitations":[...]}
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" http://127.0.0.1:8099/v1/vulns/priority/status
+# {"tree_version":"...","epss_feed":{...},"thresholds":{"epss_poc":0.1,"mission_prevalence":"..."},"defaults_for_unknown":{...},"limitations":[...]}
+curl -s -X POST -H "Authorization: Bearer $KAVACH_TOKEN" http://127.0.0.1:8099/v1/vulns/priority/refresh
+# 409 {"error":"EPSS feed disabled; set KAVACH_EPSS_FEED=on","status":{...}} unless the feed is on
+```
+
+The CVE id is upper-cased and must match the CVE pattern (400 `invalid CVE id`); an id matched on no host is 404 `CVE not matched on any host`.
+
+## Evaluation
+
+There is no accuracy evaluation of the ranking, because the output is a categorical SSVC decision and not a probability. What is tested (`vuln_prio_test.go`): all 3 x 2 x 2 x 3 x 3 = 108 input combinations map to exactly one of the 36 rows of Table 9 and agree with an independent copy of the table; unknown inputs take the documented defaults and widen the best/worst range; KEV always beats EPSS; ranking is deterministic; with the feed off no network traffic is generated; with it on only the one allowed host is contacted and no inventory data is sent; size limits hold. The 0.10 EPSS cut-off, the CVSS-vector approximations and the mission-prevalence mapping are policy choices that were not validated against outcomes. Sources and what was and was not read are in [research-vuln-priority.md](research-vuln-priority.md); upstream matching and KEV/OSV feeds are in [vuln-feeds.md](vuln-feeds.md).
+
+## Limits at a glance
+
+Response `limit` 1-500 (default 50); EPSS cache at most 50,000 CVEs, filtered to CVEs matched here plus KEV; download 16 MiB compressed / 64 MiB decompressed; refresh at start and every 24 h; manual refresh handler budget 2 minutes; the only host contacted is `epss.empiricalsecurity.com` over https.

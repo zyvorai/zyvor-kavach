@@ -53,3 +53,26 @@ Not cross-checked against a primary source; treat as audit leads:
 ## Noisy-risk rules (severity low)
 
 webhook relays, mhddos/db1000n, SimpleHelp, ScreenConnect off-path, LiteManager, GotoHTTP, UltraViewer, CHM from user directories, msiexec remote quiet install, Squirrel update, BitLocker protector, NETLOGON executables, CCleaner Agomo, PlugX SxS, USB attrib hiding.
+
+## Pack contents, counted from the files
+
+`internal/edr/content/regional.json` holds 120 rules (severity: 54 high, 51 medium, 15 low; the 15 low rules are exactly the `noisy-risk` ones). By id prefix: `rgn-rw-*` 22, `rgn-cn-*` 21, `rgn-ru-*` 20, `rgn-me-*` 18, `rgn-latam-*` 16, `rgn-kr-*` 7, `rgn-afr-*` 6, `rgn-sasia-*` 5, `rgn-jp-*` 2, `rgn-sea-*` 2, `rgn-eu-*` 1. By event type: process 76, file 32, registry 8, module 3, network 1. Each rule carries `"batch": "regional-v1"`, tags starting with `regional`, ATT&CK tactic and technique fields, a match expression, and positive and negative samples. `internal/edr/adversaries/regional.json` (pack `regional`) holds 41 profiles, all `confidence: medium`; each has `id`, `name`, `aliases`, `kind`, `attributed_origin`, `motivation`, `targets`, `techniques` and `sources`.
+
+## Using it
+
+The rules load with the other embedded content, so they appear in `GET /v1/content/versions`, the rule lifecycle and coverage views, and fire as normal findings. Adversary profiles are served by `GET /v1/adversaries` (filters `kind`, `technique`, `q`), `GET /v1/adversaries/{id}` and `GET /v1/adversaries/coverage`:
+
+```sh
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" "http://127.0.0.1:8099/v1/adversaries?q=blind"
+# {"mode":"observe-only","note":"...","count":1,"adversaries":[{"id":"...","name":"...","aliases":[...],"kind":"...",
+#   "attributed_origin":"...","motivation":"...","targets":[...],"techniques":["T1566.001",...],"confidence":"medium","sources":[...]}]}
+```
+
+Values are illustrative. A rule firing says a documented artefact or command shape appeared on a host; it does not attribute the activity to a region, actor or campaign, and the "region" is only where the tradecraft was publicly reported.
+
+## Evaluation and limits
+
+- Per-rule validation is the same as other content: each rule's own positive samples must match, negatives must not, and the pack must not match the benign corpus at medium or higher (enforced by the content tests). This shows the rules are not trivially broad, not that they detect real intrusions; no real-world detection-rate evaluation exists.
+- Rules are keyed on specific names and paths, so renamed binaries, new variants and anything not publicly documented evade them. Several are tied to one report from a given date and age quickly.
+- The items under "Unverified or heuristic items" above were not re-checked against primary sources in the 2026-11-16 pass and are unchanged; none of them has been upgraded to verified. The adversary profiles remain `medium` confidence for the reason given above.
+- The regional framework catalogs (control mappings, not threat content) and their verification status are in [regional-frameworks.md](regional-frameworks.md); incident-reporting clocks are in [regional-reporting.md](regional-reporting.md).

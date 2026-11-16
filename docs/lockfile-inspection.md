@@ -92,3 +92,20 @@ Report `Meta["lockfile.sbom"]` is a CycloneDX 1.5 JSON document: `bomFormat`, `s
 ## Tests
 
 `inspect_lockfile_test.go`: a golden fixture per format (by name and by sniffing), hostile inputs (deep JSON, XML entity bombs, tabs in YAML, NULs, 10k-package TOML), version tables per scheme including antisymmetry, matching against a synthetic advisory set, the weight cap, unknown-comparison fallback, CycloneDX structural validity, the no-network structure test, and a short fuzz target per parser.
+
+## Worked example
+
+```sh
+curl -s -X POST "http://127.0.0.1:8099/v1/inspect/lockfile?name=package-lock.json" \
+  -H "Authorization: Bearer $KAVACH_TOKEN" --data-binary @package-lock.json
+```
+
+The name selects the parser (content sniffing is the fallback); a JSON body `{"text": "...", "name": "go.mod"}` also works. The response is the standard inspector report ([shape](artifact-analyzers.md#calling-the-inspector-and-how-the-verdict-is-built)) with `kind: "lockfile"`, `format` set to the detected format, findings `sca-*`, and:
+
+- `meta["lockfile.format"]` and `meta["lockfile.summary"]` (`components`, `direct`, `ecosystems`, `notes`, `version_schemes`);
+- `meta["lockfile.sbom"]`, the CycloneDX 1.5 document;
+- IOCs for matched components, and `known_iocs` ids when a name/purl equals an IOC-store value.
+
+## Limits at a glance
+
+Input 4 MiB (text kinds), 5 s analyzer budget, 10,000 components in the SBOM, hygiene examples 8 per category, SCA contribution capped at 60. The `pkg-manifest` analyzer is also registered for kind `lockfile` and handles `package.json`/extension manifests submitted here (see [artifact-analyzers.md](artifact-analyzers.md#browser-extensions-npm-and-pypi)). Unknown formats yield `sca-format-unknown` with `meta["lockfile.format"] = "unknown"`.

