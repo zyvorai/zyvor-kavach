@@ -2986,6 +2986,69 @@ paths:
         - { name: include_custom, in: query, schema: { type: string }, description: "true to include custom rules" }
       responses:
         "200": { description: "Coverage" }
+  /v1/exposure/sboms:
+    get:
+      summary: "List ingested SBOMs (host, format, component count); local and offline"
+      responses:
+        "200": { description: "{count, sboms[]}" }
+  /v1/exposure/sboms/{host}:
+    get:
+      summary: "Component metadata (name, version, purl, type) retained for a host"
+      parameters:
+        - { name: host, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "{host, format, count, components[]}" }
+        "404": { description: "No SBOM for host" }
+    put:
+      summary: "Ingest a CycloneDX or SPDX 2.x JSON SBOM for a host (admin token; 8 MiB, 20000 components)"
+      parameters:
+        - { name: host, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "{host, format, components}" }
+        "400": { description: "Unrecognised or invalid SBOM" }
+        "403": { description: "Admin token required" }
+        "413": { description: "Body too large" }
+    post:
+      summary: "Same as PUT"
+      parameters:
+        - { name: host, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "{host, format, components}" }
+    delete:
+      summary: "Remove the retained SBOM metadata for a host (admin token)"
+      parameters:
+        - { name: host, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Deleted" }
+        "404": { description: "No SBOM for host" }
+  /v1/exposure/advisories:
+    get:
+      summary: "Active advisory dataset: embedded SAMPLE or operator-imported (not a complete feed)"
+      responses:
+        "200": { description: "{source, sample, count, advisories[], format, note, offline}" }
+    delete:
+      summary: "Drop the operator dataset and fall back to the embedded SAMPLE (admin token)"
+      responses:
+        "200": { description: "Reverted" }
+  /v1/exposure/advisories/import:
+    post:
+      summary: "Import advisories offline: kavach-advisories/1, OSV records, or a CISA KEV catalogue to flag KEV (admin token; 8 MiB)"
+      parameters:
+        - { name: mode, in: query, schema: { type: string, enum: [merge, replace] } }
+        - { name: source, in: query, schema: { type: string }, description: "label shown in reports" }
+      responses:
+        "200": { description: "{imported, kev_flagged, total, source, mode}" }
+        "400": { description: "Invalid or unrecognised file" }
+        "403": { description: "Admin token required" }
+        "413": { description: "Body too large" }
+  /v1/exposure/report:
+    get:
+      summary: "Exposed assets with factors, ranked; local offline matching against the loaded dataset"
+      parameters:
+        - { name: host, in: query, schema: { type: string } }
+        - { name: min_score, in: query, schema: { type: number } }
+      responses:
+        "200": { description: "{advisory_source, advisory_sample, assets[{host, score, level, factors[], matches[]}], note}" }
   /v1/vulns/priority:
     get:
       summary: "SSVC + EPSS + CVSS vulnerability prioritisation"

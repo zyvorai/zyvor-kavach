@@ -1,0 +1,6 @@
+{"spdxVersion":"SPDX-2.3","SPDXID":"SPDXRef-DOCUMENT","name":"svc",
+ "packages":[
+  {"name":"lodash","SPDXID":"SPDXRef-1","versionInfo":"4.17.20","externalRefs":[{"referenceCategory":"PACKAGE-MANAGER","referenceType":"purl","referenceLocator":"pkg:npm/lodash@4.17.20"}]},
+  {"name":"golang.org/x/net","SPDXID":"SPDXRef-2","versionInfo":"v0.17.0","externalRefs":[{"referenceCategory":"PACKAGE-MANAGER","referenceType":"purl","referenceLocator":"pkg:golang/golang.org/x/net@v0.17.0"}]},
+  {"name":"nopurl","SPDXID":"SPDXRef-3","versionInfo":"1"}
+ ]}
