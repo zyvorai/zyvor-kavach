@@ -345,3 +345,75 @@ renamed binary evades, and none of them has been run against real attacker activ
 apply: file events carry no writer, network events carry only a destination, so the file and network
 rules are path or port heuristics. Overlap with older packs is possible (for example other
 sticky-keys, COM-hijack and Run-key rules); overlapping hits are not deduplicated.
+
+## 9. Independent validation of the second gap pass (measured)
+
+Section 8 added `content/gap2.json` and left its techniques `untested`. This pass writes one scenario per
+untested technique, in `scenarios/singles2.json` (87 scenarios, ids `val2-*`) and `scenarios/benign2.json`
+(6 near-miss benign controls). The scenarios were written from public ATT&CK procedure descriptions
+(tool names, switches, registry keys, file paths the technique page and its public procedure examples
+describe), NOT copied from the rules' own positive samples; the rules' match patterns were read only
+after the first run, to diagnose misses. Rules were never loosened to fit a scenario without a recorded
+reason, scenarios were never loosened, and the benign corpus guard (`TestContentBenignCorpus`) stayed green.
+
+| Measure | Before (section 7) | First run of val2 | After rule fixes |
+|---|---|---|---|
+| Detected | 141 | 209 (+68) | 219 (+78) |
+| Partial | 0 | 8 | 7 |
+| Missed | 0 | 12 | 2 |
+| Not-testable | 11 | 17 | 18 |
+| Untested | 94 | 0 | 0 |
+| Scenario pass rate (non-benign, strict) | 94.7% (188) | 89.2% | 93.1% (249 non-benign) |
+| Benign controls firing at medium or above | 0 | 0 | 0 of 44 |
+
+Of the 94 techniques: 87 now have a scenario (78 Detected, 7 Partial, 2 Missed) and 7 are Not-testable
+(6 declared up front, plus T1221 reclassified after its first scenario missed, see below). The regression
+floor stays at 0.93 (measured 0.931); it was not lowered.
+
+**Not-testable (reasons in `scenarios/not_testable.json`)**: `T1068` (exploitation needs crash, memory or
+syscall telemetry), `T1078.003` (valid local-account login needs a baseline), `T1078.004` (cloud-account use is
+control-plane telemetry), `T1110.002` (offline cracking leaves no victim event), `T1204.001` (user clicking a
+link), `T1554` (needs file-content integrity), `T1221` (remote-template fetch happens inside the document;
+the network event has no owning process and the command line holds only a local path). T1221 first ran as a
+network-only scenario and was Missed; it was reclassified as not testable rather than fixed because no
+telemetry field could carry the evidence. The existing rule only catches the rarer variant where the Office
+command line itself contains a template URL.
+
+**Missed on first run, fixed by rules (9)**, added to `gap2.json` with positive and negative samples:
+`T1053.006` (`systemd-run --on-calendar`, the rule only saw `.timer` file creation), `T1070.004` (`shred -u`
+of a hidden file in /tmp; rule only covered log and history wiping), `T1071` (curl with an MSIE 6 user
+agent), `T1071.001` (PowerShell WebClient with a Cookie header to a raw IP; rule needed POST),
+`T1563.001` (ssh `-S` control socket in /tmp; rule only covered agent-socket hijack), `T1564.002`
+(registry write to `Winlogon\SpecialAccounts\UserList`; rule only saw the `reg add` command line),
+`T1574.001` (unsigned `version.dll` loaded from an application folder; rule only covered phantom DLL
+creation in System32), `T1574.004` (unsigned shared object or dylib loaded from /tmp or /Users/Shared; rule
+only covered `DYLD_INSERT_LIBRARIES` env). `T1078.001` was fixed by extending the default-account list
+(`pi`, `ubnt`, `vagrant`, `cisco`). These fixes were written after seeing the miss and are not themselves
+validated by a second independent variant, so treat them as one-variant results. Six near-miss benign
+controls cover the new rules.
+
+**Still Missed (2, real misses, not loosened)**:
+* `T1137.001`: a modified `Normal.dotm`. Word rewrites that file on ordinary preference changes and file
+  events carry no writer, so a rule would fire on healthy desktops. Left as a deliberate precision gap.
+* `T1568`: fast-flux or generated lookups of 12-character mixed alphanumeric labels under a made-up
+  domain. The existing DGA rules need long labels (30+) or consonant-only labels on throwaway TLDs; a
+  broader rule would fire on CDN and hash-named hosts. No stateful NXDOMAIN-rate signal exists.
+
+**Partial (7)** (behavior seen, filed under a neighbouring technique; mostly mapping disagreements):
+`T1021` (PsExec fires as `T1569.002`), `T1090.001` (ssh `-R` fires `T1572`), `T1112` (Defender policy
+`reg add` fires `T1562.001`), `T1203` (Office spawning cmd fires `T1204.002` and `T1566.001`), `T1204`
+(wscript from Downloads fires `T1059.005`/`T1059.007`), `T1553.002` (the scenario is a module event with a
+revoked-style signer string, which is contrived: module telemetry carries no revocation data, so only an
+injection-path rule fired), `T1562.006` (stopping auditd fires `T1562.001`).
+
+One detector change: the failed-login detector (`auth_burst.go`) now reports a burst against a single
+account as `auth-password-guessing` (`T1110.001`) instead of the generic `auth-failed-login-burst`
+(`T1110`); bursts across 2 to 4 accounts keep the generic rule, 5 or more are still `T1110.003`. This fixed
+the T1110.001 Partial; the unit test was updated to match.
+
+**Caveats.** Still synthetic data authored by the same team that wrote the rules; one variant per
+technique; parent-technique ids (for example `T1003`, `T1071`, `T1548`) are credited when any
+sub-technique rule fires, so a parent Detected does not prove the parent-level behavior is covered beyond
+that variant. No evasion variants (renamed binaries defeat the name heuristics). Rule fixes were authored
+after the miss was seen. "Detected" means a mapped rule fired, not that the alert is actionable. Several new
+rules are low severity or informational by design.

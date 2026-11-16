@@ -23,6 +23,7 @@ const (
 
 func init() {
 	ruleMITRE["auth-failed-login-burst"] = struct{ Tactic, Technique, ID string }{"Credential Access", "Brute Force", "T1110"}
+	ruleMITRE["auth-password-guessing"] = struct{ Tactic, Technique, ID string }{"Credential Access", "Brute Force: Password Guessing", "T1110.001"}
 	ruleMITRE["auth-password-spray"] = struct{ Tactic, Technique, ID string }{"Credential Access", "Brute Force: Password Spraying", "T1110.003"}
 }
 
@@ -118,7 +119,10 @@ func (d *AuthBurstDetector) Observe(e TelemetryEvent) []Finding {
 	if len(users) >= authSprayUsers && len(kept) >= authSprayUsers {
 		emit("auth-password-spray", "high", fmt.Sprintf("%d distinct accounts failed to authenticate from %s within %s (password spraying pattern; investigate, not proof of compromise)", len(users), e.SourceIP, authBurstWindow))
 	}
-	if len(kept) >= authBurstFailures {
+	if len(kept) >= authBurstFailures && len(users) == 1 {
+		// Many failures against one account is password guessing (T1110.001), not a generic burst.
+		emit("auth-password-guessing", "medium", fmt.Sprintf("%d failed logins against one account from %s within %s (password guessing pattern; investigate, not proof of compromise)", len(kept), e.SourceIP, authBurstWindow))
+	} else if len(kept) >= authBurstFailures {
 		emit("auth-failed-login-burst", "medium", fmt.Sprintf("%d failed logins from %s within %s (brute-force pattern; investigate, not proof of compromise)", len(kept), e.SourceIP, authBurstWindow))
 	}
 	return out

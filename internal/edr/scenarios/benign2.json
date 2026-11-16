@@ -1,0 +1,101 @@
+{
+ "scenarios": [
+  {
+   "id": "benign-val2-systemd-run-scope",
+   "name": "Resource-limited build under systemd-run",
+   "description": "Benign control paired with the val2 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/systemd-run",
+     "command": "systemd-run --scope -p MemoryMax=2G make -j8",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-val2-shred-session-key",
+   "name": "Admin shreds a temporary key file",
+   "description": "Benign control paired with the val2 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/shred",
+     "command": "shred -u /tmp/session.key",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-val2-ps-api-bearer",
+   "name": "Script calls an internal API with a bearer header",
+   "description": "Benign control paired with the val2 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "windows",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+     "command": "powershell -c \"$w=New-Object Net.WebClient;$w.Headers.Add('Authorization','Bearer abc');$w.DownloadString('https://api.contoso.com/v1/items')\"",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ]
+  },
+  {
+   "id": "benign-val2-ssh-own-controlpath",
+   "name": "ssh through the user's own control socket",
+   "description": "Benign control paired with the val2 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/ssh",
+     "command": "ssh -S /home/ann/.ssh/cm-ann@host:22 host -O check",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-val2-signed-version-dll",
+   "name": "Signed vendor DLL named like a system DLL",
+   "description": "Benign control paired with the val2 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "windows",
+   "benign": true,
+   "steps": [
+    {
+     "type": "module",
+     "module_path": "C:\\Program Files\\VendorApp\\version.dll",
+     "signed": true,
+     "signer": "Vendor Inc",
+     "module_kind": "dll"
+    }
+   ]
+  },
+  {
+   "id": "benign-val2-system-lib-load",
+   "name": "Distro shared library loaded from /usr/lib",
+   "description": "Benign control paired with the val2 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "module",
+     "module_path": "/usr/lib/x86_64-linux-gnu/libz.so.1",
+     "signed": false,
+     "module_kind": "so"
+    }
+   ]
+  }
+ ]
+}
