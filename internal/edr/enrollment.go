@@ -202,7 +202,7 @@ func (r *CredentialRegistry) Status(now time.Time, staleAfter time.Duration) []A
 func (r *CredentialRegistry) RegisterRoutes(mux *http.ServeMux, admin string) {
 	isAdmin := func(w http.ResponseWriter, req *http.Request) bool {
 		token := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
-		if subtle.ConstantTimeCompare([]byte(token), []byte(admin)) == 1 || validSession(req, admin) {
+		if secureEqual(token, admin) || validSession(req, admin) {
 			return true
 		}
 		http.Error(w, "unauthorized", 401)

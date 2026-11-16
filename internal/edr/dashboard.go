@@ -23,6 +23,9 @@ func sessionSignature(secret, payload string) string {
 	return base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
 }
 func validSession(r *http.Request, secret string) bool {
+	if secret == "" {
+		return false // an empty secret would make the cookie forgeable by anyone
+	}
 	c, err := r.Cookie("zyvor_session")
 	if err != nil {
 		return false
@@ -67,7 +70,7 @@ func registerDashboard(mux *http.ServeMux, token string, store *Store) {
 		var credentials struct {
 			Token string `json:"token"`
 		}
-		if json.NewDecoder(r.Body).Decode(&credentials) != nil || subtle.ConstantTimeCompare([]byte(credentials.Token), []byte(token)) != 1 {
+		if json.NewDecoder(r.Body).Decode(&credentials) != nil || !secureEqual(credentials.Token, token) {
 			http.Error(w, "unauthorized", 401)
 			return
 		}
@@ -85,7 +88,7 @@ func registerDashboard(mux *http.ServeMux, token string, store *Store) {
 			return true
 		}
 		auth := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-		if subtle.ConstantTimeCompare([]byte(auth), []byte(token)) == 1 {
+		if secureEqual(auth, token) {
 			return true
 		}
 		http.Error(w, "unauthorized", 401)

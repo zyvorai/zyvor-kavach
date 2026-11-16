@@ -37,6 +37,9 @@ func main() {
 	if len(token) < 8 {
 		log.Fatal("set KAVACH_TOKEN to a secret of at least 8 characters")
 	}
+	if len(token) < 16 {
+		log.Printf("WARNING: KAVACH_TOKEN is shorter than 16 characters; use a random 32+ character secret")
+	}
 	switch *mode {
 	case "server":
 		store, err := edr.NewStore(*state, 1000)
@@ -55,7 +58,14 @@ func main() {
 		if (*tlsCert == "") != (*tlsKey == "") {
 			log.Fatal("TLS certificate and key must be supplied together")
 		}
-		srv := &http.Server{Addr: *listen, Handler: handler, ReadHeaderTimeout: 5 * time.Second}
+		srv := &http.Server{
+			Addr: *listen, Handler: handler,
+			ReadHeaderTimeout: 5 * time.Second,
+			ReadTimeout:       2 * time.Minute, // covers the largest (32 MiB) evidence upload; stops slow-body clients
+			IdleTimeout:       2 * time.Minute,
+			MaxHeaderBytes:    64 << 10,
+			// No WriteTimeout: /v1/stream is long-lived SSE.
+		}
 		if *tlsCert == "" {
 			if !strings.HasPrefix(*listen, "127.0.0.1:") && !strings.HasPrefix(*listen, "localhost:") {
 				log.Fatal("non-loopback listener requires TLS")

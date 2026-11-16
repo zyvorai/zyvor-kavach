@@ -3,7 +3,6 @@ package edr
 
 import (
 	"bytes"
-	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -224,7 +223,7 @@ func (s *SIEMExporter) Status() map[string]any {
 func (s *SIEMExporter) RegisterRoutes(mux *http.ServeMux, token string, store *Store) {
 	mux.HandleFunc("GET /v1/siem/status", func(w http.ResponseWriter, r *http.Request) {
 		got := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-		if subtle.ConstantTimeCompare([]byte(got), []byte(token)) != 1 && !validSession(r, token) {
+		if !secureEqual(got, token) && !validSession(r, token) {
 			http.Error(w, "unauthorized", 401)
 			return
 		}
@@ -233,7 +232,7 @@ func (s *SIEMExporter) RegisterRoutes(mux *http.ServeMux, token string, store *S
 	})
 	mux.HandleFunc("GET /v1/siem/export", func(w http.ResponseWriter, r *http.Request) {
 		got := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-		if subtle.ConstantTimeCompare([]byte(got), []byte(token)) != 1 && !validSession(r, token) {
+		if !secureEqual(got, token) && !validSession(r, token) {
 			http.Error(w, "unauthorized", 401)
 			return
 		}
