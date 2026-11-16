@@ -126,6 +126,7 @@ func printHelp(w io.Writer) {
 	row("identity summary|indicators|risk|privileged|timeline USER", "ITDR")
 	row("vulns software|advisories|findings|exposure|top; sbom HOST", "Vulnerability management")
 	row("regulatory regimes|clocks|profile [set ID,...]", "Regional incident-reporting regimes and time remaining (informational; no filing)")
+	row("cloudaudit sources", "Cloud / SaaS audit-log sources and cld- rule count (ingest via POST /v1/cloud/audit/events)")
 	row("posture-trend [diff --from D [--to D]] [--days N]", "Posture trend and diff between two dates")
 	row("advisories list|status|refresh", "Worldwide CERT advisory feeds (opt-in, KAVACH_CERT_FEEDS)")
 	row("validate scenarios|show ID|run --ids A,B|--all|coverage", "Detection validation lab (synthetic data, not a guarantee)")

@@ -1,0 +1,570 @@
+[
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "DescribeInstances outcome=success user_type=AssumedRole region=us-east-1",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "DescribeSecurityGroups outcome=success user_type=IAMUser region=eu-west-1",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "GetObject outcome=success user_type=AssumedRole region=us-east-1",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "PutObject outcome=success user_type=AssumedRole region=us-east-1",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "ListObjectsV2 outcome=success user_type=AssumedRole",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "ConsoleLogin outcome=success user_type=IAMUser mfa=true region=us-east-1",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "AssumeRole outcome=success user_type=AWSService",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "GetCallerIdentity outcome=failure user_type=IAMUser error=AccessDenied",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "DescribeLogGroups outcome=success user_type=AssumedRole",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "CreateLogStream outcome=success user_type=AssumedRole",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "PutMetricData outcome=success user_type=AssumedRole",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "Decrypt outcome=success user_type=AWSService",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "GenerateDataKey outcome=success user_type=AWSService",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "StartInstances outcome=success user_type=AssumedRole",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "DescribeVolumes outcome=success user_type=AssumedRole",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "DeleteObject outcome=success user_type=AssumedRole",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "CreateBucket outcome=success user_type=AssumedRole",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "PutBucketTagging outcome=success user_type=AssumedRole",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "ListRoles outcome=failure error=AccessDenied",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "SendCommand outcome=failure error=AccessDenied",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "AttachRolePolicy outcome=success params={\"policyArn\":\"arn:aws:iam::aws:policy/ReadOnlyAccess\"}",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "AuthorizeSecurityGroupIngress outcome=success params={\"ipPermissions\":{\"items\":[{\"cidrIp\":\"10.0.0.0/16\"}]}}",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "PutBucketPolicy outcome=success params={\"bucketName\":\"logs\",\"policy\":\"restricted\"}",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "ModifySnapshotAttribute outcome=success params={\"attributeType\":\"tags\"}",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "ModifyInstanceMetadataOptions outcome=success params={\"httpTokens\":\"required\"}",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "aws:cloudtrail",
+"command": "GetParameter outcome=success params={\"name\":\"/app/feature-flag\"}",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "azure:activity",
+"command": "MICROSOFT.COMPUTE/VIRTUALMACHINES/READ outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "azure:activity",
+"command": "MICROSOFT.STORAGE/STORAGEACCOUNTS/READ outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "azure:activity",
+"command": "MICROSOFT.RESOURCES/SUBSCRIPTIONS/RESOURCEGROUPS/READ outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "azure:activity",
+"command": "MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE outcome=started",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "azure:activity",
+"command": "MICROSOFT.COMPUTE/VIRTUALMACHINES/START/ACTION outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "azure:activity",
+"command": "MICROSOFT.INSIGHTS/DIAGNOSTICSETTINGS/WRITE outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "azure:activity",
+"command": "MICROSOFT.NETWORK/NETWORKSECURITYGROUPS/READ outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "azure:activity",
+"command": "MICROSOFT.KEYVAULT/VAULTS/READ outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "azure:signin",
+"command": "SignIn outcome=success mfa=true client=Browser app=Office_365_Exchange_Online ca=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "azure:signin",
+"command": "SignIn outcome=success client=Mobile_Apps_and_Desktop_clients app=Microsoft_Teams ca=notApplied",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "azure:signin",
+"command": "SignIn outcome=success risk=low mfa=true client=Browser app=Azure_Portal",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "azure:signin",
+"command": "SignIn outcome=failure error=50057 client=Browser app=Office_365",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "azure:audit",
+"command": "Update_user outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "azure:audit",
+"command": "Add_member_to_group outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "azure:audit",
+"command": "Update_application outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "azure:audit",
+"command": "Add_user outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "azure:audit",
+"command": "Update_device outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "gcp:audit",
+"command": "storage.objects.get outcome=success service=storage.googleapis.com",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "gcp:audit",
+"command": "compute.instances.list outcome=success service=compute.googleapis.com",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "gcp:audit",
+"command": "compute.instances.get outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "gcp:audit",
+"command": "logging.sinks.list outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "gcp:audit",
+"command": "compute.firewalls.list outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "gcp:audit",
+"command": "GetIamPolicy outcome=success service=cloudresourcemanager.googleapis.com",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "gcp:audit",
+"command": "compute.firewalls.insert outcome=success params={\"request\":{\"sourceRanges\":[\"10.0.0.0/8\"]}}",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "gcp:audit",
+"command": "SetIamPolicy outcome=failure",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "gcp:audit",
+"command": "storage.buckets.list outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "gcp:audit",
+"command": "bigquery.jobs.query outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "okta:system",
+"command": "user.session.start outcome=success risk=low auth=PASSWORD",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "okta:system",
+"command": "user.authentication.sso outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "okta:system",
+"command": "user.authentication.auth_via_mfa outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "okta:system",
+"command": "app.user_membership.add outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "okta:system",
+"command": "user.session.end outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "okta:system",
+"command": "user.mfa.factor.activate outcome=failure",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "okta:system",
+"command": "policy.evaluate_sign_on outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "okta:system",
+"command": "user.account.update_profile outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "m365:audit",
+"command": "MailItemsAccessed outcome=success workload=Exchange",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "m365:audit",
+"command": "FileAccessed outcome=success workload=SharePoint",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "m365:audit",
+"command": "FileModified outcome=success workload=OneDrive",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "m365:audit",
+"command": "UserLoggedIn outcome=success workload=AzureActiveDirectory",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "m365:audit",
+"command": "Send outcome=success workload=Exchange",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "m365:audit",
+"command": "New-InboxRule outcome=success workload=Exchange params=Name=Newsletters;SubjectContainsWords=weekly",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "m365:audit",
+"command": "Set-Mailbox outcome=success workload=Exchange params=DisplayName=Support",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "m365:audit",
+"command": "SearchQueryInitiatedExchange outcome=success",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "m365:audit",
+"command": "PageViewed outcome=success workload=SharePoint",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+},
+{
+"kind": "process",
+"os": "linux",
+"executable": "m365:audit",
+"command": "SharingSet outcome=success workload=SharePoint",
+"parent_exe": "cloud-actor",
+"note": "cloud audit benign"
+}
+]
