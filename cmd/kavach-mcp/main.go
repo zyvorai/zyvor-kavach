@@ -91,6 +91,9 @@ func buildServer(c *client, allowMutations bool) (*mcpserver.Server, error) {
 	if err := registerProvTools(srv, c); err != nil {
 		return nil, err
 	}
+	if err := registerSurfaceTools(srv, c); err != nil {
+		return nil, err
+	}
 	if err := registerRansomTools(srv, c); err != nil {
 		return nil, err
 	}
