@@ -81,7 +81,15 @@ Aliases: `fin`, `banking`.
 
 ## Console
 
-**Browse → Finance** — metric band (modules, institutions, exchanges, insurance, events), venues, payment rails, institutions, insurers, IRDAI posture, recent events.
+**Browse -> Finance** (`#/finance`, no g-key; open it from the Browse menu, the palette, or the hash).
+
+- Metric band: modules, institutions, exchanges, insurance, events.
+- Tables: exchanges and markets (venue, place, segments, status), payment rails, institutions, insurers, IRDAI posture, and recent finance events.
+- Data: `/v1/finance/summary|exchanges|payment-rails|institutions|insurance|irdai|events`. These are fetched with the console's main data load (at sign-in and on refresh), not when the page is opened, so a failed request shows in the main page error line rather than inside the page.
+- Controls: read-only. Every table gets the standard tool row (column toggle, CSV and JSON export of loaded rows, click-to-sort) and the page gets the saved-views bar; see [console](console.md).
+- Empty state: a table with no data shows an empty-state row; the event ledger also shows events posted to `POST /v1/finance/events`. Inventory domains are served as empty lists, never null.
+- Not on the page: markets, trading desks, algo, UPI, cards, SWIFT, treasury, fraud, insider, sanctions, KYC, PCI, RBI, SEBI, NBFC and mutual-fund routes are API and `kavachctl` only.
+- Known limit: the dark theme and the 390px phone width of this page are unverified in a browser; see [console-qa](console-qa.md).
 
 ## Hard rule
 
