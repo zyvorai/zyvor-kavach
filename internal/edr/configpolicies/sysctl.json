@@ -1,0 +1,469 @@
+{
+ "area": "sysctl",
+ "policies": [
+  {
+   "id": "sys-ip-forward",
+   "title": "IPv4 forwarding is enabled",
+   "description": "Checks that a non-router host does not forward packets.",
+   "rationale": "A forwarding host can be abused to bridge networks. Routers, VPN and container hosts legitimately need it, so treat a failure as a prompt to confirm intent.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "sysctl"
+    ]
+   },
+   "check": {
+    "key": "net.ipv4.ip_forward",
+    "op": "equals",
+    "value": "0"
+   },
+   "on_absent": "unknown",
+   "absence_note": "The kernel default (or a distribution drop-in) applies and cannot be known from this file alone: result is unknown.",
+   "remediation": "Set net.ipv4.ip_forward = 0 on hosts that are not routers.",
+   "references": [
+    "Linux kernel documentation: sysctl/net, sysctl/kernel, sysctl/fs (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "net.ipv4.ip_forward = 1\n",
+   "negative": "net.ipv4.ip_forward = 0\n"
+  },
+  {
+   "id": "sys-source-route",
+   "title": "IPv4 source-routed packets are accepted",
+   "description": "Checks that the sender cannot dictate the packet route.",
+   "rationale": "Source routing lets an attacker steer traffic around filters.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "sysctl"
+    ]
+   },
+   "check": {
+    "key": "net.ipv4.conf.all.accept_source_route",
+    "op": "equals",
+    "value": "0"
+   },
+   "on_absent": "unknown",
+   "absence_note": "The kernel default (or a distribution drop-in) applies and cannot be known from this file alone: result is unknown.",
+   "remediation": "Set net.ipv4.conf.all.accept_source_route = 0.",
+   "references": [
+    "Linux kernel documentation: sysctl/net, sysctl/kernel, sysctl/fs (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "net.ipv4.conf.all.accept_source_route = 1\n",
+   "negative": "net.ipv4.conf.all.accept_source_route = 0\n"
+  },
+  {
+   "id": "sys-accept-redirects",
+   "title": "ICMP redirects are accepted",
+   "description": "Checks that ICMP redirects cannot change the routing table.",
+   "rationale": "Forged redirects can reroute traffic through an attacker.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "sysctl"
+    ]
+   },
+   "check": {
+    "key": "net.ipv4.conf.all.accept_redirects",
+    "op": "equals",
+    "value": "0"
+   },
+   "on_absent": "unknown",
+   "absence_note": "The kernel default (or a distribution drop-in) applies and cannot be known from this file alone: result is unknown.",
+   "remediation": "Set net.ipv4.conf.all.accept_redirects = 0.",
+   "references": [
+    "Linux kernel documentation: sysctl/net, sysctl/kernel, sysctl/fs (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "net.ipv4.conf.all.accept_redirects = 1\n",
+   "negative": "net.ipv4.conf.all.accept_redirects = 0\n"
+  },
+  {
+   "id": "sys-send-redirects",
+   "title": "ICMP redirects are sent",
+   "description": "Checks that a non-router does not send ICMP redirects.",
+   "rationale": "Hosts that are not routers have no reason to advertise better routes.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "sysctl"
+    ]
+   },
+   "check": {
+    "key": "net.ipv4.conf.all.send_redirects",
+    "op": "equals",
+    "value": "0"
+   },
+   "on_absent": "unknown",
+   "absence_note": "The kernel default (or a distribution drop-in) applies and cannot be known from this file alone: result is unknown.",
+   "remediation": "Set net.ipv4.conf.all.send_redirects = 0.",
+   "references": [
+    "Linux kernel documentation: sysctl/net, sysctl/kernel, sysctl/fs (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "net.ipv4.conf.all.send_redirects = 1\n",
+   "negative": "net.ipv4.conf.all.send_redirects = 0\n"
+  },
+  {
+   "id": "sys-rp-filter",
+   "title": "Reverse-path filtering is off",
+   "description": "Checks that packets arriving on an interface that would not route back are dropped.",
+   "rationale": "It blunts source-address spoofing. Asymmetric routing setups may need loose mode (2).",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "sysctl"
+    ]
+   },
+   "check": {
+    "key": "net.ipv4.conf.all.rp_filter",
+    "op": "in",
+    "values": [
+     "1",
+     "2"
+    ]
+   },
+   "on_absent": "unknown",
+   "absence_note": "The kernel default (or a distribution drop-in) applies and cannot be known from this file alone: result is unknown.",
+   "remediation": "Set net.ipv4.conf.all.rp_filter = 1 (or 2 for loose mode).",
+   "references": [
+    "Linux kernel documentation: sysctl/net, sysctl/kernel, sysctl/fs (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "net.ipv4.conf.all.rp_filter = 0\n",
+   "negative": "net.ipv4.conf.all.rp_filter = 1\n"
+  },
+  {
+   "id": "sys-icmp-broadcast",
+   "title": "ICMP echo to broadcast addresses is answered",
+   "description": "Checks that the host ignores broadcast pings.",
+   "rationale": "Answering them enables amplification (smurf-style) abuse.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "sysctl"
+    ]
+   },
+   "check": {
+    "key": "net.ipv4.icmp_echo_ignore_broadcasts",
+    "op": "equals",
+    "value": "1"
+   },
+   "on_absent": "unknown",
+   "absence_note": "The kernel default (or a distribution drop-in) applies and cannot be known from this file alone: result is unknown.",
+   "remediation": "Set net.ipv4.icmp_echo_ignore_broadcasts = 1.",
+   "references": [
+    "Linux kernel documentation: sysctl/net, sysctl/kernel, sysctl/fs (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "net.ipv4.icmp_echo_ignore_broadcasts = 0\n",
+   "negative": "net.ipv4.icmp_echo_ignore_broadcasts = 1\n"
+  },
+  {
+   "id": "sys-syncookies",
+   "title": "TCP SYN cookies are disabled",
+   "description": "Checks that SYN cookies protect the listen queue under flood.",
+   "rationale": "Without them a SYN flood can exhaust the backlog.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "sysctl"
+    ]
+   },
+   "check": {
+    "key": "net.ipv4.tcp_syncookies",
+    "op": "equals",
+    "value": "1"
+   },
+   "on_absent": "unknown",
+   "absence_note": "The kernel default (or a distribution drop-in) applies and cannot be known from this file alone: result is unknown.",
+   "remediation": "Set net.ipv4.tcp_syncookies = 1.",
+   "references": [
+    "Linux kernel documentation: sysctl/net, sysctl/kernel, sysctl/fs (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "net.ipv4.tcp_syncookies = 0\n",
+   "negative": "net.ipv4.tcp_syncookies = 1\n"
+  },
+  {
+   "id": "sys-log-martians",
+   "title": "Packets with impossible addresses are not logged",
+   "description": "Checks that spoofed or misrouted addresses are logged.",
+   "rationale": "The log gives defenders evidence of spoofing or routing mistakes.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "sysctl"
+    ]
+   },
+   "check": {
+    "key": "net.ipv4.conf.all.log_martians",
+    "op": "equals",
+    "value": "1"
+   },
+   "on_absent": "unknown",
+   "absence_note": "The kernel default (or a distribution drop-in) applies and cannot be known from this file alone: result is unknown.",
+   "remediation": "Set net.ipv4.conf.all.log_martians = 1.",
+   "references": [
+    "Linux kernel documentation: sysctl/net, sysctl/kernel, sysctl/fs (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "net.ipv4.conf.all.log_martians = 0\n",
+   "negative": "net.ipv4.conf.all.log_martians = 1\n"
+  },
+  {
+   "id": "sys-aslr",
+   "title": "Address space layout randomisation is not full",
+   "description": "Checks that stack, heap and mappings are randomised.",
+   "rationale": "ASLR makes memory-corruption exploits less reliable.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "sysctl"
+    ]
+   },
+   "check": {
+    "key": "kernel.randomize_va_space",
+    "op": "equals",
+    "value": "2"
+   },
+   "on_absent": "unknown",
+   "absence_note": "The kernel default (or a distribution drop-in) applies and cannot be known from this file alone: result is unknown.",
+   "remediation": "Set kernel.randomize_va_space = 2.",
+   "references": [
+    "Linux kernel documentation: sysctl/net, sysctl/kernel, sysctl/fs (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "kernel.randomize_va_space = 0\n",
+   "negative": "kernel.randomize_va_space = 2\n"
+  },
+  {
+   "id": "sys-kptr-restrict",
+   "title": "Kernel pointers are exposed to users",
+   "description": "Checks that kernel addresses are hidden from unprivileged users.",
+   "rationale": "Leaked addresses help defeat ASLR in kernel exploits.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "sysctl"
+    ]
+   },
+   "check": {
+    "key": "kernel.kptr_restrict",
+    "op": "in",
+    "values": [
+     "1",
+     "2"
+    ]
+   },
+   "on_absent": "unknown",
+   "absence_note": "The kernel default (or a distribution drop-in) applies and cannot be known from this file alone: result is unknown.",
+   "remediation": "Set kernel.kptr_restrict = 2 (or 1).",
+   "references": [
+    "Linux kernel documentation: sysctl/net, sysctl/kernel, sysctl/fs (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "kernel.kptr_restrict = 0\n",
+   "negative": "kernel.kptr_restrict = 2\n"
+  },
+  {
+   "id": "sys-dmesg-restrict",
+   "title": "Kernel log is readable by all users",
+   "description": "Checks that only privileged users can read the kernel ring buffer.",
+   "rationale": "The buffer can leak addresses and hardware detail.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "sysctl"
+    ]
+   },
+   "check": {
+    "key": "kernel.dmesg_restrict",
+    "op": "equals",
+    "value": "1"
+   },
+   "on_absent": "unknown",
+   "absence_note": "The kernel default (or a distribution drop-in) applies and cannot be known from this file alone: result is unknown.",
+   "remediation": "Set kernel.dmesg_restrict = 1.",
+   "references": [
+    "Linux kernel documentation: sysctl/net, sysctl/kernel, sysctl/fs (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "kernel.dmesg_restrict = 0\n",
+   "negative": "kernel.dmesg_restrict = 1\n"
+  },
+  {
+   "id": "sys-ptrace-scope",
+   "title": "Any process may ptrace its peers",
+   "description": "Checks that the Yama ptrace restriction is on.",
+   "rationale": "Unrestricted ptrace lets a compromised process read the memory of other processes of the same user.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "sysctl"
+    ]
+   },
+   "check": {
+    "key": "kernel.yama.ptrace_scope",
+    "op": "ge",
+    "value": "1"
+   },
+   "on_absent": "unknown",
+   "absence_note": "The kernel default (or a distribution drop-in) applies and cannot be known from this file alone: result is unknown.",
+   "remediation": "Set kernel.yama.ptrace_scope = 1 (or higher).",
+   "references": [
+    "Linux kernel documentation: sysctl/net, sysctl/kernel, sysctl/fs (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)",
+    "ATT&CK T1055.008 (hint)"
+   ],
+   "positive": "kernel.yama.ptrace_scope = 0\n",
+   "negative": "kernel.yama.ptrace_scope = 1\n"
+  },
+  {
+   "id": "sys-suid-dumpable",
+   "title": "Set-uid programs may dump core",
+   "description": "Checks that privileged programs do not write core files.",
+   "rationale": "Core files can hold secrets from privileged memory.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "sysctl"
+    ]
+   },
+   "check": {
+    "key": "fs.suid_dumpable",
+    "op": "equals",
+    "value": "0"
+   },
+   "on_absent": "unknown",
+   "absence_note": "The kernel default (or a distribution drop-in) applies and cannot be known from this file alone: result is unknown.",
+   "remediation": "Set fs.suid_dumpable = 0.",
+   "references": [
+    "Linux kernel documentation: sysctl/net, sysctl/kernel, sysctl/fs (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "fs.suid_dumpable = 1\n",
+   "negative": "fs.suid_dumpable = 0\n"
+  },
+  {
+   "id": "sys-protected-links",
+   "title": "Hard and symbolic link protections are off",
+   "description": "Checks that link-following races in shared directories are blocked.",
+   "rationale": "These protections stop a class of /tmp link attacks.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "sysctl"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "key": "fs.protected_hardlinks",
+      "op": "equals",
+      "value": "1"
+     },
+     {
+      "key": "fs.protected_symlinks",
+      "op": "equals",
+      "value": "1"
+     }
+    ]
+   },
+   "on_absent": "unknown",
+   "absence_note": "The kernel default (or a distribution drop-in) applies and cannot be known from this file alone: result is unknown.",
+   "remediation": "Set fs.protected_hardlinks = 1 and fs.protected_symlinks = 1.",
+   "references": [
+    "Linux kernel documentation: sysctl/net, sysctl/kernel, sysctl/fs (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "fs.protected_hardlinks = 0\nfs.protected_symlinks = 1\n",
+   "negative": "fs.protected_hardlinks = 1\nfs.protected_symlinks = 1\n"
+  },
+  {
+   "id": "sys-unprivileged-bpf",
+   "title": "Unprivileged BPF is allowed",
+   "description": "Checks that unprivileged users cannot load BPF programs.",
+   "rationale": "Unprivileged BPF has been a repeated source of local privilege escalation.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "sysctl"
+    ]
+   },
+   "check": {
+    "key": "kernel.unprivileged_bpf_disabled",
+    "op": "ge",
+    "value": "1"
+   },
+   "on_absent": "unknown",
+   "absence_note": "The kernel default (or a distribution drop-in) applies and cannot be known from this file alone: result is unknown.",
+   "remediation": "Set kernel.unprivileged_bpf_disabled = 1 (or 2).",
+   "references": [
+    "Linux kernel documentation: sysctl/net, sysctl/kernel, sysctl/fs (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "kernel.unprivileged_bpf_disabled = 0\n",
+   "negative": "kernel.unprivileged_bpf_disabled = 1\n"
+  },
+  {
+   "id": "sys-ipv6-ra",
+   "title": "IPv6 router advertisements are accepted",
+   "description": "Checks that a static-addressed host ignores router advertisements.",
+   "rationale": "Rogue advertisements can redirect IPv6 traffic. Hosts that rely on SLAAC need them.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "sysctl"
+    ]
+   },
+   "check": {
+    "key": "net.ipv6.conf.all.accept_ra",
+    "op": "equals",
+    "value": "0"
+   },
+   "on_absent": "unknown",
+   "absence_note": "The kernel default (or a distribution drop-in) applies and cannot be known from this file alone: result is unknown.",
+   "remediation": "Set net.ipv6.conf.all.accept_ra = 0 where addressing is static.",
+   "references": [
+    "Linux kernel documentation: sysctl/net, sysctl/kernel, sysctl/fs (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "net.ipv6.conf.all.accept_ra = 1\n",
+   "negative": "net.ipv6.conf.all.accept_ra = 0\n"
+  }
+ ]
+}

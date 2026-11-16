@@ -12,6 +12,7 @@ import (
 	"context"
 	"encoding/binary"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -392,7 +393,7 @@ func fileFindingIDs(r *InspectReport) map[string]InspectFinding {
 }
 
 func fileTestBuilder() *InspectBuilder {
-	return &InspectBuilder{r: &InspectReport{}, seenIOC: map[string]bool{}, analyzer: "test"}
+	return &InspectBuilder{mu: &sync.Mutex{}, r: &InspectReport{}, seenIOC: map[string]bool{}, analyzer: "test"}
 }
 
 func fileHasIOC(r *InspectReport, typ, val string) bool {

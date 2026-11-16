@@ -9,7 +9,7 @@ import (
 
 func newTestStore(t *testing.T) *Store {
 	t.Helper()
-	s, err := NewStore(t.TempDir()+"/f.jsonl", 1000)
+	s, err := testStore(t, t.TempDir()+"/f.jsonl", 1000)
 	if err != nil {
 		t.Fatal(err)
 	}

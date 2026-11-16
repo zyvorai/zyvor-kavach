@@ -43,7 +43,9 @@ Legacy lab tokens that used `Admin@321Admin@321` are still tried when the passwo
 
 ## Browse menu
 
-Timeline, Prevent, Intel, Identity, Spotlight, OverWatch, Response, Ops, **eBPF**, **Finance**, **Sectors**, Modules, Integrations.
+Timeline, Prevent, Intel, Identity, Spotlight, OverWatch, Response, Ops, Observe, eBPF, Alerts, Risk, SOC, Posture, Finance, Sectors, Modules, Integrations, Detection lab, Intel feeds, Evidence, Fleet health, Prevalence, Canaries, Governance, Tuning, Identity threats, Vulnerabilities, Cases, Hunt packs, Ransomware, Content library, Adversaries, Rule health, Export, Search, CERT advisories, Regulatory clocks, Models, Inspector, Provenance, Ransomware behaviour, TTP similarity, Competitive, Syslog, Content versions, Reports and SLO, Automation, Attack chains, Feedback, Vulnerability priority, Sequence hunt, Coverage, Posture trend, Executive digest, Auditor bundle.
+
+The menu is read from `internal/edr/dashboard.html`; `TestDocsConsoleListsMenuPages` fails when a page is missing here.
 
 ---
 

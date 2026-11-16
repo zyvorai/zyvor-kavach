@@ -61,7 +61,7 @@ func TestAdversaryEndpoints(t *testing.T) {
 	if err := LoadContentPacks(); err != nil {
 		t.Fatal(err)
 	}
-	store, err := NewStore(filepath.Join(t.TempDir(), "f.jsonl"), 100)
+	store, err := testStore(t, filepath.Join(t.TempDir(), "f.jsonl"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}

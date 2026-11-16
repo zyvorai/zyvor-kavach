@@ -52,9 +52,9 @@ func registerMutateTools(srv *mcpserver.Server, c *client) error {
 			"description":  strProp("Description"),
 		}, "name", "pattern"), bodyFields: true},
 		{name: "kavach_prevention_policy_create", method: "POST", path: "/v1/prevention/policies", description: "Create detect-only prevention policy.", schema: objSchema(map[string]any{
-			"name":            strProp("Policy name"),
-			"ml_sensitivity":  strProp("aggressive|moderate|cautious"),
-			"script_control":  map[string]any{"type": "boolean"},
+			"name":             strProp("Policy name"),
+			"ml_sensitivity":   strProp("aggressive|moderate|cautious"),
+			"script_control":   map[string]any{"type": "boolean"},
 			"ransomware_guard": map[string]any{"type": "boolean"},
 		}, "name"), bodyFields: true},
 		{name: "kavach_device_control_ingest", method: "POST", path: "/v1/device-control", description: "Ingest USB/device observation (never blocks).", schema: objSchema(map[string]any{

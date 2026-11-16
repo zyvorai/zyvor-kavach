@@ -100,3 +100,7 @@ The filter is a necessary condition only, so results are identical to unfiltered
 ## The T-telemetry pack
 
 `internal/edr/content/telemetry.json` (batch `T-telemetry`) ships original per-event rules for the four telemetry types: registry (Run keys to user-writable paths or interpreters, IFEO and SilentProcessExit, AppInit/AppCert DLLs, service ImagePath, Defender exclusions and disable values, UAC, LSA/RunAsPPL, LSA packages, WDigest, RDP enabling and NLA, Winlogon, COM hijack, script block logging), dns (DGA-like labels, long TXT and NULL queries, hex-encoded labels, dynamic-DNS, paste-site and file-drop domain classes, onion gateways), auth (root ssh from a public address, sudo or ssh by service accounts, RDP from public addresses or default accounts, NTLM from public addresses or as Administrator, krbtgt Kerberos use, OAuth to privileged accounts) and module (unsigned modules from temp and user directories, injection-prone paths, LD_PRELOAD-style shared objects, unsigned drivers and kexts from user directories, kexts outside the Extensions directories, vulnerable drivers, credential-theft modules, amsi.dll outside system directories). Rules that need counting over time (failure bursts) are out of scope: content rules are per-event.
+
+## The gap2 pack
+
+`internal/edr/content/gap2.json` (batch `gap2-v1`, ids `gp2-*`) ships 97 original rules for ATT&CK techniques the validation lab reports as untested; see section 8 of `docs/research-validation-lab.md` for scope and caveats.

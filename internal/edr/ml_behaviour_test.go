@@ -247,12 +247,16 @@ func TestMLSimilarityEvaluation(t *testing.T) {
 	}
 	// detection: variants of every exemplar, nearest-exemplar cosine at the documented threshold
 	var total, detected, attributed int
+	nth := 0
 	for _, r := range ContentRules() {
 		if r.EventType != "process" || r.Tests == nil {
 			continue
 		}
 		for _, p := range r.Tests.Positive {
 			if strings.TrimSpace(p.Command) == "" {
+				continue
+			}
+			if nth++; raceEnabled && nth%5 != 0 { // every fifth sample under -race; all of them otherwise
 				continue
 			}
 			for _, v := range mlVariants(p.Command) {
@@ -402,7 +406,7 @@ func TestMLBaselineColdStartGuard(t *testing.T) {
 func mlSetup(t *testing.T) (*http.ServeMux, *Store, string) {
 	t.Helper()
 	dir := t.TempDir()
-	st, err := NewStore(filepath.Join(dir, "f.jsonl"), 20000)
+	st, err := testStore(t, filepath.Join(dir, "f.jsonl"), 20000)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -432,7 +436,7 @@ func TestMLAuth(t *testing.T) {
 }
 
 func TestMLIncrementalHookReplayResetPersistence(t *testing.T) {
-	st, err := NewStore(filepath.Join(t.TempDir(), "f.jsonl"), 20000)
+	st, err := testStore(t, filepath.Join(t.TempDir(), "f.jsonl"), 20000)
 	if err != nil {
 		t.Fatal(err)
 	}

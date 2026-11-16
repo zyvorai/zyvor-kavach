@@ -44,6 +44,31 @@ func mlTools() []endpointTool {
 				"command":    strProp("Command line, max 4096 bytes"),
 				"event":      map[string]any{"type": "object", "description": "Event object (kind, host, executable, parent_exe, command, path, destination, ...)"},
 			}), bodyFields: true},
+		{name: "ml_dns", method: "GET", path: "/v1/ml/dns",
+			description: "DNS/domain tunneling and DGA-burst windows per host (5 minute windows, domain scoring). Hosts below 50 lookups report not_enough_data." + mlNote,
+			schema: objSchema(map[string]any{
+				"host":  strProp("Optional host; omit for a ranked host list"),
+				"limit": strProp("Max hosts, default 20, max 200"),
+			}), queryParams: []string{"host", "limit"}},
+		{name: "ml_users", method: "GET", path: "/v1/ml/users",
+			description: "Per-user behaviour baseline: unusual logon hour, new host, rare process. Users below the minimum samples report not_enough_data." + mlNote,
+			schema: objSchema(map[string]any{
+				"user":  strProp("Optional auth user name, or uid:N for process-derived identities"),
+				"limit": strProp("Max users, default 20, max 200"),
+			}), queryParams: []string{"user", "limit"}},
+		{name: "ml_peers", method: "GET", path: "/v1/ml/peers",
+			description: "Peer-group outlier model: how far a host's process and destination mix is from the rest of the fleet, with the most distinct items. Needs at least 5 hosts with enough events." + mlNote,
+			schema: objSchema(map[string]any{
+				"host":  strProp("Optional host; omit for a ranked list"),
+				"limit": strProp("Max hosts, default 20, max 200"),
+			}), queryParams: []string{"host", "limit"}},
+		{name: "ml_fatigue", method: "GET", path: "/v1/ml/fatigue",
+			description: "Alert-fatigue advisor: which rules to consider retuning, from rule health and analyst feedback, with factor breakdown and suggestions. It changes nothing." + mlNote,
+			schema: objSchema(map[string]any{
+				"rule":       strProp("Optional single rule id"),
+				"candidates": strProp("Set to 1 to list only retune candidates"),
+				"limit":      strProp("Max rules, default 25, max 200"),
+			}), queryParams: []string{"rule", "candidates", "limit"}},
 		{name: "ml_priority", method: "GET", path: "/v1/ml/priority",
 			description: "Advisory 0-100 priority score fusing severity, rarity, beaconing, asset criticality and rule trust, for one finding or a ranked list. Absent factors are listed as omitted." + mlNote,
 			schema: objSchema(map[string]any{

@@ -145,6 +145,9 @@ func TestMLReadCommands(t *testing.T) {
 		"suspects": []map[string]any{{"host": "h1", "destination": "1.2.3.4:443", "level": "high", "score": 91.5, "events": 20, "status": "scored"}}}))
 	mux.HandleFunc("GET /v1/ml/priority", h(map[string]any{"model": "priority-fusion-v1", "total": 1,
 		"priorities": []map[string]any{{"finding_id": "f1", "host": "h1", "rule": "r", "severity": "high", "score": 70.0, "level": "high"}}}))
+	for _, p := range []string{"dns", "users", "peers", "fatigue"} {
+		mux.HandleFunc("GET /v1/ml/"+p, h(map[string]any{"method": "ml-v1", "status": "not_enough_data"}))
+	}
 	setupMock(t, mux)
 
 	out, err := imRun(t, "ml", "status")
@@ -170,6 +173,11 @@ func TestMLReadCommands(t *testing.T) {
 	if out, err = imRun(t, "ml", "priority", "--host", "h1"); err != nil || !strings.Contains(out, "priority-fusion-v1") || !strings.Contains(out, "f1") {
 		t.Fatalf("priority: %v %s", err, out)
 	}
+	for _, c := range [][]string{{"dns", "--host", "h1"}, {"users", "--user", "bob"}, {"peers", "--host", "h1"}, {"fatigue", "--candidates", "--rule", "r1"}} {
+		if out, err = imRun(t, append([]string{"ml"}, c...)...); err != nil || !strings.Contains(out, "not_enough_data") {
+			t.Fatalf("%v: %v %s", c, err, out)
+		}
+	}
 	if _, err = imRun(t, "ml", "priority"); err == nil {
 		t.Fatal("priority needs a selector")
 	}
@@ -178,7 +186,8 @@ func TestMLReadCommands(t *testing.T) {
 	}
 	all := strings.Join(got, "\n")
 	for _, want := range []string{"GET /v1/ml/lineage?host=h1&limit=5", "GET /v1/ml/similar?host=h1&q=curl+http%3A%2F%2Fx",
-		"GET /v1/ml/baseline?host=h1", "GET /v1/ml/beacons?exclude_private=1&min_events=8", "GET /v1/ml/priority?host=h1"} {
+		"GET /v1/ml/baseline?host=h1", "GET /v1/ml/beacons?exclude_private=1&min_events=8", "GET /v1/ml/priority?host=h1",
+		"GET /v1/ml/dns?host=h1", "GET /v1/ml/users?user=bob", "GET /v1/ml/peers?host=h1", "GET /v1/ml/fatigue?candidates=1&rule=r1"} {
 		if !strings.Contains(all, want) {
 			t.Fatalf("missing request %q in\n%s", want, all)
 		}

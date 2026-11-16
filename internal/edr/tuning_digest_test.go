@@ -48,7 +48,7 @@ func tuneSeed(t *testing.T, s *Store, prefix, rule, sev string, hosts map[string
 }
 
 func TestTuningSuggestionMath(t *testing.T) {
-	s, _ := NewStore(t.TempDir()+"/f.jsonl", 500)
+	s, _ := testStore(t, t.TempDir()+"/f.jsonl", 500)
 	now := time.Now().UTC()
 	tuneSeed(t, s, "n", "noisy-r", "medium", map[string]int{"h1": 8, "h2": 4}, now)
 	tuneSeed(t, s, "q", "quiet-r", "medium", map[string]int{"h1": 2}, now)
@@ -100,7 +100,7 @@ func TestTuningNeverSuppressCritical(t *testing.T) {
 }
 
 func TestTuningCollateralCritical(t *testing.T) {
-	s, _ := NewStore(t.TempDir()+"/f.jsonl", 500)
+	s, _ := testStore(t, t.TempDir()+"/f.jsonl", 500)
 	now := time.Now().UTC()
 	tuneSeed(t, s, "m", "scan", "medium", map[string]int{"h1": 12}, now)
 	tuneSeed(t, s, "c", "xscan", "critical", map[string]int{"h1": 1}, now) // "scan h1" matches "xscan h1"
@@ -185,7 +185,7 @@ func TestDigestSchedulerAndRestart(t *testing.T) {
 	sink := &tuneSink{}
 	ts := httptest.NewServer(http.HandlerFunc(sink.handler))
 	defer ts.Close()
-	s, _ := NewStore(t.TempDir()+"/f.jsonl", 100)
+	s, _ := testStore(t, t.TempDir()+"/f.jsonl", 100)
 	now := time.Date(2026, 11, 12, 8, 59, 0, 0, time.UTC) // Thursday
 	svc := tuneService_(t, s, &now)
 	svc.st.Digests = []Digest{
@@ -229,7 +229,7 @@ func TestDigestPayloadSignedAndClean(t *testing.T) {
 	sink := &tuneSink{}
 	ts := httptest.NewServer(http.HandlerFunc(sink.handler))
 	defer ts.Close()
-	s, _ := NewStore(t.TempDir()+"/f.jsonl", 100)
+	s, _ := testStore(t, t.TempDir()+"/f.jsonl", 100)
 	now := time.Now().UTC()
 	tuneSeed(t, s, "k", "r1", "critical", map[string]int{"h1": 2}, now)
 	svc := tuneService_(t, s, &now)

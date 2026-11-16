@@ -52,7 +52,8 @@ type RegRegime struct {
 	AppliesTo      string     `json:"applies_to"`
 	Stages         []RegStage `json:"stages"`
 	SourceURL      string     `json:"source_url"`
-	SourceKind     string     `json:"source_kind"`
+	SourceKind     string     `json:"source_kind"`       // official_fetched: page read directly; official_excerpt: official text seen only through a search-result excerpt
+	Sources        []string   `json:"sources,omitempty"` // additional sources read
 	LastVerified   string     `json:"last_verified"`
 	LastResearched string     `json:"last_researched"`
 	Verified       bool       `json:"verified"`
@@ -65,7 +66,7 @@ type regCatalog struct {
 }
 
 var regStartEvents = map[string]bool{"awareness": true, "discovery": true, "classification": true, "materiality_determination": true, "reasonable_belief": true, "assessment": true}
-var regSourceKinds = map[string]bool{"official_fetched": true, "official_unfetched": true, "secondary": true}
+var regSourceKinds = map[string]bool{"official_fetched": true, "official_excerpt": true, "official_unfetched": true, "secondary": true}
 
 // LoadRegulatoryCatalog parses and validates catalog JSON.
 func LoadRegulatoryCatalog(raw []byte) ([]RegRegime, error) {
@@ -97,8 +98,8 @@ func LoadRegulatoryCatalog(raw []byte) ([]RegRegime, error) {
 			if _, err := time.Parse("2006-01-02", r.LastVerified); err != nil {
 				return nil, fmt.Errorf("%s: verified entries need a last_verified date", p)
 			}
-			if r.SourceKind != "official_fetched" {
-				return nil, fmt.Errorf("%s: verified entries need source_kind official_fetched", p)
+			if r.SourceKind != "official_fetched" && r.SourceKind != "official_excerpt" {
+				return nil, fmt.Errorf("%s: verified entries need source_kind official_fetched or official_excerpt", p)
 			}
 		} else if r.LastVerified != "" {
 			return nil, fmt.Errorf("%s: unverified entries must not carry last_verified", p)
@@ -214,7 +215,9 @@ func BuildRegulatoryClocks(regimes []RegRegime, ids []string, store *Store, inc 
 					list = append(list, map[string]any{"finding_id": e.FindingID, "rule": e.Rule, "host": e.Host, "severity": e.Severity,
 						"status": e.Status, "first_detected": e.FirstDetected, "deadline": dl.UTC(), "remaining_seconds": rem, "overdue": rem < 0})
 				}
-				sort.Slice(list, func(i, j int) bool { return list[i]["remaining_seconds"].(int64) < list[j]["remaining_seconds"].(int64) })
+				sort.Slice(list, func(i, j int) bool {
+					return list[i]["remaining_seconds"].(int64) < list[j]["remaining_seconds"].(int64)
+				})
 			}
 			row["incidents"] = list
 			stages = append(stages, row)

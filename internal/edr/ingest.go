@@ -187,6 +187,9 @@ func (s *Store) appendFindingLocked(x Finding) error {
 	if ruleShadowed(x) { // rule lifecycle "testing": recorded as a shadow finding, not in the main list
 		return nil
 	}
+	if exceptionSuppress(x) { // active exception: reporting suppressed, kept in the suppressed list
+		return nil
+	}
 	if err := os.MkdirAll(filepath.Dir(s.path), 0700); err != nil {
 		return err
 	}

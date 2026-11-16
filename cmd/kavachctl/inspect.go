@@ -24,6 +24,7 @@ const inspectUsage = `usage: kavachctl inspect <command>
   file PATH [--json]            static analysis of a local file (max 32 MiB; never executed)
   script PATH|- [--json]        analyse script text (- reads stdin)
   cmdline TEXT|- [--json]       analyse a command line (- reads stdin)
+  config PATH|- [--json]        assess a configuration or CI pipeline file (parse-only; not scored)
   domain NAME [--json]          analyse a domain name
   reports [--limit N] [--json]  recent inspection reports
   analyzers [--json]            registered analyzers per kind`
@@ -85,6 +86,25 @@ func inspectRun(out io.Writer, args []string) error {
 			return fmt.Errorf("usage: kavachctl inspect cmdline TEXT|- [--json]")
 		}
 		return inspectText(out, "cmdline", text, "", j)
+	case "config":
+		if len(pos) != 1 {
+			return fmt.Errorf("usage: kavachctl inspect config PATH|- [--json]")
+		}
+		var text []byte
+		var err error
+		name := "stdin"
+		if pos[0] == "-" {
+			text, err = inspectReadStdin()
+		} else {
+			text, name, err = inspectReadFile(pos[0], inspectMaxText, "4 MiB")
+			if err == nil {
+				name = configHintName(pos[0], name)
+			}
+		}
+		if err != nil {
+			return err
+		}
+		return inspectText(out, "config", string(text), name, j)
 	case "domain":
 		if len(pos) != 1 {
 			return fmt.Errorf("usage: kavachctl inspect domain NAME [--json]")
@@ -136,6 +156,17 @@ func inspectReadFile(path string, max int64, human string) ([]byte, string, erro
 		return nil, "", fmt.Errorf("%s is empty", path)
 	}
 	return data, filepath.Base(path), nil
+}
+
+// configHintName returns the name sent to the config analyzers: the base name, except that a file
+// under .github/workflows/ keeps that fixed directory suffix so GitHub Actions is recognised by
+// path as well as by content. The caller's full local path is never sent.
+func configHintName(path, base string) string {
+	p := "/" + strings.ToLower(filepath.ToSlash(path))
+	if strings.Contains(p, "/.github/workflows/") {
+		return ".github/workflows/" + base
+	}
+	return base
 }
 
 func inspectReadStdin() ([]byte, error) {

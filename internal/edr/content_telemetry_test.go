@@ -24,7 +24,7 @@ func withContentPacks(t *testing.T) {
 func telStore(t *testing.T) (*Store, string) {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "f.jsonl")
-	st, err := NewStore(path, 200)
+	st, err := testStore(t, path, 200)
 	if err != nil {
 		t.Fatal(err)
 	}

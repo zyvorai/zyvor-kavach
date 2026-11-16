@@ -100,11 +100,11 @@ func TestQueryLibraryRunsEverything(t *testing.T) {
 		}
 		validateLibSyntax(t, e)
 	}
-	empty, err := NewStore(filepath.Join(t.TempDir(), "e.jsonl"), 100)
+	empty, err := testStore(t, filepath.Join(t.TempDir(), "e.jsonl"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}
-	syn, _ := NewStore(filepath.Join(t.TempDir(), "s.jsonl"), 100)
+	syn, _ := testStore(t, filepath.Join(t.TempDir(), "s.jsonl"), 100)
 	now := time.Now().UTC()
 	for i, r := range []struct{ rule, sev, host, exe string }{
 		{"ransomware-burst", "critical", "prod-web-1", "/tmp/x"},

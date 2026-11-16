@@ -17,6 +17,9 @@ import (
 type DomainInventory struct {
 	mu   sync.Mutex
 	rows map[string][]map[string]any
+	// path is where async persistence writes (set by BootstrapLivePlatform; KAVACH_INVENTORY
+	// overrides). Guarded by mu. Persist goroutines are tracked by the lifecycle registry.
+	path string
 }
 
 var Live = &DomainInventory{rows: map[string][]map[string]any{}}
@@ -126,11 +129,11 @@ func RegisterInventoryIngest(mux *http.ServeMux, token string) {
 		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 		defer r.Body.Close()
 		var body struct {
-			Domain string           `json:"domain"`
-			Host   string           `json:"host"`
-			Replace bool            `json:"replace"`
-			Items  []map[string]any `json:"items"`
-			Item   map[string]any   `json:"item"`
+			Domain  string           `json:"domain"`
+			Host    string           `json:"host"`
+			Replace bool             `json:"replace"`
+			Items   []map[string]any `json:"items"`
+			Item    map[string]any   `json:"item"`
 		}
 		if json.NewDecoder(r.Body).Decode(&body) != nil || body.Domain == "" {
 			http.Error(w, "invalid inventory payload", 400)
@@ -185,7 +188,7 @@ func deriveCASB(store *Store) []map[string]any {
 		out = append(out, map[string]any{
 			"app": name, "category": "saas", "risk": risk, "users": n,
 			"sanctioned": name == "GitHub" || name == "Slack" || name == "Zoom",
-			"source": "derived-network", "id": "casb-" + strings.ToLower(name),
+			"source":     "derived-network", "id": "casb-" + strings.ToLower(name),
 		})
 	}
 	return out
@@ -687,4 +690,3 @@ func shortID(s string) string {
 	}
 	return s
 }
-

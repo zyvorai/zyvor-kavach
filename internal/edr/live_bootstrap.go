@@ -2,6 +2,7 @@
 package edr
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"os"
@@ -58,12 +59,18 @@ func (d *DomainInventory) Load(path string) error {
 	return nil
 }
 
+// persistAsync is called with d.mu held.
 func (d *DomainInventory) persistAsync() {
 	path := inventoryPath()
 	if path == "" {
+		path = d.path
+	}
+	if path == "" {
 		return
 	}
+	lc.bg.Add(1)
 	go func() {
+		defer lc.bg.Done()
 		if err := d.Save(path); err != nil {
 			log.Printf("inventory persist: %v", err)
 		}
@@ -76,7 +83,17 @@ func BootstrapLivePlatform(store *Store, registry *CredentialRegistry, statePath
 	path := inventoryPath()
 	if path == "" && statePath != "" {
 		path = statePath + ".inventory.json"
-		_ = os.Setenv("KAVACH_INVENTORY", path)
+		Live.mu.Lock()
+		Live.path = path
+		Live.mu.Unlock()
+		RegisterStopper("live-inventory", func(context.Context) error {
+			Live.mu.Lock()
+			if Live.path == path {
+				Live.path = ""
+			}
+			Live.mu.Unlock()
+			return nil
+		})
 	}
 	if err := Live.Load(path); err != nil {
 		log.Printf("inventory load: %v", err)

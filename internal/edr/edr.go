@@ -160,7 +160,7 @@ func Detect(e Event) []Finding {
 	result := []Finding{}
 	add := func(rule, severity, description string, tags ...string) {
 		result = append(result, Finding{
-			ID: fmt.Sprintf("%s:%d:%s:%d", e.Host, e.PID, rule, e.Time.UnixNano()),
+			ID:   fmt.Sprintf("%s:%d:%s:%d", e.Host, e.PID, rule, e.Time.UnixNano()),
 			Time: e.Time, Host: e.Host, PID: e.PID, Rule: rule, Severity: severity,
 			Description: description, Evidence: e, Tags: tags,
 		})
@@ -331,6 +331,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	registerDashboard(mux, token, store)
 	RegisterFileRoutes(mux, token, store, registry)
 	RegisterTelemetryRoutes(mux, token, store, registry)
+	registerHuntSeq(mux, token, store)
 	incidents, incidentErr := NewIncidentStore(store)
 	if incidentErr != nil {
 		panic(incidentErr)
@@ -489,11 +490,15 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	metrics := NewMetrics()
 	RegisterHealth(mux, store)
 	RegisterATTACK(mux, token, store)
+	RegisterTTP(mux, token, store)
 	RegisterAdversaries(mux, token, store)
 	RegisterStream(mux, token, store)
 	RegisterRiskTrends(mux, token, store)
 	RegisterFleetHealth(mux, token, store, registry)
+	RegisterContentVersionsAndBlindspots(mux, token, store)
+	RegisterReportSched(mux, token, store, registry)
 	RegisterPrevalenceGraph(mux, token, store)
+	RegisterProvenance(mux, token, store)
 	RegisterIntelFeeds(mux, token, store)
 	alertDispatcher := RegisterAlerts(mux, token, store)
 	RegisterComplianceEvidence(mux, token, store, registry, incidents, alertDispatcher)
@@ -504,23 +509,36 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	analystWS := RegisterAnalystWorkspace(mux, token, store)
 	alertDispatcher.ws = analystWS
 	RegisterCaseManagement(mux, token, store, analystWS)
+	RegisterChainsAndTemplates(mux, token, store)
 	RegisterDetectionLab(mux, token, store)
+	RegisterValidationLab(mux, token, store)
+	RegisterEvidenceImport(mux, token, store)
 	RegisterCustomContent(mux, token, store)
 	RegisterRuleHealth(mux, token, store)
+	RegisterFeedback(mux, token, store)
+	RegisterRegression(mux, token, store)
 	RegisterMLNet(mux, token, store)
 	RegisterSOCOps(mux, token, store)
 	RegisterTuningDigest(mux, token, store, alertDispatcher)
 	RegisterPosturePlus(mux, token, store)
 	SetVulnCachePath(store.path + ".vulncache.json")
 	RegisterVulnMgmt(mux, token)
+	RegisterVulnPriority(mux, token, store)
 	RegisterCertFeeds(mux, token, store)
+	RegisterSyslog(mux, token, store)
 	RegisterDeceptionTokens(mux, token, store)
 	RegisterDataGovernance(mux, token, store, registry)
 	RegisterHuntPacks(mux, token, store)
+	RegisterScheduledDetections(mux, token, store, analystWS)
 	RegisterQueryLibrary(mux, token, analystWS)
 	RegisterGlobalSearch(mux, token, store, analystWS)
 	RegisterInspect(mux, token)
+	RegisterInspectSimilar(mux, token)
 	RegisterMLBehaviour(mux, token, store)
+	RegisterMLExt(mux, token, store)
+	RegisterRansomDetect(mux, token, store)
+	RegisterCompetitive(mux, token)
+	RegisterPostureReports(mux, token, store)
 	mux.HandleFunc("GET /metrics", func(w http.ResponseWriter, r *http.Request) {
 		if !requireAuth(w, r, token) {
 			return
