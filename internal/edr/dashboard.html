@@ -7266,7 +7266,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   function mdStatus() {
     mdGet('md-status-out', '/v1/ml/status', (box, r) => {
       mdMethod(box, r);
-      uiMeta(box, ['Events learned: ' + (r.learned_events ?? '-'), 'Last updated: ' + pxTime(r.updated)]);
+      uiMeta(box, ['Events learned: ' + (r.learned_events && typeof r.learned_events === 'object' ? (Object.keys(r.learned_events).sort().map((k) => k + ' ' + r.learned_events[k]).join(', ') || '0') : (r.learned_events ?? '-')), 'Last updated: ' + pxTime(r.updated)]);
       const names = { lineage: 'Process lineage', command_similarity: 'Command similarity', baselines: 'Host baselines' };
       const tb = uiTable(box, ['Model', 'State', 'Sample counts and thresholds']);
       Object.keys(r.models || {}).forEach((k) => {
