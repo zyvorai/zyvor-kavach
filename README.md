@@ -17,6 +17,7 @@ Observation-first endpoint, cloud, and AI security by [ZYVOR](https://zyvor.dev)
 - **Observation only** — findings, fleet, hunt, AI assist. Containment stays a request ledger.
 - **Quiet console + CLI** — Apple-style investigate UI, `kavachctl`, MCP for agents.
 - **Finance & sectors** — banks, insurance, public fleets, industry, space, eBPF. Observe only.
+- **Cloud, exposure, e-mail** — you send audit logs, SBOMs and messages; Kavach reads them offline and reports. It never calls a cloud API, scans a host or fetches a link.
 
 → **[Product docs & story](https://zyvorai.github.io/zyvor-kavach/)**
 
@@ -28,9 +29,11 @@ Observation-first endpoint, cloud, and AI security by [ZYVOR](https://zyvor.dev)
 git clone https://github.com/zyvorai/zyvor-kavach.git && cd zyvor-kavach
 export KAVACH_TOKEN='Admin@321'
 
-go test ./...
 go run ./cmd/kavach -mode server -listen 127.0.0.1:8099
 ```
+
+The token must be at least 8 characters (a warning is logged under 16). State is written under `./data/` (`-state` moves it).
+`go test ./...` runs the full suite; the race variant is `go test -race -timeout 30m ./...` ([testing.md](docs/testing.md)).
 
 Second terminal:
 
@@ -39,7 +42,15 @@ export KAVACH_TOKEN='Admin@321'
 go run ./cmd/kavach -mode agent -url http://127.0.0.1:8099
 go build -o bin/kavachctl ./cmd/kavachctl
 KAVACH_URL=http://127.0.0.1:8099 ./bin/kavachctl status
-open http://127.0.0.1:8099/   # admin / Admin@321
+open http://127.0.0.1:8099/   # username admin, password = your KAVACH_TOKEN
+```
+
+Check it end to end:
+
+```bash
+curl -s http://127.0.0.1:8099/readyz                                   # public probe
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" http://127.0.0.1:8099/v1/summary
+./bin/kavachctl doctor                                                 # URL, token, probes, auth, TLS hint
 ```
 
 ---
@@ -53,10 +64,11 @@ export KAVACH_TOKEN='Admin@321'
 go run ./cmd/kavach -mode server -listen 0.0.0.0:8099
 ```
 
-**Kubernetes lab**
+**Kubernetes lab** (run the test gates first, see [deploy-remote.md](docs/deploy-remote.md); the script does not run tests itself)
 
 ```bash
-./scripts/deploy-remote.sh sus@80.79.5.173 --k8s --envoy-gateway
+go test -race -timeout 30m ./... && go test ./... && go vet ./...
+KAVACH_ADMIN_TOKEN='use-a-real-secret' ./scripts/deploy-remote.sh sus@80.79.5.173 --k8s --envoy-gateway
 # NodePort  → https://HOST:30899/
 # Envoy     → https://kavach.HOST.sslip.io:30943/
 ```
@@ -69,18 +81,26 @@ go run ./cmd/kavach -mode server -listen 0.0.0.0:8099
 
 | Surface | |
 |---------|--|
-| **Console** | Sign in `admin` / `Admin@321` — [console.md](docs/console.md) |
-| **kavachctl** | `status` · `findings` · `finance` · `sectors` · `ebpf` — [kavachctl.md](docs/kavachctl.md) |
+| **Console** | Sign in as `admin` with the controller token as password (lab default `Admin@321`) — [console.md](docs/console.md) |
+| **kavachctl** | `status` · `doctor` · `watch` · `findings` · `export` · `exposure` · `fleet slo` · `finance` · `sectors` · `ebpf` — [kavachctl.md](docs/kavachctl.md), [cli-reference.md](docs/cli-reference.md) |
 | **Finance** | Banks, UPI, insurance, IRDAI — never freezes money — [finance.md](docs/finance.md) |
 | **Sectors** | Rail, fleets, industry, space — never immobilizes — [sectors.md](docs/sectors.md) |
 | **eBPF** | Observe-only CO-RE — [ebpf.md](docs/ebpf.md) |
 | **Observe** | ATT&CK matrix · compliance grade · live SSE · Prometheus — [observability.md](docs/observability.md) |
-| **MCP** | Agent tooling — [mcp-integration.md](docs/mcp-integration.md) |
+| **MCP** | Agent tooling, 425 read-only tools (499 with `KAVACH_MCP_ALLOW_MUTATIONS=true`, measured at this commit) — [mcp-integration.md](docs/mcp-integration.md) |
+| **Cloud** | CloudTrail, Azure, GCP, Okta, M365 audit-log detection from logs you POST — [cloud-audit.md](docs/cloud-audit.md) |
+| **Exposure** | SBOM-based software exposure, offline, SAMPLE advisories until you import data — [exposure.md](docs/exposure.md) |
+| **E-mail / URL** | Parse-only analyzers, no fetching — [url-email-inspection.md](docs/url-email-inspection.md) |
+| **Telemetry / syslog** | Typed events and an opt-in agentless syslog listener — [telemetry-types.md](docs/telemetry-types.md), [syslog-listener.md](docs/syslog-listener.md) |
+| **SIEM** | Pull export (OCSF, ECS, CEF, LEEF, Splunk HEC, STIX, Navigator) with cursors; optional push sink — [siem-export.md](docs/siem-export.md) |
+| **State** | Every on-disk file, reset and backup — [persistence-files.md](docs/persistence-files.md) |
 
 ```bash
 ./bin/kavachctl finance summary
 ./bin/kavachctl sectors public-vehicles
 ./bin/kavachctl ebpf health
+./bin/kavachctl exposure report                       # after PUT /v1/exposure/sboms/{host}
+./bin/kavachctl export findings --format ocsf         # SIEM pull export with cursor paging
 ```
 
 ---
@@ -114,12 +134,25 @@ go run ./cmd/kavach -mode server -listen 0.0.0.0:8099
 | [Site](https://zyvorai.github.io/zyvor-kavach/) | Story + full guides |
 | [Tutorial](docs/tutorial.md) | First hour |
 | [Use cases](docs/use-cases.md) | SOC, hunt, XDR |
-| [Testing](docs/testing.md) | Unit, smoke, lab |
+| [Testing](docs/testing.md) | Unit, race, smoke, lab |
+| [Security review](docs/security-review.md) | What was reviewed, accepted risks, gaps |
 | [OpenAPI](docs/openapi.yaml) | HTTP contract |
+| [Docs index](docs/index.md) | Every document by area |
 
 ```bash
-go test ./...
+go test -race -timeout 30m ./...   # CI race job (the edr package needs more than the default 10m)
+go test ./...                      # full corpora, no race detector
 ```
+
+---
+
+## Honest limits
+
+- Observation only: findings, ledgers and exports. Containment, RTR and similar APIs append request ledgers; nothing is enforced.
+- Detection and similarity numbers come from **synthetic corpora** and heuristics; they are not a guarantee against real attacks.
+- Reporting-regime clocks, compliance scores and framework catalogs are informational evidence, not legal advice or a certification; some items remain unverified ([verification-log.md](docs/verification-log.md)).
+- The embedded advisory set used for exposure is a small SAMPLE. SIEM mappings, syslog parsers and the eBPF programs were tested with fixtures, not live vendor systems or kernels.
+- Single controller replica with file-backed state; no multi-user auth (one shared token).
 
 ---
 

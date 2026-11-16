@@ -9,6 +9,21 @@ the full operator CLI see [kavachctl.md](kavachctl.md); for MCP setup see
 All commands below are plain authenticated `GET` requests. They never change
 state.
 
+## Surface size
+
+Measured at this commit by building `kavach-mcp` and calling `tools/list` over stdio: **425 tools in the default
+read-only mode and 499 with `KAVACH_MCP_ALLOW_MUTATIONS=true`** (74 additional tools: POST/PUT/DELETE-backed ones such as
+ledger writes, case and exception changes, sandbox lab runs and enroll/revoke; containment is only ever a request ledger). The registered `GET` routes are all covered by a `kavachctl` command or a listed
+exemption. These numbers move with every release; re-measure with the command below rather than trusting this page.
+
+```bash
+go build -o bin/kavach-mcp ./cmd/kavach-mcp
+(printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"x","version":"1"}}}' \
+   '{"jsonrpc":"2.0","method":"notifications/initialized"}' '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'; sleep 1) \
+ | KAVACH_URL=http://127.0.0.1:8099 KAVACH_TOKEN=xxxxxxxxxx ./bin/kavach-mcp 2>/dev/null | tail -1 \
+ | python3 -c 'import sys,json; print(len(json.load(sys.stdin)["result"]["tools"]))'
+```
+
 ## Authentication and output
 
 - Token: set `KAVACH_TOKEN` (or `ZYVOR_EDR_TOKEN`, or `~/.kavach/api-key`).
@@ -46,6 +61,34 @@ state.
 Sector, finance, eBPF and similar routes that already had commands are
 documented in [kavachctl.md](kavachctl.md).
 
+### Worked examples
+
+```bash
+export KAVACH_URL=http://127.0.0.1:8099 KAVACH_TOKEN='Admin@321'
+kavachctl events summary
+kavachctl exposure report --min_score 50 --json
+kavachctl regression gate --max-regressions 0 --max-false-positives 0; echo "exit=$?"   # 0 pass, non-zero on HTTP 412
+kavachctl reports templates                 # list; with an ID it renders markdown to stdout
+kavachctl rollback                          # guidance only; never restores anything
+```
+
+`regression gate` against a fresh install returned `pass: true` with `measured_detected_pct: 83.9` on Kavach's own
+synthetic scenarios (one variant per technique); that number measures the software on its own corpus, not real-world
+detection.
+
+### Other command groups added since the first parity pass (read or dry-run)
+
+| Command | Route | Notes |
+|---|---|---|
+| `cloudaudit sources` | `GET /v1/cloud/audit/sources` | Ingest is `POST /v1/cloud/audit/events` (admin), not a CLI command |
+| `posture-trend [diff --from D]` | `GET /v1/posture/trend[/diff]` | Counts only |
+| `digest`, `auditor-bundle` | `GET /v1/reports/digest`, `GET /v1/compliance/auditor-bundle` | `auditor-bundle` needs `--out FILE.zip` or `--manifest` |
+| `fleet health\|gaps\|stale\|slo` | `GET /v1/fleet/*` | `fleet slo set --file F` is an admin write |
+| `syslog status\|samples\|parse` | `GET /v1/syslog/*`, `POST /v1/syslog/parse` | `parse` is a dry run |
+| `coverage blindspots\|telemetry` | `GET /v1/coverage/*` | Computed live |
+| `siem status\|export` | `GET /v1/siem/*` | Push-sink status and the legacy ECS NDJSON dump |
+| `export findings\|iocs\|layer` | `GET /v1/export/*` | SIEM formats with cursor paging ([siem-export.md](siem-export.md)) |
+
 ## MCP tools added
 
 `kavach-mcp` registers these in read-only mode. Mutating or admin tools stay
@@ -66,6 +109,11 @@ in this group is a `GET` with no request body, and its description says
 - `kavach_case_workflow_journal`, `kavach_posture_trend_config`,
   `kavach_vulns_feeds_status`
 - `kavach_sectors_<view>` (42 views) and `kavach_finance_<view>` (16 views)
+
+Gaps at this commit (found by comparing the tool list with the routes): no MCP tool exists for
+`GET /v1/exposure/*` (only the older `kavach_exposure` world scorecard), `GET /v1/cloud/audit/sources`,
+or `POST /v1/inspect/email|url` (`kavach_email_threats` for the inventory view does exist). They are available over HTTP and
+`kavachctl` (where listed above). Add them to `cmd/kavach-mcp/tools_surface.go` by hand if an agent needs them.
 
 Not exposed over MCP on purpose: the console HTML and static assets, the
 `/v1/stream` event stream, `/v1/export/report` and `/v1/reports/archive/{id}`

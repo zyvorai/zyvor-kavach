@@ -1,6 +1,14 @@
 # On-disk state files
 
-All files sit next to the findings store path (`<store>` below), are written atomically (temp file + rename) with mode 0600, and a missing or corrupt file is logged or ignored and treated as empty at startup.
+`<store>` is the path given to the server flag `-state` (default `./data/findings.jsonl`; the container and Helm chart use `/app/data/findings.jsonl`). The agent credential registry is a separate flag, `-credentials` (default `./data/agents.json`). Every derived file below is `<store>` plus a suffix, so for the default it is `./data/findings.jsonl.exposure.json` and so on. Nothing is written anywhere else (no request field reaches a filesystem path; see [security-review.md](security-review.md)).
+
+Unless a row says otherwise, files are written atomically (temp file + rename) with mode 0600. For most derived files, a missing or corrupt file is logged or ignored and treated as empty at startup. There are three stricter exceptions to know about:
+
+* `<store>.incidents`: a line that is not valid JSON makes startup fail with `corrupt incident ledger` (the API constructor panics). Fix or remove the bad line, or move the file aside.
+* The credential registry (`-credentials`): invalid JSON is a startup error (`log.Fatal`). A missing file is fine (empty registry).
+* `<store>.events.telemetry`: a corrupt file is moved aside to `<store>.events.telemetry.corrupt-<timestamp>` and persistence restarts empty (see [telemetry-types.md](telemetry-types.md)).
+
+The findings file itself is read line by line; lines that do not parse are skipped, and only the newest 1000 findings are kept in memory (the server is started with a 1000-finding window), although the file on disk keeps growing until the retention purge rewrites it.
 
 | File | Holds |
 |------|-------|
@@ -26,6 +34,9 @@ All files sit next to the findings store path (`<store>` below), are written ato
 | `<store>.reportschedules.json` | Scheduled report definitions (template, params, frequency, retention, format, next/last run; max 100). Rendered reports live in the directory `<store>.reports/` as `<run_id>.md|json|csv` plus `<run_id>.meta.json` (template, params, generated_at, bytes, sha256, status), capped per schedule by retention, and globally at 500 reports / 64 MB. Pull-only via `GET /v1/reports/archive/{run_id}`; Kavach never emails or pushes reports. Deleting a schedule deletes its reports |
 | `<store>.fleetslo.json` | Fleet SLO targets and the bounded series (5-minute samples, max 72 h, 500 agents: heartbeat freshness flag and event count per sample), persisted at most every 10 minutes. Derived only from data agents already send |
 | `<store>` (the path itself) | The findings store: one JSON finding per line, appended; rewritten by the retention purge |
+| `<store>.incidents` | Append-only JSON-lines incident workflow ledger (finding id, status, actor, time). Feeds `GET /v1/incidents` and the SOC metrics (`docs/observability.md`). Corrupt lines abort startup, see above |
+| `<store>.transitions` | Append-only log of detection-triage status transitions, merged with `.incidents` when computing MTTA/MTTR (`GET /v1/soc/metrics`) |
+| `<store>.events.telemetry` | Ring buffer of typed telemetry (registry, dns, auth, module; 5000 per type; `docs/telemetry-types.md`). Corrupt file is renamed aside at startup |
 | `<store>.events` | Append-only JSON-lines ledger of process, network and file events (retention purge rewrites it; contains full command lines and paths, so treat as personal data) |
 | `<store>.cases.json` | Incident cases (title, severity, status, assignee, comments, linked findings), written atomically |
 | `<store>.casetemplates.json` | Custom case templates, per-case workflow (checklist, applied template), chain-to-case links and a hash-chained journal of workflow actions |
@@ -39,7 +50,27 @@ All files sit next to the findings store path (`<store>` below), are written ato
 | `<store>.redaction.json` | Data-governance export redaction toggle (`{"enabled": bool}`) |
 | `<store>.governance.audit.jsonl` | Append-only JSON-lines audit of governance actions (retention.set, retention.apply, redaction.set) with actor and time |
 | `<store>.evidence.json` | Opt-in (`KAVACH_EVIDENCE_PERSIST=1`) metadata of offline evidence import cases (`docs/evidence-import.md`): up to 20 cases with id, labels, artefact inventory counts, totals and a findings summary (rule, severity, technique, artefact, line). Never holds raw artefact text, commands, paths, IOC values or the timeline; restored cases cannot be promoted. Safe to delete |
-| credential registry file | Agent enrollment and last heartbeat; fleet health is derived from it, so stale detection survives restarts |
+| credential registry file (`-credentials`, default `./data/agents.json`) | Agent enrollment (SHA-256 hashed credentials, never the plain secret) and last heartbeat; fleet health is derived from it, so stale detection survives restarts. Written by temp file + rename. Invalid JSON is a startup error |
 
 Backup: copy these files while the server is stopped, or at any time (JSON state files are written by atomic rename; the append-only `<store>`, `<store>.events` and `.governance.audit.jsonl` files and `<store>.hunts` are not).
 
+
+## Quick reference: files added with the newest features
+
+| Feature | File | Reset | Doc |
+|---|---|---|---|
+| Extended local models (DNS, user logon hours, peer groups) | `<store>.mlext.json` | `POST /v1/ml/reset` (admin token or session; `kavachctl ml reset --yes`), then `POST /v1/ml/learn/replay` or delete while stopped | [local-models.md](local-models.md), [local-models-net.md](local-models-net.md) |
+| Posture trend snapshots | `<store>.posturetrend.json` | Delete while stopped; history restarts, first snapshot about 15 s after start | [posture-reports.md](posture-reports.md) |
+| Software exposure (SBOM metadata, operator advisories) | `<store>.exposure.json` | `DELETE /v1/exposure/sboms/{host}`, `DELETE /v1/exposure/advisories`, or delete the file while stopped | [exposure.md](exposure.md) |
+| Fleet SLO series | `<store>.fleetslo.json` | Delete while stopped | [observability.md](observability.md) |
+| Evidence import metadata (opt-in `KAVACH_EVIDENCE_PERSIST=1`) | `<store>.evidence.json` | Delete | [evidence-import.md](evidence-import.md) |
+
+Cloud audit ingest (`POST /v1/cloud/audit/events`, [cloud-audit.md](cloud-audit.md)) has no file of its own: accepted records become ordinary findings in `<store>`. SBOM and cloud-audit bodies are not retained beyond the metadata described in the table.
+
+## Operating notes
+
+* **Backup**: see the paragraph above; the simplest consistent backup is to stop the server (or snapshot the volume) and copy `<store>*` plus the credentials file.
+* **Restore**: stop the server, put the files back with mode 0600 and the same prefix, start. Files for features that are off (for example `.epss.json`) can simply be absent.
+* **Disk growth**: `<store>`, `<store>.events` and the append-only ledgers grow until the retention purge (`POST /v1/governance/retention/apply`, admin token plus `{"confirm":"purge"}`) or external rotation. Size the Helm `persistence.size` (default 2 Gi) accordingly.
+* **Personal data**: `<store>.events` contains full command lines and paths; treat it as personal data (see the governance endpoints in [observability.md](observability.md)).
+* **Shutdown flush**: on SIGTERM the server stops background workers through the lifecycle registry within a 5 s budget after a 7 s HTTP drain; workers that persist on stop (for example the posture trend) flush then. A hard kill can lose the last interval of in-memory-only state.

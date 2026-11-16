@@ -18,9 +18,19 @@ go build -o bin/kavachctl ./cmd/kavachctl
 | `KAVACH_TOKEN` | Bearer token (alias `ZYVOR_EDR_TOKEN`) |
 | `KAVACH_TLS_INSECURE=true` | Skip TLS verify (auto on loopback) |
 | `~/.kavach/api-key` | Token file if env unset |
-| `~/.kavach/env` | Optional dotenv |
+| `~/.kavach/env` | Optional dotenv (`KEY=VALUE` lines; real environment variables win). Skipped when `KAVACH_SKIP_DOTENV=1` |
+| `KAVACH_CLI_ACTOR` | Value sent as `X-Kavach-Actor` on requests (default `kavachctl`); shows up as the actor on notes, journal and ledger entries |
+| `KAVACH_CLI_NO_BANNER` | Any value hides the TTY banner |
+| `KAVACH_CLI_COLOR` | `true`/`false` (or `0`) forces colour on or off; `NO_COLOR` and `TERM=dumb` always turn it off; default is colour on a TTY |
 
-Demo login password `Admin@321` is the API token when deployed with that secret.
+Demo login password `Admin@321` is the API token when deployed with that secret. The console username is `admin`; the
+password is the token itself.
+
+Token resolution order: `KAVACH_TOKEN`, then `ZYVOR_EDR_TOKEN`, then `~/.kavach/env`, then `~/.kavach/api-key`. Note that
+`KAVACH_ADMIN_TOKEN` (written by `deploy-remote.sh` into `~/.kavach/env` on the remote host) is **not** read by
+`kavachctl`; export `KAVACH_TOKEN` as well. On a loopback URL TLS verification is skipped automatically; for a remote
+self-signed certificate set `KAVACH_TLS_INSECURE=true`. There is no client-certificate option, so `kavachctl` cannot talk to
+a listener that requires mTLS ([agent-mtls.md](agent-mtls.md)).
 
 ```bash
 export KAVACH_URL=https://kavach.80.79.5.173.sslip.io:30943
@@ -149,3 +159,64 @@ kavachctl compliance cert-in-clock          # open high/critical findings with t
 ```
 
 All lab commands print a sandbox notice: lab rules never raise alerts or touch production detections. `compliance controls` and `evidence` are observe-only evidence, not a certification, and `cert-in-clock` is informational (Kavach files no reports). Existing `compliance` and `compliance score` are unchanged. Tables accept `--json` or `-o json|yaml`; server error messages are shown verbatim with the HTTP status. Writes need an admin token.
+
+## Telemetry, cloud, exposure and coverage (read-only)
+
+```bash
+kavachctl events auth --host web-01 --limit 20       # also dns, module, registry; events summary
+kavachctl cloudaudit sources                         # supported sources and the loaded cld- rule count
+kavachctl exposure report --min_score 50             # exposed hosts from imported SBOMs and advisories
+kavachctl exposure advisories                        # loaded advisory set (SAMPLE until you import data)
+kavachctl exposure sboms web-01                      # SBOM inventory
+kavachctl coverage blindspots                        # techniques with no telemetry / rules
+kavachctl coverage telemetry                         # per-category: never_seen / stale / ok
+kavachctl syslog status                              # listener state; syslog parse LINE is a dry run
+kavachctl fleet health                               # also: fleet gaps, fleet stale, fleet host HOST
+kavachctl fleet slo                                  # also: history, definitions, set --file slo.json (admin)
+```
+
+Ingest is not done through `kavachctl`: SBOMs, cloud audit records and telemetry are POSTed to the HTTP API with an admin
+token or a per-host credential (see [exposure.md](exposure.md), [cloud-audit.md](cloud-audit.md),
+[telemetry-types.md](telemetry-types.md)).
+
+## Posture, reports and gates
+
+```bash
+kavachctl posture-trend --days 30                    # counts-only snapshots; every 6 h by default
+kavachctl posture-trend diff --from 2026-11-01       # deltas between two dates (--to optional)
+kavachctl digest --format md                         # executive digest (md|json|html via the API)
+kavachctl auditor-bundle --out evidence.zip          # or --manifest to print the manifest only
+kavachctl regulatory clocks                          # reporting-time clocks for your regimes (informational)
+kavachctl regression gate --max-regressions 0 --max-false-positives 0
+echo "exit=$?"                                       # non-zero when the server answers HTTP 412
+```
+
+## Output, errors and exit codes
+
+* Tables are the default; `--json` prints the raw response; some commands accept `-o table|json|yaml`.
+* Errors go to stderr as `kavachctl: <message>` and the process exits with status 1. Server error text is shown with the
+  HTTP status (for example `days must be 7, 14 or 30`).
+* Specific exits: `doctor` (any failed check), `journal verify` (broken hash chain) and `regression gate` (HTTP 412).
+* Write commands need an admin token. Destructive or state-changing commands ask for `--yes` (for example
+  `ml reset --yes`, `governance retention apply --yes`, `feedback record ... --yes`); without it the command refuses with `<name> is mutating; re-run with --yes to confirm` and sends nothing.
+* Commands that write files (`export`, `soc shift-report`, `compliance evidence`, `auditor-bundle`, `reports archive get`)
+  never overwrite an existing file without `--force`.
+* `kavachctl get /v1/PATH` is a raw GET escape hatch. It does not count as CLI coverage in the parity test
+  ([cli-reference.md](cli-reference.md)).
+* `kavachctl completion bash|zsh|fish` prints a completion script; a test keeps the completion word list and `--help` in sync
+  with the command catalog.
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| `kavachctl: set KAVACH_TOKEN (or ~/.kavach/api-key)` | Export the token, or write it to `~/.kavach/api-key` |
+| `x509: certificate signed by unknown authority` | Self-signed server: `export KAVACH_TLS_INSECURE=true` (the error text includes this hint) |
+| `connection refused` | Wrong `KAVACH_URL` (default `https://127.0.0.1:30899`; a local `go run` server is `http://127.0.0.1:8099`) |
+| `HTTP 401` | Wrong token. Repeated failures are throttled per IP; wait a few seconds |
+| `HTTP 403 admin token required` | The command writes; use the admin token, not a per-host agent credential |
+| `unknown command` | `kavachctl --help` shows the full map; the usage line of a command group lists its subcommands |
+| `watch` exits immediately | A 401/403 stops `watch` instead of retrying; fix the token |
+| Run `kavachctl doctor` first | Checks URL, token, `/livez`, `/readyz`, auth and TLS in one go |
+
+See also [cli-reference.md](cli-reference.md) for the read-only surface-parity commands and the MCP equivalents.

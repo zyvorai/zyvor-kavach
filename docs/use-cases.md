@@ -14,7 +14,12 @@ Practical ways teams use Kavach. Every scenario stays inside the observation-onl
 4. Transition incident state in **Incidents** (workflow ledger).  
 5. Export for the SIEM: `kavachctl siem export` or Integrations download.
 
-**APIs:** `/v1/findings`, `/v1/detections`, `/v1/incidents`, `/v1/ai/briefing`, `/v1/siem/export`
+**APIs:** `/v1/findings`, `/v1/detections`, `/v1/incidents`, `/v1/ai/briefing`, `/v1/export/findings`, `/v1/siem/export`
+
+Handy extras: `kavachctl watch --severity high` (live tail with auto-reconnect), `kavachctl soc metrics --days 30`
+(MTTA/MTTR, backlog age, noisy rules), `kavachctl soc shift-report --hours 12 --out shift.txt` and
+`kavachctl feedback record --finding ID --verdict false_positive` to feed per-rule precision (nothing is auto-applied).
+Limits: SOC metrics need the incident ledger to contain transitions, so a new install reports `null` MTTA/MTTR.
 
 ---
 
@@ -226,6 +231,124 @@ Follow [tutorial.md](tutorial.md) and [testing.md](testing.md).
 
 ---
 
+## 13. Cloud and SaaS audit-log detection
+
+**Goal:** Catch risky cloud activity (root console login, missing MFA, policy changes) from logs you already export.
+
+```bash
+kavachctl cloudaudit sources
+curl -s -X POST -H "Authorization: Bearer $KAVACH_TOKEN" "$KAVACH_URL/v1/cloud/audit/events?source=aws" \
+  --data-binary @cloudtrail.json          # admin token; up to 4 MiB and 1000 records per request
+kavachctl findings --rule cld-aws-root-console-login
+```
+
+Kavach reads what you send and never calls a cloud API. Findings carry `cld-` rule ids and appear on a synthetic
+host such as `cloud:aws`. Coverage is only as good as the logs you export. See [cloud-audit.md](cloud-audit.md).
+
+---
+
+## 14. Software exposure from SBOMs
+
+**Goal:** Which hosts carry a package with a known advisory, without scanning anything.
+
+```bash
+curl -s -X PUT -H "Authorization: Bearer $KAVACH_TOKEN" $KAVACH_URL/v1/exposure/sboms/web-01 --data-binary @sbom.json
+curl -s -X POST -H "Authorization: Bearer $KAVACH_TOKEN" "$KAVACH_URL/v1/exposure/advisories/import?source=my-feed" \
+  --data-binary @osv-or-kev.json
+kavachctl exposure report --min_score 50
+# with KAVACH_EXPOSURE_PRIORITY=1 set in the SERVER environment:
+kavachctl ml priority --host web-01      # adds an `exposure` factor for hosts that have an SBOM
+```
+
+Until you import advisories the embedded SAMPLE set (five entries) is used, so an empty report proves nothing.
+See [exposure.md](exposure.md), [vuln-feeds.md](vuln-feeds.md) and [lockfile-inspection.md](lockfile-inspection.md).
+
+---
+
+## 15. SIEM and data-lake integration
+
+**Goal:** Feed an existing SIEM without giving Kavach any outbound reach.
+
+```bash
+curl -s -D hdr.txt -H "Authorization: Bearer $KAVACH_TOKEN" \
+  "$KAVACH_URL/v1/export/findings?format=ocsf&limit=1000" > batch.ndjson
+# store X-Kavach-Next-Cursor from hdr.txt, then call again with &cursor=<value>
+```
+
+A collector polls on a schedule and keeps the cursor; formats are OCSF, ECS, CEF, LEEF and Splunk HEC. An optional
+fire-and-forget push sink (`KAVACH_SIEM_WEBHOOK`, `KAVACH_SIEM_SYSLOG`) exists for low-latency notification. Output was
+validated by unit tests only, not by a live SIEM. See [siem-export.md](siem-export.md).
+
+---
+
+## 16. Agentless sources: network gear via syslog
+
+**Goal:** See auth, DNS and flow signals from devices that cannot run an agent.
+
+```bash
+export KAVACH_SYSLOG=tls:10.0.0.5:6514 KAVACH_SYSLOG_ALLOW=10.1.0.0/16
+export KAVACH_SYSLOG_TLS_CERT=/etc/kavach/syslog.crt KAVACH_SYSLOG_TLS_KEY=/etc/kavach/syslog.key
+kavachctl syslog status
+kavachctl syslog parse '<38>Nov 16 10:00:01 gw sshd[411]: Failed password for root from 203.0.113.9 port 4242 ssh2'
+```
+
+Off by default; plaintext UDP/TCP is spoofable. Events are namespaced `syslog:<name>` so a device can never write into an
+enrolled agent's host. See [syslog-listener.md](syslog-listener.md).
+
+---
+
+## 17. Posture trend and executive reporting
+
+**Goal:** Show direction of travel to management and auditors with counts only.
+
+```bash
+kavachctl posture-trend --days 30
+kavachctl posture-trend diff --from 2026-11-01
+kavachctl digest --format md
+kavachctl auditor-bundle --out evidence.zip
+kavachctl compliance evidence --framework cis --format html --out evidence.html
+kavachctl regulatory clocks            # incident-reporting regimes and time remaining (informational; no filing)
+```
+
+Snapshots exist only while Kavach runs; gaps mean it was stopped. Scores are evidence counts, not a certification
+or legal advice. See [posture-reports.md](posture-reports.md), [compliance-evidence.md](compliance-evidence.md) and
+[regional-reporting.md](regional-reporting.md).
+
+---
+
+## 18. Detection engineering and CI gates
+
+**Goal:** Change rules without silently losing coverage.
+
+```bash
+kavachctl lab backtest --rule rule.json      # sandbox: never raises alerts
+kavachctl validate coverage
+kavachctl regression gate --max-regressions 0 --max-false-positives 0 || echo "gate failed"
+```
+
+`regression gate` exits non-zero when the server answers HTTP 412, so a pipeline can stop. The corpus is synthetic
+(one variant per technique) and the measured percentage is not a guarantee against real attacks. See
+[regression-tracking.md](regression-tracking.md), [research-validation-lab.md](research-validation-lab.md) and
+[content-framework.md](content-framework.md).
+
+---
+
+## 19. Fleet SLOs and sensor health
+
+**Goal:** Know whether agents keep reporting, not just whether they enrolled.
+
+```bash
+kavachctl fleet health
+kavachctl fleet gaps          # shadow hosts, agents without data, agents on the polling sensor
+kavachctl fleet stale
+kavachctl fleet slo
+```
+
+Only data agents already send is used (heartbeats, event timestamps); version, CPU and queue depth are reported as
+"not reported by agent". See [observability.md](observability.md).
+
+---
+
 ## Anti-use-cases (out of scope)
 
 | Request | Kavach answer |
@@ -238,5 +361,8 @@ Follow [tutorial.md](tutorial.md) and [testing.md](testing.md).
 | Quarantine a binary | No |
 | Drop a 5-tuple in-kernel | Use Netra (leased) — not Kavach |
 | Silent prevention | Detect-only policies |
+| Scan or call out to a cloud tenant, mail server or link | No — only logs and files you send are read; analyzers never fetch |
+| Patch a vulnerable package | No — exposure is reported, never remediated |
+| Guarantee detection of a real attack | No — rates are measured on synthetic corpora |
 
 If you need enforcement, use Netra’s leased datapath controls or an external SOAR that reads Kavach exports — never claim Kavach did the enforce.
