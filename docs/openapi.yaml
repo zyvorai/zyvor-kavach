@@ -2719,6 +2719,27 @@ paths:
         "200": { description: "Similarity matches" }
         "400": { description: "Malformed or unsupported digest" }
         "404": { description: "Unknown sha256" }
+  /v1/inspect/clusters:
+    get:
+      summary: "Cluster stored inspector reports by shared IOCs, embedded hashes and similarity digests (read-only)"
+      description: "Single-linkage grouping over the capped in-memory report ring (200). Each cluster lists the shared factors and pairwise links that justify it. Shows shared evidence, not a common actor. No input bytes are kept."
+      parameters:
+        - { name: min_score, in: query, schema: { type: number }, description: "Sum of shared-factor weights needed to link two reports (strong factors weigh 1, path/registry/entropy 0.4); default 1" }
+        - { name: limit, in: query, schema: { type: integer }, description: "Clusters returned, default 20, max 50" }
+        - { name: kind, in: query, schema: { type: string }, description: "Only reports of this inspect kind" }
+      responses:
+        "200": { description: "{count, clusters[{id,size,max_score,max_level,members[],shared_factors[],links[],explanation}], considered, singletons, ignored_common_factors[], limits_hit[], min_score, mode, note}" }
+        "400": { description: "Unknown kind" }
+  /v1/inspect/sarif:
+    get:
+      summary: "Export one stored inspector report as SARIF 2.1.0 (pull-only, for CI)"
+      parameters:
+        - { name: id, in: query, schema: { type: string }, description: "Report id, or latest" }
+        - { name: sha256, in: query, schema: { type: string }, description: "Or the sha256 of an inspected input" }
+      responses:
+        "200": { description: "application/sarif+json: a SARIF 2.1.0 log with one run; results mirror the report findings, the artifact location is a base name or sha256:HASH, never a local path" }
+        "400": { description: "Neither id nor sha256 given" }
+        "404": { description: "Report not in the in-memory ring" }
   /v1/ml/status:
     get:
       summary: "Local behaviour model status"

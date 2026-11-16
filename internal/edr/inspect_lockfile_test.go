@@ -23,7 +23,7 @@ func TestInspectLockfileKindRegistered(t *testing.T) {
 	if !found || InspectKindLockfile != "lockfile" {
 		t.Fatal("lockfile kind missing from inspectKinds")
 	}
-	if got := InspectAnalyzerNames()[InspectKindLockfile]; len(got) != 1 || got[0] != "lockfile" {
+	if got := InspectAnalyzerNames()[InspectKindLockfile]; len(got) != 2 || got[0] != "lockfile" || got[1] != "pkg-manifest" {
 		t.Fatalf("analyzers for lockfile kind: %v", got)
 	}
 }

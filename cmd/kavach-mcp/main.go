@@ -100,6 +100,9 @@ func buildServer(c *client, allowMutations bool) (*mcpserver.Server, error) {
 	if err := registerInspectSimilarTools(srv, c); err != nil {
 		return nil, err
 	}
+	if err := registerInspectClusterTools(srv, c); err != nil {
+		return nil, err
+	}
 	if err := registerObs2Tools(srv, c, allowMutations); err != nil {
 		return nil, err
 	}

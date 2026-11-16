@@ -534,6 +534,8 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	RegisterGlobalSearch(mux, token, store, analystWS)
 	RegisterInspect(mux, token)
 	RegisterInspectSimilar(mux, token)
+	RegisterInspectClusters(mux, token)
+	RegisterInspectSARIF(mux, token)
 	RegisterMLBehaviour(mux, token, store)
 	RegisterMLExt(mux, token, store)
 	RegisterRansomDetect(mux, token, store)
