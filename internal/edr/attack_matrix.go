@@ -14,13 +14,13 @@ var attackTactics = []string{
 }
 
 type ATTACKTechnique struct {
-	ID      string   `json:"id"`
-	Name    string   `json:"name"`
-	Rules   []string `json:"rules"`
+	ID    string   `json:"id"`
+	Name  string   `json:"name"`
+	Rules []string `json:"rules"`
 	// CustomRules is the subset of Rules authored by the customer (source=custom).
 	CustomRules []string `json:"custom_rules,omitempty"`
-	Hits    int      `json:"hits"`
-	Covered bool     `json:"covered"`
+	Hits        int      `json:"hits"`
+	Covered     bool     `json:"covered"`
 }
 type ATTACKTactic struct {
 	Tactic     string            `json:"tactic"`
@@ -129,7 +129,7 @@ func BuildATTACKMatrix(findings []Finding) map[string]any {
 		// seen in findings). They are excluded from coverage and hits rather than defaulted.
 		"unmapped_rules": unmapped,
 		"unmapped_hits":  unmappedHits,
-		"mode":          "observe-only",
+		"mode":           "observe-only",
 	}
 }
 

@@ -8,7 +8,7 @@ import (
 func TestMore2ToolsGating(t *testing.T) {
 	ro := listTools(t, false)
 	rw := listTools(t, true)
-	if len(more2ReadTools()) != 23|| len(more2MutateTools()) != 7 {
+	if len(more2ReadTools()) != 23 || len(more2MutateTools()) != 7 {
 		t.Fatalf("unexpected tool counts %d/%d", len(more2ReadTools()), len(more2MutateTools()))
 	}
 	for _, tl := range more2ReadTools() {

@@ -226,7 +226,9 @@ func TestMLUserEvaluation(t *testing.T) {
 	for u := 0; u < users; u++ {
 		name := fmt.Sprintf("user%d", u)
 		hosts := []string{fmt.Sprintf("ws%d", u), "build1", "git1"}
-		day := func(d int, h int) time.Time { return extT0.AddDate(0, 0, d).Add(time.Duration(h)*time.Hour + time.Duration(r.Intn(3000))*time.Second) }
+		day := func(d int, h int) time.Time {
+			return extT0.AddDate(0, 0, d).Add(time.Duration(h)*time.Hour + time.Duration(r.Intn(3000))*time.Second)
+		}
 		logonHour := func() int { // working hours, with 3% shoulder hours
 			if r.Float64() < 0.03 {
 				return []int{6, 19, 20}[r.Intn(3)]
@@ -456,11 +458,11 @@ func extFatigueFindings(now time.Time) ([]Finding, map[string]RulePrecision) {
 				Time: now.Add(-time.Duration(ageDays*24*float64(time.Hour)) + time.Duration(i)*time.Minute)})
 		}
 	}
-	add("noisy-rule", 300, 2, 2)      // huge, concentrated, recent
+	add("noisy-rule", 300, 2, 2)       // huge, concentrated, recent
 	add("noisy-unlabelled", 250, 3, 3) // same shape, no verdicts
-	add("healthy-rule", 14, 10, 12)   // modest, spread
-	add("rare-rule", 3, 3, 5)         // below the guard
-	for i := 0; i < 40; i++ {         // background so shares are meaningful
+	add("healthy-rule", 14, 10, 12)    // modest, spread
+	add("rare-rule", 3, 3, 5)          // below the guard
+	for i := 0; i < 40; i++ {          // background so shares are meaningful
 		fs = append(fs, Finding{ID: fmt.Sprintf("bg%d", i), Rule: fmt.Sprintf("bg-rule-%d", i%20), Severity: "low", Host: "h9", Time: now.Add(-time.Duration(i) * time.Hour)})
 	}
 	pos, neg := 1, 25

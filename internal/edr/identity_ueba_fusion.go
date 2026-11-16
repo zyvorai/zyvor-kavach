@@ -11,23 +11,23 @@ import (
 )
 
 type IdentityEvent struct {
-	ID        string    `json:"id"`
-	Time      time.Time `json:"time"`
-	User      string    `json:"user"`
-	Host      string    `json:"host"`
-	Action    string    `json:"action"`
-	SourceIP  string    `json:"source_ip,omitempty"`
-	Severity  string    `json:"severity"`
-	Rule      string    `json:"rule"`
-	Detail    string    `json:"detail"`
+	ID       string    `json:"id"`
+	Time     time.Time `json:"time"`
+	User     string    `json:"user"`
+	Host     string    `json:"host"`
+	Action   string    `json:"action"`
+	SourceIP string    `json:"source_ip,omitempty"`
+	Severity string    `json:"severity"`
+	Rule     string    `json:"rule"`
+	Detail   string    `json:"detail"`
 }
 
 type IdentityEntity struct {
-	User       string  `json:"user"`
-	RiskScore  int     `json:"risk_score"`
-	Privileged bool    `json:"privileged"`
+	User       string    `json:"user"`
+	RiskScore  int       `json:"risk_score"`
+	Privileged bool      `json:"privileged"`
 	LastSeen   time.Time `json:"last_seen"`
-	Signals    []string `json:"signals"`
+	Signals    []string  `json:"signals"`
 }
 
 type UEBAScore struct {
@@ -59,9 +59,9 @@ type PlaybookRun struct {
 }
 
 var (
-	idMu     sync.Mutex
-	idEvents = defaultIdentityEvents()
-	fusionMu sync.Mutex
+	idMu      sync.Mutex
+	idEvents  = defaultIdentityEvents()
+	fusionMu  sync.Mutex
 	playbooks = append(defaultPlaybooks(), builtinPlaybooks()...)
 	playRuns  []PlaybookRun
 )
@@ -267,7 +267,7 @@ func RegisterFusion(mux *http.ServeMux, token string, store *Store) {
 			return
 		}
 		run := PlaybookRun{
-			ID: "run-" + time.Now().UTC().Format("20060102150405.000"),
+			ID:         "run-" + time.Now().UTC().Format("20060102150405.000"),
 			PlaybookID: body.PlaybookID, TriggerRef: body.TriggerRef,
 			Status: "recorded", Actions: append([]string{}, pb.Actions...),
 			Time: time.Now().UTC(),

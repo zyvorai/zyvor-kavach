@@ -1605,7 +1605,8 @@
    "effort": "L",
    "risk": "Not applicable",
    "conflicts_with_observation_only": "YES: contradicts the product boundary; listed only to document the deliberate gap",
-   "status": "open"
+   "status": "not_planned",
+   "evidence": "Out of scope by design: Kavach is observation-only and has no enforcement channel to hosts, accounts or mail, so automatic disruption or isolation is deliberately not planned."
   }
  ],
  "sources": [

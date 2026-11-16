@@ -97,6 +97,9 @@ func inspectRun(out io.Writer, args []string) error {
 			text, err = inspectReadStdin()
 		} else {
 			text, name, err = inspectReadFile(pos[0], inspectMaxText, "4 MiB")
+			if err == nil {
+				name = configHintName(pos[0], name)
+			}
 		}
 		if err != nil {
 			return err
@@ -153,6 +156,17 @@ func inspectReadFile(path string, max int64, human string) ([]byte, string, erro
 		return nil, "", fmt.Errorf("%s is empty", path)
 	}
 	return data, filepath.Base(path), nil
+}
+
+// configHintName returns the name sent to the config analyzers: the base name, except that a file
+// under .github/workflows/ keeps that fixed directory suffix so GitHub Actions is recognised by
+// path as well as by content. The caller's full local path is never sent.
+func configHintName(path, base string) string {
+	p := "/" + strings.ToLower(filepath.ToSlash(path))
+	if strings.Contains(p, "/.github/workflows/") {
+		return ".github/workflows/" + base
+	}
+	return base
 }
 
 func inspectReadStdin() ([]byte, error) {

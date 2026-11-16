@@ -9,10 +9,10 @@ import (
 
 // Rules that have no honest ATT&CK technique today. They must surface as unmapped, not as a guess.
 var intentionallyUnmapped = map[string]bool{
-	"identity-from-finding":    true, // identity event derived from findings, not a Finding rule
-	"custom-rule":              true, // placeholder for operator-authored custom-* rules
-	"ioc-generic":              true, // placeholder for operator-added IOC types
-	"ioa-generic":              true, // placeholder for operator-added IOA ids
+	"identity-from-finding": true, // identity event derived from findings, not a Finding rule
+	"custom-rule":           true, // placeholder for operator-authored custom-* rules
+	"ioc-generic":           true, // placeholder for operator-added IOC types
+	"ioa-generic":           true, // placeholder for operator-added IOA ids
 }
 
 func TestMapDetectionUnmappedIsExplicit(t *testing.T) {

@@ -75,13 +75,13 @@ type AttackStep struct {
 }
 
 type FindingCluster struct {
-	ID        string   `json:"id"`
-	Label     string   `json:"label"`
-	Severity  string   `json:"severity"`
-	Count     int      `json:"count"`
+	ID         string   `json:"id"`
+	Label      string   `json:"label"`
+	Severity   string   `json:"severity"`
+	Count      int      `json:"count"`
 	FindingIDs []string `json:"finding_ids"`
-	Hosts     []string `json:"hosts"`
-	Summary   string   `json:"summary"`
+	Hosts      []string `json:"hosts"`
+	Summary    string   `json:"summary"`
 }
 
 type BehaviorClass struct {
@@ -703,9 +703,9 @@ func riskForecast(store *Store) map[string]any {
 		base = 95
 	}
 	return map[string]any{
-		"horizon_hours": 72,
+		"horizon_hours":     72,
 		"breach_risk_score": int(base),
-		"level": riskLevel(int(base)),
+		"level":             riskLevel(int(base)),
 		"drivers": []string{
 			fmt.Sprintf("%d open findings", len(findings)),
 			fmt.Sprintf("%d high/critical", high),
@@ -1007,11 +1007,11 @@ func socBriefing(store *Store) map[string]any {
 	}
 	fc := riskForecast(store)
 	return map[string]any{
-		"title": "Kavach AI Daily Briefing",
-		"generated_at": time.Now().UTC(),
-		"headline": envNarrative(store),
-		"top_clusters": top,
-		"forecast": fc,
+		"title":           "Kavach AI Daily Briefing",
+		"generated_at":    time.Now().UTC(),
+		"headline":        envNarrative(store),
+		"top_clusters":    top,
+		"forecast":        fc,
 		"ai_capabilities": len(AICapabilities()),
 		"lineage":         "kaveri-briefing",
 	}
@@ -1026,10 +1026,10 @@ func whatIf(scenario, host string, store *Store) map[string]any {
 	}
 	return map[string]any{
 		"scenario": scenario, "host": host, "impact": impact,
-		"simulated_path": path,
-		"blast_radius_hosts": []string{host, "adjacent-peer (model)"},
+		"simulated_path":       path,
+		"blast_radius_hosts":   []string{host, "adjacent-peer (model)"},
 		"recommended_controls": []string{"detect-only IOC", "IOA rule", "Fusion notify playbook"},
-		"note": "Simulation only — no host changes",
+		"note":                 "Simulation only — no host changes",
 	}
 }
 
@@ -1047,7 +1047,7 @@ func analyzeStream(store *Store) map[string]any {
 	return map[string]any{
 		"process_events": procs, "network_events": nets,
 		"suspicious_entities": suspicious,
-		"summary": fmt.Sprintf("Stream analyst reviewed %d process and %d network events; %d entities scored anomalous.", procs, nets, suspicious),
+		"summary":             fmt.Sprintf("Stream analyst reviewed %d process and %d network events; %d entities scored anomalous.", procs, nets, suspicious),
 	}
 }
 
@@ -1090,11 +1090,10 @@ func xdrAIFusion(store *Store) map[string]any {
 	store.mu.Unlock()
 	return map[string]any{
 		"endpoint_findings": len(findings),
-		"xdr_correlated": xdr,
-		"network_events": nets,
-		"netra_poller": NetraPollerStatus(),
-		"ai_insight": fmt.Sprintf("Fusion model links %d XDR-tagged endpoint findings with %d network events.", xdr, nets),
-		"note":       "Native Netra×Kavach cross-domain AI — observation only",
+		"xdr_correlated":    xdr,
+		"network_events":    nets,
+		"netra_poller":      NetraPollerStatus(),
+		"ai_insight":        fmt.Sprintf("Fusion model links %d XDR-tagged endpoint findings with %d network events.", xdr, nets),
+		"note":              "Native Netra×Kavach cross-domain AI — observation only",
 	}
 }
-

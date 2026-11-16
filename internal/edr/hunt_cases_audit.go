@@ -11,17 +11,17 @@ import (
 )
 
 type Case struct {
-	ID          string    `json:"id"`
-	Title       string    `json:"title"`
-	Severity    string    `json:"severity"`
-	Status      string    `json:"status"`
-	Assignee    string    `json:"assignee,omitempty"`
-	FindingIDs  []string  `json:"finding_ids,omitempty"`
-	DetectionIDs []string `json:"detection_ids,omitempty"`
-	Tags        []string  `json:"tags,omitempty"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	Notes       string    `json:"notes,omitempty"`
+	ID           string    `json:"id"`
+	Title        string    `json:"title"`
+	Severity     string    `json:"severity"`
+	Status       string    `json:"status"`
+	Assignee     string    `json:"assignee,omitempty"`
+	FindingIDs   []string  `json:"finding_ids,omitempty"`
+	DetectionIDs []string  `json:"detection_ids,omitempty"`
+	Tags         []string  `json:"tags,omitempty"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	Notes        string    `json:"notes,omitempty"`
 }
 
 type GraphNode struct {
@@ -31,9 +31,9 @@ type GraphNode struct {
 }
 
 type GraphEdge struct {
-	From  string `json:"from"`
-	To    string `json:"to"`
-	Rel   string `json:"rel"`
+	From string `json:"from"`
+	To   string `json:"to"`
+	Rel  string `json:"rel"`
 }
 
 type AuditEntry struct {
@@ -71,7 +71,7 @@ func AppendAudit(_token, action, detail string) {
 	auditMu.Lock()
 	defer auditMu.Unlock()
 	auditLog = append(auditLog, AuditEntry{
-		ID: "aud-" + time.Now().UTC().Format("20060102150405.000000"),
+		ID:   "aud-" + time.Now().UTC().Format("20060102150405.000000"),
 		Time: time.Now().UTC(), Action: action, Detail: detail,
 	})
 	if len(auditLog) > 5000 {
@@ -356,8 +356,8 @@ func RegisterCloudMobile(mux *http.ServeMux, token string) {
 }
 
 var (
-	deviceMu   sync.Mutex
-	deviceInv  = defaultDeviceInventory()
+	deviceMu  sync.Mutex
+	deviceInv = defaultDeviceInventory()
 )
 
 func defaultDeviceInventory() []map[string]any {

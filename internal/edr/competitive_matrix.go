@@ -45,7 +45,7 @@ type BacklogItem struct {
 	Effort              string `json:"effort"`
 	Risk                string `json:"risk"`
 	Conflicts           string `json:"conflicts_with_observation_only"`
-	// Status is open, partial or implemented; Evidence names the endpoints
+	// Status is open, partial, implemented or not_planned (boundary); Evidence names the endpoints
 	// and files for implemented/partial items, including stated limits.
 	Status   string `json:"status,omitempty"`
 	Evidence string `json:"evidence,omitempty"`

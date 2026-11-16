@@ -24,11 +24,11 @@ type Detection struct {
 	Technique   string    `json:"technique"`
 	TechniqueID string    `json:"technique_id"`
 	// Unmapped is true when the rule has no ATT&CK entry; Tactic/Technique/TechniqueID are then empty.
-	Unmapped bool      `json:"unmapped,omitempty"`
-	IOAs       []string  `json:"ioas,omitempty"`
-	IOCs        []string  `json:"iocs,omitempty"`
-	Score       int       `json:"score"`
-	XDR         bool      `json:"xdr"`
+	Unmapped bool     `json:"unmapped,omitempty"`
+	IOAs     []string `json:"ioas,omitempty"`
+	IOCs     []string `json:"iocs,omitempty"`
+	Score    int      `json:"score"`
+	XDR      bool     `json:"xdr"`
 }
 
 var ruleMITRE = map[string]struct{ Tactic, Technique, ID string }{

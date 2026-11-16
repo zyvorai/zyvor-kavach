@@ -160,7 +160,7 @@ func Detect(e Event) []Finding {
 	result := []Finding{}
 	add := func(rule, severity, description string, tags ...string) {
 		result = append(result, Finding{
-			ID: fmt.Sprintf("%s:%d:%s:%d", e.Host, e.PID, rule, e.Time.UnixNano()),
+			ID:   fmt.Sprintf("%s:%d:%s:%d", e.Host, e.PID, rule, e.Time.UnixNano()),
 			Time: e.Time, Host: e.Host, PID: e.PID, Rule: rule, Severity: severity,
 			Description: description, Evidence: e, Tags: tags,
 		})

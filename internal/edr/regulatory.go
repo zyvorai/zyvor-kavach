@@ -214,7 +214,9 @@ func BuildRegulatoryClocks(regimes []RegRegime, ids []string, store *Store, inc 
 					list = append(list, map[string]any{"finding_id": e.FindingID, "rule": e.Rule, "host": e.Host, "severity": e.Severity,
 						"status": e.Status, "first_detected": e.FirstDetected, "deadline": dl.UTC(), "remaining_seconds": rem, "overdue": rem < 0})
 				}
-				sort.Slice(list, func(i, j int) bool { return list[i]["remaining_seconds"].(int64) < list[j]["remaining_seconds"].(int64) })
+				sort.Slice(list, func(i, j int) bool {
+					return list[i]["remaining_seconds"].(int64) < list[j]["remaining_seconds"].(int64)
+				})
 			}
 			row["incidents"] = list
 			stages = append(stages, row)

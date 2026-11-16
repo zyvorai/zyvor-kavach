@@ -189,9 +189,9 @@ func (e *mlExtEngine) peerCompute() (map[string]*mlPeerResult, map[string]any) {
 	pj, pz, pr, pok := peerScores(pc, pt, mlPeerMinProc)
 	dj, dz, dr, dok := peerScores(dc, dt, mlPeerMinDest)
 	meta := map[string]any{"hosts_tracked": len(e.st.Peers),
-		"process_view": map[string]any{"ready_hosts": len(pr), "min_hosts": mlPeerMinHosts, "min_events_per_host": mlPeerMinProc, "status": mlReady(pok)},
+		"process_view":     map[string]any{"ready_hosts": len(pr), "min_hosts": mlPeerMinHosts, "min_events_per_host": mlPeerMinProc, "status": mlReady(pok)},
 		"destination_view": map[string]any{"ready_hosts": len(dr), "min_hosts": mlPeerMinHosts, "min_events_per_host": mlPeerMinDest, "status": mlReady(dok)},
-		"z_threshold": mlPeerZ}
+		"z_threshold":      mlPeerZ}
 	out := map[string]*mlPeerResult{}
 	for _, h := range mlSortedKeys(e.st.Peers) {
 		p := e.st.Peers[h]
