@@ -9,10 +9,20 @@ what this guard does and does not prove.
 
 `internal/edr/testdata/benign_corpus.json` holds hand-written, realistic, non-malicious
 events. Each carries `kind`, `os`, the event fields, and (for file and network events) a `note`
-naming the process that would have caused it. The size is not recorded here so it cannot go stale:
-`TestContentBenignCorpus` enforces minimums (at least 500 events, at least 20 per event kind, at least
-50 per OS) and `len()` plus a `collections.Counter` over `(kind, os)` of the JSON array gives the live
-breakdown.
+naming the process that would have caused it. At the time of writing (2026-11-16) it holds 1,719 events: 703 process, 320 file, 199 network, 165 registry,
+144 module, 128 dns and 60 auth; by OS 692 linux, 681 windows and 346 macos. The numbers drift as events are
+added, so recount rather than trust this paragraph. `TestContentBenignCorpus` enforces minimums (at least 500
+events, at least 20 per event kind, at least 50 per OS). A second, smaller corpus,
+`internal/edr/testdata/benign_corpus_cloud.json` (71 normalised cloud-audit events), is checked by
+`TestCloudAuditBenignCorpus` against every non-low process-type rule.
+
+```sh
+python3 - <<'EOF'
+import json, collections
+c = json.load(open('internal/edr/testdata/benign_corpus.json'))
+print(len(c), collections.Counter(e['kind'] for e in c), collections.Counter(e['os'] for e in c))
+EOF
+```
 
 Events tagged `"note": "unix2 guard"` were added with the `ux2-` Linux/macOS/container pack: routine
 admin and developer activity that sits next to the attack shapes (history size tuning, `journalctl
@@ -22,10 +32,22 @@ instance-id reads, `security find-identity`, `spctl --assess`, `log show`, own-u
 They exist so those rules are exercised against near-misses, not only against their own samples.
 
 Known precision gaps found while extending the corpus: some pre-existing rules do fire on plausible admin
-activity (Docker-in-Docker `--privileged`, a Traefik/Portainer docker.sock mount, `kubectl exec ... -n
-kube-system`, `chmod u+s /usr/bin/newuidmap`, `networksetup -setwebproxy ... 127.0.0.1`, `sysadminctl
--addUser` for a non-admin). Those events were deliberately left out of the corpus rather than
-loosening the guard or hiding the rule; treat them as a worklist for tightening those older rules.
+activity. Those events were deliberately left out of the corpus rather than loosening the guard or hiding the
+rule; treat them as a worklist for tightening those older rules. Re-checked on 2026-11-16 by replaying
+reconstructed events (the exact corpus drafts were not kept, so the command lines are representative, not
+identical) against the embedded packs, all still fire at medium or above:
+
+| Benign activity | Rules that still fire | Severity |
+|-----------------|-----------------------|----------|
+| Docker-in-Docker `docker run -d --privileged docker:dind` | `cloud-docker-run-privileged`, `lx-docker-run-privileged-hostroot` (high); `gap-any-container-run-detached-privileged` (medium); `ux2-docker-run-privileged` (low) | high |
+| Traefik/Portainer `-v /var/run/docker.sock:/var/run/docker.sock` | `cloud-docker-run-mount-docker-sock` (high), `lx-docker-mount-docker-socket` (medium) | high |
+| `kubectl exec -it <pod> -n kube-system -- sh` | `cloud-kubectl-exec-kube-system` (high), `ux2-kubectl-exec-shell-sensitive-ns` (medium), `gap-any-container-exec-session` (low) | high |
+| `chmod u+s /usr/bin/newuidmap` | `lx-chmod-setuid-bit` | medium |
+| `networksetup -setwebproxy Wi-Fi 127.0.0.1 8080` | `macos-networksetup-proxy-set` | medium |
+| `sysadminctl -addUser build ...` (non-admin) | `macos-sysadminctl-add-user` | high |
+| `systemctl enable --now nginx.service` | built-in `persistence-attempt` (not a content rule, so not in the corpus guard) | medium |
+
+Treat these as open tuning tasks: a fix is a `not` clause or a severity change plus a near-miss corpus event so the guard then protects it.
 
 Coverage themes: package managers (apt, dpkg, dnf, snap, brew, pip, npm, cargo, go, choco),
 compilers and build tools (gcc, clang, make, MSBuild, Xcode, dotnet), browsers and their updaters,
@@ -56,7 +78,7 @@ enforces a corpus floor (500+ events, 20+ per kind, 50+ per OS).
   accepted resolution for activity that is routine for administrators but still worth recording.
 - `TestContentHarness` and each rule's own positive and negative samples are unchanged and still pass.
 
-## What was changed
+## What was changed (first tuning pass)
 
 Initial run: 58 rules fired (114 hits). After tuning: 0 rules at medium or above fire. No rule was
 dropped. 51 rules were touched: 23 had severity lowered (some also tightened), the rest were
@@ -111,10 +133,17 @@ Exclusion lists below are name-based and therefore evadable (see limits).
 
 ### Rules that still fire at low severity on the corpus (allowed)
 
-26 low-severity rules fire 36 times, including six that were already low and are untouched:
-ioa-net-cloud-metadata-reach, macos-aws-credentials-touched, macos-kube-docker-config-touched,
-win-file-hosts-modified, win-whoami-priv-all, ioa-net-lateral-ports-raw-ip. The latter fires on
-internal SMB to a raw IP because its own positive samples are private addresses.
+The first tuning pass left 26 low-severity rules firing 36 times. After the later packs (`gap-`, `gp2-`,
+`ux2-`, `cloud-`) and the larger corpus, `go test ./internal/edr/ -run TestContentBenignCorpus -v` reports
+**40 low-severity rules firing 62 times** (measured 2026-11-16). This is the current noisy-rule worklist, with
+hits on the corpus in brackets:
+
+* Persistence and config paths: `ioa-file-cron-dir-write` (1), `lx-cron-dir-file-written` (1), `ioa-file-systemd-unit-created` (2), `lx-systemd-unit-file-written` (2), `ux2-systemd-user-unit-file` (1), `ioa-file-rc-local-or-profile-write` (3), `ioa-file-macos-zsh-startup-write` (2), `linux-authorized-keys-modified` (2), `lx-sudoers-file-written` (1), `ioa-file-pam-or-sshd-config-write` (1), `macos-sshd-config-modified` (1), `ux2-auditd-rules-file-edit` (1), `ioa-file-windows-tasks-dir-write` (1), `win-file-task-xml-drop` (1), `win-file-spooler-dll-drop` (1), `win-file-hosts-modified` (1), `gp2-win-startup-folder-lnk` (1).
+* macOS: `ux2-mac-launch-plist-file` (7, the noisiest), `macos-kube-docker-config-touched` (4), `macos-aws-credentials-touched` (2), `gap-macos-launchagent-plist-created` (2), `macos-tcc-database-modified` (1), `ux2-mac-tcc-file-modify` (1), `macos-cloud-metadata-endpoint` (1).
+* Network and discovery: `ux2-imds-network-nonagent` (1), `cloud-net-imds-aws-azure` (1), `ioa-net-cloud-metadata-reach` (1), `ioa-net-lateral-ports-raw-ip` (1, fires on internal SMB to a raw IP because its own positive samples are private addresses), `lx-port-scanner-active-flags` (1), `ioa-network-sweep-cmdline` (1), `win-nltest-domain-trusts` (1), `win-whoami-priv-all` (1), `gap-win-systeminfo-enum` (1).
+* Admin tooling: `gap-any-container-exec-session` (5), `gap-any-clipboard-read-cli` (2), `gap-any-cloud-cli-enumeration` (1), `gp2-any-hide-file-attribute` (1), `gp2-k8s-cronjob-or-job-created` (1), `ioa-gtfobins-python-pty-spawn` (1), `win-cipher-wipe-free-space` (1).
+
+If an entry here disappears from the log line the rule was tightened; update this list from the test output.
 
 ### Corpus events removed or reshaped
 
@@ -123,9 +152,21 @@ enabling RDP (`fDenyTSConnections=0`) and creating a `NOPASSWD` sudoers drop-in.
 rewritten to the realistic Process Explorer replacement of `taskmgr.exe`. Writer and client
 executables were removed from file and network events to match the live event shape.
 
+## Tuning workflow
+
+For a rule that fires too often in production, or that the guard reports:
+
+1. Find it. `kavachctl rules health --noisy` lists rules whose noisy score is 60 or above (volume, share and per-host repetition; see [rule-health.md](rule-health.md)); `--silent` lists rules with no hits at all, which is the other half of tuning (a rule that stopped firing after a log-format change). `GET /v1/rules/health/{id}` gives one rule.
+2. Look at real events. For a custom rule, `POST /v1/content/custom/{id}/dryrun` replays up to 1,000 events you supply and records no findings. For an embedded rule, put the events in a temporary copy of the corpus and run the guard.
+3. Choose the smallest change that separates the benign shape: a `not` clause on the parent or path, an anchored host list, or severity `low` when the fields cannot tell admin from attacker. Prefer a `not` clause over deleting the rule.
+4. Add the benign event to `testdata/benign_corpus.json` with a `note` naming the process that caused it (file and network events carry only `path`/`operation` and `destination`, so keep the corpus event to those fields) and add a near-miss negative sample to the rule.
+5. Prove nothing regressed: `go test ./internal/edr/ -run 'TestContentHarness|TestContentBenignCorpus|TestVal'`. The validation lab's detect rate (floor 0.93) and zero-benign-false-positive rule catch a fix that over-tightens.
+6. Run in `testing` first when you are unsure. Setting a custom rule to the `testing` lifecycle stores its hits as shadow findings so you can watch `shadow_hits` without alerting anyone.
+7. If you add an exclusion, record why. Name-based exclusions trade recall for noise; see the limits below.
+
 ## Honest limits
 
-- The corpus is 1,611 hand-written events, not production telemetry. Passing it is evidence against
+- The corpus is 1,719 hand-written events (plus 71 cloud-audit events), not production telemetry. Passing it is evidence against
   gross false positives, not proof of low noise on a real fleet. Rules never exercised by a corpus
   event (most of them, which target attacker tradecraft) are untested by this guard, and a clean run does
   not measure detection quality (false negatives).
@@ -142,4 +183,4 @@ executables were removed from file and network events to match the live event sh
   real attacker techniques because the benign and malicious forms are identical in the fields available.
   Restoring them needs richer telemetry (writer process, signer) rather than more regex.
 - The low-severity allowance is a test policy. If you want zero firing at every severity,
-  tighten the guard and drop or exclude the 26 rules above, accepting the lost coverage.
+  tighten the guard and drop or exclude the 40 rules above, accepting the lost coverage.

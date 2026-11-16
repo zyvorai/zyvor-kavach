@@ -141,6 +141,26 @@ These are short example queries copied from the pages above, kept here verbatim.
 - The VQL fetch response included a sample query labelled by the fetcher as general
   VQL style and not from the page; it is deliberately not reproduced.
 
+## Using kavach-seq
+
+Endpoints (all authenticated): `POST /v1/hunt/seq` (`{"query":"...","since":"24h"}`; `since` is `24h`, `7d` or RFC3339), `POST /v1/hunt/seq/explain`, `GET /v1/hunt/seq/fields`, `GET /v1/hunt/seq/examples`. CLI: `kavachctl hunt seq QUERY|--file F [--since 24h]`, `kavachctl hunt seq fields`, `explain QUERY`, `examples`.
+
+A query exercised by `TestSeqHTTP` (curl then a binary run from `/tmp` on the same host within an hour):
+
+```
+sequence by host with maxspan=1h
+  [process where executable endswith "/curl"]
+  [process where executable startswith "/tmp/"]
+```
+
+Categories are `process`, `network`, `file`, `registry`, `dns`, `auth`, `module`. The response carries `count`, `matches[].events[]` (each with its `step`) and `scanned_total`. A syntax error returns 400 with a character `pos`; a field Kavach does not collect (for example `executable` on a network event, or `hash` on a process event) is refused with a reason rather than silently matching nothing.
+
+Limits (from `hunt_eql_lexer.go` and `hunt_eql_http.go`): query up to 4096 bytes and 16 KiB request body, at most 6 steps, 256 nodes, depth 32, 64 list items, 512-byte literals, 256-byte regexes, 500 matches, 200,000 scanned events (the newest are kept when more exist), `maxspan` up to 24 hours, 5-second time budget.
+
+Run the language tests with `go test ./internal/edr/ -run 'TestSeq' -v`; `TestSeqBruteForceCrossCheck` compares the evaluator with a naive reading of the semantics on random inputs.
+
+Honest limits: a hunt only sees what the store retains; there is no Kleene closure, negation `!`, any-match enumeration or pipes. The examples catalogue is hand-written and its tests use synthetic events.
+
 ## Design decisions that follow
 
 - Own grammar and name (`kavach-seq`), EQL-inspired surface: `cat where cond`,

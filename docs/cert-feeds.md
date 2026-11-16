@@ -86,3 +86,31 @@ Cached at `<store path>.certfeeds.json` (see `docs/persistence-files.md`). When 
 - `POST /v1/advisories/feeds/refresh`: refresh now; 409 when `KAVACH_CERT_FEEDS` is unset.
 
 CLI: `kavachctl advisories list [--source --cve --since --q --matched --limit --json] | status | refresh`. MCP (read-only): `advisories_list`, `advisories_feed_status`.
+
+## Worked examples
+
+```sh
+KAVACH_CERT_FEEDS=cisa,cert-eu,jvn go run ./cmd/kavach -mode server -listen 127.0.0.1:8099
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" "http://127.0.0.1:8099/v1/advisories?source=cisa,cert-eu&matched=true&since=2026-11-01&limit=20"
+# {"count":3,"total":3,"enabled_feeds":["cisa","cert-eu","jvn"],"last_refresh":"...","feed_errors":[],"note":"...",
+#  "advisories":[{"source":"cisa","id":"icsa-26-316-02","title":"...","published":"...","url":"https://...",
+#                 "cves":["CVE-2026-111497"],"severity":"high","matched":true,
+#                 "matched_cves":["CVE-2026-111497"],"matched_hosts":["web-1"]}]}
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" http://127.0.0.1:8099/v1/advisories/feeds/status
+# {"enabled":[...],"available":["cccs","cert-bund",...],"last_refresh":"...","counts":{"cisa":300,...},
+#  "fetched":{"cisa":"..."},"feed_errors":[],"note":"..."}
+curl -s -X POST -H "Authorization: Bearer $KAVACH_TOKEN" http://127.0.0.1:8099/v1/advisories/feeds/refresh
+```
+
+`total` is the number of matches before `limit` is applied. Values are illustrative. The 14 feed ids in the table are exactly the ones compiled into `cert_feeds.go`; `available` in the status lists them.
+
+## Limits and what was not re-checked
+
+| Item | Value |
+|---|---|
+| Response size | 16 MiB per feed |
+| Items | 300 per feed, 50 CVEs per advisory |
+| Kept fields | 400 characters for title, id and url; 64 KiB of text scanned for CVE ids per item |
+| Network | https only, per-feed host allowlist, 3 redirects, 30 s timeout, refresh at start and every 6 h |
+
+The "verified live" feed table and the licence notes record what was fetched on 2026-11-13; they were not re-fetched in the 2026-11-16 documentation pass, so a publisher may have since moved or changed a feed. Severity is only what the feed provides, so most records have none. Matching depends on the inventory and on whichever advisory source feeds `/v1/vulns/findings`; an advisory that names a product but no CVE id cannot be matched. An advisory with no `matched_hosts` is not evidence that your hosts are unaffected.

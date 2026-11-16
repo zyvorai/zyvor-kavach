@@ -23,6 +23,51 @@ Absence: `on_absent` states what a setting that is not in the file means: `fail`
 
 Known evaluation limits: a repeated key must satisfy `all` occurrences by default; a leaf over a key that does not exist is false (use `not`/`absent` or `on_absent` for "no bad value"). Kubernetes per-container gaps are detected through synthetic `container.unset.*` markers. Kubernetes and compose results carry no line numbers.
 
+## Using it
+
+```sh
+kavachctl inspect config /etc/ssh/sshd_config          # parse-only; prints findings cfg-<policy> and the summary
+kavachctl inspect config Dockerfile --json
+curl -H "Authorization: Bearer $KAVACH_TOKEN" -X POST localhost:8080/v1/inspect/config \
+  -d '{"name":"sshd_config","text":"PermitRootLogin yes\nPasswordAuthentication yes\n"}'
+```
+
+The `name` helps format sniffing (`sshd_config`, `Dockerfile`, `*.tf`, `docker-compose.yml`); without it the content is sniffed. Read `config-assess.summary` in the report meta: `counts`, `compliance_pct`, per-policy `results`. Severity mix of the 150 shipped policies (counted from the files): 6 critical, 45 high, 56 medium, 43 low.
+
+A second analyzer, `config-extra` (`inspect_config_extra.go`), runs on the same kind and adds regex-based checks for CI pipeline YAML (GitHub Actions, GitLab CI) plus a few Kubernetes and Dockerfile checks outside the 150 policies. It is text matching, not YAML evaluation: anchors, includes, templates, matrix expansion and reusable workflows are not resolved, so it can miss or over-match. Its findings also carry weight 0 and the report is not scored.
+
+## Authoring a policy (worked example)
+
+Policies live in `internal/edr/configpolicies/<area>.json` as `{"area": "...", "policies": [ ... ]}` (any `*.json` there is embedded). This example was run through the policy validator and the policy self-test while writing this page; it is illustrative and is not shipped. The default value in `absence_note` is from general knowledge and is unverified: check the vendor documentation and fill `absence_source` and `default_verified_on` when you do.
+
+```json
+{ "id": "ssh-max-sessions-example",
+  "title": "SSH daemon allows many multiplexed sessions per connection",
+  "description": "Checks that MaxSessions is not raised above 10.",
+  "rationale": "A high session limit makes one authenticated connection a larger pivot point.",
+  "severity": "low",
+  "applies_to": { "formats": ["sshd"] },
+  "check": { "key": "maxsessions", "op": "le", "value": "10" },
+  "on_absent": "pass",
+  "absence_note": "Default is 10 (unverified for every version).",
+  "remediation": "Set MaxSessions to 10 or lower.",
+  "references": ["OpenSSH sshd_config(5) manual page (public)"],
+  "positive": "MaxSessions 50\n",
+  "negative": "MaxSessions 4\n" }
+```
+
+1. `check` is the PASS condition. `positive` must make it fail and `negative` must make it pass; `cfgSelfTest` enforces both.
+2. Decide `on_absent` deliberately (`fail`, `pass`, `unknown` or `evaluate`) and write the reason in `absence_note`; the loader rejects a policy without remediation or an absence note.
+3. Keep regexes under 256 characters. Reference public documentation, never copy benchmark text or numbering.
+4. Run `go test ./internal/edr/ -run 'TestConfig|Inspect.*Config' -v`, then `go test ./internal/edr/ -run 'Docs|OpenAPI|Content|Lab'` if you also touched docs. Update the counts table below by recounting the files; the table was recounted on 2026-11-16 and totals 150 policies across 12 files (`audit` 13, `compose` 12, `dockerfile` 14, `kubernetes` 24, `login` 6, `pam` 6, `permissions` 2, `ssh` 17, `sudo` 10, `sysctl` 16, `terraform` 15, `web` 15).
+5. Add a hardened and a stock sample to `inspect_config_benign_test.go` when the policy could plausibly fail on a normal file, so a false fail is caught by the test rather than by a user.
+
+## Honest limits (summary)
+
+* Policies are Kavach's own wording and thresholds; 19 of the 150 still carry an UNVERIFIED marker (counted by searching the policy JSON; the section below attributes them to Kubernetes references), and none is a certified benchmark. A passing score is not a compliance attestation.
+* The percentage covers one submitted file. Drop-ins, includes, runtime state and distribution defaults can differ, so a 100% file can sit on a weaker system.
+* There is no collector: Kavach never reads configuration from a host, so someone has to submit the text, and a stale submission is judged as written.
+
 ## Counts
 
 | Area | Policies | Formats |

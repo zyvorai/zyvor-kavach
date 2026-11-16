@@ -302,3 +302,13 @@ tricky-benign false positives at most 20%.
   flagged; the finding text says "resembles", not "is malicious".
 * The reference distributions come from about 30 short hand-written scripts
   (5 or 6 per language), so they are crude.
+
+## 8. Running and re-measuring
+
+```sh
+go test ./internal/edr/ -run 'TestObfEvaluation' -v   # regenerates the eval corpus (seed 777001) and prints the tables
+kavachctl inspect script PATH|-                      # analyse script text
+kavachctl inspect cmdline TEXT|-                     # analyse a command line
+```
+
+Re-run on 2026-11-16: precision 0.993, recall 0.841, F1 0.911 (TP 757, FP 5, FN 143, TN 895); tricky benign set 20 cases with 2 false positives (`encodedcommand-benign`, `ansi-colors-py`); the five printed synthetic false positives are ANSI colour escapes in bash and Python. Python has the weakest recall (0.733) and the lowest precision (0.965). Format-string obfuscation is the weakest technique (recall 0.568 overall, 0.250 alone). All of this is measured on a generator written by the same author as the scorer; treat it as a regression guard.

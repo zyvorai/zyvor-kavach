@@ -234,6 +234,19 @@ Status column (as of 2026-11-13): Implemented, Partial (shipped with stated limi
 | 30 | Scheduled report exports | PDF/CSV scheduled reports to stakeholders. | Wazuh dashboards (S9), Fleet reports (S15) | Evidence for auditors. | Existing templates; scheduler | Yes | S | Low | No | Partial |
 | 31 | Automatic attack disruption / host isolation | Auto-containment of hosts, accounts or mail. | Defender (S4), CrowdStrike (S1), Elastic (S8), Wazuh AR (S10), Velociraptor (S12) | Speeds containment. | Enforcement channel to hosts | n/a | L | Not applicable | YES: contradicts the product boundary; listed only to document the deliberate gap | Not planned (boundary) |
 
+## Changes since the 2026-11-13 research
+
+The matrix, per-product notes and the status column above were last written on 2026-11-13 and are served unchanged by `GET /v1/world/competitive` and the console Competitive page. Work merged after that date is not yet reflected in `internal/edr/competitive_matrix.json`, and `TestCompetitiveDocsMatchMatrix` keeps this document's status column in step with that file, so the table was not edited here. Competitor cells were not re-researched. What the repository shows now:
+
+- **Item 21, native cloud audit-log collectors (table: Open).** Partly addressed. `POST /v1/cloud/audit/events` ingests exported AWS CloudTrail, Azure, GCP, Okta and Microsoft 365 audit records, normalises them, and evaluates 159 `cld-` rules (batch `cloud-audit-v1`). It is push-only: Kavach does not hold cloud credentials or poll any provider API, which is what the backlog item asked for, so on the item's own wording it is at most Partial. Rules were written from public provider documentation and not replayed against real tenant exports. See [cloud-audit](cloud-audit.md). The "Cloud" row and its Kavach evidence note above still describe the earlier ledger-only state.
+- **Item 24, offline vulnerability repository matching (table: Open).** Partly addressed by `PUT /v1/exposure/sboms/{host}`, operator-supplied advisories (Kavach format, OSV, CISA KEV) and `GET /v1/exposure/report`, all offline. Without an operator import only a five-entry labelled sample is loaded, and SBOMs are pushed by the operator, so advisory and inventory supply stay with the operator. See [exposure](exposure.md). The lockfile analyzer ([lockfile-inspection](lockfile-inspection.md)) matches dependencies offline for inspected artifacts.
+- **Item 17, Sigma coverage and rule-pack versioning (table: Partial).** The Sigma importer was extended (quantifiers, wildcards, base64offset and windash modifiers, regex safety, derived samples, an export with round trip). Rule-pack versioning is unchanged. See [sigma-import](sigma-import.md).
+- **Detection content.** New packs since the research (the gap2 pack, the unix2 pack) widen ATT&CK technique coverage; the validation lab and the benign corpus gate cover them. They do not change any backlog status.
+- **Inspector and models.** New file, email and config analyzers and four local models (DNS tunneling, user baseline, peer outliers, alert fatigue) are not backlog items in this matrix.
+- **Items that remain Open** because the telemetry gap in the table is unchanged: 1 to 11, 13, 16, 26 and 28.
+
+Backlog item 31 (automatic disruption and isolation) stays out of scope by design: Kavach observes and reports and never contains, kills or blocks.
+
 ## Sources
 
 All accessed 2026-11-13. Summaries are in our own words; no vendor text, rules or screenshots were copied.

@@ -9,6 +9,61 @@ go test -race -shuffle=on -count=3 ./internal/edr
 Both runs are required: the race run proves goroutine safety, the non-race run proves the full
 statistical and size-bound coverage. Run them both before releasing.
 
+**The `-timeout 30m` is required for the race run.** The `internal/edr` package alone exceeds Go's default
+10 minute test timeout under the race detector; without the flag the run is killed with
+`panic: test timed out after 10m0s`. CI uses the same flag (`.github/workflows/ci.yml`, job `go`), and
+`go-full` runs `go test ./...` without `-race`. `scripts/smoke.sh` is a much smaller local check (tests, vet, build
+of the binaries and a narrow race subset); it is not a substitute for the two full runs.
+
+## Fast loops while editing docs or CLI surface
+
+```bash
+go test ./internal/edr/ -run 'Docs|OpenAPI'   # docs index, console menu coverage, OpenAPI route coverage
+go test ./cmd/...                             # kavachctl, kavach-mcp and netra-bridge, including surface parity
+go vet ./...
+```
+
+| Test | What it enforces |
+|---|---|
+| `TestDocsIndexListsEveryDoc` | Every `.md` and `.yaml` under `docs/` is linked from `docs/index.md` or `docs/README.md` (as `(relative/path)`). A new doc must be added to the index |
+| `TestDocsConsoleListsMenuPages` | Every console Browse-menu page label appears in `docs/console.md` |
+| `TestOpenAPICoversRegisteredRoutes` | Every route registered in `internal/edr` is documented in `docs/openapi.yaml` or on an allowlist with a reason; stale allowlist entries fail |
+| `TestEveryGETRouteHasCLICommandOrExemption` (`cmd/kavachctl`) | Every `GET` route has a `kavachctl` command or an entry in `parityExempt`; stale exemptions fail |
+| `TestSurfaceToolsReadOnly`, `TestSurfaceToolsRequests` (`cmd/kavach-mcp`) | The parity MCP tools are read-only GETs with no body. There is no automatic MCP route parity test, so new read-only routes are added by hand |
+| Help and completion tests (`cmd/kavachctl`) | Every catalog command appears in `--help` and in the completion word list |
+| `TestDashboardEveryPageResolves` and siblings | The console page ids, loader guards, g-keys and inline script parse; text token contrast |
+| `security_routes_test.go` and siblings | Route walk without credentials, body caps, panics on malformed bodies, header set ([security-review.md](security-review.md)) |
+
+## Fuzz targets
+
+Nine targets live in `internal/edr/security_fuzz_test.go` (inspect text and file bytes, event ingest, telemetry
+validate, hunt query parser, lab rule parser, byte-pack parser, syslog parser, Sigma converter). Each ran for 12 seconds
+in the security review with no crashers; that is a smoke test, not long-duration fuzzing.
+
+```bash
+go test ./internal/edr -run '^$' -fuzz FuzzParseSyslog -fuzztime 30s
+```
+
+## Regenerating golden and trained artifacts
+
+| Variable | Effect |
+|---|---|
+| `KAVACH_UPDATE_GOLDEN=1` | `go test ./internal/edr -run TestSIEMGoldenFormats` rewrites the SIEM export golden files; review the diff before committing |
+| `KAVACH_OBF_WRITE=1` | `TestObfTrain` rewrites the committed obfuscation model weights (`inspect_obf_weights.go`) |
+| `KAVACH_OBF_REPORT=/path/report.md` | `TestObfEvaluation` writes an evaluation report |
+
+## Honest limits of the test suite
+
+* Detection and similarity corpora are **synthetic**; thresholds prove the code behaves as designed on those corpora,
+  not that it catches real attacks ([research-validation-lab.md](research-validation-lab.md)).
+* The SIEM mappings, syslog parsers, eBPF programs and Helm/Envoy flows have unit or template-level tests only; no
+  live SIEM, device, kernel or cluster is exercised by `go test` ([siem-export.md](siem-export.md),
+  [syslog-listener.md](syslog-listener.md), [ebpf.md](ebpf.md)).
+* Wall-clock bounds (analyzer budgets) can flake on a heavily loaded machine; the race reductions below exist for that
+  reason. Re-run a single failing test with `-run` and `-count=1` before assuming a regression.
+* A failing test in a package you did not touch usually means an upstream change in shared registries; run
+  `go test -race -shuffle=on -count=3 ./internal/edr` to expose order-dependence.
+
 ## Race-only reductions
 
 `race_on_test.go` / `race_off_test.go` export `const raceEnabled`; `scaleN(full, reduced)` picks

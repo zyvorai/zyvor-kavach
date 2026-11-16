@@ -121,9 +121,21 @@ Full module list: `GET /v1/sectors/modules`.
 
 Aliases: `sector`, `railways`, `govt`, `government` → sectors summary when used alone.
 
+## More routes
+
+The table above lists key routes. Every route registered under `/v1/sectors/` also includes: `air-cargo`, `airport-security`, `cantonment`, `cert-in`, `citizen-services`, `coast-guard`, `courts`, `customs`, `defence-civil`, `dgca`, `digital-id`, `drdo-labs`, `e-office`, `education`, `elections`, `fids`, `freight`, `ground-handling`, `health`, `highways`, `metro`, `ministries`, `oil-gas`, `paramilitary`, `passenger-apps`, `pharma`, `ports`, `postal`, `rail-signaling`, `smart-city`, `spectrum`, `stations`, `tax`, `telecom` and `water` (all `GET`). `GET /v1/sectors/modules` is the authoritative list.
+
 ## Console
 
-**Browse → Sectors** — metric band (public fleets, city buses, ISRO), government vehicles, city buses, taxis, OEMs, manufacturing, ISRO centers, airports, flights, defence, railways, portals, recent events.
+**Browse -> Sectors** (`#/sectors`, no g-key; open it from the Browse menu, the palette, or the hash).
+
+- Metric band: modules, public fleets, city buses, ISRO centers, events.
+- Tables: government vehicles, city buses, taxis and cabs, vehicle OEMs, manufacturing, ISRO centers, airports, flights, defence, railways, government portals, and recent sector events.
+- Data: `/v1/sectors/summary|gov-vehicles|city-buses|taxis-cabs|vehicle-oem|manufacturing|isro-centers|airports|flights|defence|railways|gov-portals|events`. These are fetched with the console's main data load (at sign-in and on refresh), not when the page is opened, so a failed request shows in the main page error line rather than inside the page.
+- Controls: read-only. Every table gets the standard tool row (column toggle, CSV and JSON export of loaded rows, click-to-sort) and the page gets the saved-views bar; see [console](console.md).
+- Empty state: if the fleet has reported nothing for a domain, its table shows an empty-state row rather than staying blank; inventory domains are served as empty lists, never null, and the event ledger shows events posted to `POST /v1/sectors/events`.
+- Not on the page: the other routes above (power, SCADA, telecom, space, and so on) are API and `kavachctl` only.
+- Known limit: the dark theme and the 390px phone width of this page are unverified in a browser; see [console-qa](console-qa.md).
 
 ## Hard rule
 

@@ -44,6 +44,21 @@ Tests added (all in `internal/edr`):
 
 Fuzz result: 9 new targets, 12 s each, no crashers.
 
+## Re-run it
+
+The tests added by the review stay in CI. To repeat the checks locally:
+
+```bash
+go test ./internal/edr -count=1 -run 'EveryRouteRequiresAuth|IngestRoutesReject|AgentCredentialAndForged|WriteRoutesCap|RoutesDoNotPanic|HardenHeaders|LoginThrottle|BadBearer|EmptyToken|SessionCookie|InspectorsNeverFetch|AdminTokenNever|MetricsCardinality|IOAPattern|UserRegexIsLinear|FileDetectionsHostMap'
+go test -race -timeout 30m ./...
+go test ./internal/edr -run '^$' -fuzz FuzzParseSyslog -fuzztime 12s    # one of the nine targets
+```
+
+The route walk (`security_routes_test.go`) enumerates routes from the source, so routes added after the review
+(for example the exposure, cloud-audit and syslog routes) are covered by the same "401 without credentials" and
+"agent credential opens nothing else" checks. The behaviours below were read from the code at the current commit,
+not re-proven by new tests.
+
 ## Findings
 
 Severity is the impact on a deployed controller, assuming the attacker position
@@ -105,6 +120,33 @@ named in the evidence column.
   tokens are returned once at enrolment with `Cache-Control: no-store`. Logs
   contain error values and static text only.
 
+## Additions since the review (read from the code, not separately reviewed)
+
+| Area | Auth and bounds | Note |
+| --- | --- | --- |
+| Software exposure (`/v1/exposure/*`, [exposure.md](exposure.md)) | Reads need a token or session; SBOM upload, advisory import and deletes need the admin token (a session is refused with 403). 8 MiB bodies, 20,000 components per SBOM, 2,000 hosts, 50,000 advisories | Offline; no network request. Only name, version, purl and type are retained |
+| Cloud audit ingest (`POST /v1/cloud/audit/events`, [cloud-audit.md](cloud-audit.md)) | Admin token only (agent credentials and sessions refused). 4 MiB body, 1,000 records per request (413), 2 s evaluation budget | Reads records you send; never calls a cloud API |
+| Syslog listener ([syslog-listener.md](syslog-listener.md)) | Off by default; explicit `proto:host:port` binds; mandatory source allowlist; `POST /v1/syslog/parse` is admin or session and never ingests | Plaintext syslog is unauthenticated and spoofable by nature. Host names are namespaced `syslog:<name>` |
+| Parse-only inspectors (URL, e-mail extras, .NET, OneNote, packages) | Same 32 MiB inspect bound as other kinds | `TestURLNeverFetches` and `TestInspectorsNeverFetch` prove no outbound request |
+| SIEM push sink (`KAVACH_SIEM_*`, `internal/edr/siem.go`) | Operator environment only, never request data | The webhook client has a 5 s timeout but does not use the SSRF dial guard of alert rules, has no retry and no signature; point it only at trusted receivers |
+| Console login | `POST /v1/session` takes `{"token": ...}`; the form's username `admin` is cosmetic (the password is the token) | One shared token; see accepted risks |
+
+## Known gaps found while documenting (not fixed here)
+
+These came out of a documentation pass that compared docs to code. They are observations, not new test-proven findings.
+
+1. **mTLS "optional" is not implemented as described.** `ServerTLSConfig` uses `RequireAndVerifyClientCert` whenever
+   `-client-ca` is set, and the Helm chart passes `-client-ca` for both `optional` and `required`. Every TLS client of that
+   listener then needs a certificate, including kubelet probes, browsers and `kavachctl`. See [agent-mtls.md](agent-mtls.md).
+2. **A corrupt `<store>.incidents` line aborts startup** (`NewIncidentStore` error is turned into a panic in the API
+   constructor), unlike most other state files, which are ignored when corrupt ([persistence-files.md](persistence-files.md)).
+3. **Chart/agent mismatch:** the DaemonSet sets `KAVACH_TLS_INSECURE` for agents (`tls.agentInsecureSkipVerify`) but the
+   agent binary never reads it and its client never skips verification, so an agent needs `-ca` for the chart's self-signed
+   certificate.
+4. **`KAVACH_SIEM_FORMAT` is cosmetic:** the push payload is always ECS-flavoured JSON.
+5. **`deploy-remote.sh`** logs the admin token at the end of a run and its random-token fallback is unreachable
+   (`${KAVACH_ADMIN_TOKEN:-Admin@321}`), so the lab default is used whenever the variable is empty ([deploy-remote.md](deploy-remote.md)).
+
 ## Accepted risks
 
 | Risk | Rationale |
@@ -126,6 +168,7 @@ revocation list, per-user tokens with real RBAC, trusted-proxy aware client IP,
 log rotation for the findings file.
 
 ## Not reviewed
+- Everything listed under "Additions since the review" as an independent security review (only auth and bounds were read).
 
 - `internal/edr/dashboard.html` (front end XSS, DOM sinks, CSP interaction) was
   explicitly out of scope for this pass.

@@ -7,7 +7,7 @@ writes to the live store except one informational finding (below). State: `<stor
 
 ## What a run does
 
-* Replays the whole embedded scenario set (`docs/research-validation-lab.md`) against the embedded
+* Replays the whole embedded scenario set ([research-validation-lab.md](research-validation-lab.md)) against the embedded
   content only (customer rules are excluded), with a bounded runtime (`max_runtime_sec`, default 60,
   range 5..300). If the bound is hit the snapshot is marked `truncated`, diffs are marked `incomplete`
   and no finding is raised from it.
@@ -57,6 +57,23 @@ All reads need auth (`requireAuth`); run-now and config writes need admin token 
   `max_regressions` counts regressions in the latest diff; `max_false_positives` counts benign controls
   that fired. HTTP 200 and `pass: true`, or 412 and `pass: false` with per-check detail. No snapshot yet
   fails closed (412). Bad parameters give 400. The gate reads recorded results; it does not run anything.
+
+## Operating it
+
+```sh
+curl -H "Authorization: Bearer $KAVACH_TOKEN" -X POST localhost:8080/v1/regression/run   # run now (admin or session)
+kavachctl regression status                      # config, next run, latest snapshot
+kavachctl regression diff                        # previous vs latest
+kavachctl regression diff --from 3 --to 5        # by snapshot seq
+kavachctl regression trend --window 30d         # measured coverage per tactic
+kavachctl regression gate --min-detected 80 --max-regressions 0 --max-false-positives 0   # exit non-zero on HTTP 412
+```
+
+`kavachctl` has no `regression run` command; use the POST above (or wait for the daily run). `alert_min_regressions: 0` means no finding is recorded for regressions alone (a new benign false positive still alerts when `alert_on_benign_fp` is true).
+
+Reference point for a first gate (measured 2026-11-16 on the embedded packs by running the lab, not by calling the regression endpoint): 567 scenarios (485 single, 19 chain, 63 benign), 268 claimed techniques, 225 Detected, 6 Partial, 2 Missed, 18 Not-testable, 17 Untested, detect rate 0.964 over 504 non-benign scenarios (486 pass), 0 of 63 benign controls firing at medium or above. Because Untested and Not-testable techniques are not measured Detected, `measured_detected_pct` is 83.9, so a sensible starting gate is `--min-detected 80`; the code-level test gate (`TestValDetectedRateFloor`) is the scenario pass rate at 0.93, a different number. Confirm the percent your instance reports from `GET /v1/regression/status` before setting a gate, because the regression run also records its own snapshot.
+
+Capacity note: the loader caps scenarios at 600 (`valMaxScenarios`) and 567 ship today, so adding more than 33 scenarios needs that constant raised; the loader reports `scenario cap of 600 reached` and drops the extras otherwise.
 
 ## Honest limits
 

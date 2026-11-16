@@ -33,3 +33,34 @@ How the single-file console (`internal/edr/dashboard.html`) was checked, and wha
 ## Usability pass (palette, tables, views)
 
 Checked with headless Chrome driving a copy of the page with a probe script (no server, synthetic rows): table tool row and view bar appear, numeric sort ascending and descending, column hide, palette CVE lookup entry, saved view written to localStorage. Dark theme, phone width and a real signed-in session against live data were not exercised in this pass; contrast relies on existing text tokens.
+
+## Automated checks that run in `go test`
+
+These are static checks of `dashboard.html` and `docs/console.md`; none of them runs a browser.
+
+| Test | What it guards |
+|------|----------------|
+| `TestDashboardEveryPageResolves` | Every page id has a section, a label and a loader guard, and the g-key table points at real pages (at least 60 pages) |
+| `TestDashboardInlineScriptParses` | The inline script is syntactically valid |
+| `TestDashboardModelsAndInspectorTabs` | Every Models tab and Inspector mode button has a pane and is listed in its handler |
+| `TestDashboardLightTextTokensContrast` | Light-theme text tokens keep the contrast ratio after the fixes above |
+| `TestDashboardUsabilityFeatures` | The table, saved-view and palette block keeps its safety rules: tokens only, no `innerHTML`, storage access inside try/catch, the user-facing hooks present |
+| `TestDocsConsoleListsMenuPages` | Every Browse-menu label appears in `docs/console.md` |
+
+Run them with `go test ./internal/edr/ -run 'Docs|Dashboard'`.
+
+## Coverage by feature
+
+| Feature | Real browser, light, desktop | Dark theme | 390px phone width | Against live data |
+|---------|------------------------------|------------|-------------------|-------------------|
+| g-key navigation, login, page loads | yes (headless Chrome) | no | no | synthetic data, local server |
+| Models tabs (original and four new) | yes | no | no | synthetic data |
+| Inspector modes | yes | no | no | synthetic data |
+| Palette, table tools, saved views | probe page only, no server | no | no | no (synthetic rows) |
+| Pages added later (Posture trend, Executive digest, Auditor bundle, Syslog, Content versions, Reports and SLO, Automation, Attack chains, Feedback, Vulnerability priority, Sequence hunt, Coverage, Competitive, Provenance, Ransomware behaviour, TTP similarity) | covered only by the g-key sweep where it ran; no per-page interaction record | no | no | no |
+
+"No" here means not exercised or not recorded, not that a defect was found. Treat every "no" as unverified.
+
+## Not covered by the console at all
+
+No console page exists for software exposure reports, cloud audit-log ingestion or the Sigma importer, so their QA is the API tests, not this document. The Inspector's SARIF export and report clustering are API only.

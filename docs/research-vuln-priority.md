@@ -73,3 +73,21 @@ Compares NVD/CVSS with exploit-database and exploit-kit data against Symantec's 
 - Feed choice: the bulk file, not the API. A bulk GET reveals nothing about this install, whereas per-CVE API queries would disclose which CVEs matched. Filtering happens locally.
 - EPSS maps to SSVC only as exploitation evidence: at or above 0.10 it counts as `poc`-level evidence. 0.10 is a Kavach policy choice; neither the SSVC guide nor FIRST defines such a cut. A low EPSS leaves exploitation `unknown` (not `none`) because a low probability is not proof that no exploit exists.
 - KEV wins over EPSS because KEV is observed exploitation, EPSS is a forecast.
+
+## How the findings map to code (checked 2026-11-16)
+
+| Finding | Where it lands |
+|---|---|
+| Tables 8 and 9 of the CISA guide, 36 rows | `ssvcTable` in `internal/edr/vuln_prio_ssvc.go`; `TestSSVCEveryLeaf` walks all 108 inputs; tree version string `cisa-ssvc-2022-11/table9` |
+| No "unknown" value in the CISA tree | defaults in `ssvcDefaults` (exploitation none, automatable no, technical impact partial, mission support, well-being minimal) plus the favourable/adverse outcome range in `SSVCResult` |
+| Bulk file, not the API | `vpEPSSURL` and the one-entry host allowlist `vpEPSSHosts` in `vuln_prio_epss.go`; limits `vpEPSSMaxGz` 16 MiB, `vpEPSSMaxRaw` 64 MiB, `vpEPSSMaxEntries` 50,000, refresh `vpEPSSInterval` 24 h |
+| EPSS as exploitation evidence at 0.10 | `vpEPSSPoCThreshold = 0.10` (Kavach policy, untuned) |
+| KEV beats EPSS | exploitation `active` from KEV regardless of EPSS (`TestVPKEVPrecedence`) |
+| CVSS vectors used only to approximate automatable and technical impact | `vpVectors()` reads an optional `cvss_vector` from `KAVACH_CVE_FILE` |
+
+## Still open
+
+- The EPSS data licence is unconfirmed (Terms pages were not opened); only "published freely, no registration, attribution requested" is relied on, and the attribution text is returned by `GET /v1/vulns/priority/status`.
+- The 0.10 threshold, the CVSS-vector approximations and the asset-criticality to mission-prevalence mapping are not validated.
+- The SEI SSVC v2.0 report body, the EPSS v3 paper body and the FIRST API pages were not read; claims here rest on the abstracts and pages listed above.
+- Research date is 2026-11-13; the sources were not re-fetched on 2026-11-16, so this document does not claim they are unchanged since.

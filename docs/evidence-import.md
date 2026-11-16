@@ -81,3 +81,43 @@ Read on 2026-11-13 while building this feature.
 ## UNVERIFIED parts
 
 Formats not covered by any page above and written from general knowledge, so they may not match every OS version: `lsof -i` columns and `->` form, macOS `netstat` dot-separated ports, WMIC CSV layout, `Get-Process | ConvertTo-Csv` headers, crontab and `/etc/cron.d` syntax, `ls -l` output, bash `#epoch` and zsh `: epoch:dur;cmd` history forms, `launchctl list` columns, `dpkg -l` and `rpm -qa` layouts, the sshd `Failed`/`Accepted` log line wording, and `reg query` layout. The golden test samples were written by the implementer, not captured from real hosts.
+
+## Worked example
+
+Collect on the host with read-only commands, then upload:
+
+```sh
+ps -ef > ps.txt; ss -tunap > ss.txt; crontab -l > cron.txt
+curl -s -X POST -H "Authorization: Bearer $KAVACH_ADMIN_TOKEN" -H 'Content-Type: application/json' \
+  -d "$(jq -n --rawfile ps ps.txt --rawfile ss ss.txt \
+        '{case:"ir-2026-11",host:"web01",collected_at:"2026-11-13T09:00:00Z",
+          artefacts:[{name:"ps -ef",content:$ps},{name:"ss -tunap",content:$ss}]}')" \
+  http://127.0.0.1:8099/v1/evidence/import
+# multipart alternative: -F case=ir-2026-11 -F host=web01 -F 'ps -ef=@ps.txt' -F 'ss -tunap=@ss.txt'
+```
+
+The reply is 201 with the case (`id` of the form `ev-<10 hex>`), for example:
+
+```json
+{"id":"ev-3fa9c01b2d","case":"ir-2026-11","host":"web01","host_label":"import:ir-2026-11:web01",
+ "artefacts":[{"name":"ps -ef","format":"ps","bytes":18234,"lines":212,"parsed":209,"skipped":3,"failed":0,"status":"parsed"}],
+ "totals":{"events":209},"findings":[{"rule":"...","severity":"high","technique":"T1059","artefact":"ps -ef","line":87,"evidence":"..."}],
+ "timeline":[...],"iocs":[...],"promoted":false}
+```
+
+Field names beyond `id`, `case`, `host_label`, `artefacts`, `findings`, `timeline`, `iocs` and `promoted` are as described in "What a case contains"; the values above are illustrative. Then:
+
+```sh
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" http://127.0.0.1:8099/v1/evidence/cases
+# {"cases":[{"id":"ev-...","case":"...","host":"web01","host_label":"...","created_at":"...","artefacts":2,"events":340,"findings":3,"promoted":false}],
+#  "count":1,"max_cases":20,"formats":["ps","ss",...],"note":"..."}
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" "http://127.0.0.1:8099/v1/evidence/cases/ev-3fa9c01b2d?download=1" -o case.json
+curl -s -X POST -H "Authorization: Bearer $KAVACH_ADMIN_TOKEN" http://127.0.0.1:8099/v1/evidence/cases/ev-3fa9c01b2d/promote
+# {"promoted":3,"tag":"evidence-import","case":"ev-3fa9c01b2d"}   (409 if already promoted; 403 for a session)
+```
+
+Errors from import: 400 when the host label is missing or invalid (1-64 characters `A-Za-z0-9._-`), the case label is invalid, no artefacts are supplied, or `collected_at` is not RFC 3339; 413 over the 32 MiB request cap; 429 when two imports are already running. The `formats` array in the case list is the authoritative list of the 20 accepted format ids (`ps`, `ss`, `netstat`, `lsof`, `crontab`, `crontab_system`, `ls`, `filelist`, `systemd_unit_files`, `systemd_units`, `launchctl`, `history`, `tasklist`, `process_csv`, `schtasks`, `reg`, `authlog`, `passwd`, `dpkg`, `rpm`).
+
+## Evaluation
+
+There is no detection-rate evaluation. The tests (`evidence_test.go`) use golden samples written by the implementer, check that every parser survives hostile and truncated input, that the live store and findings file are untouched by an import, that a host label cannot impersonate an enrolled agent, the size and count limits, and that promotion is admin-only and one-shot. Because the samples were not captured from real hosts, a parser can fail on an OS version whose output layout differs (see UNVERIFIED parts); such lines are counted as `failed` or `skipped` in the artefact inventory, so compare the parsed count with the line count before trusting an empty findings list.

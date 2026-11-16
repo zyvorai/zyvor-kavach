@@ -55,3 +55,36 @@ With `KAVACH_EXPOSURE_PRIORITY=1`, `GET /v1/ml/priority` gains an `exposure` fac
 ## State and limits
 
 State is persisted in `<store>.exposure.json` (see [persistence-files.md](persistence-files.md)). No background goroutine is used; the only lifecycle registration is the stopper that detaches the optional priority hook. Limits: 8 MiB bodies, 20000 components per SBOM, 2000 hosts, 50000 advisories.
+
+## Worked example
+
+```sh
+# 1. ingest an SBOM for a host (admin token; CycloneDX or SPDX 2.x JSON)
+curl -s -X PUT -H "Authorization: Bearer $KAVACH_ADMIN_TOKEN" --data-binary @bom.json \
+  http://127.0.0.1:8099/v1/exposure/sboms/web-01
+# 2. load your own advisories (merge by default)
+curl -s -X POST -H "Authorization: Bearer $KAVACH_ADMIN_TOKEN" --data-binary @osv.json \
+  "http://127.0.0.1:8099/v1/exposure/advisories/import?mode=merge&source=osv-snapshot-2026-11"
+# 3. read the report
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" "http://127.0.0.1:8099/v1/exposure/report?min_score=30"
+```
+
+Report shape:
+
+```json
+{"generated_at":"...","advisory_source":"imported:osv-snapshot-2026-11","advisory_sample":false,"advisory_count":1234,
+ "hosts_with_sbom":12,"exposed_hosts":3,"offline":true,"note":"...",
+ "assets":[{"host":"web-01","sbom_format":"cyclonedx","sbom_updated":"...","components":412,"components_with_purl":398,
+   "indeterminate_version_checks":2,"exposed_packages":2,"score":64.5,"level":"high",
+   "factors":[{"name":"known_exploited","value":1,"weight":0.45,"note":"..."},
+              {"name":"max_severity","value":0.81,"weight":0.35,"note":"..."},
+              {"name":"breadth","value":0.2,"weight":0.2,"note":"..."},
+              {"name":"asset_criticality","value":0.75,"weight":0,"note":"... shown for context ..."}],
+   "matches":[{"id":"CVE-...","package":"lodash","version":"4.17.15","fixed_in":"4.17.21","severity":"high","cvss":7.4,"kev":true,"summary":"..."}]}]}
+```
+
+Values are illustrative. `GET /v1/exposure/advisories` returns `{source, sample, count, advisories (first 500), format, note, offline}`. `min_score` is parsed leniently (a non-number is treated as 0). Hosts are sorted by score then host name.
+
+## Evaluation and limits
+
+There is no accuracy evaluation: matching is deterministic version-range comparison, and the fixtures in `internal/edr/testdata/exposure/` (CycloneDX, SPDX, OSV, KEV and Kavach-format advisories) only exercise parsing and matching paths. Coverage is exactly the loaded advisory set. The 0.45 / 0.35 / 0.20 factor weights are hand-set, not fitted to data. A matched advisory means the installed version is inside an affected range in the loaded data, not that the code path is reachable or exploitable. Components without a purl or version, ecosystems the OSV mapper skips (for example Debian) and GIT ranges are not matched at all. The report only lists hosts with at least one match, so check `hosts_with_sbom` to see how many hosts were examined. Hard limits: 8 MiB bodies, 20,000 components per SBOM, 2,000 hosts, 50,000 advisories; `GET /v1/exposure/advisories` lists at most 500.

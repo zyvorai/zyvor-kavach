@@ -1,6 +1,6 @@
 # Adversary profiles
 
-Kavach embeds 60 concise profiles of well-documented public threat groups and ransomware families (`internal/edr/adversaries/*.json`, validated at load). Each lists aliases, motivation, typical targets, the ATT&CK technique ids publicly attributed to the actor, a confidence label and sources. Observation only: nothing here detects, blocks or contains an actor.
+Kavach embeds 101 concise profiles of well-documented public threat groups and ransomware families (`internal/edr/adversaries/*.json`, validated at load). Counted from the files on 2026-11-16: `groups.json` 50, `ransomware.json` 10, `regional.json` 41 (the regional set is described in [regional-threats.md](regional-threats.md)); by kind 74 nation-state, 17 cybercrime, 10 ransomware; every profile is `medium` confidence. Each lists aliases, motivation, typical targets, the ATT&CK technique ids publicly attributed to the actor, a confidence label and sources. Observation only: nothing here detects, blocks or contains an actor.
 
 ## Research notes
 
@@ -19,6 +19,26 @@ Pattern adopted from vendor UIs: actor card (name, aliases, motivation, targets)
 * Origin fields say "as publicly reported/attributed"; they are not Kavach attribution.
 * Coverage means Kavach has a rule that can observe the technique. It does not mean the actor is present, and a covered technique may still be evaded.
 
+## Adding or correcting a profile
+
+Profiles are JSON in `internal/edr/adversaries/` (any `*.json` there is embedded). The loader rejects unknown fields and the whole set fails to load on the first invalid profile, so a mistake is caught by `go test ./internal/edr/ -run Adversar` rather than at runtime. Rules the validator enforces: kebab-case unique `id` (max 64), non-empty `name`, `kind`, `motivation` and `targets`, `confidence` of `high|medium|low`, at least one technique id of the form `T1234` or `T1234.001` with no duplicates, and at least one source with a title and an `https://` URL.
+
+Worked example (illustrative; not shipped):
+
+```json
+{ "pack": "example", "profiles": [ {
+  "id": "example-group", "name": "Example Group", "aliases": ["EG"],
+  "kind": "cybercrime", "attributed_origin": "as publicly reported: unknown",
+  "motivation": "financial", "targets": "retail and hospitality",
+  "techniques": ["T1566.001", "T1059.001", "T1486"],
+  "confidence": "medium",
+  "sources": [ { "title": "Vendor report title", "url": "https://example.com/report" } ] } ] }
+```
+
+Steps: copy each technique id from the cited report (not from memory), keep `confidence` at `medium` unless a primary source lists the technique for the actor, run the test command above, then check `kavachctl adversary show example-group` for the per-technique status. A `gap` means no Kavach rule maps to that technique: add a rule (see [content-framework.md](content-framework.md)) rather than editing the profile.
+
+The similarity feature ([research-ttp.md](research-ttp.md)) is built from the same profiles, so adding a profile changes its idf weights and can move rankings; re-run `go test ./internal/edr/ -run TTP -v` after a change.
+
 ## API
 
 * `GET /v1/adversaries` (filters `kind`, `technique`, `q`)
@@ -26,3 +46,6 @@ Pattern adopted from vendor UIs: actor card (name, aliases, motivation, targets)
 * `GET /v1/adversaries/coverage`: all actors ranked by coverage and by observed hits from the ATT&CK matrix
 
 CLI: `kavachctl adversary list|show|coverage`. MCP tools: `adversary_list`, `adversary_profile`, `adversary_coverage`.
+* The mapping from a rule to a technique is one rule to one technique, so coverage percentages count techniques with at least one rule, and say nothing about how many variants of the technique are detected (see the validation lab for measured results).
+* Coverage is computed against the embedded content and the ATT&CK matrix hit counters; custom rules count only to the extent the matrix includes them. This was not separately verified.
+* All 101 profiles carry `medium` confidence, so the field does not discriminate between them.

@@ -190,3 +190,30 @@ Static and offline: a clean report is not proof of safety, shortened and
 redirecting links are not resolved, attachment analysis is only as good as the
 file analyzers, encrypted archives are reported but not opened, and the
 5-second per-analyzer budget bounds how many attachments are analysed.
+
+## Worked examples
+
+```sh
+curl -s -X POST http://127.0.0.1:8099/v1/inspect/url \
+  -H "Authorization: Bearer $KAVACH_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"text":"http://paypal.com@0x7f000001/login"}'
+curl -s -X POST http://127.0.0.1:8099/v1/inspect/email \
+  -H "Authorization: Bearer $KAVACH_TOKEN" --data-binary @message.eml
+```
+
+Both return the standard inspector report ([shape](artifact-analyzers.md#calling-the-inspector-and-how-the-verdict-is-built)).
+
+URL report: `kind: "url"`, `format: "url"`, findings `url-*` (the example above produces `url-userinfo-lookalike` and `url-ip-obfuscated`), `meta` keys `url.parse` (scheme, userinfo, host, port, path, query, fragment, canonical IP), `url.threshold` (20, `URLPhishThreshold`) and `url.note`; IOCs are the URL and its host. Only the first line of the input is analysed.
+
+E-mail report: `kind: "email"`, `format: "email"`, findings `email-*`, `email-url-*`, `email-att-*`; `meta` keys `email.headers`, `email.auth` (reported SPF/DKIM/DMARC verdicts, DKIM signature count and the trust note), `email.received_hops`, `email.urls`, `email.parts`, `email.attachments`, `email.decoded_bytes`; IOCs for sender and reply addresses, URLs, hosts and attachment sha256 values. The `email-extra` analyzer adds the `email-x-*` ids described in [artifact-analyzers.md](artifact-analyzers.md#email-and-phishing-email-and-email-extra) and `.msg` detection.
+
+## Limits at a glance
+
+| Item | Limit |
+|---|---|
+| Input | 4 MiB text cap; each analyzer 5 s |
+| MIME | 64 parts, depth 6, 8 MiB per decoded part, 24 MiB total decoded |
+| URLs / attachments | 25 URLs analysed, 50 attachments hashed, 8 sent to the file analyzers |
+| URL phishing threshold | score 20 (evaluation only; the report level uses the normal contract thresholds) |
+
+Evaluation numbers above are from a synthetic generator and were not re-measured here beyond confirming the test (`TestURLEvaluationSynthetic`) exists; run `go test ./internal/edr -run TestURLEvaluationSynthetic -v` to reproduce.
