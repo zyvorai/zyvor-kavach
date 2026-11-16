@@ -1,19 +1,28 @@
 # Observability & posture
 
-All endpoints are read-only. Kavach observes; it never contains.
+Unless a section says otherwise the endpoints here are read-only. Kavach observes; it never contains.
+Writes described below (alert rules, feeds, notes, tuning, retention, SLO targets) change Kavach's own
+configuration or ledgers only, never a host.
 
 | Endpoint | Auth | What |
 |---|---|---|
-| `GET /livez` · `/readyz` | none | Probes (Helm uses both) |
-| `GET /metrics` | bearer/session | Prometheus: findings by severity, agents online, request counts and latency |
+| `GET /healthz` · `/livez` · `/readyz` | none | Probes. `/healthz` and `/livez` return 200 while the process runs; `/readyz` returns 503 as soon as shutdown starts so load balancers stop routing (Helm probes use `/livez` and `/readyz`) |
+| `GET /metrics` | bearer/session | Prometheus text. See [Metrics reference](#metrics-reference) |
 | `GET /v1/attack/matrix` | bearer/session | MITRE ATT&CK tactics → techniques, rule coverage, observed hits |
 | `GET /v1/compliance/score` | bearer/session | Overall grade + per-framework score (CIS, NIST CSF, SOC2, ISO 27001) |
-| `GET /v1/export/findings` | bearer/session | Download findings, `format=csv`, `json` or `ndjson`; filters `severity`, `host`, `rule`, `since` (RFC3339); CSV neutralises formula injection; capped at 50k rows |
+| `GET /v1/export/findings` | bearer/session | Download findings, `format=csv`, `json` or `ndjson`; filters `severity`, `host`, `rule`, `since` (RFC3339); CSV neutralises formula injection; capped at 50k rows. The SIEM formats (`ocsf`, `ecs`, `cef`, `leef`, `splunk-hec`, with cursor paging) are on the same route; see [siem-export.md](siem-export.md) |
 | `GET /v1/export/report` | bearer/session | Self-contained executive posture report, `format=html` or `json` (severity counts, top hosts, ATT&CK, compliance) |
 | `GET /v1/risk/hosts` | bearer/session | Per-host risk 0-100 (ScoreFinding weight, 72h half-life decay), top rules, last seen, rank; `/metrics` exports `kavach_host_risk{host}` for the top 20 |
 | `GET /v1/risk/summary` | bearer/session | Fleet risk index and host counts by band (low <25, medium <50, high <75, critical) |
 | `GET /v1/trends?days=7\|14\|30&bucket=hour\|day` | bearer/session | Finding counts per UTC-aligned bucket by severity, delta vs previous period, top rules |
 | `GET /v1/stream` | bearer/session | Server-Sent Events, `event: finding` with a detection payload |
+| `GET /v1/search?q=&types=&limit=` | bearer/session | Global search across findings, hosts, rules, CVEs, IOCs, cases and more; see [global-search.md](global-search.md) |
+| `GET /v1/posture/trend`, `/trend/diff`, `/trend/config` | bearer/session (PUT config: admin) | Counts-only posture history; see [posture-reports.md](posture-reports.md) |
+| `GET /v1/fleet/slo`, `/slo/history`, `/slo/definitions`, `PUT /v1/fleet/slo` | bearer/session (PUT: admin) | Agent heartbeat and telemetry SLOs; see [Fleet SLOs](#fleet-slos) |
+| `GET /v1/exposure/report` and friends | bearer/session (writes: admin) | Software exposure from imported SBOMs; see [exposure.md](exposure.md) |
+| `GET /v1/cloud/audit/sources`, `POST /v1/cloud/audit/events` | bearer; POST is admin only | Cloud and SaaS audit-log detection; see [cloud-audit.md](cloud-audit.md) |
+| `GET /v1/email/threats`, `POST /v1/inspect/email` | bearer/session | Email signals (inventory domain) and the parse-only e-mail analyzer; see [url-email-inspection.md](url-email-inspection.md) |
+| `GET /v1/syslog/status` | bearer/session | Agentless syslog listener state; see [syslog-listener.md](syslog-listener.md) |
 
 ```bash
 kavachctl attack
@@ -23,6 +32,56 @@ curl -N -H "Authorization: Bearer $KAVACH_TOKEN" $KAVACH_URL/v1/stream
 ```
 
 Console: **Browse → Observe** shows the ATT&CK heatmap, compliance gauges and live feed.
+
+### Worked examples
+
+```bash
+export KAVACH_URL=http://127.0.0.1:8099 KAVACH_TOKEN='Admin@321'
+H="Authorization: Bearer $KAVACH_TOKEN"
+
+curl -s $KAVACH_URL/readyz                                  # no auth needed; 200 ok
+curl -s -H "$H" $KAVACH_URL/v1/summary                      # {"findings":0,"hosts":0,"severities":{}}
+curl -s -H "$H" $KAVACH_URL/v1/compliance/score             # includes "certification":false and the evidence counts
+curl -s -H "$H" "$KAVACH_URL/v1/trends?days=14&bucket=day"
+curl -s -H "$H" "$KAVACH_URL/v1/export/findings?format=ndjson&severity=high" > high.ndjson
+curl -s -H "$H" "$KAVACH_URL/v1/export/report?format=html" > report.html
+curl -s -H "$H" $KAVACH_URL/metrics | grep '^kavach_'
+
+kavachctl status --json --wait
+kavachctl doctor
+kavachctl risk hosts
+kavachctl watch --severity high --max-events 5
+```
+
+A wrong or missing token returns `401 unauthorized` with `Cache-Control: no-store`. Compliance scores
+are evidence-based counts, explicitly not a certification (the payload says `"certification": false`).
+
+## Metrics reference
+
+Names exposed by `GET /metrics` (labels in braces; all label sets are bounded):
+
+| Metric | Meaning |
+|---|---|
+| `kavach_findings{severity}`, `kavach_findings_total` | Findings currently held, by severity and in total |
+| `kavach_agents{state}` | Enrolled agents by state |
+| `kavach_host_risk{host}` | Risk 0-100 for the top 20 hosts |
+| `kavach_fleet_coverage_score`, `kavach_fleet_stale_agents` | Fleet health score (0-100) and agents older than 15 minutes |
+| `kavach_telemetry_events_total{type}`, `kavach_telemetry_eval_skipped_total` | Typed telemetry accepted, and events stored but not evaluated because the 150 ms budget ran out |
+| `kavach_http_requests_total`, `kavach_http_request_duration_seconds` (histogram), `kavach_http_inflight` | Request counts and latency, labelled by registered route pattern and a fixed method set (never the raw path) |
+| `kavach_uptime_seconds` | Process uptime |
+
+Example alert rules (Prometheus):
+
+```yaml
+- alert: KavachStaleAgents
+  expr: kavach_fleet_stale_agents > 0
+  for: 15m
+- alert: KavachNotReady
+  expr: up{job="kavach"} == 0
+```
+
+Limits: `/metrics` needs the token, so the scrape config must carry it (see below); metrics are
+computed from the in-memory window (1000 findings), not the whole findings file.
 
 ## Prometheus scrape
 
@@ -37,9 +96,14 @@ scrape_configs:
 
 ## Hardening
 
-Every response carries `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy` and a CSP.
-`POST /v1/session` is limited to a burst of 10 then 1 per 2 s per IP. Other POST/DELETE requests are
-limited per IP by `KAVACH_RATE_LIMIT` (requests/sec, default `100`; `0` disables). Exceeding returns `429`.
+Every response carries `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` and a CSP;
+`/v1/*` and `/metrics` also send `Cache-Control: no-store`.
+`POST /v1/session` is limited to a burst of 10 then 1 per 2 s per IP and is never disabled, even with
+`KAVACH_RATE_LIMIT=0`. Other POST, PUT, PATCH and DELETE requests are limited per IP by `KAVACH_RATE_LIMIT`
+(requests/sec, default `100`; `0` disables that limiter). Repeated failed authentication (token guessing) is
+throttled per IP on every route (burst 20, then 1 per 5 s). Exceeding a limit returns `429` with `Retry-After: 2`.
+Limits key on the TCP peer address; behind a proxy all clients share one bucket
+(see [security-review.md](security-review.md)).
 
 ## Exposure posture (Spotlight/Exposure class, observe only)
 - `GET/POST/DELETE /v1/posture/assets`: asset criticality (`host`, `criticality` 1-5, `owner`, `tags`; max 1000
@@ -154,6 +218,36 @@ observes and describes; recommendations are plain-English suggestions, never act
 - `GET /v1/fleet/health/{host}`: single-host diagnostic with deterministic `recommendations`. 404 when the host
   is neither enrolled nor seen in data; a shadow host returns `enrolled: false`.
 - Metrics: `kavach_fleet_coverage_score` and `kavach_fleet_stale_agents` (15 minute cutoff).
+## Fleet SLOs
+
+Read-only measurement of whether agents keep reporting, derived only from data agents already send
+(heartbeats and event timestamps). Nothing is estimated for facts agents do not report.
+
+- A sampler records one point per enrolled, non-revoked agent every 5 minutes (max 500 agents, window
+  1-72 h). State is kept in `<store>.fleetslo.json`, persisted at most every 10 minutes.
+- Indicators: `heartbeat_freshness` (last heartbeat no older than `heartbeat_fresh_minutes`),
+  `telemetry_continuity` (no event gap longer than `continuity_gap_minutes` for an agent that normally sends
+  events; needs two windows of history) and per-category `coverage` (process, network, file).
+- Error budget: allowed bad time = (1 - target) x judged time; remaining budget is floored at 0. With no judged
+  samples the status is `unknown` and the percentages are `null`, not zero.
+- Defaults: heartbeat fresh 5 min, heartbeat target 99%, continuity gap 30 min, continuity target 95%,
+  coverage target 90%, window 24 h.
+- `GET /v1/fleet/slo` (report), `GET /v1/fleet/slo/definitions` (definitions and the agent fields that would
+  be needed for footprint SLOs, currently "not reported by agent"), `GET /v1/fleet/slo/history?window=6h&agent=`
+  (`window` 5m to 72h such as `6h` or `2d`; 404 for an unknown agent) and `PUT /v1/fleet/slo` (admin token;
+  omitted fields keep their value; invalid values return 400 with the reason, for example
+  `window_hours must be 1-72`).
+
+```bash
+kavachctl fleet slo
+kavachctl fleet slo history
+echo '{"window_hours":48}' > slo.json && kavachctl fleet slo set --file slo.json   # admin token
+curl -s -X PUT -H "$H" $KAVACH_URL/v1/fleet/slo -d '{"heartbeat_fresh_minutes":10,"window_hours":48}'
+```
+
+Limits: no agent reports CPU, memory, version or queue depth to the heartbeat today, so footprint and version
+SLOs are listed as not measurable. A freshly started server has no history; the first sample is taken at start.
+
 ## Prevalence and blast radius
 
 Observation-only analytics over the in-memory event stores (last 100k process/network events, no external calls).

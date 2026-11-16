@@ -1,7 +1,9 @@
 # SIEM and standards export
 
-Pull-based and read-only. A SIEM, collector or script polls Kavach; Kavach opens no new outbound
-connection. All endpoints need the bearer token (or a console session).
+Pull-based and read-only. A SIEM, collector or script polls Kavach; the endpoints below open no
+outbound connection. All of them need the bearer token (or a console session). Kavach also has an
+optional, separate push sink configured by the operator with environment variables; see
+[Optional push sink](#optional-push-sink-operator-configured) at the end. The two are independent.
 
 | Endpoint | Output |
 |---|---|
@@ -11,6 +13,44 @@ connection. All endpoints need the bearer token (or a console session).
 
 CLI: `kavachctl export findings --format ocsf`, `kavachctl export iocs`, `kavachctl export layer`.
 MCP (read-only): `export_findings_siem`, `export_iocs_stix`, `export_attack_layer`.
+Related: `GET /v1/siem/status` (push sink state) and `GET /v1/siem/export` (every stored finding as
+one ECS-flavoured JSON document per line, `application/x-ndjson`, no filters or cursor; prefer
+`/v1/export/findings?format=ecs` for polling). `kavachctl siem status|export` wraps these two.
+
+## Examples
+
+```bash
+export KAVACH_URL=http://127.0.0.1:8099 KAVACH_TOKEN='Admin@321'
+H="Authorization: Bearer $KAVACH_TOKEN"
+
+# First page, OCSF, and keep the response headers to read the cursor
+curl -s -D hdr.txt -H "$H" "$KAVACH_URL/v1/export/findings?format=ocsf&limit=500" > page1.ndjson
+grep -i '^X-Kavach-' hdr.txt            # X-Kavach-Count, X-Kavach-Next-Cursor
+
+# Resume strictly after the last record you stored
+CUR=$(grep -i '^X-Kavach-Next-Cursor:' hdr.txt | cut -d' ' -f2 | tr -d '\r')
+curl -s -H "$H" "$KAVACH_URL/v1/export/findings?format=ocsf&limit=500&cursor=$CUR" > page2.ndjson
+
+# Only high severity from one host since a date, as Splunk HEC envelopes
+curl -s -H "$H" "$KAVACH_URL/v1/export/findings?format=splunk-hec&severity=high&host=web-01&since=2026-11-01T00:00:00Z"
+
+# Raw process events instead of findings
+curl -s -H "$H" "$KAVACH_URL/v1/export/findings?format=ecs&kind=events&limit=100"
+
+# STIX 2.1 bundle and an ATT&CK Navigator layer
+curl -s -H "$H" "$KAVACH_URL/v1/export/iocs?format=stix" > iocs.stix.json
+curl -s -H "$H" "$KAVACH_URL/v1/export/attack-layer" > layer.json
+
+# CLI equivalents
+kavachctl export findings --format ocsf
+kavachctl export iocs
+kavachctl export layer
+```
+
+Errors are plain text with a 400: `kind must be findings or events`, `limit must be 1..10000`,
+`since must be RFC3339`, an invalid `cursor`, and `format must be stix` on the IOC export.
+The first call without `cursor` returns the oldest records first (ordering is by time, then id),
+so a new poller backfills the whole retained window before reaching the present.
 
 ## Parameters
 
@@ -89,6 +129,48 @@ only and red when hits were observed.
   `techniqueID`, `tactic` (lowercase hyphenated shortname), `score`, `color`, `comment`, `enabled`.
   https://github.com/mitre-attack/attack-navigator/tree/master/layers (page not fetchable from this
   environment; written from the published v4.5 format).
+
+## Optional push sink (operator configured)
+
+Separate from the pull endpoints, the controller can push each **newly ingested** finding to a
+webhook and/or a UDP syslog target. It is off unless a target is configured, and the settings come
+only from the server environment (or the Helm `siem.*` values), never from request data.
+
+| Variable | Meaning |
+|---|---|
+| `KAVACH_SIEM_WEBHOOK` (alias `KAVACH_SIEM_WEBHOOK_URL`) | HTTP endpoint that receives one JSON POST per finding (5 s client timeout) |
+| `KAVACH_SIEM_SYSLOG` (alias `KAVACH_SIEM_SYSLOG_ADDR`) | `host:port` of a UDP syslog receiver; one RFC 5424-style datagram per finding (`<134>1 <time> kavach - - - <json>`) |
+| `KAVACH_SIEM_HEADERS` | Extra webhook headers as `k=v,k2=v2` |
+| `KAVACH_SIEM_SINK` | `webhook`, `syslog`, `both` (default) or `none` |
+| `KAVACH_SIEM_FORMAT` | `json`, `ecs` or `syslog`; default `ecs` |
+| `KAVACH_SIEM_ENABLED` | `false` or `0` forces it off; otherwise it is on exactly when a target is set and the sink is not `none` |
+
+Behaviour read from `internal/edr/siem.go`: the payload is always the ECS-flavoured document
+(`@timestamp`, `message`, `event.kind=alert`, `rule.id`, `host.name`, `kavach.finding_id`, tags) whatever
+`KAVACH_SIEM_FORMAT` says; that variable is only echoed in the status. Delivery is fire and forget:
+each finding is sent once in its own goroutine, there is no retry, queue, signature or TLS pinning, and
+a failure only increments `err_count` and sets `last_error`. UDP can drop silently. The webhook URL is
+operator supplied and is not subject to the SSRF guards used for alert rules. Check it with
+`kavachctl siem status` or `GET /v1/siem/status`:
+
+```json
+{"enabled":false,"err_count":0,"format":"ecs","last_error":"","ok_count":0,"sink":"both","syslog_set":false,"webhook_set":false}
+```
+
+Use the pull endpoints with a cursor when you need completeness; use the push sink only for low-latency
+notification. Neither can change anything on a host.
+
+## Troubleshooting
+
+| Symptom | Cause |
+|---|---|
+| Poller sees the same records | The cursor was not stored, or `since` was used instead of `cursor` (`cursor` overrides `since`) |
+| Poller misses a late finding | Ordering is by event time; a finding ingested with a time older than your cursor is not re-delivered. Poll with an overlap and de-duplicate on the id |
+| Records disappear | The findings store is bounded (1000 findings in memory); export between polls or use the push sink as well |
+| `X-Kavach-Count: 0` and an unchanged cursor | No new records; store the cursor anyway. On a first call that returns nothing the `X-Kavach-Next-Cursor` header is absent |
+| Push sink status `enabled: false` | No webhook or syslog target is set, `KAVACH_SIEM_SINK=none`, or `KAVACH_SIEM_ENABLED=false` |
+| `ok_count` stays 0 with a webhook set | Webhook returned HTTP 300 or above, timed out (5 s) or refused; read `last_error` |
+| Fields look redacted | Data-governance redaction is on (`GET /v1/governance/redaction`); it applies to finding exports |
 
 ## Honest limits
 

@@ -108,3 +108,28 @@ Policies: `internal/edr/configpolicies/*.json`. New optional fields `absence_sou
 - Syslog format notes (`internal/edr/syslog_parse.go`, `docs/syslog-listener.md`: RFC 3164 rsyslog timestamps, LEEF, PAN-OS field positions), `docs/url-email-inspection.md`, `docs/lockfile-inspection.md`, `docs/evidence-import.md`, the runtime `UNVERIFIED` evidence string in `internal/edr/inspect_lockfile_analyzer.go` (a behaviour marker, not a research claim).
 - `docs/config-assessment.md` frameworks hints (NIST 800-53 CM-6 on every policy, ATT&CK ids) were not checked against NIST or MITRE.
 - Config checks whose thresholds are project choices (MaxAuthTries 4 and similar) are not facts to verify.
+
+## 5. Documentation accuracy pass (code versus docs)
+
+A separate pass compared operational documentation with the code and a locally running server (built from this tree, loopback only, throwaway data directory, synthetic requests). It checks what the software does, not external standards, so it complements sections 1 to 4. Statuses use the same words as above.
+
+| Doc | Claim checked | Status | Evidence |
+|---|---|---|---|
+| `siem-export.md` | "Kavach opens no new outbound connection" | corrected | True for the pull endpoints only; `internal/edr/siem.go` has an optional webhook and UDP syslog push sink (`KAVACH_SIEM_*`). Doc now separates the two |
+| `siem-export.md` | Cursor paging headers | confirmed | `X-Kavach-Count` and `X-Kavach-Next-Cursor` seen on a live `format=ocsf` request; header absent when the first page is empty (code) |
+| `syslog-listener.md` | "the `kavach` binary has no graceful-shutdown hook" | corrected | `cmd/kavach/main.go` drains HTTP and calls the lifecycle registry, where the listener is registered as stopper `syslog`. A live shutdown was not exercised |
+| `deploy-remote.md` | Token variable | corrected | The script reads `KAVACH_ADMIN_TOKEN` (default `Admin@321`), not `KAVACH_TOKEN`; its random-token fallback is unreachable because of `${...:-Admin@321}` |
+| `deploy-remote.md` | Tests gate the deploy | not implemented in the script | `deploy-remote.sh` runs no tests; the gate is a process, documented with the CI commands |
+| `deploy-remote.md`, `tutorial.md` | Console login | confirmed | `POST /v1/session` accepts `{"token": ...}` and returns 401 for any other body; the login form's username must be `admin` and the password is the token (`dashboard.html`) |
+| `agent-mtls.md` | `optional` mode lets agents without certificates connect | unverified, contradicted by code | `ServerTLSConfig` sets `RequireAndVerifyClientCert` when `-client-ca` is given and the chart passes it for `optional` and `required` alike. Not tried on a live cluster |
+| `agent-mtls.md` | Certificate hot reload | unverified | No reload code found; documented as manual restart |
+| `persistence-files.md` | "a missing or corrupt file is ignored" | partial | Not true for `<store>.incidents` (startup panic) or the credential registry (startup error); documented. Real files seen after a short run: `.contentversions.json`, `.events.telemetry`, `.exposure.json`, `.inventory.json`, `.posturetrend.json`, `.regression.json` |
+| `observability.md` | Write rate limiting | corrected | PUT and PATCH are limited too; failed-auth throttle (burst 20, then 1 per 5 s) applies to every route; login limiter stays on with `KAVACH_RATE_LIMIT=0` |
+| `observability.md` | Metric names | confirmed | Listed from `/metrics` output of a running server |
+| `ebpf.md` | Pin lookup order and API shapes | confirmed | `ebpf_watch_linux.go`, live responses for status, health, features, events and drops. Kernel loading was not tested (macOS host) |
+| `cli-reference.md`, `mcp-integration.md` | MCP tool count | measured | `tools/list` against the built `kavach-mcp`: 425 tools read-only, 499 with `KAVACH_MCP_ALLOW_MUTATIONS=true` |
+| `testing.md` | Race run needs `-timeout 30m` | confirmed by CI config | `.github/workflows/ci.yml` job `go`; the timeout itself was not re-measured here |
+
+Still unverified from this pass: behaviour on a live Kubernetes cluster (Helm install, Envoy Gateway, probes with mTLS, persistence across pod restarts), kernel-side eBPF loading, any real SIEM or syslog device, and the mTLS "optional" behaviour described above.
+
+Addendum: `deploy-remote.sh` writes `KAVACH_ADMIN_TOKEN` to the remote `~/.kavach/env`, which `kavachctl` does not read as a token (it uses `KAVACH_TOKEN`, `ZYVOR_EDR_TOKEN` or `~/.kavach/api-key`); the deploy doc now says so. Confirmed in `cmd/kavachctl/main.go`.

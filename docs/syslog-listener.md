@@ -59,6 +59,50 @@ within +-48 h of receipt, otherwise receipt time is used.
 - `POST /v1/syslog/parse` (admin or session): `{"line": "...", "sender": "<ip, optional>"}`, returns the parse and
   the normalised events, never ingests.
 
+## Worked example
+
+```bash
+# 1. Enable on the server (explicit address, source allowlist required)
+export KAVACH_SYSLOG=udp:10.0.0.5:514
+export KAVACH_SYSLOG_ALLOW=10.1.0.0/16
+go run ./cmd/kavach -mode server -listen 127.0.0.1:8099 &
+
+# 2. Check the state (enabled=false and a `note` when KAVACH_SYSLOG is unset)
+kavachctl syslog status
+curl -s -H "Authorization: Bearer $KAVACH_TOKEN" $KAVACH_URL/v1/syslog/status
+
+# 3. Dry-run a line before pointing a device at the listener (nothing is ingested)
+kavachctl syslog parse '<38>Nov 16 10:00:01 gw sshd[411]: Failed password for root from 203.0.113.9 port 4242 ssh2'
+curl -s -X POST -H "Authorization: Bearer $KAVACH_TOKEN" $KAVACH_URL/v1/syslog/parse \
+  -d '{"line":"<38>Nov 16 10:00:01 gw sshd[411]: Failed password for root from 203.0.113.9 port 4242 ssh2","sender":"10.1.0.7"}'
+
+# 4. Send a test message from an allowed source and look at the counters
+logger -n 10.0.0.5 -P 514 -d "test message"
+kavachctl syslog samples
+```
+
+The same lines also work through MCP as `syslog_status`, `syslog_samples` and `syslog_parse` (a dry run
+that needs an admin token on the server).
+
+## Failure modes and troubleshooting
+
+| Symptom | Meaning and fix |
+|---|---|
+| `enabled: false` in status | `KAVACH_SYSLOG` is unset (normal default) or the listener failed to start; the start error is in the status payload and the server log |
+| Refuses to start with an empty allowlist | Set `KAVACH_SYSLOG_ALLOW` to at least one CIDR or address |
+| `udp:514` is refused | Entries must be `proto:host:port`; there is no implicit bind address |
+| `tls:` entry fails | `KAVACH_SYSLOG_TLS_CERT` and `KAVACH_SYSLOG_TLS_KEY` are both required |
+| Nothing arrives, `dropped_by_reason.not_allowed` rises | The sender is outside the allowlist. Behind NAT the source address is the NAT address |
+| `rate_limited` or `queue_full` rise | A chatty source exceeds 200 msg/s (burst 2x) or the 4096-item queue is full. Raise `KAVACH_SYSLOG_RATE` (accepted range above 0 up to 100000) or reduce the source |
+| Messages counted but `parsed_without_event` rises | The shape is recognised but maps to no Kavach telemetry type (for example web access logs) |
+| `unparsed` rises | New device format; read `GET /v1/syslog/samples` (redacted, newest last) and open a parser request |
+| Windows event forwarding | Not parsed (see below) |
+| Port below 1024 fails to bind | The container runs non-root; use a high port, or map it with the Service |
+
+Limits of this feature: syslog over UDP or plain TCP is unauthenticated and spoofable; the allowlist only filters
+addresses. Parsers were written from public format descriptions and covered by repository tests with synthetic lines;
+no live device was used (see the unverified list below).
+
 ## Supported shapes (mapping)
 
 | Shape | Maps to |
@@ -116,5 +160,7 @@ counted as RFC 3164/5424 and yield no event, or are sampled as unparsed.
 - dnsmasq `query[A] name from ip`.
 - RFC 3339 timestamps in otherwise RFC 3164 lines (rsyslog style) are accepted as a de-facto extension.
 - Windows event forwarding as syslog: not researched, not parsed.
-- Server shutdown: the `kavach` binary has no graceful-shutdown hook (it uses `log.Fatal`), so the listener is released at
-  process exit; `StopSyslog()` / `SyslogListener.Close()` close sockets and wait for goroutines (tested).
+- Shutdown (corrected): earlier versions of this page said the `kavach` binary had no graceful-shutdown hook. It now
+  has one: on SIGINT or SIGTERM the server marks `/readyz` as 503, drains HTTP, then calls the lifecycle registry, in which
+  the syslog listener is registered as stopper `syslog` (`StopSyslog()` closes the sockets and waits for goroutines).
+  Confirmed in `cmd/kavach/main.go` and `internal/edr/syslog_listener.go`; a live shutdown was not exercised in this pass.
