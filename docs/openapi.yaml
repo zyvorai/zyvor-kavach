@@ -2691,7 +2691,7 @@ paths:
         content:
           application/octet-stream:
             schema: { type: string, format: binary }
-        description: "raw RFC 5322 message bytes"
+        description: "raw RFC 5322 message bytes, or an Outlook .msg (OLE2; detected by header/string scan only). email-extra adds T1566.001/.002 tagged findings"
       responses:
         "200": { description: "Inspection report with email-* findings" }
         "400": { description: "Empty input" }
