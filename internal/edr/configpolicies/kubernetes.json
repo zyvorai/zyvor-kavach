@@ -22,7 +22,7 @@
    "remediation": "Remove privileged: true; add only the specific capability needed.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (UNVERIFIED: PDF returned HTTP 403 and this specific topic was not confirmed in a search excerpt)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)",
@@ -64,7 +64,7 @@
    "remediation": "Set allowPrivilegeEscalation: false on each container.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (UNVERIFIED: PDF returned HTTP 403 and this specific topic was not confirmed in a search excerpt)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)"
@@ -97,7 +97,7 @@
    "remediation": "Remove hostNetwork: true.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (UNVERIFIED: PDF returned HTTP 403 and this specific topic was not confirmed in a search excerpt)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)"
@@ -130,7 +130,7 @@
    "remediation": "Remove hostPID: true.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (UNVERIFIED: PDF returned HTTP 403 and this specific topic was not confirmed in a search excerpt)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)"
@@ -163,7 +163,7 @@
    "remediation": "Remove hostIPC: true.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (UNVERIFIED: PDF returned HTTP 403 and this specific topic was not confirmed in a search excerpt)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)"
@@ -195,7 +195,7 @@
    "remediation": "Use emptyDir, PVCs or ConfigMaps/Secrets instead.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (UNVERIFIED: PDF returned HTTP 403 and this specific topic was not confirmed in a search excerpt)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)",
@@ -229,7 +229,7 @@
    "remediation": "Never mount the runtime socket into workloads.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (UNVERIFIED: PDF returned HTTP 403 and this specific topic was not confirmed in a search excerpt)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)",
@@ -291,7 +291,7 @@
    "remediation": "Set securityContext.runAsNonRoot: true and a numeric runAsUser.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (topic confirmed 2026-11-16 via a search excerpt of the PDF; the PDF itself returned HTTP 403)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)"
@@ -324,7 +324,7 @@
    "remediation": "Use a non-zero UID.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (UNVERIFIED: PDF returned HTTP 403 and this specific topic was not confirmed in a search excerpt)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)"
@@ -357,7 +357,7 @@
    "remediation": "Add only the minimal capability required, such as NET_BIND_SERVICE.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (UNVERIFIED: PDF returned HTTP 403 and this specific topic was not confirmed in a search excerpt)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)"
@@ -399,7 +399,7 @@
    "remediation": "Set capabilities.drop: [\"ALL\"] and add back only what is needed.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (UNVERIFIED: PDF returned HTTP 403 and this specific topic was not confirmed in a search excerpt)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)"
@@ -440,7 +440,7 @@
    "remediation": "Set readOnlyRootFilesystem: true and mount emptyDir where writes are needed.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (topic confirmed 2026-11-16 via a search excerpt of the PDF; the PDF itself returned HTTP 403)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)"
@@ -472,7 +472,7 @@
    "remediation": "Set resources.limits.memory.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (topic confirmed 2026-11-16 via a search excerpt of the PDF; the PDF itself returned HTTP 403)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)"
@@ -504,7 +504,7 @@
    "remediation": "Set resources.limits.cpu or document the exception.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (topic confirmed 2026-11-16 via a search excerpt of the PDF; the PDF itself returned HTTP 403)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)"
@@ -537,7 +537,7 @@
    "remediation": "Pin a version tag, ideally a digest.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (UNVERIFIED: PDF returned HTTP 403 and this specific topic was not confirmed in a search excerpt)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)"
@@ -570,7 +570,7 @@
    "remediation": "Reference images as repo@sha256:...",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (UNVERIFIED: PDF returned HTTP 403 and this specific topic was not confirmed in a search excerpt)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)"
@@ -626,7 +626,7 @@
    "remediation": "Set securityContext.seccompProfile.type: RuntimeDefault.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (UNVERIFIED: PDF returned HTTP 403 and this specific topic was not confirmed in a search excerpt)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)"
@@ -659,7 +659,7 @@
    "remediation": "Set automountServiceAccountToken: false.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (topic confirmed 2026-11-16 via a search excerpt of the PDF; the PDF itself returned HTTP 403)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)"
@@ -691,7 +691,7 @@
    "remediation": "Use a Service instead.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (UNVERIFIED: PDF returned HTTP 403 and this specific topic was not confirmed in a search excerpt)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)"
@@ -724,7 +724,7 @@
    "remediation": "Remove procMount: Unmasked.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (UNVERIFIED: PDF returned HTTP 403 and this specific topic was not confirmed in a search excerpt)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)"
@@ -757,7 +757,7 @@
    "remediation": "Move the value to a Secret and reference it with valueFrom.secretKeyRef.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (UNVERIFIED: PDF returned HTTP 403 and this specific topic was not confirmed in a search excerpt)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)"
@@ -790,7 +790,7 @@
    "remediation": "List only the verbs required.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (UNVERIFIED: PDF returned HTTP 403 and this specific topic was not confirmed in a search excerpt)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)"
@@ -825,7 +825,7 @@
    "remediation": "List only the resources required.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (UNVERIFIED: PDF returned HTTP 403 and this specific topic was not confirmed in a search excerpt)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)"
@@ -860,7 +860,7 @@
    "remediation": "Bind a narrower role.",
    "references": [
     "Kubernetes Pod Security Standards (public)",
-    "NSA/CISA Kubernetes Hardening Guidance (public; not opened in this research, UNVERIFIED)"
+    "NSA/CISA Kubernetes Hardening Guidance v1.2, Aug 2022 (UNVERIFIED: PDF returned HTTP 403 and this specific topic was not confirmed in a search excerpt)"
    ],
    "frameworks": [
     "NIST SP 800-53 CM-6 (hint)"

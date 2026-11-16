@@ -376,7 +376,9 @@
     ]
    },
    "on_absent": "unknown",
-   "absence_note": "SSLProtocol not set: the default depends on the Apache/OpenSSL versions, so the result is unknown. The meaning of 'all' in recent versions is UNVERIFIED, so it is only accepted when the old versions are also removed.",
+   "absence_note": "SSLProtocol not set: the default is \"all -SSLv3\" from httpd 2.4.17 (\"all\" alone before), and \"all\" includes TLSv1 and TLSv1.1 when the OpenSSL build allows them (mod_ssl docs, read 2026-11-16), so the result stays unknown; \"all\" is only accepted here when the old versions are also removed.",
+   "absence_source": "https://httpd.apache.org/docs/2.4/mod/mod_ssl.html",
+   "default_verified_on": "2026-11-16",
    "remediation": "Use SSLProtocol -all +TLSv1.2 +TLSv1.3 (or all -SSLv3 -TLSv1 -TLSv1.1).",
    "references": [
     "Apache mod_ssl SSLProtocol directive (public)"
@@ -441,7 +443,9 @@
     ]
    },
    "on_absent": "fail",
-   "absence_note": "Default is Full (UNVERIFIED in this research): treated as a failure.",
+   "absence_note": "Default is Full (httpd core docs, read 2026-11-16): treated as a failure.",
+   "absence_source": "https://httpd.apache.org/docs/2.4/mod/core.html",
+   "default_verified_on": "2026-11-16",
    "remediation": "Set ServerTokens Prod.",
    "references": [],
    "frameworks": [
@@ -467,7 +471,9 @@
     "value": "(^|\\s)\\+?Indexes\\b"
    },
    "on_absent": "pass",
-   "absence_note": "Default depends on the Options in effect (UNVERIFIED); not flagged when absent.",
+   "absence_note": "The documented default is \"Options FollowSymlinks\", which does not enable Indexes (httpd core docs, read 2026-11-16); distribution configs often set Options in Directory blocks, so it is not flagged when absent.",
+   "absence_source": "https://httpd.apache.org/docs/2.4/mod/core.html",
+   "default_verified_on": "2026-11-16",
    "remediation": "Use Options -Indexes.",
    "references": [],
    "frameworks": [
@@ -493,7 +499,9 @@
     "value": "off"
    },
    "on_absent": "fail",
-   "absence_note": "Default is on (UNVERIFIED in this research): treated as a failure.",
+   "absence_note": "Default is on (httpd core docs, read 2026-11-16): treated as a failure.",
+   "absence_source": "https://httpd.apache.org/docs/2.4/mod/core.html",
+   "default_verified_on": "2026-11-16",
    "remediation": "Set TraceEnable off.",
    "references": [],
    "frameworks": [

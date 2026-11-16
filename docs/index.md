@@ -75,6 +75,7 @@ Refresh with `ruby docs/tools/inventory.rb --write`. Counts are read from the fi
 - [compliance-evidence.md](compliance-evidence.md): control-level evidence and the CERT-In clock; never a certification.
 - [regional-frameworks.md](regional-frameworks.md): worldwide compliance framework catalogs.
 - [regional-reporting.md](regional-reporting.md): regional incident-reporting clocks.
+- [verification-log.md](verification-log.md): 2026-11-16 verification pass for reporting regimes, framework controls and configuration defaults.
 - [observability.md](observability.md): metrics, probes, ATT&CK coverage, compliance score and live stream.
 
 ## Sector and industry observe platforms
