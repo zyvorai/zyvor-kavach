@@ -12,9 +12,9 @@
   --surface-1: #ffffff;
   --surface-hover: #f5f5f7;
   --text-primary: #1d1d1f;
-  --text-secondary: #6e6e73;
-  --text-tertiary: #86868b;
-  --text-faint: #a1a1a6;
+  --text-secondary: #636366;
+  --text-tertiary: #6e6e73;
+  --text-faint: #767679;
   --bg-elevated: #ffffff;
   --apple-blue: #0071e3;
   --apple-blue-hover: #0077ed;
@@ -31,6 +31,7 @@
   --nav-link: rgba(0, 0, 0, 0.8);
   --nav-link-active: #1d1d1f;
   --danger: #ff3b30;
+  --danger-text: #c9251b;
   --danger-bg: #fff1f0;
   --accent-cyan: #32ade6;
   --accent-cyan-hover: #28a0d8;
@@ -102,6 +103,7 @@
   --nav-link: rgba(255, 255, 255, 0.8);
   --nav-link-active: #f5f5f7;
   --danger: #ff453a;
+  --danger-text: #ff453a;
   --danger-bg: rgba(255, 69, 58, 0.14);
   --accent-cyan: #64d2ff;
   --accent-cyan-hover: #70d7ff;
@@ -735,7 +737,7 @@ main {
   color: var(--text-secondary);
   text-transform: lowercase;
 }
-.tag.high, .tag.critical { background: var(--danger-bg); color: var(--danger); }
+.tag.high, .tag.critical { background: var(--danger-bg); color: var(--danger-text); }
 .tag.medium { background: var(--warning-bg); color: var(--warning-text); }
 .tag.low { background: var(--info-bg); color: var(--apple-link); }
 .tag.open, .tag.investigating { background: var(--info-bg); color: var(--apple-link); }
@@ -745,7 +747,7 @@ main {
 .tag.offline, .tag.stale, .tag.pending { background: var(--warning-bg); color: var(--warning-text); }
 .tag.xdr { background: var(--info-bg); color: var(--apple-link); }
 .tag.delivered { background: var(--success-bg); color: var(--success-text); }
-.tag.failed { background: var(--danger-bg); color: var(--danger); }
+.tag.failed { background: var(--danger-bg); color: var(--danger-text); }
 .alert-url { font-family: var(--font-mono, ui-monospace, monospace); word-break: break-all; }
 .risk-bar { display:inline-block; width:96px; height:8px; border-radius:4px; background:var(--fill-tertiary); vertical-align:middle; overflow:hidden; margin-right:8px; }
 .risk-bar > i { display:block; height:100%; background:var(--text-secondary); }
@@ -773,7 +775,7 @@ main {
 .note-item .note-text { white-space:pre-wrap; overflow-wrap:anywhere; margin:4px 0 0; }
 .note-form textarea { width:100%; min-height:64px; box-sizing:border-box; }
 .alert-confirm { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.tag.deny { background: var(--danger-bg); color: var(--danger); }
+.tag.deny { background: var(--danger-bg); color: var(--danger-text); }
 
 .eyebrow {
   font-size: 12px;
@@ -988,7 +990,7 @@ main {
   color: var(--text-secondary);
   min-height: 1.2em;
 }
-.work-msg.is-error { color: var(--danger); }
+.work-msg.is-error { color: var(--danger-text); }
 .work-msg.is-ok { color: var(--success-text); }
 
 .token-box {
@@ -1268,7 +1270,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 .ui-hash { font-family: var(--font-mono); font-size: 12px; overflow-wrap: anywhere; }
 .ui-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .ui-copy { min-height: 32px; padding: 2px 10px; font-size: 12px; }
-.tag.malicious-likely { background: var(--danger-bg); color: var(--danger); }
+.tag.malicious-likely { background: var(--danger-bg); color: var(--danger-text); }
 .tag.suspicious { background: var(--warning-bg); color: var(--warning-text); }
 .tag.clean { background: var(--success-bg); color: var(--success-text); }
 .tag.verified { background: var(--success-bg); color: var(--success-text); }
@@ -1331,13 +1333,13 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 .rg-opt input { margin-top: 5px; flex: none; }
 .rg-opt small { display: block; color: var(--text-secondary); }
 .rg-stage { margin: 0 0 10px; }
-.rg-overdue td { color: var(--danger); }
+.rg-overdue td { color: var(--danger-text); }
 .rg-text-only { color: var(--text-secondary); font-style: italic; }
 
 /* === cert advisories page === */
 .table-wrap tr.ad-matched td { background: var(--warning-bg); }
 .ad-filters label, .nx-filters label.ad-check { display: inline-flex; align-items: center; gap: 6px; min-height: var(--hit-min); }
-.ad-feed-err { color: var(--danger); font-size: 13px; overflow-wrap: anywhere; }
+.ad-feed-err { color: var(--danger-text); font-size: 13px; overflow-wrap: anywhere; }
 code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--fill-tertiary); border-radius: 5px; padding: 1px 6px; }
 
 /* Global search */
@@ -1363,7 +1365,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 .cv-seg-not_testable { fill: var(--text-tertiary); }
 .cv-seg-untested { fill: var(--fill-tertiary); stroke: var(--hairline-1); }
 .tag.detected, .tag.active { background: var(--success-bg); color: var(--success-text); }
-.tag.missed { background: var(--danger-bg); color: var(--danger); }
+.tag.missed { background: var(--danger-bg); color: var(--danger-text); }
 .tag.not_testable, .tag.untested, .tag.never_seen { background: var(--fill-tertiary); color: var(--text-secondary); }
 .cv-details { margin: 8px 0; }
 .cv-details summary { cursor: pointer; min-height: var(--hit-min); display: flex; align-items: center; font-weight: 600; }
@@ -1372,7 +1374,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 @media (max-width: 860px) { .hs-grid { grid-template-columns: minmax(0, 1fr); } }
 .hs-query { width: 100%; box-sizing: border-box; font-family: var(--font-mono, ui-monospace, monospace); font-size: 13px; line-height: 1.5; resize: vertical; min-height: 120px; }
 .hs-query.is-bad { border-color: var(--danger); }
-.hs-caret { margin: 4px 0; padding: 6px 8px; overflow-x: auto; font-size: 12px; background: var(--danger-bg); color: var(--danger); border-radius: var(--radius-md); white-space: pre; }
+.hs-caret { margin: 4px 0; padding: 6px 8px; overflow-x: auto; font-size: 12px; background: var(--danger-bg); color: var(--danger-text); border-radius: var(--radius-md); white-space: pre; }
 .hs-side { min-width: 0; }
 .hs-cat summary { cursor: pointer; min-height: var(--hit-min); display: flex; align-items: center; font-weight: 600; }
 .hs-cat ul { margin: 4px 0 8px; padding-left: 18px; font-size: 13px; }
@@ -1383,7 +1385,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 .hs-tree { font-size: 12px; overflow-x: auto; white-space: pre; margin: 4px 0; }
 /* === vulnerability priority page === */
 .vp-detail { margin-top: 12px; border-color: var(--apple-blue); }
-.tag.act { background: var(--danger-bg); color: var(--danger); }
+.tag.act { background: var(--danger-bg); color: var(--danger-text); }
 .tag.attend { background: var(--warning-bg); color: var(--warning-text); }
 .tag.track, .tag.track_star { background: var(--info-bg); color: var(--apple-link); }
 .tag.unknown { background: var(--fill-tertiary); color: var(--text-secondary); border: 1px dashed var(--text-tertiary); }
@@ -1399,7 +1401,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 .ch-detail { margin-top: 12px; border-color: var(--apple-blue); }
 .cw-check { display: flex; gap: 10px; align-items: flex-start; min-height: var(--hit-min); padding: 4px 0; overflow-wrap: anywhere; }
 .cw-check input { margin-top: 4px; }
-.tag.overdue-sla { background: var(--danger-bg); color: var(--danger); }
+.tag.overdue-sla { background: var(--danger-bg); color: var(--danger-text); }
 /* === automation page === */
 .tag.draft, .tag.retired, .tag.expired { background: var(--fill-tertiary); color: var(--text-secondary); }
 .tag.testing { background: var(--warning-bg); color: var(--warning-text); }
@@ -1407,12 +1409,12 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 /* === reports and fleet SLO page === */
 .field[hidden] { display: none; }
 .tag.meeting, .tag.fresh, .tag.reporting { background: var(--success-bg); color: var(--success-text); }
-.tag.breaching, .tag.silent { background: var(--danger-bg); color: var(--danger); }
+.tag.breaching, .tag.silent { background: var(--danger-bg); color: var(--danger-text); }
 .tag.unknown, .tag.never_seen, .tag.never_reported { background: var(--fill-tertiary); color: var(--text-secondary); }
 .rp-nr { color: var(--text-tertiary); font-style: italic; }
 /* === content versions page === */
 .tag.added { background: var(--success-bg); color: var(--success-text); }
-.tag.removed { background: var(--danger-bg); color: var(--danger); }
+.tag.removed { background: var(--danger-bg); color: var(--danger-text); }
 .tag.modified { background: var(--warning-bg); color: var(--warning-text); }
 /* === syslog status page === */
 .sl-pre { font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; margin: 4px 0; font-family: var(--font-mono, ui-monospace, monospace); }
@@ -1421,7 +1423,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 .pt-spark polyline { fill: none; stroke: var(--apple-link); stroke-width: 2; vector-effect: non-scaling-stroke; }
 .pt-spark line { stroke: var(--hairline-1); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .pt-up { color: var(--success-text); }
-.pt-down { color: var(--danger); }
+.pt-down { color: var(--danger-text); }
 .pt-filters { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end; margin: 0 0 12px; }
 .pt-filters label { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 13px; color: var(--text-secondary); }
 .dg-stmt { margin: 0 0 12px; padding: 0 0 12px; border-bottom: 1px solid var(--hairline-1); overflow-wrap: anywhere; }
@@ -3353,7 +3355,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       <header class="page-hero">
         <p class="apple-eyebrow">Inspector</p>
         <h1>Look inside a suspicious artifact.</h1>
-        <p class="lede">Static analysis of a file, script, command line or domain. Nothing is executed and no network connection is made for you.</p>
+        <p class="lede">Static analysis of a file, script, command line, domain, configuration file, dependency lockfile, URL or email message. Nothing is executed and no network connection is made for you.</p>
       </header>
       <p class="nx-note" id="in-privacy">Uploaded bytes and pasted text are not stored. Only the resulting report and its sha256 are kept, in a capped in-memory list that is cleared when the server restarts.</p>
       <div class="nx-tabs" role="tablist" aria-label="Inspector sections" id="in-tabs">
@@ -3369,6 +3371,9 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
           <button type="button" role="tab" data-in-mode="cmdline" aria-selected="false">Command line</button>
           <button type="button" role="tab" data-in-mode="domain" aria-selected="false">Domain</button>
           <button type="button" role="tab" data-in-mode="config" aria-selected="false">Config</button>
+          <button type="button" role="tab" data-in-mode="lockfile" aria-selected="false">Lockfile</button>
+          <button type="button" role="tab" data-in-mode="url" aria-selected="false">URL</button>
+          <button type="button" role="tab" data-in-mode="email" aria-selected="false">Email</button>
         </div>
         <div class="work-panel">
           <div id="in-mode-file">
@@ -3396,6 +3401,20 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
             <input class="input-field" id="in-config-name" type="text" spellcheck="false" autocomplete="off">
             <label class="hint" for="in-config">Paste a configuration file. It is parsed only: nothing is executed, included, fetched or applied.</label>
             <textarea class="input-field lab-code" id="in-config" spellcheck="false" autocomplete="off"></textarea>
+          </div>
+          <div id="in-mode-lockfile" hidden>
+            <label class="hint" for="in-lock-name">File name (optional, identifies the ecosystem, for example package-lock.json or go.sum)</label>
+            <input class="input-field" id="in-lock-name" type="text" spellcheck="false" autocomplete="off">
+            <label class="hint" for="in-lockfile">Paste a dependency lockfile. It is parsed only: no package is installed, fetched or resolved.</label>
+            <textarea class="input-field lab-code" id="in-lockfile" spellcheck="false" autocomplete="off"></textarea>
+          </div>
+          <div id="in-mode-url" hidden>
+            <label class="hint" for="in-url">URL to assess (it is parsed only, never fetched or resolved)</label>
+            <input class="input-field" id="in-url" type="text" spellcheck="false" autocomplete="off" placeholder="https://example.com/path">
+          </div>
+          <div id="in-mode-email" hidden>
+            <label class="hint" for="in-email">Paste a raw email message with headers (RFC 5322 / MIME). It is parsed only: nothing is opened, rendered or fetched.</label>
+            <textarea class="input-field lab-code" id="in-email" spellcheck="false" autocomplete="off"></textarea>
           </div>
           <div class="px-actions"><button type="button" class="primary" id="in-run">Analyze</button><button type="button" class="secondary" id="in-clear">Clear</button></div>
         </div>
@@ -3516,6 +3535,10 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
         <button type="button" role="tab" data-md-tab="beacons" aria-selected="false">Beacons</button>
         <button type="button" role="tab" data-md-tab="synth" aria-selected="false">Draft rule</button>
         <button type="button" role="tab" data-md-tab="priority" aria-selected="false">Priority</button>
+        <button type="button" role="tab" data-md-tab="dns" aria-selected="false">DNS tunneling</button>
+        <button type="button" role="tab" data-md-tab="users" aria-selected="false">Users</button>
+        <button type="button" role="tab" data-md-tab="peers" aria-selected="false">Peers</button>
+        <button type="button" role="tab" data-md-tab="fatigue" aria-selected="false">Alert fatigue</button>
       </div>
 
       <div id="md-pane-status" class="md-pane">
@@ -3585,6 +3608,44 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
           <button type="button" id="md-pri-go">Explain priority</button>
         </div>
         <div id="md-priority-out"></div>
+        <div class="work-panel">
+          <h3>Factors that can appear</h3>
+          <p class="hint">Weights are nominal. A factor with no data is omitted and the rest are renormalised, so a missing factor never counts as zero risk.</p>
+          <div id="md-pri-ref"></div>
+        </div>
+      </div>
+
+      <div id="md-pane-dns" class="md-pane" hidden>
+        <div class="toolbar-pill nx-filters">
+          <input class="input-field" id="md-dns-host" type="text" placeholder="Host (empty for all hosts)" aria-label="Host filter for DNS model" autocomplete="off">
+          <button type="button" id="md-dns-go">Load</button>
+        </div>
+        <div id="md-dns-out"></div>
+      </div>
+
+      <div id="md-pane-users" class="md-pane" hidden>
+        <div class="toolbar-pill nx-filters">
+          <input class="input-field" id="md-usr-user" type="text" placeholder="User (empty for all users)" aria-label="User filter" autocomplete="off">
+          <button type="button" id="md-usr-go">Load</button>
+        </div>
+        <div id="md-users-out"></div>
+      </div>
+
+      <div id="md-pane-peers" class="md-pane" hidden>
+        <div class="toolbar-pill nx-filters">
+          <input class="input-field" id="md-peer-host" type="text" placeholder="Host (empty for all hosts)" aria-label="Host filter for peer model" autocomplete="off">
+          <button type="button" id="md-peer-go">Load</button>
+        </div>
+        <div id="md-peers-out"></div>
+      </div>
+
+      <div id="md-pane-fatigue" class="md-pane" hidden>
+        <div class="toolbar-pill nx-filters">
+          <input class="input-field" id="md-fat-rule" type="text" placeholder="Rule id (empty for all rules)" aria-label="Rule filter" autocomplete="off" spellcheck="false">
+          <label class="hint"><input type="checkbox" id="md-fat-cand"> Retune candidates only</label>
+          <button type="button" id="md-fat-go">Load</button>
+        </div>
+        <div id="md-fatigue-out"></div>
       </div>
     </section>
     <!-- === end models page === -->
@@ -6743,11 +6804,11 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       await inPost('/v1/inspect/file?name=' + encodeURIComponent(inFile.name), { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: buf }, inFile.name);
       return;
     }
-    const id = { script: 'in-script', cmdline: 'in-cmdline', domain: 'in-domain', config: 'in-config' }[inMode];
+    const id = { script: 'in-script', cmdline: 'in-cmdline', domain: 'in-domain', config: 'in-config', lockfile: 'in-lockfile', url: 'in-url', email: 'in-email' }[inMode];
     const text = $(id).value;
     if (!text.trim()) { setMsg('in-msg', 'Enter something to analyze.', true); $(id).focus(); return; }
     if (new Blob([text]).size > 4 * 1024 * 1024) { setMsg('in-msg', 'Text is over the 4 MiB limit.', true); return; }
-    const cfgName = inMode === 'config' ? $('in-config-name').value.trim() : '';
+    const cfgName = inMode === 'config' ? $('in-config-name').value.trim() : (inMode === 'lockfile' ? $('in-lock-name').value.trim() : '');
     await inPost('/v1/inspect/' + inMode + (cfgName ? '?name=' + encodeURIComponent(cfgName) : ''), pgJSON({ text }), inMode);
   }
   async function inLoadReports() {
@@ -6773,7 +6834,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   function loadInspector() { inLoadLimits(); }
   const inModeSel = uiTabs('in-modes', 'data-in-mode', (m) => {
     inMode = m;
-    ['file', 'script', 'cmdline', 'domain', 'config'].forEach((k) => { $('in-mode-' + k).hidden = k !== m; });
+    ['file', 'script', 'cmdline', 'domain', 'config', 'lockfile', 'url', 'email'].forEach((k) => { $('in-mode-' + k).hidden = k !== m; });
   });
   const inTabSel = uiTabs('in-tabs', 'data-in-tab', (t) => {
     $('in-pane-analyze').hidden = t !== 'analyze';
@@ -6782,7 +6843,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   });
   $('in-run').addEventListener('click', inRun);
   $('in-clear').addEventListener('click', () => {
-    inFile = null; $('in-file').value = ''; $('in-script').value = ''; $('in-cmdline').value = ''; $('in-domain').value = ''; $('in-config').value = ''; $('in-config-name').value = '';
+    inFile = null; $('in-file').value = ''; $('in-script').value = ''; $('in-cmdline').value = ''; $('in-domain').value = ''; $('in-config').value = ''; $('in-config-name').value = ''; $('in-lockfile').value = ''; $('in-lock-name').value = ''; $('in-url').value = ''; $('in-email').value = '';
     $('in-drop-title').textContent = 'Drop a file here, or press Enter to choose one';
     $('in-result').replaceChildren(); setMsg('in-msg', '', false);
   });
@@ -7466,10 +7527,161 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       else box.appendChild(el('p', 'None. Every factor was present.', 'hint'));
     }, mdPriority);
   }
-  const mdLoaders = { status: mdStatus, lineage: mdLineage, beacons: mdBeacons };
+  function mdKV(box, o, keys) {
+    uiMeta(box, keys.filter((k) => o[k[0]] !== undefined && o[k[0]] !== null).map((k) => k[1] + ': ' + o[k[0]]));
+  }
+  function mdTime(u) { return typeof u === 'number' ? pxTime(new Date(u * 1000).toISOString()) : '-'; }
+  function mdState(box, r) {
+    const row = el('div', '', 'ui-row');
+    row.appendChild(mdStatusTag(r.status));
+    if (r.sample_count !== undefined) row.appendChild(el('span', r.sample_count + ' samples'));
+    box.appendChild(row);
+  }
+  function mdFactorTable(box, factors, omitted) {
+    if ((factors || []).length) {
+      const tb = uiTable(box, ['Factor', 'Value (0 to 1)', 'Nominal weight', 'Note']);
+      factors.forEach((f) => tableRow(tb, [f.name, mdNum(f.value, 3), f.weight, f.note]));
+    }
+    if ((omitted || []).length) { box.appendChild(el('h4', 'Omitted factors (no data)')); uiList(box, omitted); }
+  }
+  function mdDns() {
+    const host = $('md-dns-host').value.trim();
+    mdGet('md-dns-out', '/v1/ml/dns' + (host ? '?host=' + encodeURIComponent(host) : ''), (box, r) => {
+      mdMethod(box, r);
+      mdKV(box, r, [['window_seconds', 'Window seconds'], ['min_lookups', 'Minimum lookups'], ['tunnel_min_distinct_subdomains', 'Tunnel min distinct subdomains'], ['tunnel_score_threshold', 'Tunnel score threshold'], ['dga_min_domains', 'DGA min domains'], ['dga_score_threshold', 'DGA score threshold'], ['hosts_tracked', 'Hosts tracked'], ['dropped_hosts', 'Hosts dropped at cap']]);
+      if (host) {
+        box.appendChild(el('h3', 'Host ' + host));
+        mdState(box, r);
+        if (r.status !== 'ok') uiNote(box, 'Not enough data: ' + (r.sample_count || 0) + ' lookups seen for this host, ' + r.min_lookups + ' needed. No score is shown.');
+        mdKV(box, r, [['windows', 'Windows'], ['late_events_ignored', 'Late events ignored'], ['unscorable_names', 'Unscorable names']]);
+        const fl = r.flags || [];
+        box.appendChild(el('h4', 'Flagged windows'));
+        if (fl.length) {
+          const tb = uiTable(box, ['Window start', 'Kind', 'Domain', 'Score', 'Distinct', 'Lookups', 'Reasons']);
+          fl.forEach((f) => tableRow(tb, [mdTime(f.window_start_unix), f.kind, f.domain, mdNum(f.score, 1), f.distinct, f.lookups, (f.reasons || []).join('; ')]));
+        } else box.appendChild(el('p', 'No flagged windows.', 'hint'));
+        if (r.open_window) {
+          const o = r.open_window;
+          box.appendChild(el('h4', 'Open (partial) window'));
+          uiMeta(box, ['Started: ' + mdTime(o.window_start_unix), 'Lookups: ' + o.lookups, 'Domains tracked: ' + o.domains_tracked, o.status ? 'State: ' + o.status : 'Would flag: ' + (o.would_flag ? JSON.stringify(o.would_flag) : 'no')]);
+        }
+        return;
+      }
+      const hs = r.hosts || [];
+      if (!hs.length) { uiEmpty(box, 'No DNS data yet', 'No host has produced domain or DNS lookups. This model reports not_enough_data until it does.'); return; }
+      const tb = uiTable(box, ['Host', 'State', 'Lookups', 'Windows', 'Flagged windows', 'Top score', 'Last flagged']);
+      hs.forEach((h) => tableRow(tb, [h.host, mdStatusTag(h.status), h.sample_count, h.windows, h.flagged_windows, h.status === 'ok' ? mdNum(h.top_score, 1) : '-', h.last_flagged ? pxTime(h.last_flagged) : '-']));
+      if (r.total > hs.length) uiNote(box, 'Showing ' + hs.length + ' of ' + r.total + ' hosts.');
+    }, mdDns);
+  }
+  function mdUsers() {
+    const u = $('md-usr-user').value.trim();
+    mdGet('md-users-out', '/v1/ml/users' + (u ? '?user=' + encodeURIComponent(u) : ''), (box, r) => {
+      mdMethod(box, r);
+      mdKV(box, r, [['users_tracked', 'Users tracked'], ['dropped_users', 'Users dropped at cap'], ['min_logons', 'Minimum logons'], ['min_process_events', 'Minimum process events']]);
+      if (r.note) uiNote(box, r.note);
+      if (u) {
+        box.appendChild(el('h3', 'User ' + (r.user || u)));
+        mdState(box, r);
+        if (r.status !== 'ok') uiNote(box, 'Not enough data for this user. No baseline is shown.');
+        if (r.sub_models) {
+          const tb = uiTable(box, ['Sub-model', 'State']);
+          Object.keys(r.sub_models).forEach((k) => { const v = r.sub_models[k]; tableRow(tb, [k.replace(/_/g, ' '), typeof v === 'object' && v ? mdStatusTag(v.status || '') : String(v)]); });
+        }
+        mdKV(box, r, [['failed_logons', 'Failed logons']]);
+        if ((r.logon_hours_utc || []).length) {
+          box.appendChild(el('h4', 'Logons by hour (UTC)'));
+          box.appendChild(el('p', r.logon_hours_utc.map((n, i) => (i < 10 ? '0' : '') + i + 'h:' + n).join('  '), 'hint'));
+        }
+        if ((r.top_executables || []).length) {
+          box.appendChild(el('h4', 'Top executables'));
+          const tb = uiTable(box, ['Executable', 'Count']);
+          r.top_executables.forEach((x) => tableRow(tb, [x.executable, x.count]));
+        }
+        const ac = r.anomaly_counts || {};
+        if (Object.keys(ac).length) { box.appendChild(el('h4', 'Anomaly counts')); uiMeta(box, Object.keys(ac).map((k) => k.replace(/_/g, ' ') + ': ' + ac[k])); }
+        if ((r.recent_anomalies || []).length) {
+          box.appendChild(el('h4', 'Recent anomalies'));
+          const tb = uiTable(box, ['Time', 'Kind', 'Detail', 'Surprisal bits', 'Host']);
+          r.recent_anomalies.forEach((a) => tableRow(tb, [mdTime(a.time_unix), a.kind, a.detail, a.surprisal_bits !== undefined ? mdNum(a.surprisal_bits, 2) : '-', a.host || '-']));
+        }
+        return;
+      }
+      const us = r.users || [];
+      if (!us.length) { uiEmpty(box, 'No user data yet', 'No logons or per-user process events have been learned. This model reports not_enough_data until they are.'); return; }
+      const tb = uiTable(box, ['User', 'State', 'Logons', 'Process events', 'Anomalies']);
+      us.forEach((x) => tableRow(tb, [x.user, mdStatusTag(x.status), x.logons, x.process_events, Object.keys(x.anomalies || {}).map((k) => k.replace(/_/g, ' ') + ' ' + x.anomalies[k]).join(', ') || '-']));
+      if (r.total > us.length) uiNote(box, 'Showing ' + us.length + ' of ' + r.total + ' users.');
+    }, mdUsers);
+  }
+  function mdPeerViews(box, views) {
+    const tb = uiTable(box, ['View', 'State', 'Samples', 'JSD bits', 'Robust z', 'Outlier', 'Most distinct items']);
+    (views || []).forEach((v) => tableRow(tb, [v.view, mdStatusTag(v.status), v.sample_count, v.status === 'ok' ? mdNum(v.jsd_bits, 3) : '-', v.status === 'ok' ? mdNum(v.robust_z, 2) : '-', v.status === 'ok' ? (v.outlier ? 'yes' : 'no') : '-', (v.most_distinct_items || []).map((i) => i.item + ' (host ' + mdNum(i.host_share, 2) + ', peers ' + mdNum(i.peer_share, 2) + ')').join('; ') || '-']));
+  }
+  function mdPeers() {
+    const host = $('md-peer-host').value.trim();
+    mdGet('md-peers-out', '/v1/ml/peers' + (host ? '?host=' + encodeURIComponent(host) : ''), (box, r) => {
+      mdMethod(box, r);
+      if (r.peer_group) uiNote(box, 'Peer group: ' + r.peer_group + '. Distance: ' + (r.distance || '-'));
+      const pv = r.process_view || {}, dv = r.destination_view || {};
+      uiMeta(box, ['Hosts tracked: ' + (r.hosts_tracked ?? '-'), 'Outlier z threshold: ' + (r.z_threshold ?? '-'), 'Process view: ' + (pv.status || '-') + ', ' + (pv.ready_hosts ?? 0) + ' ready hosts, needs ' + (pv.min_hosts ?? '-') + ' with ' + (pv.min_events_per_host ?? '-') + ' events each', 'Destination view: ' + (dv.status || '-') + ', ' + (dv.ready_hosts ?? 0) + ' ready hosts, needs ' + (dv.min_hosts ?? '-') + ' with ' + (dv.min_events_per_host ?? '-') + ' events each']);
+      if (host) {
+        box.appendChild(el('h3', 'Host ' + host));
+        mdState(box, r);
+        if (r.status !== 'ok') uiNote(box, 'Not enough hosts or events for a peer comparison. No score is shown.');
+        else uiMeta(box, ['Max z: ' + mdNum(r.max_z, 2), 'Score: ' + mdNum(r.score, 1) + ' / 100', 'Outlier: ' + (r.outlier ? 'yes' : 'no')]);
+        if ((r.views || []).length) mdPeerViews(box, r.views);
+        return;
+      }
+      const hs = r.hosts || [];
+      if (!hs.length) { uiEmpty(box, 'No peer data yet', 'No host has produced process or destination events. This model reports not_enough_data until enough hosts do.'); return; }
+      const tb = uiTable(box, ['Host', 'State', 'Max z', 'Score', 'Outlier', 'Views']);
+      hs.forEach((h) => tableRow(tb, [h.host, mdStatusTag(h.status), h.status === 'ok' ? mdNum(h.max_z, 2) : '-', h.status === 'ok' ? mdNum(h.score, 1) : '-', h.status === 'ok' ? (h.outlier ? 'yes' : 'no') : '-', (h.views || []).map((v) => v.view + ': ' + v.status + ' (' + v.sample_count + ')').join(', ')]));
+      if (r.total > hs.length) uiNote(box, 'Showing ' + hs.length + ' of ' + r.total + ' hosts.');
+    }, mdPeers);
+  }
+  function mdFatRow(box, x) {
+    box.appendChild(el('h3', (x.name ? x.name + ' ' : '') + '(' + x.rule + ')'));
+    const row = el('div', '', 'ui-row');
+    row.appendChild(mdStatusTag(x.status));
+    if (x.status === 'ok') { row.appendChild(el('p', mdNum(x.fatigue_score, 1) + ' / 100', 'px-score')); if (x.retune_candidate) row.appendChild(uiTag('retune candidate', 'warn')); }
+    box.appendChild(row);
+    uiMeta(box, ['Hits 30d: ' + x.hits_30d, 'Hits 7d: ' + x.hits_7d, 'Hosts 30d: ' + x.distinct_hosts_30d, 'Decided verdicts: ' + x.decided_verdicts, x.status === 'ok' ? 'Coverage: ' + mdNum(x.coverage, 2) : '']);
+    if (x.note) uiNote(box, x.note);
+    mdFactorTable(box, x.factors, x.omitted);
+    if ((x.suggestions || []).length) { box.appendChild(el('h4', 'Suggestions (advisory)')); uiList(box, x.suggestions); }
+  }
+  function mdFatigue() {
+    const rule = $('md-fat-rule').value.trim();
+    const cand = $('md-fat-cand').checked;
+    const qs = [];
+    if (rule) qs.push('rule=' + encodeURIComponent(rule));
+    if (cand) qs.push('candidates=1');
+    mdGet('md-fatigue-out', '/v1/ml/fatigue' + (qs.length ? '?' + qs.join('&') : ''), (box, r) => {
+      mdMethod(box, r);
+      mdState(box, { status: r.status });
+      uiMeta(box, ['Rules evaluated: ' + r.rules_evaluated, 'With enough data: ' + r.rules_with_enough_data, 'Retune candidates: ' + r.retune_candidates, 'Minimum hits (30d): ' + r.min_hits_30d, 'Retune score threshold: ' + r.retune_score_threshold, 'Minimum verdicts: ' + r.min_verdicts]);
+      if (r.note) uiNote(box, r.note);
+      if (r.status !== 'ok') uiNote(box, 'No rule has enough findings yet (cold start). Rules below the minimum hits show not_enough_data and no score.');
+      if (r.rule) { mdFatRow(box, r.rule); return; }
+      const rs = r.rules || [];
+      if (!rs.length) { uiEmpty(box, cand ? 'No retune candidates' : 'No rules with findings', cand ? 'No rule currently scores at or above the retune threshold.' : 'No rule has produced findings yet.'); return; }
+      const tb = uiTable(box, ['Rule', 'State', 'Fatigue score', 'Hits 30d', 'Hits 7d', 'Hosts', 'Verdicts', 'Retune']);
+      rs.forEach((x) => tableRow(tb, [x.name ? x.name + ' (' + x.rule + ')' : x.rule, mdStatusTag(x.status), x.status === 'ok' ? mdNum(x.fatigue_score, 1) : '-', x.hits_30d, x.hits_7d, x.distinct_hosts_30d, x.decided_verdicts, x.status === 'ok' ? (x.retune_candidate ? 'yes' : 'no') : '-']));
+      uiNote(box, 'Type a rule id above to see its factor breakdown.');
+    }, mdFatigue);
+  }
+  (function mdPriRef() {
+    const box = $('md-pri-ref');
+    const tb = uiTable(box, ['Factor', 'Nominal weight', 'What it uses']);
+    [['severity', '0.30', 'Rule severity'], ['rule_trust', '0.15', 'Rule noisiness and analyst verdict precision'], ['rarity', '0.20', 'Lineage rarity from the similarity model'], ['beaconing', '0.20', 'Beacon score toward the destination'], ['asset_criticality', '0.15', 'Posture asset criticality'],
+      ['dns_anomaly', '0.10', 'Tunneling or DGA-burst window near the finding (DNS tunneling tab)'], ['user_behaviour', '0.08', 'Baseline deviations for the account near the finding (Users tab)'], ['peer_outlier', '0.07', 'Divergence from peer hosts (Peers tab)'], ['rule_fatigue', '0.05', 'Inverse of the rule fatigue score (Alert fatigue tab)']]
+      .forEach((r) => tableRow(tb, r));
+  })();
+  const mdLoaders = { status: mdStatus, lineage: mdLineage, beacons: mdBeacons, dns: mdDns, users: mdUsers, peers: mdPeers, fatigue: mdFatigue };
   const mdTabSel = uiTabs('md-tabs', 'data-md-tab', (t) => {
     md.tab = t;
-    ['status', 'lineage', 'similar', 'baseline', 'beacons', 'synth', 'priority'].forEach((k) => { $('md-pane-' + k).hidden = k !== t; });
+    ['status', 'lineage', 'similar', 'baseline', 'beacons', 'synth', 'priority', 'dns', 'users', 'peers', 'fatigue'].forEach((k) => { $('md-pane-' + k).hidden = k !== t; });
     if (mdLoaders[t] && !md.loaded[t]) { md.loaded[t] = true; mdLoaders[t](); }
   });
   function loadModels() { md.loaded = {}; mdTabSel(md.tab, false); }
@@ -7483,6 +7695,10 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   $('md-syn-go').addEventListener('click', mdSynth);
   $('md-syn-in').addEventListener('keydown', (e) => { if (e.key === 'Enter') mdSynth(); });
   $('md-pri-go').addEventListener('click', mdPriority);
+  [['dns-host', 'dns-go', mdDns], ['usr-user', 'usr-go', mdUsers], ['peer-host', 'peer-go', mdPeers], ['fat-rule', 'fat-go', mdFatigue]].forEach((a) => {
+    $('md-' + a[1]).addEventListener('click', a[2]);
+    $('md-' + a[0]).addEventListener('keydown', (e) => { if (e.key === 'Enter') a[2](); });
+  });
   $('md-pri-id').addEventListener('keydown', (e) => { if (e.key === 'Enter') mdPriority(); });
   const mdActions = {
     reset: { path: '/v1/ml/reset', text: 'Reset models? This erases everything the console has learned: process lineage, command history and per-host baselines. Until enough events are seen again every model reports not_enough_data, and lineage, similarity-to-history and baseline hints disappear. Findings, events and rules are not changed.' },
