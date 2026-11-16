@@ -523,6 +523,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	SetVulnCachePath(store.path + ".vulncache.json")
 	RegisterVulnMgmt(mux, token)
 	RegisterVulnPriority(mux, token, store)
+	RegisterExposure(mux, token, store)
 	RegisterCertFeeds(mux, token, store)
 	RegisterSyslog(mux, token, store)
 	RegisterDeceptionTokens(mux, token, store)

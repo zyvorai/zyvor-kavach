@@ -33,6 +33,7 @@ All files sit next to the findings store path (`<store>` below), are written ato
 | `<store>.labrules.json` | Detection-lab rules (sandbox detection-as-code; shadow only, never promoted automatically) |
 | `<store>.posture.json` | Posture assets and baselines (`GET /v1/posture/*`) |
 | `<store>.vulncache.json` | Vulnerability feed cache: CISA KEV (CVE to date added, fetch time), OSV lookups per ecosystem/package/version, and matched advisories; 24 h TTL, opt-in network feeds. See `docs/vuln-feeds.md` |
+| `<store>.exposure.json` | Software exposure state (`docs/exposure.md`): per-host SBOM component metadata (name, version, purl, type only; no hashes or licences) and the optional operator-imported advisory set. Written atomically, mode 0600. Safe to delete (SBOMs must be re-ingested; the embedded sample set returns) |
 | `<store>.inventory.json` | Live inventory rows per domain so inventory APIs are not empty after restart. Location can be overridden with `KAVACH_INVENTORY` |
 | `<store>.retention.json` | Data-governance retention policy (days per class: findings, process_events, network_events, file_events; null = unlimited) |
 | `<store>.redaction.json` | Data-governance export redaction toggle (`{"enabled": bool}`) |

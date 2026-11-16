@@ -1,0 +1,2 @@
+{"format":"kavach-advisories/1","source":"test","advisories":[
+ {"id":"CVE-2099-1000","purl":"pkg:npm/lodash","ranges":[{"introduced":"4.17.0","last_affected":"4.17.20"}],"severity":"high","cvss":8.1,"summary":"fixture"}]}
