@@ -29,3 +29,7 @@ How the single-file console (`internal/edr/dashboard.html`) was checked, and wha
 - Models "ok" for DNS tunneling with flagged windows was not reached: the synthetic burst stayed below the 50-lookup minimum per host (shown honestly as not_enough_data).
 
 `internal/edr/dashboard_smoke_test.go` gained static checks for Models tabs, Inspector modes and the light text-token contrast.
+
+## Usability pass (palette, tables, views)
+
+Checked with headless Chrome driving a copy of the page with a probe script (no server, synthetic rows): table tool row and view bar appear, numeric sort ascending and descending, column hide, palette CVE lookup entry, saved view written to localStorage. Dark theme, phone width and a real signed-in session against live data were not exercised in this pass; contrast relies on existing text tokens.

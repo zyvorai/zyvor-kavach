@@ -1187,6 +1187,23 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 .state-error h3 { margin: 0 0 6px; font-size: var(--fs-h3, 17px); color: var(--text-primary); }
 @media (max-width: 640px) { .overlay { padding-top: 6vh; } }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+/* === console usability: table tools, saved views, palette extras === */
+.tbl-tools, .view-bar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:8px 12px; font-size:13px; color:var(--text-secondary); }
+.view-bar { margin:0 0 12px; border:1px solid var(--hairline-1); border-radius:var(--radius-xl); background:var(--surface-1); }
+.view-bar .input-field, .view-bar .select-field { width:auto; min-width:0; flex:0 1 180px; min-height:32px; padding:2px 10px; font-size:13px; }
+.tbl-tools .tbl-status { margin-right:auto; }
+.tbl-tools button, .view-bar button { min-height:32px; padding:2px 10px; font-size:12px; }
+.tbl-cols > summary { cursor:pointer; min-height:32px; display:inline-flex; align-items:center; padding:2px 10px; border:1px solid var(--hairline-1); border-radius:var(--radius-pill); color:var(--text-primary); font-size:12px; }
+.tbl-cols[open] { flex:1 1 100%; }
+.tbl-cols label { display:inline-flex; gap:6px; align-items:center; margin:6px 14px 0 0; color:var(--text-primary); }
+.table-wrap th.is-sortable { cursor:pointer; user-select:none; }
+.table-wrap th.is-sortable:hover { color:var(--text-primary); }
+.table-wrap th.is-sortable:focus-visible { outline:2px solid var(--apple-blue); outline-offset:-2px; }
+.table-wrap th[aria-sort="ascending"]::after { content:" \25B2"; font-size:10px; }
+.table-wrap th[aria-sort="descending"]::after { content:" \25BC"; font-size:10px; }
+.pal-list li.pal-kind { justify-content:flex-start; }
+.pal-list li.pal-kind small { margin-left:auto; }
+/* === end console usability === */
 /* === soc-ops page === */
 .soc-split { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr)); gap:16px; margin:0 0 16px; }
 .soc-split .table-wrap { margin:0; }
@@ -4306,6 +4323,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     const want = '#/' + current;
     if (location.hash !== want) { try { history.replaceState(null, '', want); } catch (_) { location.hash = want; } }
     document.title = 'Kavach · ' + (pageLabels[current] || current);
+    if (typeof enhancePage === 'function') setTimeout(enhancePage, 0);
     if (current === 'alerts' && typeof loadAlerts === 'function') loadAlerts();
     if (current === 'detections' && typeof loadSaved === 'function') loadSaved();
     if (current === 'risk' && typeof loadRisk === 'function') loadRisk();
@@ -6403,7 +6421,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 
   // --- Global search page (GET /v1/search) ---
   const gsLabels = { finding: 'Findings', host: 'Hosts', rule: 'Rules', huntpack: 'Hunt packs', query: 'Queries', guidance: 'Guidance', technique: 'Techniques', cve: 'CVEs', ioc: 'IOCs', case: 'Cases', saved: 'Saved searches' };
-  let gsTimer = 0, gsSeq = 0, gsPending = '';
+  let gsTimer = 0, gsSeq = 0, gsPending = '', gsPendingType = '';
   function gsOpen(r) {
     const page = String(r.route || '').replace(/^#\/?/, '');
     if (!pages.includes(page)) return;
@@ -6471,7 +6489,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     } finally { if (seq === gsSeq) box.removeAttribute('aria-busy'); }
   }
   function loadSearchPage() {
-    if (gsPending) { $('gs-q').value = gsPending; gsPending = ''; gsRun(); }
+    if (gsPending) { $('gs-q').value = gsPending; $('gs-type').value = gsPendingType; gsPending = ''; gsPendingType = ''; gsRun(); }
     $('gs-q').focus();
   }
   $('gs-q').addEventListener('input', () => { clearTimeout(gsTimer); gsTimer = setTimeout(gsRun, 250); });
@@ -10591,50 +10609,266 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   ['ex-format', 'ex-kind'].forEach((id) => $(id).addEventListener('change', exSync));
   /* === end adversaries / rule health / export pages === */
 
+
+  /* === console usability: table sort / columns / export, saved views === */
+  const tblState = new WeakMap();
+  const SKIP_TBL = '.kbd-table, .pv-break, #palette-root table, #help-root table, #drawer-root table';
+  function tblDataRows(table) {
+    const tb = table.tBodies[0];
+    const ths = table.tHead ? table.tHead.rows[table.tHead.rows.length - 1].cells.length : 0;
+    const out = { rows: [], mixed: false, ths };
+    if (!tb) return out;
+    let placeholders = 0;
+    Array.from(tb.rows).forEach((tr) => {
+      if (tr.classList.contains('skeleton-rows')) { out.loading = true; placeholders++; return; }
+      if (tr.cells.length === 1 && tr.cells[0].colSpan > 1) { placeholders++; return; }
+      if (tr.cells.length !== ths) { out.mixed = true; return; }
+      out.rows.push(tr);
+    });
+    if (placeholders && out.rows.length) out.mixed = true;
+    return out;
+  }
+  function tblKey(table, idx) { return (table.tBodies[0] && table.tBodies[0].id) || ('t' + idx); }
+  function tblCsvCell(v) {
+    let t = String(v == null ? '' : v).replace(/\s+/g, ' ').trim();
+    if (/^[=+@\t]/.test(t) || (/^-/.test(t) && !/^-?[\d.,]+%?$/.test(t))) t = "'" + t;
+    return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+  }
+  function tblCollect(table) {
+    const st = tblState.get(table);
+    const heads = Array.from(table.tHead.rows[table.tHead.rows.length - 1].cells);
+    const keep = heads.map((h, i) => !st.hide.has(i));
+    const d = tblDataRows(table);
+    return { cols: heads.map((h) => h.textContent.trim()).filter((x, i) => keep[i]), rows: d.rows.map((tr) => Array.from(tr.cells).map((c) => c.textContent.replace(/\s+/g, ' ').trim()).filter((x, i) => keep[i])) };
+  }
+  function tblExport(table, fmt, label) {
+    const c = tblCollect(table);
+    if (!c.rows.length) return false;
+    const base = 'kavach-' + (label || 'table').replace(/[^a-z0-9-]+/gi, '-').toLowerCase();
+    if (fmt === 'csv') rxSave(base + '.csv', [c.cols].concat(c.rows).map((r) => r.map(tblCsvCell).join(',')).join('\r\n') + '\r\n', 'text/csv');
+    else rxSave(base + '.json', JSON.stringify(c.rows.map((r) => { const o = {}; c.cols.forEach((k, i) => { o[k || ('col' + (i + 1))] = r[i]; }); return o; }), null, 2), 'application/json');
+    return true;
+  }
+  function tblCmp(a, b) {
+    const num = (v) => { const m = /^\s*(-?[\d,]*\.?\d+)\s*(%|ms|s|m|h|d|kb|mb|gb|b)?\s*$/i.exec(v); return m ? parseFloat(m[1].replace(/,/g, '')) : NaN; };
+    const x = num(a), y = num(b);
+    if (!isNaN(x) && !isNaN(y)) return x - y;
+    const dx = /^\d{4}-\d\d-\d\d/.test(a) ? Date.parse(a) : NaN, dy = /^\d{4}-\d\d-\d\d/.test(b) ? Date.parse(b) : NaN;
+    if (!isNaN(dx) && !isNaN(dy)) return dx - dy;
+    return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+  }
+  function tblRefresh(table) {
+    const st = tblState.get(table);
+    if (!st) return;
+    const d = tblDataRows(table);
+    const heads = Array.from(table.tHead.rows[table.tHead.rows.length - 1].cells);
+    if (st.sort && !d.mixed && d.rows.length > 1) {
+      const i = st.sort.col, dir = st.sort.dir === 'desc' ? -1 : 1;
+      const keyed = d.rows.map((tr, n) => ({ tr, n, v: tr.cells[i] ? tr.cells[i].textContent.trim() : '' }));
+      keyed.sort((p, q) => dir * tblCmp(p.v, q.v) || p.n - q.n);
+      if (keyed.some((k, n) => k.tr !== d.rows[n])) { const tb = table.tBodies[0]; keyed.forEach((k) => tb.appendChild(k.tr)); }
+    }
+    heads.forEach((h, i) => {
+      if (h.classList.contains('is-sortable')) h.setAttribute('aria-sort', st.sort && st.sort.col === i ? (st.sort.dir === 'desc' ? 'descending' : 'ascending') : 'none');
+    });
+    Array.from(table.rows).forEach((tr) => {
+      if (tr.cells.length === 1 && tr.cells[0].colSpan > 1) return;
+      Array.from(tr.cells).forEach((c, i) => { const hide = st.hide.has(i); if (hide !== (c.style.display === 'none')) c.style.display = hide ? 'none' : ''; });
+    });
+    const msg = d.loading ? 'Loading…' : (d.rows.length ? d.rows.length + ' row' + (d.rows.length === 1 ? '' : 's') : (d.mixed ? 'Detail rows shown' : 'No rows to show'));
+    if (st.status.textContent !== msg) st.status.textContent = msg;
+    st.csv.disabled = st.json.disabled = !d.rows.length;
+  }
+  function tblEnhance(table, idx, label) {
+    if (tblState.has(table) || !table.tHead || !table.tBodies.length || table.matches(SKIP_TBL) || table.parentElement.closest('table')) return;
+    const hrow = table.tHead.rows[table.tHead.rows.length - 1];
+    if (!hrow || hrow.cells.length < 2) return;
+    const st = { hide: new Set(), sort: null, key: tblKey(table, idx) };
+    const tools = document.createElement('div');
+    tools.className = 'tbl-tools';
+    st.status = el('span', '', 'tbl-status');
+    st.status.setAttribute('role', 'status');
+    const det = document.createElement('details');
+    det.className = 'tbl-cols';
+    det.appendChild(el('summary', 'Columns'));
+    st.cbs = [];
+    Array.from(hrow.cells).forEach((h, i) => {
+      const name = h.textContent.trim();
+      if (name && !/^actions?$/i.test(name)) {
+        h.classList.add('is-sortable');
+        h.tabIndex = 0;
+        const go = () => { st.sort = st.sort && st.sort.col === i ? (st.sort.dir === 'asc' ? { col: i, dir: 'desc' } : null) : { col: i, dir: 'asc' }; tblRefresh(table); tblObs.takeRecords(); };
+        h.addEventListener('click', go);
+        h.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+      }
+      const lab = document.createElement('label');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.checked = true;
+      cb.addEventListener('change', () => { if (cb.checked) st.hide.delete(i); else st.hide.add(i); tblRefresh(table); tblObs.takeRecords(); });
+      lab.appendChild(cb); lab.append(' ' + (name || 'Column ' + (i + 1)));
+      det.appendChild(lab);
+      st.cbs.push(cb);
+    });
+    const mk = (t, f) => { const b = el('button', t, 'secondary ui-copy'); b.type = 'button'; b.setAttribute('aria-label', 'Export ' + label + ' as ' + t); b.addEventListener('click', () => { if (!tblExport(table, f, label)) st.status.textContent = 'Nothing to export'; }); return b; };
+    st.csv = mk('CSV', 'csv'); st.json = mk('JSON', 'json');
+    tools.append(st.status, det, st.csv, st.json);
+    table.parentElement.insertBefore(tools, table);
+    tblState.set(table, st);
+    tblRefresh(table);
+  }
+  function tblScan() {
+    const sec = $('page-' + current);
+    if (!sec) return;
+    Array.from(sec.querySelectorAll('table')).forEach((t, i) => {
+      tblEnhance(t, i, (pageLabels[current] || current) + (i ? '-' + ((t.tBodies[0] && t.tBodies[0].id) || i) : ''));
+      tblRefresh(t);
+    });
+  }
+  let tblTimer = 0;
+  const tblObs = new MutationObserver(() => { clearTimeout(tblTimer); tblTimer = setTimeout(() => { tblScan(); viewBar(); tblObs.takeRecords(); }, 120); });
+
+  // Saved views: per page, kept in localStorage only (never sent anywhere).
+  const VIEW_SKIP = /token|secret|pass|key|cursor/i;
+  function viewsLoad(page) { try { const v = JSON.parse(localStorage.getItem('kavach-views-' + page) || '[]'); return Array.isArray(v) ? v.filter((x) => x && typeof x.name === 'string') : []; } catch (_) { return []; } }
+  function viewsStore(page, list) { try { localStorage.setItem('kavach-views-' + page, JSON.stringify(list.slice(0, 20))); return true; } catch (_) { return false; } }
+  function viewFields(sec) {
+    return Array.from(sec.querySelectorAll('input[id], select[id]')).filter((f) => !f.closest('.view-bar') && !/^(password|file|hidden|button|submit)$/.test(f.type) && !VIEW_SKIP.test(f.id));
+  }
+  function viewCapture(sec) {
+    const fields = {};
+    viewFields(sec).forEach((f) => { fields[f.id] = f.type === 'checkbox' || f.type === 'radio' ? (f.checked ? '1' : '0') : f.value; });
+    const tables = {};
+    sec.querySelectorAll('table').forEach((t) => { const st = tblState.get(t); if (st && (st.sort || st.hide.size)) tables[st.key] = { sort: st.sort, hide: Array.from(st.hide) }; });
+    return { fields, tables };
+  }
+  function viewApply(sec, v) {
+    viewFields(sec).forEach((f) => {
+      if (!v.fields || !(f.id in v.fields)) return;
+      if (f.type === 'checkbox' || f.type === 'radio') f.checked = v.fields[f.id] === '1'; else f.value = v.fields[f.id];
+      f.dispatchEvent(new Event('input', { bubbles: true }));
+      f.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    sec.querySelectorAll('table').forEach((t) => {
+      const st = tblState.get(t);
+      if (!st) return;
+      const o = (v.tables || {})[st.key] || {};
+      st.sort = o.sort && Number.isInteger(o.sort.col) ? { col: o.sort.col, dir: o.sort.dir === 'desc' ? 'desc' : 'asc' } : null;
+      st.hide = new Set((o.hide || []).filter(Number.isInteger));
+      st.cbs.forEach((cb, i) => { cb.checked = !st.hide.has(i); });
+      tblRefresh(t);
+    });
+  }
+  function viewBar() {
+    const sec = $('page-' + current);
+    if (!sec || sec.querySelector(':scope > .view-bar')) return;
+    const page = current;
+    const bar = document.createElement('div');
+    bar.className = 'view-bar';
+    bar.setAttribute('role', 'group');
+    bar.setAttribute('aria-label', 'Saved views');
+    const sel = document.createElement('select');
+    sel.className = 'select-field';
+    sel.setAttribute('aria-label', 'Saved views');
+    const name = document.createElement('input');
+    name.className = 'input-field';
+    name.placeholder = 'View name';
+    name.maxLength = 40;
+    name.setAttribute('aria-label', 'Name for the current view');
+    const save = el('button', 'Save view', 'secondary'); save.type = 'button';
+    const del = el('button', 'Delete view', 'secondary'); del.type = 'button';
+    const msg = el('span', '', 'tbl-status'); msg.setAttribute('role', 'status');
+    const fill = () => {
+      sel.replaceChildren();
+      const list = viewsLoad(page);
+      const first = el('option', list.length ? 'Saved views (' + list.length + ')' : 'No saved views');
+      first.value = '';
+      sel.appendChild(first);
+      list.forEach((v) => { const o = el('option', v.name); o.value = v.name; sel.appendChild(o); });
+      del.disabled = true;
+    };
+    sel.addEventListener('change', () => {
+      del.disabled = !sel.value;
+      const v = viewsLoad(page).find((x) => x.name === sel.value);
+      if (v) { viewApply(sec, v); msg.textContent = 'Applied "' + v.name + '". Use the page action to run it.'; }
+    });
+    save.addEventListener('click', () => {
+      const n = name.value.trim();
+      if (!n) { msg.textContent = 'Give the view a name first.'; name.focus(); return; }
+      const list = viewsLoad(page).filter((x) => x.name !== n);
+      list.push(Object.assign({ name: n }, viewCapture(sec)));
+      if (!viewsStore(page, list)) { msg.textContent = 'Could not save: browser storage is unavailable.'; return; }
+      fill(); sel.value = n; del.disabled = false; name.value = ''; msg.textContent = 'Saved "' + n + '".';
+    });
+    del.addEventListener('click', () => {
+      const n = sel.value; if (!n) return;
+      viewsStore(page, viewsLoad(page).filter((x) => x.name !== n));
+      fill(); msg.textContent = 'Deleted "' + n + '".';
+    });
+    fill();
+    bar.append(sel, name, save, del, msg);
+    sec.insertBefore(bar, sec.firstChild);
+  }
+  function enhancePage() { tblScan(); viewBar(); tblObs.takeRecords(); }
+  tblObs.observe($('app'), { childList: true, subtree: true });
+  function exportFirstTable(fmt) {
+    const sec = $('page-' + current);
+    const t = sec && Array.from(sec.querySelectorAll('table')).find((x) => tblState.has(x) && tblDataRows(x).rows.length);
+    if (!t) return false;
+    return tblExport(t, fmt, pageLabels[current] || current);
+  }
+  /* === end console usability === */
+
   const appVisible = () => !$('app').hidden;
   let lastFocus = null;
   function overlayOpen(id) { lastFocus = document.activeElement; $(id).hidden = false; }
   function overlayClose(id) { $(id).hidden = true; if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (_) {} } }
 
   let palSel = 0, palItems = [];
+  const palKinds = { host: 'host', cve: 'cve', ioc: 'ioc', rule: 'rule', case: 'case', finding: 'finding', technique: 'technique', huntpack: 'huntpack' };
+  function palLookups(raw) {
+    const out = [];
+    const m = /^(host|cve|ioc|rule|case|finding|technique|huntpack)\s+(.+)$/i.exec(raw);
+    if (m) out.push({ label: 'Look up ' + m[1].toLowerCase() + ' "' + m[2].trim() + '"', hint: 'lookup', run: () => palGo(m[2].trim(), palKinds[m[1].toLowerCase()]) });
+    else if (/^cve-\d{4}-\d{3,}$/i.test(raw)) out.push({ label: 'Look up CVE ' + raw.toUpperCase(), hint: 'lookup', run: () => palGo(raw, 'cve') });
+    else if (/^(\d{1,3}\.){3}\d{1,3}$/.test(raw) || /^[a-f0-9]{32,64}$/i.test(raw) || /^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(raw)) out.push({ label: 'Look up indicator ' + raw, hint: 'lookup', run: () => palGo(raw, 'ioc') });
+    if (raw.length >= 2) out.push({ label: 'Search everything for "' + raw + '"', hint: 'g /', run: () => palGo(raw, '') });
+    return out;
+  }
+  function palGo(q, type) { gsPending = q; gsPendingType = type || ''; closePalette(); showPage('search'); }
+  function palActions() {
+    return [
+      { label: 'Toggle light / dark theme', hint: 'action', run: () => { closePalette(); applyTheme(theme === 'dark' ? 'light' : 'dark'); } },
+      { label: 'Show keyboard shortcuts', hint: '?', run: () => { closePalette(); openHelp(); } },
+      { label: 'Export first table on this page as CSV', hint: 'action', run: () => { closePalette(); exportFirstTable('csv'); } },
+      { label: 'Export first table on this page as JSON', hint: 'action', run: () => { closePalette(); exportFirstTable('json'); } },
+    ];
+  }
   function renderPalette() {
-    const q = ($('palette-input').value || '').trim().toLowerCase();
-    palItems = pages.filter((p) => !q || p.includes(q) || pageLabels[p].toLowerCase().includes(q));
-    palSel = Math.min(palSel, palItems.length + (($('palette-input').value || '').trim().length >= 2 ? 0 : -1));
-    if (palSel < 0) palSel = 0;
+    const raw = ($('palette-input').value || '').trim();
+    const q = raw.toLowerCase();
+    const gOf = (p) => { const k = Object.keys(gKeys).find((x) => gKeys[x] === p); return k ? 'g ' + k : ''; };
+    palItems = palLookups(raw)
+      .concat(pages.filter((p) => !q || p.includes(q) || pageLabels[p].toLowerCase().includes(q)).map((p) => ({ label: pageLabels[p], hint: gOf(p), run: () => { closePalette(); showPage(p); } })))
+      .concat(palActions().filter((a) => !q || a.label.toLowerCase().includes(q)));
+    palSel = Math.max(0, Math.min(palSel, palItems.length - 1));
     const ul = $('palette-list');
     ul.replaceChildren();
-    const gsQ = ($('palette-input').value || '').trim();
-    if (gsQ.length >= 2) {
-      const li = document.createElement('li');
-      li.className = 'pal-search';
-      li.setAttribute('role', 'option');
-      li.id = 'pal-search-all';
-      li.setAttribute('aria-selected', palSel === palItems.length ? 'true' : 'false');
-      li.appendChild(el('span', 'Search everything for "' + gsQ + '"'));
-      li.appendChild(el('small', 'g /'));
-      li.addEventListener('click', () => palSearchAll());
-      ul.dataset.hasSearch = '1';
-      palSearchLi = li;
-    } else { palSearchLi = null; }
-    if (!palItems.length && !palSearchLi) { ul.appendChild(el('li', 'No matching page', 'pal-empty')); return; }
-    palItems.forEach((p, i) => {
+    if (!palItems.length) { ul.appendChild(el('li', 'Nothing matches. Try a page name, "host web01", "cve CVE-2024-1234" or an IP.', 'pal-empty')); return; }
+    palItems.forEach((it, i) => {
       const li = document.createElement('li');
       li.setAttribute('role', 'option');
       li.setAttribute('aria-selected', i === palSel ? 'true' : 'false');
-      li.id = 'pal-' + p;
-      li.appendChild(el('span', pageLabels[p]));
-      const g = Object.keys(gKeys).find((k) => gKeys[k] === p);
-      if (g) li.appendChild(el('small', 'g ' + g));
-      li.addEventListener('click', () => { closePalette(); showPage(p); });
+      li.id = 'pal-opt-' + i;
+      li.className = 'pal-kind';
+      li.appendChild(el('span', it.label));
+      if (it.hint) li.appendChild(el('small', it.hint));
+      li.addEventListener('click', () => it.run());
       ul.appendChild(li);
     });
-    if (palSearchLi) ul.appendChild(palSearchLi);
-    if (palItems[palSel]) $('palette-input').setAttribute('aria-activedescendant', 'pal-' + palItems[palSel]);
-    else if (palSearchLi) $('palette-input').setAttribute('aria-activedescendant', 'pal-search-all');
+    $('palette-input').setAttribute('aria-activedescendant', 'pal-opt-' + palSel);
+    const cur = $('pal-opt-' + palSel);
+    if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: 'nearest' });
   }
-  let palSearchLi = null;
-  function palSearchAll() { gsPending = ($('palette-input').value || '').trim(); closePalette(); showPage('search'); }
   function openPalette() { if (!appVisible()) return; palSel = 0; $('palette-input').value = ''; overlayOpen('palette-root'); renderPalette(); $('palette-input').focus(); }
   function closePalette() { overlayClose('palette-root'); }
   function openHelp() {
@@ -10652,6 +10886,8 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     add(['/'], 'Open command palette');
     add(['?'], 'Show this help');
     add(['Esc'], 'Close overlay or drawer');
+    add(['Enter', 'on a header'], 'Sort a table column (again to reverse, a third time to clear)');
+    add(['host x'], 'In the palette: look up a host, also cve, ioc, rule, case, technique');
     Object.keys(gKeys).forEach((k) => add(['g', k], 'Go to ' + pageLabels[gKeys[k]]));
     overlayOpen('help-root');
     $('help-close').focus();
@@ -10662,10 +10898,9 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   $('help-root').addEventListener('mousedown', (e) => { if (e.target === $('help-root')) closeHelp(); });
   $('palette-input').addEventListener('input', () => { palSel = 0; renderPalette(); });
   $('palette-input').addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowDown') { e.preventDefault(); palSel = Math.min(palItems.length - (($('palette-input').value || '').trim().length >= 2 ? 0 : 1), palSel + 1); renderPalette(); }
+    if (e.key === 'ArrowDown') { e.preventDefault(); palSel = Math.min(palItems.length - 1, palSel + 1); renderPalette(); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); palSel = Math.max(0, palSel - 1); renderPalette(); }
-    else if (e.key === 'Enter' && palSel === palItems.length && palSearchLi) { e.preventDefault(); palSearchAll(); }
-    else if (e.key === 'Enter' && palItems[palSel]) { e.preventDefault(); const p = palItems[palSel]; closePalette(); showPage(p); }
+    else if (e.key === 'Enter' && palItems[palSel]) { e.preventDefault(); palItems[palSel].run(); }
   });
   let gPending = 0;
   document.addEventListener('keydown', (e) => {
