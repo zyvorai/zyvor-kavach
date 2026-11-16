@@ -1469,7 +1469,8 @@
    "effort": "L",
    "risk": "Credential handling, cost",
    "conflicts_with_observation_only": "No",
-   "status": "open"
+   "status": "partial",
+   "evidence": "POST /v1/cloud/audit/events, GET /v1/cloud/audit/sources (cloud_audit.go, docs/cloud-audit.md): normalizers for AWS CloudTrail, Azure Activity/Entra, GCP Audit, Okta and M365 records feed the existing rule engine; 159 cld- rules mapped to ATT&CK cloud techniques, 118 lab scenarios, 71-event benign corpus. Limits: records are pushed by an operator with the admin token, there are no pull collectors or credentials handling and no GitHub source; rules are single-event (no bursts); tested only on hand-written records from public provider documentation, so false-positive rates on real tenants are unknown."
   },
   {
    "id": 22,
@@ -1510,7 +1511,8 @@
    "effort": "M",
    "risk": "Feed freshness",
    "conflicts_with_observation_only": "No",
-   "status": "open"
+   "status": "partial",
+   "evidence": "GET /v1/exposure/report, /sboms, /advisories, PUT/POST /v1/exposure/sboms/{host}, POST /v1/exposure/advisories/import (exposure.go, docs/exposure.md): CycloneDX and SPDX SBOMs ingested per host, operator-imported OSV/KEV/kavach-advisories data matched by purl and version range, ranked exposed-assets report, optional priority factor (KAVACH_EXPOSURE_PRIORITY=1). Limits: no agent package inventory collection (SBOMs are submitted), the embedded advisory set is five labelled sample entries written from memory, unsupported ecosystems and unorderable versions are skipped or indeterminate rather than guessed."
   },
   {
    "id": 25,
