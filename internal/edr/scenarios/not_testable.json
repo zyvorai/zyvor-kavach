@@ -10,6 +10,13 @@
   "T1027.002": "Software packing needs static binary analysis of file content; Kavach events carry no file bytes.",
   "T1573.002": "Encrypted channel detection needs TLS or flow-content telemetry that Kavach does not collect.",
   "T1030": "Transfer size limits need per-flow byte-volume telemetry; network events carry only a destination.",
-  "T1550.003": "Pass-the-ticket needs Kerberos ticket telemetry beyond the auth event fields Kavach models."
+  "T1550.003": "Pass-the-ticket needs Kerberos ticket telemetry beyond the auth event fields Kavach models.",
+  "T1110.002": "Password cracking happens offline on attacker infrastructure; no process, file, network or auth event is generated on the victim.",
+  "T1078.003": "A successful login with a valid local account is indistinguishable from legitimate use without a per-user baseline or identity-provider context; auth events carry only user, source and outcome.",
+  "T1078.004": "Valid cloud account use is visible only in cloud control-plane (IdP / CloudTrail) logs; Kavach collects endpoint process, file, network, registry, auth and module events, and a CLI call proves nothing about credential legitimacy.",
+  "T1204.001": "Whether a user followed a malicious link is a human action; a browser opening a URL is identical to normal browsing and needs URL reputation and email context Kavach does not collect.",
+  "T1068": "Exploitation of a kernel or SUID bug is visible only through crash, memory or syscall telemetry; a command line cannot demonstrate it (a named exploit binary would only test name matching).",
+  "T1554": "Detecting a modified host binary needs file-content integrity (hash before and after) and file events carry no content; a path write is only a weak proxy.",
+  "T1221": "Template injection happens inside the document XML: Office fetches the remote template itself, the process command line holds only a local path, and network events carry a destination but no owning process, so the behavior cannot be shown from the telemetry Kavach collects (a first scenario using a network-only sequence missed, see docs)."
  }
 }

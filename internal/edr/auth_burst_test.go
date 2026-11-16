@@ -17,8 +17,8 @@ func TestAuthBurstDetector(t *testing.T) {
 			fired = append(fired, f.Rule)
 		}
 	}
-	if len(fired) != 1 || fired[0] != "auth-failed-login-burst" {
-		t.Fatalf("want exactly one burst finding (cooldown), got %v", fired)
+	if len(fired) != 1 || fired[0] != "auth-password-guessing" {
+		t.Fatalf("want exactly one single-account guessing finding (cooldown), got %v", fired)
 	}
 	// slow failures, successes and other sources never fire
 	d = &AuthBurstDetector{}
@@ -42,6 +42,9 @@ func TestAuthBurstDetector(t *testing.T) {
 	}
 	if !spray {
 		t.Fatal("password spray not detected")
+	}
+	if m, ok := ruleMITRE["auth-password-guessing"]; !ok || m.ID != "T1110.001" {
+		t.Fatal("guessing rule not mapped to T1110.001")
 	}
 	if m, ok := ruleMITRE["auth-failed-login-burst"]; !ok || m.ID != "T1110" {
 		t.Fatal("burst rule not mapped to T1110")
