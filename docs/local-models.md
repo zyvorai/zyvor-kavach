@@ -207,7 +207,7 @@ curl -s -H "Authorization: Bearer $KAVACH_TOKEN" "http://127.0.0.1:8099/v1/ml/fa
 
 `?rule=<id>` returns that rule only (404 `{"error":"rule has no findings"}` when it has none). All four return `status: "not_enough_data"` with the observed counts instead of a score when the guard above is not met. Shapes beyond the fatigue envelope are described by the field names in the code (`ml_ext_*.go`); values here are illustrative.
 
-### Known issue: extended priority factors and the score
+### Fixed: extended priority factors and the score
 
-Reading `internal/edr/ml_net.go` against `ml_ext_engine.go`: `ctx.score` sums the weighted factors in its loop and only afterwards calls the extended-factor hook, which writes the four optional factors (`dns_anomaly`, `user_behaviour`, `peer_outlier`, `rule_fatigue`) into the local `vals` map. Nothing reads `vals` after that, so as the code stands these factors do not enter `score`, `coverage` or the returned `factors` list; only their omission notes (`omitted`) are returned. The unit test `TestMLExtPriorityFactors` calls the engine's `factors` function directly and so does not exercise this path. The description in "Priority fusion" above is the intended behaviour; treat the four extended factors as not influencing `/v1/ml/priority` until this is fixed. The `exposure` factor, which is evaluated before the loop, is not affected.
+**Fixed after v0.2.0:** the extended factors used to be computed after the weighted sum, so they never reached `score`, `coverage` or `factors`. They are now evaluated before the sum, and `TestMLExtFactorsReachPriorityScore` drives them through `ctx.score`. Scores from builds before the fix omit these four factors; v0.2.0 is affected. The `exposure` factor was never affected.
 <!-- END extended-models -->

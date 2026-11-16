@@ -164,6 +164,14 @@ func (c *priorityCtx) score(f Finding) PriorityResult {
 			exposureNote = "exposure: " + note
 		}
 	}
+	// Must run before the weighted sum below: the loop only reads vals.
+	if hk := mlExtFactorHook.Load(); hk != nil { // optional local-model factors (ml_ext_engine.go)
+		xf, xo := (*hk)(f, c)
+		for _, p := range xf {
+			vals[p.Name] = p
+		}
+		res.Omitted = append(res.Omitted, xo...)
+	}
 	var sum, wsum float64
 	for _, w := range mlPriorityWeights {
 		if p, ok := vals[w.Name]; ok {
@@ -171,13 +179,6 @@ func (c *priorityCtx) score(f Finding) PriorityResult {
 			sum += p.Value * w.Weight
 			wsum += w.Weight
 		}
-	}
-	if hk := mlExtFactorHook.Load(); hk != nil { // optional local-model factors (ml_ext_engine.go)
-		xf, xo := (*hk)(f, c)
-		for _, p := range xf {
-			vals[p.Name] = p
-		}
-		res.Omitted = append(res.Omitted, xo...)
 	}
 	for _, n := range []string{rarityNote, beaconNote, assetNote, exposureNote} {
 		if n != "" {
