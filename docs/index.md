@@ -16,7 +16,7 @@ Every document in `docs/`, grouped by area. Kavach is observation-only: it recor
 | Adversary profile files / profiles | 3 / 101 |
 | Validation scenarios (plus 18 declared not testable) | 567 |
 | Competitive backlog items implemented / partial / total | 4 / 9 / 31 |
-| Markdown docs in `docs/` | 60 |
+| Markdown docs in `docs/` | 61 |
 | Binaries in `cmd/` | 4 (kavach, kavach-mcp, kavachctl, netra-bridge) |
 
 Refresh with `ruby docs/tools/inventory.rb --write`. Counts are read from the files, not typed by hand.
@@ -39,6 +39,7 @@ Refresh with `ruby docs/tools/inventory.rb --write`. Counts are read from the fi
 - [persistence-files.md](persistence-files.md): every on-disk state file next to the findings store.
 - [kavachctl.md](kavachctl.md): the operator CLI.
 - [cli-reference.md](cli-reference.md): surface-parity commands, MCP tools added, and the route-to-CLI parity test.
+- [CHANGELOG.md](CHANGELOG.md): release history, grouped by area (v0.1.0, v0.2.0).
 - [mcp-integration.md](mcp-integration.md): the MCP server for AI agents.
 - [openapi.yaml](openapi.yaml): the full HTTP API contract.
 - [siem-export.md](siem-export.md): pull-based SIEM export (CEF, LEEF, OCSF, ECS, STIX, Navigator).
