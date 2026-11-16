@@ -2,11 +2,18 @@
 
 Kavach is an observation-only security platform: every change below detects, reports or stores records. Nothing here contains, kills or blocks.
 
-This file was written from `git log` and the docs on 2026-11-16, grouped by area. It is a summary, not a release process: the repository has one tag, `v0.1.0`. The v0.2.0 section describes the commits on `feat/observability-attack-compliance` after that tag; it has not been tagged or released, and its contents can still change. Counts such as rule totals come from the commit messages and the linked docs and were not recounted.
+This file was written from `git log` and the docs on 2026-11-16, grouped by area. It is a summary, not a release process: the repository has two tags, `v0.1.0` and `v0.2.0`. The v0.2.0 section describes the commits between them. Changes after `v0.2.0` are under Unreleased. Counts such as rule totals come from the commit messages and the linked docs and were not recounted.
 
 There was no changelog file before this one, and no version string in the source tree, so the tag is the only version marker.
 
-## v0.2.0 (unreleased)
+## Unreleased
+
+### Fixes
+- `/v1/ml/priority`: the optional factors `dns_anomaly`, `user_behaviour`, `peer_outlier` and `rule_fatigue` now influence score, coverage and the factor list (they were computed after the weighted sum and dropped). Regression test `TestMLExtFactorsReachPriorityScore`.
+- CI: race job timeout raised from 15 to 30 minutes.
+- Docs: full accuracy pass (see `docs/verification-log.md`).
+
+## v0.2.0 (2026-11-16)
 
 Twelve commits after `v0.1.0`, plus the merge of the `feat/observability-attack-compliance` branch.
 

@@ -621,3 +621,40 @@ func TestMLExtHTTPAndPriorityIntegration(t *testing.T) {
 		}
 	}
 }
+
+// Regression: the optional factors were computed after the weighted sum, so they
+// never reached Score, Coverage or Factors. Drive them through priorityCtx.score.
+func TestMLExtFactorsReachPriorityScore(t *testing.T) {
+	r := rand.New(rand.NewSource(2))
+	e := extEng()
+	start := extWarm(e, r, "hostA")
+	extTunnelWindow(e, r, "hostA", start)
+	extCloseWindow(e, "hostA", start)
+	f := Finding{ID: "f1", Host: "hostA", Rule: "r", Severity: "high", Time: start.Add(2 * time.Minute), Evidence: Event{UID: 5}}
+	c := &priorityCtx{health: map[string]RuleHealth{}, beacons: map[string]BeaconSeries{}, assets: map[string]PostureAsset{}, fb: map[string]RulePrecision{}}
+
+	prev := mlExtFactorHook.Load()
+	t.Cleanup(func() { mlExtFactorHook.Store(prev) })
+	mlExtFactorHook.Store(nil)
+	base := c.score(f)
+
+	fn := mlExtFactorFn(e.factors)
+	mlExtFactorHook.Store(&fn)
+	with := c.score(f)
+
+	var found bool
+	for _, p := range with.Factors {
+		if p.Name == "dns_anomaly" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("dns_anomaly missing from scored factors: %+v", with.Factors)
+	}
+	if with.Coverage <= base.Coverage {
+		t.Fatalf("coverage must grow when an optional factor is present: base %v with %v", base.Coverage, with.Coverage)
+	}
+	if with.Score <= base.Score {
+		t.Fatalf("a high dns anomaly on a high-severity finding should raise the score: base %v with %v", base.Score, with.Score)
+	}
+}

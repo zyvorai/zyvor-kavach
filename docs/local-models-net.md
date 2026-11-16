@@ -153,7 +153,7 @@ Weights in `mlPriorityWeights` (`ml_net.go`, with the two appends in `exposure.g
 | exposure | 0.10 | only when `KAVACH_EXPOSURE_PRIORITY=1` and the host has an SBOM, see [exposure.md](exposure.md) |
 | dns_anomaly, user_behaviour, peer_outlier, rule_fatigue | 0.10, 0.08, 0.07, 0.05 | extended models |
 
-**Known issue (confirmed by reading the code, not changed here):** the extended factors are computed by a hook that runs after the weighted sum has been taken (`ctx.score` in `ml_net.go`). Their values are put into a local map that is never read afterwards, so they do not change `score`, `coverage` or `factors`; only their omission notes appear in `omitted`. Until fixed, only the five base factors and `exposure` influence the score. See the matching note in [local-models.md](local-models.md).
+**Fixed after v0.2.0:** the extended factors used to be computed after the weighted sum, so they never reached `score`, `coverage` or `factors`. They are now evaluated before the sum, and `TestMLExtFactorsReachPriorityScore` drives them through `ctx.score`. Scores from builds before the fix omit these four factors; v0.2.0 is affected.
 
 ## Limits at a glance
 
@@ -198,7 +198,7 @@ Weights in `mlPriorityWeights` (`ml_net.go`, with the two appends in `exposure.g
 | exposure | 0.10 | only when `KAVACH_EXPOSURE_PRIORITY=1` and the host has an SBOM, see [exposure.md](exposure.md) |
 | dns_anomaly, user_behaviour, peer_outlier, rule_fatigue | 0.10, 0.08, 0.07, 0.05 | extended models |
 
-**Known issue (confirmed by reading the code, not changed here):** the extended factors are computed by a hook that runs after the weighted sum has been taken (`ctx.score` in `ml_net.go`). Their values are put into a local map that is never read afterwards, so they do not change `score`, `coverage` or `factors`; only their omission notes appear in `omitted`. Until fixed, only the five base factors and `exposure` influence the score. See the matching note in [local-models.md](local-models.md).
+**Fixed after v0.2.0:** the extended factors used to be computed after the weighted sum, so they never reached `score`, `coverage` or `factors`. They are now evaluated before the sum, and `TestMLExtFactorsReachPriorityScore` drives them through `ctx.score`. Scores from builds before the fix omit these four factors; v0.2.0 is affected.
 
 ## Limits at a glance
 
