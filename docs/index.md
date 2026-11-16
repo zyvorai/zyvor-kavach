@@ -49,6 +49,7 @@ Refresh with `ruby docs/tools/inventory.rb --write`. Counts are read from the fi
 - [content-framework.md](content-framework.md): JSON rule packs, loader validation and the harness gate.
 - [content-tuning.md](content-tuning.md): the benign-event corpus that guards false positives.
 - [custom-content.md](custom-content.md): customer-authored detection rules.
+- [sigma-import.md](sigma-import.md): offline Sigma subset importer (dry run by default, noisy-rule guard) and lossless Sigma export.
 - [rule-health.md](rule-health.md): rule health metrics and the draft/testing/production/retired lifecycle.
 - [adversary-profiles.md](adversary-profiles.md): embedded public threat-group and ransomware profiles.
 - [regional-threats.md](regional-threats.md): regional threat landscape rules and profiles.

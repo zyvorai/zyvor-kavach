@@ -43,13 +43,13 @@ Supported:
 
 * `logsource.category`: `process_creation` (process), `network_connection` (network), `file_event` (file), `registry_set` (registry), `dns_query` (dns). `logsource.product` windows, linux or macos sets `os`; otherwise `any`.
 * Fields: process `Image`, `CommandLine`, `ParentImage`; network `DestinationHostname`, `DestinationIp` (destination); file `TargetFilename`; registry `TargetObject` (key), `Details` (value_data); dns `QueryName`, `QueryResults`.
-* Modifiers: `contains`, `startswith`, `endswith`, `re`, `all`, `cased`; no modifier means equals. Value lists are any-of (all-of with `|all`).
-* Selections as a map (fields ANDed) or a list of maps (ORed); `condition` of selection names with `and`, `or`, `not` and parentheses.
+* Modifiers: `contains`, `startswith`, `endswith`, `re`, `all`, `cased`, `windash`, `base64`, `base64offset`, and `*`/`?` wildcards in equals values; no modifier means equals. Value lists are any-of (all-of with `|all`).
+* Selections as a map (fields ANDed) or a list of maps (ORed); `condition` of selection names with `and`, `or`, `not`, parentheses, `1 of`, `all of` and `N of`.
 * `level` maps to severity (informational becomes low); `tags` must contain one `attack.tNNNN[.NNN]` technique and one `attack.<tactic>` tag. The rule id is `kavach_id` if given, else `sigma-<slug of title>`; batch is `sigma`.
 
-Sigma rules carry no test samples, so add the Kavach extension `tests:` with `positive` and `negative` lists of lab events (`executable`, `command`, `parent_exe`, `path`, `destination`, `operation`, `attrs`). Without it the harness rejects the rule.
+Sigma rules carry no test samples, so the importer derives verified positive and negative samples from the match tree, or uses the Kavach extension `tests:` when present. If samples cannot be derived the rule is stored with `unverified: true` and starts in the `testing` lifecycle. Rules that match the benign corpus are never imported.
 
-Anything outside the subset is reported per rule instead of guessed, and that rule is not imported: other categories or products, `N of` / `all of` quantifiers, wildcard values (`*`, `?`), other modifiers (`base64`, `windash`, `cidr`, ...), null values, keyword lists, `timeframe`, aggregations (`| count`), unknown fields, multiple technique or tactic tags. The response lists them under `unsupported` with status `unsupported`.
+Anything outside the subset is reported per rule instead of guessed, and that rule is not imported: it appears under `unsupported` with status `unsupported` and the exact field, modifier or category named. The full supported list, known gaps, limits, the admin-only dry-run-by-default route `POST /v1/content/import/sigma`, and the Sigma export are in [sigma-import.md](sigma-import.md).
 
 ```json
 {"imported":1,"valid":0,"rejected":0,"unsupported":1,"results":[
@@ -69,4 +69,4 @@ kavachctl content custom import sigma.yml --format sigma
 kavachctl content custom rm acme-evil-tool
 ```
 
-`kavach-mcp` exposes read-only `content_custom_list` and `content_custom_export` (available without `--allow-mutations`).
+`kavach-mcp` exposes read-only `content_custom_list`, `content_custom_export` and `content_import_sigma_dryrun` (available without `--allow-mutations`). `kavachctl content import-sigma FILE|DIR [--apply]` and `export-sigma` are described in sigma-import.md.

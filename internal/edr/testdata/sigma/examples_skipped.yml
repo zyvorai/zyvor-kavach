@@ -1,0 +1,60 @@
+# Original example Sigma rules that the importer must NOT convert, each for a different reason.
+title: Kavach Example Noisy Git Invocation
+kavach_id: ex-sigma-noisy-git
+description: Original example of a rule that is far too broad; the benign corpus guard must refuse it.
+level: medium
+tags:
+  - attack.collection
+  - attack.t1213
+logsource:
+  category: process_creation
+detection:
+  selection:
+    Image|endswith: '/git'
+  condition: selection
+---
+title: Kavach Example Unsupported Constructs
+kavach_id: ex-sigma-unsupported
+description: Original example using a field, modifiers and a category Kavach cannot map.
+level: high
+tags:
+  - attack.execution
+  - attack.t1204
+logsource:
+  category: process_creation
+  product: windows
+detection:
+  selection:
+    Hashes|contains: 'SHA256=ab'
+    Image|fieldref: ParentImage
+    CommandLine|cidr: '10.0.0.0/8'
+  condition: selection
+---
+title: Kavach Example Unsupported Category
+kavach_id: ex-sigma-unsupported-cat
+description: Original example using a logsource category with no Kavach event type.
+level: medium
+tags:
+  - attack.persistence
+  - attack.t1543.003
+logsource:
+  category: create_remote_thread
+  product: windows
+detection:
+  selection:
+    TargetImage|endswith: '\lsass.exe'
+  condition: selection
+---
+title: Kavach Example Unsafe Regex
+kavach_id: ex-sigma-redos
+description: Original example with a nested unbounded quantifier that the importer rejects.
+level: medium
+tags:
+  - attack.execution
+  - attack.t1059
+logsource:
+  category: process_creation
+detection:
+  selection:
+    CommandLine|re: '(a+)+$'
+  condition: selection

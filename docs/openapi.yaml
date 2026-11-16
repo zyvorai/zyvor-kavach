@@ -1045,6 +1045,28 @@ paths:
           application/yaml:
             schema: {type: string}
       responses: {'200': {description: "{imported, valid, rejected, unsupported, results[{id,status,errors,unsupported}]}"}, '400': {description: Bad body or no rule accepted}}
+  /v1/content/import/sigma:
+    post:
+      summary: Offline Sigma importer (subset). Dry run by default; admin token required. Reports converted, skipped (with the exact unsupported fields, modifiers and categories), noisy (benign corpus hits) and rejected rules; noisy rules are never imported and rules without verifiable samples start in the testing lifecycle
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: dry_run, in: query, schema: {type: boolean, default: true}, description: "false stores the clean rules; the query string wins over a body dry_run"}
+      requestBody:
+        content:
+          application/yaml:
+            schema: {type: string, description: "One or more Sigma rules, YAML documents separated by ---, max 1 MiB and 200 rules"}
+          application/json:
+            schema: {type: object, description: "A Sigma rule object or array, or the envelope {sigma: string, dry_run: boolean}"}
+      responses: {'200': {description: "{mode, dry_run, summary{rules,converted,imported,skipped,noisy,rejected,starts_in_testing,samples_derived}, gap_summary{kind:{name:count}}, limits, results[{id,title,status,errors,gaps[{kind,name,detail}],samples,lifecycle,benign_hits}]}"}, '400': {description: Unparseable input or limit exceeded}, '403': {description: Not the admin token}, '413': {description: Body larger than the size limit}}
+  /v1/content/export/sigma:
+    post:
+      summary: Export custom rules as Sigma YAML where the conversion is lossless; rules that cannot be expressed exactly are listed with the reason
+      security: [{bearerAuth: []}]
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object, description: "Optional {ids:[...]}; empty body exports every custom rule"}
+      responses: {'200': {description: "{yaml, exported[], skipped[{id,reason}]}"}, '400': {description: Invalid filter}}
   /v1/lab/rules:
     get:
       summary: List detection-lab rules (sandbox only; never promoted to live detection)

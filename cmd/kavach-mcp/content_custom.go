@@ -14,6 +14,9 @@ func contentCustomReadTools() []endpointTool {
 			"source": strProp("custom (default), embedded or all"), "ids": map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Rule ids"},
 			"tactic": strProp("ATT&CK tactic"), "technique": strProp("ATT&CK technique id"), "os": strProp("linux|macos|windows|any"), "batch": strProp("Batch label"), "event_type": strProp("Event type"),
 		}), bodyFields: true},
+		{name: "content_import_sigma_dryrun", method: "POST", path: "/v1/content/import/sigma?dry_run=true", description: "Dry-run the offline Sigma importer (subset): reports which rules would convert, which are skipped and exactly which fields, modifiers or categories are unsupported, and which are noisy against the benign corpus. Never stores anything: dry_run=true is fixed in the request path and wins over the body.", schema: map[string]any{
+			"type": "object", "required": []string{"sigma"}, "properties": map[string]any{"sigma": strProp("Sigma rule(s) as YAML (documents separated by ---) or JSON, max 1 MiB and 200 rules")},
+		}, bodyFields: true},
 	}
 }
 

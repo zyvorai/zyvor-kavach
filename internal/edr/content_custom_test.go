@@ -196,31 +196,38 @@ func TestSigmaImport(t *testing.T) {
 		t.Fatalf("sigma rule not live: %+v", fs)
 	}
 
-	bad := strings.Replace(sigmaOK, "Image|endswith:", "Image|base64offset|contains:", 1)
+	bad := strings.Replace(sigmaOK, "Image|endswith:", "Image|cidr:", 1)
 	bad = strings.Replace(bad, "title: Acme Suspicious Whoami", "title: Bad One", 1)
-	bad = strings.Replace(bad, "condition: selection_img and selection_cmd and not filter", "condition: 1 of selection_*", 1)
+	bad = strings.Replace(bad, "condition: selection_img and selection_cmd and not filter", "condition: selection_img | count() > 3", 1)
 	w = customDo(mux, "POST", "/v1/content/import?format=sigma", bad)
 	if w.Code != 400 || !strings.Contains(w.Body.String(), `"unsupported":1`) || !strings.Contains(w.Body.String(), "not supported") {
 		t.Fatalf("unsupported: %d %s", w.Code, w.Body)
 	}
 	// Only the first unsupported construct per rule is guaranteed; modifier case separately.
-	bad2 := strings.Replace(strings.Replace(sigmaOK, "Image|endswith:", "Image|base64offset|contains:", 1), "Acme Suspicious Whoami", "Bad Two", 1)
+	bad2 := strings.Replace(strings.Replace(sigmaOK, "Image|endswith:", "Image|utf16le|contains:", 1), "Acme Suspicious Whoami", "Bad Two", 1)
 	w = customDo(mux, "POST", "/v1/content/import?format=sigma", bad2)
-	if !strings.Contains(w.Body.String(), "base64offset") || w.Code != 400 {
+	if !strings.Contains(w.Body.String(), "utf16le") || w.Code != 400 {
 		t.Fatalf("modifier: %d %s", w.Code, w.Body)
 	}
 	// JSON form and wildcard values.
 	js := `{"title":"Json Rule","level":"high","tags":["attack.execution","attack.t1059"],"logsource":{"category":"process_creation"},
 "detection":{"s":{"CommandLine":"*evil*"},"condition":"s"}}`
-	w = customDo(mux, "POST", "/v1/content/import?format=sigma", js)
-	if w.Code != 400 || !strings.Contains(w.Body.String(), "wildcard") {
-		t.Fatalf("wildcard: %d %s", w.Code, w.Body)
+	w = customDo(mux, "POST", "/v1/content/import?format=sigma&validate_only=true", js)
+	if w.Code != 200 || !strings.Contains(w.Body.String(), `"valid":1`) {
+		t.Fatalf("wildcard value converts to contains with derived samples: %d %s", w.Code, w.Body)
 	}
-	// Valid conversion but no samples: harness rejects it.
+	// Bare wildcard matches everything: not converted.
+	all := strings.Replace(js, "*evil*", "*", 1)
+	w = customDo(mux, "POST", "/v1/content/import?format=sigma", all)
+	if w.Code != 400 || !strings.Contains(w.Body.String(), "matches everything") {
+		t.Fatalf("bare wildcard: %d %s", w.Code, w.Body)
+	}
+	// No samples in the rule: they are derived from the match tree.
 	nt := strings.Split(sigmaOK, "tests:")[0]
-	w = customDo(mux, "POST", "/v1/content/import?format=sigma", nt)
-	if w.Code != 400 || !strings.Contains(w.Body.String(), "tests") {
-		t.Fatalf("no tests: %d %s", w.Code, w.Body)
+	nt = strings.Replace(nt, "Acme Suspicious Whoami", "Acme Derived", 1)
+	w = customDo(mux, "POST", "/v1/content/import?format=sigma&validate_only=true", nt)
+	if w.Code != 200 || !strings.Contains(w.Body.String(), `"valid":1`) {
+		t.Fatalf("derived tests: %d %s", w.Code, w.Body)
 	}
 }
 
