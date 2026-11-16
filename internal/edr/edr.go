@@ -3,7 +3,6 @@ package edr
 import (
 	"bufio"
 	"context"
-	"crypto/subtle"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -346,7 +345,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	RegisterFalconPlatform(mux, token, store, registry)
 	mux.HandleFunc("GET /v1/sensor", func(w http.ResponseWriter, r *http.Request) {
 		got := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-		if subtle.ConstantTimeCompare([]byte(got), []byte(token)) != 1 && !validSession(r, token) {
+		if !secureEqual(got, token) && !validSession(r, token) {
 			http.Error(w, "unauthorized", 401)
 			return
 		}
@@ -360,7 +359,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	})
 	fleetHandler := func(w http.ResponseWriter, r *http.Request) {
 		got := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-		if !validSession(r, token) && subtle.ConstantTimeCompare([]byte(got), []byte(token)) != 1 {
+		if !validSession(r, token) && !secureEqual(got, token) {
 			http.Error(w, "unauthorized", 401)
 			return
 		}
@@ -403,7 +402,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	}
 	authorized := func(w http.ResponseWriter, r *http.Request) bool {
 		got := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-		if len(token) == 0 || subtle.ConstantTimeCompare([]byte(got), []byte(token)) != 1 {
+		if len(token) == 0 || !secureEqual(got, token) {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return false
 		}
@@ -450,7 +449,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 		}
 		if registry != nil {
 			got := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-			admin := subtle.ConstantTimeCompare([]byte(got), []byte(token)) == 1
+			admin := secureEqual(got, token)
 			if !admin && !registry.Verify(e.Host, got) {
 				http.Error(w, "unauthorized for host", 401)
 				return

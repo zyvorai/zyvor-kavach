@@ -328,7 +328,7 @@ func RegisterConnectors(mux *http.ServeMux, token string) {
 		r.Body = http.MaxBytesReader(w, r.Body, 8192)
 		defer r.Body.Close()
 		var body map[string]any
-		if json.NewDecoder(r.Body).Decode(&body) != nil {
+		if json.NewDecoder(r.Body).Decode(&body) != nil || body == nil {
 			http.Error(w, "invalid", 400)
 			return
 		}
@@ -397,7 +397,7 @@ func RegisterDeviceControl(mux *http.ServeMux, token string, store *Store) {
 		r.Body = http.MaxBytesReader(w, r.Body, 8192)
 		defer r.Body.Close()
 		var body map[string]any
-		if json.NewDecoder(r.Body).Decode(&body) != nil {
+		if json.NewDecoder(r.Body).Decode(&body) != nil || body == nil {
 			http.Error(w, "invalid", 400)
 			return
 		}

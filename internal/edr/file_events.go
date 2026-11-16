@@ -104,6 +104,8 @@ func fileID(e FileEvent) string {
 
 // FileDetections detects a bounded rate of metadata changes. It does not claim
 // malware attribution or encryption detection; benign bulk operations may trigger.
+const fileDetectMaxHosts = 5000
+
 type FileDetections struct {
 	mu        sync.Mutex
 	counts    map[string][]time.Time
@@ -127,6 +129,16 @@ func (d *FileDetections) Observe(e FileEvent) []Finding {
 	window := d.Window
 	if window <= 0 {
 		window = 30 * time.Second
+	}
+	if _, known := d.counts[e.Host]; !known && len(d.counts) >= fileDetectMaxHosts {
+		for h, b := range d.counts { // bound per-host state fed by untrusted host names
+			if len(b) == 0 || e.Time.Sub(b[len(b)-1]) > window {
+				delete(d.counts, h)
+			}
+		}
+		if len(d.counts) >= fileDetectMaxHosts {
+			return nil
+		}
 	}
 	bucket := d.counts[e.Host]
 	fresh := bucket[:0]
