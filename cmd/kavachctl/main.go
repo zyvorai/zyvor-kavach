@@ -41,16 +41,25 @@ func run(args []string) error {
 		return nil
 	}
 	ensureConfig()
+	if handled, err := surfDispatch(args, os.Stdout); handled {
+		return err
+	}
 	if handled, err := nxDispatch(args, os.Stdout); handled {
 		return err
 	}
 	if handled, err := ccDispatch(args, os.Stdout); handled {
 		return err
 	}
+	if handled, err := sigmaDispatch(args, os.Stdout); handled {
+		return err
+	}
 	if handled, err := rhDispatch(args, os.Stdout); handled {
 		return err
 	}
 	if handled, err := regDispatch(args, os.Stdout); handled {
+		return err
+	}
+	if handled, err := cloudAuditDispatch(args, os.Stdout); handled {
 		return err
 	}
 	if handled, err := prDispatch(args, os.Stdout); handled {

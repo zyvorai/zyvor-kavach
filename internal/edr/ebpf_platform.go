@@ -583,6 +583,7 @@ func RegisterEBPFPlatform(mux *http.ServeMux, token string, store *Store, regist
 		if !requireAuth(w, r, token) {
 			return
 		}
+		r.Body = http.MaxBytesReader(w, r.Body, 4<<20)
 		var body struct {
 			Events []EBPFEvent `json:"events"`
 			Lost   int         `json:"lost"`
@@ -614,6 +615,7 @@ func RegisterEBPFPlatform(mux *http.ServeMux, token string, store *Store, regist
 			return
 		}
 		id := r.PathValue("id")
+		r.Body = http.MaxBytesReader(w, r.Body, 4096)
 		var body struct {
 			Mode string `json:"mode"`
 		}

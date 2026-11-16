@@ -73,7 +73,7 @@ func NewNetraPollerFromEnv() *NetraPoller {
 			interval = d
 		}
 	}
-	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure}} //nolint:gosec // lab opt-in
+	tr := &http.Transport{TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12, InsecureSkipVerify: insecure}} //nolint:gosec // lab opt-in
 	pollerMu.Lock()
 	pollerURL = strings.TrimRight(u, "/")
 	pollerMu.Unlock()

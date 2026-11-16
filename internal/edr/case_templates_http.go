@@ -1,7 +1,6 @@
 package edr
 
 import (
-	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -15,7 +14,7 @@ const ctAssigneeNote = "Assignee is a free-text analyst label. Kavach has no per
 
 func ctIsAdmin(r *http.Request, token string) bool {
 	got := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-	return subtle.ConstantTimeCompare([]byte(got), []byte(token)) == 1
+	return secureEqual(got, token)
 }
 
 // requireCTAdmin allows only the admin bearer token.

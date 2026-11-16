@@ -7,19 +7,25 @@ what this guard does and does not prove.
 
 ## The corpus
 
-`internal/edr/testdata/benign_corpus.json` holds 1,611 hand-written, realistic, non-malicious
+`internal/edr/testdata/benign_corpus.json` holds hand-written, realistic, non-malicious
 events. Each carries `kind`, `os`, the event fields, and (for file and network events) a `note`
-naming the process that would have caused it.
+naming the process that would have caused it. The size is not recorded here so it cannot go stale:
+`TestContentBenignCorpus` enforces minimums (at least 500 events, at least 20 per event kind, at least
+50 per OS) and `len()` plus a `collections.Counter` over `(kind, os)` of the JSON array gives the live
+breakdown.
 
-| Kind     | Linux | macOS | Windows |
-|----------|------:|------:|--------:|
-| process  | 279   | 131   | 201     |
-| file     | 127   | 84    | 97      |
-| network  | 96    | 38    | 61      |
-| registry | -     | -     | 165     |
-| dns      | 62    | 27    | 39      |
-| auth     | 21    | 13    | 26      |
-| module   | 30    | 22    | 92      |
+Events tagged `"note": "unix2 guard"` were added with the `ux2-` Linux/macOS/container pack: routine
+admin and developer activity that sits next to the attack shapes (history size tuning, `journalctl
+--vacuum-time=2weeks`, reproducible-build `touch -d @epoch`, `unshare --pid --mount-proc`, CI containers
+bind-mounting a workspace, `kubectl get secrets -n prod`, `kubectl auth can-i create pods`, IMDS
+instance-id reads, `security find-identity`, `spctl --assess`, `log show`, own-user `launchctl bootstrap`, ...).
+They exist so those rules are exercised against near-misses, not only against their own samples.
+
+Known precision gaps found while extending the corpus: some pre-existing rules do fire on plausible admin
+activity (Docker-in-Docker `--privileged`, a Traefik/Portainer docker.sock mount, `kubectl exec ... -n
+kube-system`, `chmod u+s /usr/bin/newuidmap`, `networksetup -setwebproxy ... 127.0.0.1`, `sysadminctl
+-addUser` for a non-admin). Those events were deliberately left out of the corpus rather than
+loosening the guard or hiding the rule; treat them as a worklist for tightening those older rules.
 
 Coverage themes: package managers (apt, dpkg, dnf, snap, brew, pip, npm, cargo, go, choco),
 compilers and build tools (gcc, clang, make, MSBuild, Xcode, dotnet), browsers and their updaters,

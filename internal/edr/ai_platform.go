@@ -410,7 +410,7 @@ func RegisterAIPlatform(mux *http.ServeMux, token string, store *Store) {
 		}
 		memoryMu.Lock()
 		for k, v := range body {
-			if len(k) > 64 || len(v) > 512 {
+			if len(k) > 64 || len(v) > 512 || (len(aiMemory) >= 256 && aiMemory[k] == "") {
 				continue
 			}
 			aiMemory[k] = v

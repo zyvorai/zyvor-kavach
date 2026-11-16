@@ -81,6 +81,11 @@ type ContentRule struct {
 	Tests            *ContentTests `json:"tests,omitempty"`
 	PendingTelemetry bool          `json:"pending_telemetry"` // computed at load; ignored in pack input
 	Source           string        `json:"source,omitempty"`  // "custom" for customer-authored rules (content_custom.go); empty = embedded
+	// Unverified marks a custom rule with no test samples (a Sigma import whose samples could not be
+	// derived). Such rules are only accepted via the custom path and always start in the "testing" lifecycle.
+	Unverified bool `json:"unverified,omitempty"`
+
+	allowUnverified bool // set only by validateCustomRule; embedded packs always require samples
 
 	node *LabNode    // compiled matcher (shared with the detection lab)
 	pre  []preClause // required-literal prefilter derived from node (see content_prefilter.go)
@@ -249,11 +254,14 @@ func (r *ContentRule) validateAndCompile() error {
 	if r.Batch != "" && !contentBatchRe.MatchString(r.Batch) {
 		return fail("batch %q must match %s", r.Batch, contentBatchRe)
 	}
-	if r.Tests == nil || len(r.Tests.Positive) == 0 || len(r.Tests.Negative) == 0 {
-		return fail("tests: at least one positive and one negative sample are required")
-	}
-	if len(r.Tests.Positive) > contentMaxSamples || len(r.Tests.Negative) > contentMaxSamples {
-		return fail("tests: at most %d samples per list", contentMaxSamples)
+	noTests := r.Unverified && r.allowUnverified && (r.Tests == nil || (len(r.Tests.Positive) == 0 && len(r.Tests.Negative) == 0))
+	if !noTests {
+		if r.Tests == nil || len(r.Tests.Positive) == 0 || len(r.Tests.Negative) == 0 {
+			return fail("tests: at least one positive and one negative sample are required")
+		}
+		if len(r.Tests.Positive) > contentMaxSamples || len(r.Tests.Negative) > contentMaxSamples {
+			return fail("tests: at most %d samples per list", contentMaxSamples)
+		}
 	}
 	node, err := r.Match.toLab("match")
 	if err != nil {

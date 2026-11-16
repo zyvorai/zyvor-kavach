@@ -104,3 +104,7 @@ The filter is a necessary condition only, so results are identical to unfiltered
 ## The gap2 pack
 
 `internal/edr/content/gap2.json` (batch `gap2-v1`, ids `gp2-*`) ships 97 original rules for ATT&CK techniques the validation lab reports as untested; see section 8 of `docs/research-validation-lab.md` for scope and caveats.
+
+## The unix2 pack
+
+`internal/edr/content/unix2.json` (batch `unix2-v1`, ids `ux2-*`) deepens Linux, macOS, container and Kubernetes coverage: systemd/cron/ld.so.preload/rc.local/PAM/udev/XDG/authorized_keys persistence, shadow and key and cloud-credential theft, macOS keychain/dscl/osascript abuse, history/log/audit tampering and timestomping, hidden directories, TCC/Gatekeeper/quarantine/profile abuse, launchd persistence, and container escape and abuse (docker.sock, privileged runs, nsenter, cgroup release_agent, core_pattern, kubectl secret and exec use, kubelet and etcd access, cloud metadata, miner pools). Every rule carries an ATT&CK technique and has positive and near-miss negative samples. Count and per-OS and per-tactic split: `GET /v1/content/coverage` (filter `batch=unix2-v1` on `GET /v1/content/rules`). Validation: `scenarios/unix2.json` (ids `val3-*`) and `scenarios/benign3.json`, see section 10 of `docs/research-validation-lab.md`.

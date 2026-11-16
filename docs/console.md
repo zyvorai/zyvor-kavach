@@ -49,6 +49,18 @@ The menu is read from `internal/edr/dashboard.html`; `TestDocsConsoleListsMenuPa
 
 ---
 
+## Usability features
+
+- **Command palette**: Ctrl/Cmd+K or `/` opens it. Type a page name to jump, or a lookup: `host web01`, `cve CVE-2024-1234`, `ioc <ip|domain|hash>`, `rule`, `case`, `technique` (a bare CVE id, IP, hash or domain is recognised too). Lookups open the Search page with the type preset. It also offers theme toggle, shortcuts help and CSV/JSON export of the first table on the page.
+- **Keyboard help**: `?` lists every shortcut, including all `g` page keys.
+- **Tables**: each table has a tool row with a row count (or "Loading…" / "No rows to show"), a **Columns** toggle, and **CSV** / **JSON** export of the rows already loaded in the browser (visible columns only; nothing is refetched). Click or press Enter on a header to sort ascending, again for descending, a third time to clear. Numbers, percentages and ISO dates sort naturally, and sort and hidden columns survive reloads of the table data. CSV cells that start with `=`, `+`, `-` or `@` are prefixed with `'` to stop spreadsheet formula injection.
+- **Saved views**: a bar at the top of each page saves the current filter inputs, selects, sort and hidden columns under a name. Views live only in this browser's `localStorage` (`kavach-views-<page>`, up to 20 per page); they are never sent to the server and secret-like fields (token, password, key) are never captured. Applying a view fills the fields; press the page's own action to run it. If storage is blocked the bar says so and the page still works.
+- Mobile and dark mode use the same tokens as the rest of the console; the tool rows wrap at phone width.
+
+Not covered: pages that render lists as cards rather than tables get no sort or export; tables with expandable detail rows are not sortable.
+
+---
+
 ## eBPF page
 
 Health score, backend, event/lost counters, feature table, recent events. Data from `/v1/ebpf/status|health|features|events`.

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -61,31 +62,70 @@ func Harden(next http.Handler) http.Handler {
 	}
 	writes := newRateLimiter(writeRate, writeRate*2)
 	logins := newRateLimiter(0.5, 10)
+	// authFails throttles repeated credential failures per client IP on every
+	// route (token guessing against Bearer-protected endpoints, not just /v1/session).
+	authFails := newRateLimiter(0.2, 20)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		h := w.Header()
 		h.Set("X-Content-Type-Options", "nosniff")
 		h.Set("X-Frame-Options", "DENY")
 		h.Set("Referrer-Policy", "no-referrer")
 		h.Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'")
-		if writeRate > 0 {
-			ip, _, err := net.SplitHostPort(r.RemoteAddr)
-			if err != nil {
-				ip = r.RemoteAddr
-			}
-			now := time.Now()
-			limited := false
-			switch {
-			case r.Method == http.MethodPost && r.URL.Path == "/v1/session":
-				limited = !logins.allow(ip, now)
-			case r.Method == http.MethodPost || r.Method == http.MethodDelete:
-				limited = !writes.allow(ip, now)
-			}
-			if limited {
-				h.Set("Retry-After", "2")
-				http.Error(w, "rate limited", http.StatusTooManyRequests)
-				return
-			}
+		if strings.HasPrefix(r.URL.Path, "/v1/") || r.URL.Path == "/metrics" {
+			h.Set("Cache-Control", "no-store")
 		}
-		next.ServeHTTP(w, r)
+		ip, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			ip = r.RemoteAddr
+		}
+		now := time.Now()
+		limited := false
+		switch {
+		case r.Method == http.MethodPost && r.URL.Path == "/v1/session":
+			// Login throttling is never disabled, even with KAVACH_RATE_LIMIT=0.
+			limited = !logins.allow(ip, now)
+		case writeRate > 0 && (r.Method == http.MethodPost || r.Method == http.MethodDelete || r.Method == http.MethodPut || r.Method == http.MethodPatch):
+			limited = !writes.allow(ip, now)
+		}
+		if limited {
+			h.Set("Retry-After", "2")
+			http.Error(w, "rate limited", http.StatusTooManyRequests)
+			return
+		}
+		if r.URL.Path != "/v1/session" && authFails.blocked(ip, now) { // login has its own limiter
+			h.Set("Retry-After", "5")
+			http.Error(w, "too many failed authentication attempts", http.StatusTooManyRequests)
+			return
+		}
+		sw := &statusWriter{ResponseWriter: w, code: 200}
+		next.ServeHTTP(sw, r)
+		if sw.code == http.StatusUnauthorized {
+			authFails.allow(ip, now)
+		}
 	})
 }
+
+// blocked reports whether key has exhausted its bucket, without consuming a token.
+func (l *rateLimiter) blocked(key string, now time.Time) bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	b := l.m[key]
+	if b == nil {
+		return false
+	}
+	return b.tokens+now.Sub(b.last).Seconds()*l.rate < 1
+}
+
+// statusWriter records the response status; it forwards Flush so SSE keeps working.
+type statusWriter struct {
+	http.ResponseWriter
+	code int
+}
+
+func (s *statusWriter) WriteHeader(c int) { s.code = c; s.ResponseWriter.WriteHeader(c) }
+func (s *statusWriter) Flush() {
+	if f, ok := s.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+func (s *statusWriter) Unwrap() http.ResponseWriter { return s.ResponseWriter }

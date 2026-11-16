@@ -3411,7 +3411,7 @@
      {
       "field": "command",
       "op": "regex",
-      "pattern": "\\b(cat|cp|tar|zip|scp)\\b.*\\.ssh/id_"
+      "pattern": "\\b(cat|cp|tar|zip|scp)\\b.*\\.ssh/id_[a-z0-9_]+(\\s|$|['\\\"])"
      },
      {
       "field": "command",
@@ -3440,6 +3440,10 @@
      {
       "executable": "/bin/cat",
       "command": "cat /Users/a/.ssh/config"
+     },
+     {
+      "executable": "/usr/bin/scp",
+      "command": "scp /Users/a/.ssh/id_rsa.pub web01:/tmp/"
      }
     ]
    }

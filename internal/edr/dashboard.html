@@ -12,9 +12,9 @@
   --surface-1: #ffffff;
   --surface-hover: #f5f5f7;
   --text-primary: #1d1d1f;
-  --text-secondary: #6e6e73;
-  --text-tertiary: #86868b;
-  --text-faint: #a1a1a6;
+  --text-secondary: #636366;
+  --text-tertiary: #6e6e73;
+  --text-faint: #767679;
   --bg-elevated: #ffffff;
   --apple-blue: #0071e3;
   --apple-blue-hover: #0077ed;
@@ -31,6 +31,7 @@
   --nav-link: rgba(0, 0, 0, 0.8);
   --nav-link-active: #1d1d1f;
   --danger: #ff3b30;
+  --danger-text: #c9251b;
   --danger-bg: #fff1f0;
   --accent-cyan: #32ade6;
   --accent-cyan-hover: #28a0d8;
@@ -102,6 +103,7 @@
   --nav-link: rgba(255, 255, 255, 0.8);
   --nav-link-active: #f5f5f7;
   --danger: #ff453a;
+  --danger-text: #ff453a;
   --danger-bg: rgba(255, 69, 58, 0.14);
   --accent-cyan: #64d2ff;
   --accent-cyan-hover: #70d7ff;
@@ -735,7 +737,7 @@ main {
   color: var(--text-secondary);
   text-transform: lowercase;
 }
-.tag.high, .tag.critical { background: var(--danger-bg); color: var(--danger); }
+.tag.high, .tag.critical { background: var(--danger-bg); color: var(--danger-text); }
 .tag.medium { background: var(--warning-bg); color: var(--warning-text); }
 .tag.low { background: var(--info-bg); color: var(--apple-link); }
 .tag.open, .tag.investigating { background: var(--info-bg); color: var(--apple-link); }
@@ -745,7 +747,7 @@ main {
 .tag.offline, .tag.stale, .tag.pending { background: var(--warning-bg); color: var(--warning-text); }
 .tag.xdr { background: var(--info-bg); color: var(--apple-link); }
 .tag.delivered { background: var(--success-bg); color: var(--success-text); }
-.tag.failed { background: var(--danger-bg); color: var(--danger); }
+.tag.failed { background: var(--danger-bg); color: var(--danger-text); }
 .alert-url { font-family: var(--font-mono, ui-monospace, monospace); word-break: break-all; }
 .risk-bar { display:inline-block; width:96px; height:8px; border-radius:4px; background:var(--fill-tertiary); vertical-align:middle; overflow:hidden; margin-right:8px; }
 .risk-bar > i { display:block; height:100%; background:var(--text-secondary); }
@@ -773,7 +775,7 @@ main {
 .note-item .note-text { white-space:pre-wrap; overflow-wrap:anywhere; margin:4px 0 0; }
 .note-form textarea { width:100%; min-height:64px; box-sizing:border-box; }
 .alert-confirm { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.tag.deny { background: var(--danger-bg); color: var(--danger); }
+.tag.deny { background: var(--danger-bg); color: var(--danger-text); }
 
 .eyebrow {
   font-size: 12px;
@@ -988,7 +990,7 @@ main {
   color: var(--text-secondary);
   min-height: 1.2em;
 }
-.work-msg.is-error { color: var(--danger); }
+.work-msg.is-error { color: var(--danger-text); }
 .work-msg.is-ok { color: var(--success-text); }
 
 .token-box {
@@ -1185,6 +1187,23 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 .state-error h3 { margin: 0 0 6px; font-size: var(--fs-h3, 17px); color: var(--text-primary); }
 @media (max-width: 640px) { .overlay { padding-top: 6vh; } }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+/* === console usability: table tools, saved views, palette extras === */
+.tbl-tools, .view-bar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:8px 12px; font-size:13px; color:var(--text-secondary); }
+.view-bar { margin:0 0 12px; border:1px solid var(--hairline-1); border-radius:var(--radius-xl); background:var(--surface-1); }
+.view-bar .input-field, .view-bar .select-field { width:auto; min-width:0; flex:0 1 180px; min-height:32px; padding:2px 10px; font-size:13px; }
+.tbl-tools .tbl-status { margin-right:auto; }
+.tbl-tools button, .view-bar button { min-height:32px; padding:2px 10px; font-size:12px; }
+.tbl-cols > summary { cursor:pointer; min-height:32px; display:inline-flex; align-items:center; padding:2px 10px; border:1px solid var(--hairline-1); border-radius:var(--radius-pill); color:var(--text-primary); font-size:12px; }
+.tbl-cols[open] { flex:1 1 100%; }
+.tbl-cols label { display:inline-flex; gap:6px; align-items:center; margin:6px 14px 0 0; color:var(--text-primary); }
+.table-wrap th.is-sortable { cursor:pointer; user-select:none; }
+.table-wrap th.is-sortable:hover { color:var(--text-primary); }
+.table-wrap th.is-sortable:focus-visible { outline:2px solid var(--apple-blue); outline-offset:-2px; }
+.table-wrap th[aria-sort="ascending"]::after { content:" \25B2"; font-size:10px; }
+.table-wrap th[aria-sort="descending"]::after { content:" \25BC"; font-size:10px; }
+.pal-list li.pal-kind { justify-content:flex-start; }
+.pal-list li.pal-kind small { margin-left:auto; }
+/* === end console usability === */
 /* === soc-ops page === */
 .soc-split { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr)); gap:16px; margin:0 0 16px; }
 .soc-split .table-wrap { margin:0; }
@@ -1268,7 +1287,7 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 .ui-hash { font-family: var(--font-mono); font-size: 12px; overflow-wrap: anywhere; }
 .ui-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .ui-copy { min-height: 32px; padding: 2px 10px; font-size: 12px; }
-.tag.malicious-likely { background: var(--danger-bg); color: var(--danger); }
+.tag.malicious-likely { background: var(--danger-bg); color: var(--danger-text); }
 .tag.suspicious { background: var(--warning-bg); color: var(--warning-text); }
 .tag.clean { background: var(--success-bg); color: var(--success-text); }
 .tag.verified { background: var(--success-bg); color: var(--success-text); }
@@ -1331,13 +1350,13 @@ kbd { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var
 .rg-opt input { margin-top: 5px; flex: none; }
 .rg-opt small { display: block; color: var(--text-secondary); }
 .rg-stage { margin: 0 0 10px; }
-.rg-overdue td { color: var(--danger); }
+.rg-overdue td { color: var(--danger-text); }
 .rg-text-only { color: var(--text-secondary); font-style: italic; }
 
 /* === cert advisories page === */
 .table-wrap tr.ad-matched td { background: var(--warning-bg); }
 .ad-filters label, .nx-filters label.ad-check { display: inline-flex; align-items: center; gap: 6px; min-height: var(--hit-min); }
-.ad-feed-err { color: var(--danger); font-size: 13px; overflow-wrap: anywhere; }
+.ad-feed-err { color: var(--danger-text); font-size: 13px; overflow-wrap: anywhere; }
 code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--fill-tertiary); border-radius: 5px; padding: 1px 6px; }
 
 /* Global search */
@@ -1363,7 +1382,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 .cv-seg-not_testable { fill: var(--text-tertiary); }
 .cv-seg-untested { fill: var(--fill-tertiary); stroke: var(--hairline-1); }
 .tag.detected, .tag.active { background: var(--success-bg); color: var(--success-text); }
-.tag.missed { background: var(--danger-bg); color: var(--danger); }
+.tag.missed { background: var(--danger-bg); color: var(--danger-text); }
 .tag.not_testable, .tag.untested, .tag.never_seen { background: var(--fill-tertiary); color: var(--text-secondary); }
 .cv-details { margin: 8px 0; }
 .cv-details summary { cursor: pointer; min-height: var(--hit-min); display: flex; align-items: center; font-weight: 600; }
@@ -1372,7 +1391,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 @media (max-width: 860px) { .hs-grid { grid-template-columns: minmax(0, 1fr); } }
 .hs-query { width: 100%; box-sizing: border-box; font-family: var(--font-mono, ui-monospace, monospace); font-size: 13px; line-height: 1.5; resize: vertical; min-height: 120px; }
 .hs-query.is-bad { border-color: var(--danger); }
-.hs-caret { margin: 4px 0; padding: 6px 8px; overflow-x: auto; font-size: 12px; background: var(--danger-bg); color: var(--danger); border-radius: var(--radius-md); white-space: pre; }
+.hs-caret { margin: 4px 0; padding: 6px 8px; overflow-x: auto; font-size: 12px; background: var(--danger-bg); color: var(--danger-text); border-radius: var(--radius-md); white-space: pre; }
 .hs-side { min-width: 0; }
 .hs-cat summary { cursor: pointer; min-height: var(--hit-min); display: flex; align-items: center; font-weight: 600; }
 .hs-cat ul { margin: 4px 0 8px; padding-left: 18px; font-size: 13px; }
@@ -1383,7 +1402,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 .hs-tree { font-size: 12px; overflow-x: auto; white-space: pre; margin: 4px 0; }
 /* === vulnerability priority page === */
 .vp-detail { margin-top: 12px; border-color: var(--apple-blue); }
-.tag.act { background: var(--danger-bg); color: var(--danger); }
+.tag.act { background: var(--danger-bg); color: var(--danger-text); }
 .tag.attend { background: var(--warning-bg); color: var(--warning-text); }
 .tag.track, .tag.track_star { background: var(--info-bg); color: var(--apple-link); }
 .tag.unknown { background: var(--fill-tertiary); color: var(--text-secondary); border: 1px dashed var(--text-tertiary); }
@@ -1399,7 +1418,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 .ch-detail { margin-top: 12px; border-color: var(--apple-blue); }
 .cw-check { display: flex; gap: 10px; align-items: flex-start; min-height: var(--hit-min); padding: 4px 0; overflow-wrap: anywhere; }
 .cw-check input { margin-top: 4px; }
-.tag.overdue-sla { background: var(--danger-bg); color: var(--danger); }
+.tag.overdue-sla { background: var(--danger-bg); color: var(--danger-text); }
 /* === automation page === */
 .tag.draft, .tag.retired, .tag.expired { background: var(--fill-tertiary); color: var(--text-secondary); }
 .tag.testing { background: var(--warning-bg); color: var(--warning-text); }
@@ -1407,12 +1426,12 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 /* === reports and fleet SLO page === */
 .field[hidden] { display: none; }
 .tag.meeting, .tag.fresh, .tag.reporting { background: var(--success-bg); color: var(--success-text); }
-.tag.breaching, .tag.silent { background: var(--danger-bg); color: var(--danger); }
+.tag.breaching, .tag.silent { background: var(--danger-bg); color: var(--danger-text); }
 .tag.unknown, .tag.never_seen, .tag.never_reported { background: var(--fill-tertiary); color: var(--text-secondary); }
 .rp-nr { color: var(--text-tertiary); font-style: italic; }
 /* === content versions page === */
 .tag.added { background: var(--success-bg); color: var(--success-text); }
-.tag.removed { background: var(--danger-bg); color: var(--danger); }
+.tag.removed { background: var(--danger-bg); color: var(--danger-text); }
 .tag.modified { background: var(--warning-bg); color: var(--warning-text); }
 /* === syslog status page === */
 .sl-pre { font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; margin: 4px 0; font-family: var(--font-mono, ui-monospace, monospace); }
@@ -1421,7 +1440,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 .pt-spark polyline { fill: none; stroke: var(--apple-link); stroke-width: 2; vector-effect: non-scaling-stroke; }
 .pt-spark line { stroke: var(--hairline-1); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .pt-up { color: var(--success-text); }
-.pt-down { color: var(--danger); }
+.pt-down { color: var(--danger-text); }
 .pt-filters { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end; margin: 0 0 12px; }
 .pt-filters label { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 13px; color: var(--text-secondary); }
 .dg-stmt { margin: 0 0 12px; padding: 0 0 12px; border-bottom: 1px solid var(--hairline-1); overflow-wrap: anywhere; }
@@ -3353,7 +3372,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       <header class="page-hero">
         <p class="apple-eyebrow">Inspector</p>
         <h1>Look inside a suspicious artifact.</h1>
-        <p class="lede">Static analysis of a file, script, command line or domain. Nothing is executed and no network connection is made for you.</p>
+        <p class="lede">Static analysis of a file, script, command line, domain, configuration file, dependency lockfile, URL or email message. Nothing is executed and no network connection is made for you.</p>
       </header>
       <p class="nx-note" id="in-privacy">Uploaded bytes and pasted text are not stored. Only the resulting report and its sha256 are kept, in a capped in-memory list that is cleared when the server restarts.</p>
       <div class="nx-tabs" role="tablist" aria-label="Inspector sections" id="in-tabs">
@@ -3369,6 +3388,9 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
           <button type="button" role="tab" data-in-mode="cmdline" aria-selected="false">Command line</button>
           <button type="button" role="tab" data-in-mode="domain" aria-selected="false">Domain</button>
           <button type="button" role="tab" data-in-mode="config" aria-selected="false">Config</button>
+          <button type="button" role="tab" data-in-mode="lockfile" aria-selected="false">Lockfile</button>
+          <button type="button" role="tab" data-in-mode="url" aria-selected="false">URL</button>
+          <button type="button" role="tab" data-in-mode="email" aria-selected="false">Email</button>
         </div>
         <div class="work-panel">
           <div id="in-mode-file">
@@ -3396,6 +3418,20 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
             <input class="input-field" id="in-config-name" type="text" spellcheck="false" autocomplete="off">
             <label class="hint" for="in-config">Paste a configuration file. It is parsed only: nothing is executed, included, fetched or applied.</label>
             <textarea class="input-field lab-code" id="in-config" spellcheck="false" autocomplete="off"></textarea>
+          </div>
+          <div id="in-mode-lockfile" hidden>
+            <label class="hint" for="in-lock-name">File name (optional, identifies the ecosystem, for example package-lock.json or go.sum)</label>
+            <input class="input-field" id="in-lock-name" type="text" spellcheck="false" autocomplete="off">
+            <label class="hint" for="in-lockfile">Paste a dependency lockfile. It is parsed only: no package is installed, fetched or resolved.</label>
+            <textarea class="input-field lab-code" id="in-lockfile" spellcheck="false" autocomplete="off"></textarea>
+          </div>
+          <div id="in-mode-url" hidden>
+            <label class="hint" for="in-url">URL to assess (it is parsed only, never fetched or resolved)</label>
+            <input class="input-field" id="in-url" type="text" spellcheck="false" autocomplete="off" placeholder="https://example.com/path">
+          </div>
+          <div id="in-mode-email" hidden>
+            <label class="hint" for="in-email">Paste a raw email message with headers (RFC 5322 / MIME). It is parsed only: nothing is opened, rendered or fetched.</label>
+            <textarea class="input-field lab-code" id="in-email" spellcheck="false" autocomplete="off"></textarea>
           </div>
           <div class="px-actions"><button type="button" class="primary" id="in-run">Analyze</button><button type="button" class="secondary" id="in-clear">Clear</button></div>
         </div>
@@ -3516,6 +3552,10 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
         <button type="button" role="tab" data-md-tab="beacons" aria-selected="false">Beacons</button>
         <button type="button" role="tab" data-md-tab="synth" aria-selected="false">Draft rule</button>
         <button type="button" role="tab" data-md-tab="priority" aria-selected="false">Priority</button>
+        <button type="button" role="tab" data-md-tab="dns" aria-selected="false">DNS tunneling</button>
+        <button type="button" role="tab" data-md-tab="users" aria-selected="false">Users</button>
+        <button type="button" role="tab" data-md-tab="peers" aria-selected="false">Peers</button>
+        <button type="button" role="tab" data-md-tab="fatigue" aria-selected="false">Alert fatigue</button>
       </div>
 
       <div id="md-pane-status" class="md-pane">
@@ -3585,6 +3625,44 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
           <button type="button" id="md-pri-go">Explain priority</button>
         </div>
         <div id="md-priority-out"></div>
+        <div class="work-panel">
+          <h3>Factors that can appear</h3>
+          <p class="hint">Weights are nominal. A factor with no data is omitted and the rest are renormalised, so a missing factor never counts as zero risk.</p>
+          <div id="md-pri-ref"></div>
+        </div>
+      </div>
+
+      <div id="md-pane-dns" class="md-pane" hidden>
+        <div class="toolbar-pill nx-filters">
+          <input class="input-field" id="md-dns-host" type="text" placeholder="Host (empty for all hosts)" aria-label="Host filter for DNS model" autocomplete="off">
+          <button type="button" id="md-dns-go">Load</button>
+        </div>
+        <div id="md-dns-out"></div>
+      </div>
+
+      <div id="md-pane-users" class="md-pane" hidden>
+        <div class="toolbar-pill nx-filters">
+          <input class="input-field" id="md-usr-user" type="text" placeholder="User (empty for all users)" aria-label="User filter" autocomplete="off">
+          <button type="button" id="md-usr-go">Load</button>
+        </div>
+        <div id="md-users-out"></div>
+      </div>
+
+      <div id="md-pane-peers" class="md-pane" hidden>
+        <div class="toolbar-pill nx-filters">
+          <input class="input-field" id="md-peer-host" type="text" placeholder="Host (empty for all hosts)" aria-label="Host filter for peer model" autocomplete="off">
+          <button type="button" id="md-peer-go">Load</button>
+        </div>
+        <div id="md-peers-out"></div>
+      </div>
+
+      <div id="md-pane-fatigue" class="md-pane" hidden>
+        <div class="toolbar-pill nx-filters">
+          <input class="input-field" id="md-fat-rule" type="text" placeholder="Rule id (empty for all rules)" aria-label="Rule filter" autocomplete="off" spellcheck="false">
+          <label class="hint"><input type="checkbox" id="md-fat-cand"> Retune candidates only</label>
+          <button type="button" id="md-fat-go">Load</button>
+        </div>
+        <div id="md-fatigue-out"></div>
       </div>
     </section>
     <!-- === end models page === -->
@@ -4245,6 +4323,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     const want = '#/' + current;
     if (location.hash !== want) { try { history.replaceState(null, '', want); } catch (_) { location.hash = want; } }
     document.title = 'Kavach · ' + (pageLabels[current] || current);
+    if (typeof enhancePage === 'function') setTimeout(enhancePage, 0);
     if (current === 'alerts' && typeof loadAlerts === 'function') loadAlerts();
     if (current === 'detections' && typeof loadSaved === 'function') loadSaved();
     if (current === 'risk' && typeof loadRisk === 'function') loadRisk();
@@ -6342,7 +6421,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
 
   // --- Global search page (GET /v1/search) ---
   const gsLabels = { finding: 'Findings', host: 'Hosts', rule: 'Rules', huntpack: 'Hunt packs', query: 'Queries', guidance: 'Guidance', technique: 'Techniques', cve: 'CVEs', ioc: 'IOCs', case: 'Cases', saved: 'Saved searches' };
-  let gsTimer = 0, gsSeq = 0, gsPending = '';
+  let gsTimer = 0, gsSeq = 0, gsPending = '', gsPendingType = '';
   function gsOpen(r) {
     const page = String(r.route || '').replace(/^#\/?/, '');
     if (!pages.includes(page)) return;
@@ -6410,7 +6489,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     } finally { if (seq === gsSeq) box.removeAttribute('aria-busy'); }
   }
   function loadSearchPage() {
-    if (gsPending) { $('gs-q').value = gsPending; gsPending = ''; gsRun(); }
+    if (gsPending) { $('gs-q').value = gsPending; $('gs-type').value = gsPendingType; gsPending = ''; gsPendingType = ''; gsRun(); }
     $('gs-q').focus();
   }
   $('gs-q').addEventListener('input', () => { clearTimeout(gsTimer); gsTimer = setTimeout(gsRun, 250); });
@@ -6743,11 +6822,11 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       await inPost('/v1/inspect/file?name=' + encodeURIComponent(inFile.name), { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: buf }, inFile.name);
       return;
     }
-    const id = { script: 'in-script', cmdline: 'in-cmdline', domain: 'in-domain', config: 'in-config' }[inMode];
+    const id = { script: 'in-script', cmdline: 'in-cmdline', domain: 'in-domain', config: 'in-config', lockfile: 'in-lockfile', url: 'in-url', email: 'in-email' }[inMode];
     const text = $(id).value;
     if (!text.trim()) { setMsg('in-msg', 'Enter something to analyze.', true); $(id).focus(); return; }
     if (new Blob([text]).size > 4 * 1024 * 1024) { setMsg('in-msg', 'Text is over the 4 MiB limit.', true); return; }
-    const cfgName = inMode === 'config' ? $('in-config-name').value.trim() : '';
+    const cfgName = inMode === 'config' ? $('in-config-name').value.trim() : (inMode === 'lockfile' ? $('in-lock-name').value.trim() : '');
     await inPost('/v1/inspect/' + inMode + (cfgName ? '?name=' + encodeURIComponent(cfgName) : ''), pgJSON({ text }), inMode);
   }
   async function inLoadReports() {
@@ -6773,7 +6852,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   function loadInspector() { inLoadLimits(); }
   const inModeSel = uiTabs('in-modes', 'data-in-mode', (m) => {
     inMode = m;
-    ['file', 'script', 'cmdline', 'domain', 'config'].forEach((k) => { $('in-mode-' + k).hidden = k !== m; });
+    ['file', 'script', 'cmdline', 'domain', 'config', 'lockfile', 'url', 'email'].forEach((k) => { $('in-mode-' + k).hidden = k !== m; });
   });
   const inTabSel = uiTabs('in-tabs', 'data-in-tab', (t) => {
     $('in-pane-analyze').hidden = t !== 'analyze';
@@ -6782,7 +6861,7 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   });
   $('in-run').addEventListener('click', inRun);
   $('in-clear').addEventListener('click', () => {
-    inFile = null; $('in-file').value = ''; $('in-script').value = ''; $('in-cmdline').value = ''; $('in-domain').value = ''; $('in-config').value = ''; $('in-config-name').value = '';
+    inFile = null; $('in-file').value = ''; $('in-script').value = ''; $('in-cmdline').value = ''; $('in-domain').value = ''; $('in-config').value = ''; $('in-config-name').value = ''; $('in-lockfile').value = ''; $('in-lock-name').value = ''; $('in-url').value = ''; $('in-email').value = '';
     $('in-drop-title').textContent = 'Drop a file here, or press Enter to choose one';
     $('in-result').replaceChildren(); setMsg('in-msg', '', false);
   });
@@ -7466,10 +7545,161 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
       else box.appendChild(el('p', 'None. Every factor was present.', 'hint'));
     }, mdPriority);
   }
-  const mdLoaders = { status: mdStatus, lineage: mdLineage, beacons: mdBeacons };
+  function mdKV(box, o, keys) {
+    uiMeta(box, keys.filter((k) => o[k[0]] !== undefined && o[k[0]] !== null).map((k) => k[1] + ': ' + o[k[0]]));
+  }
+  function mdTime(u) { return typeof u === 'number' ? pxTime(new Date(u * 1000).toISOString()) : '-'; }
+  function mdState(box, r) {
+    const row = el('div', '', 'ui-row');
+    row.appendChild(mdStatusTag(r.status));
+    if (r.sample_count !== undefined) row.appendChild(el('span', r.sample_count + ' samples'));
+    box.appendChild(row);
+  }
+  function mdFactorTable(box, factors, omitted) {
+    if ((factors || []).length) {
+      const tb = uiTable(box, ['Factor', 'Value (0 to 1)', 'Nominal weight', 'Note']);
+      factors.forEach((f) => tableRow(tb, [f.name, mdNum(f.value, 3), f.weight, f.note]));
+    }
+    if ((omitted || []).length) { box.appendChild(el('h4', 'Omitted factors (no data)')); uiList(box, omitted); }
+  }
+  function mdDns() {
+    const host = $('md-dns-host').value.trim();
+    mdGet('md-dns-out', '/v1/ml/dns' + (host ? '?host=' + encodeURIComponent(host) : ''), (box, r) => {
+      mdMethod(box, r);
+      mdKV(box, r, [['window_seconds', 'Window seconds'], ['min_lookups', 'Minimum lookups'], ['tunnel_min_distinct_subdomains', 'Tunnel min distinct subdomains'], ['tunnel_score_threshold', 'Tunnel score threshold'], ['dga_min_domains', 'DGA min domains'], ['dga_score_threshold', 'DGA score threshold'], ['hosts_tracked', 'Hosts tracked'], ['dropped_hosts', 'Hosts dropped at cap']]);
+      if (host) {
+        box.appendChild(el('h3', 'Host ' + host));
+        mdState(box, r);
+        if (r.status !== 'ok') uiNote(box, 'Not enough data: ' + (r.sample_count || 0) + ' lookups seen for this host, ' + r.min_lookups + ' needed. No score is shown.');
+        mdKV(box, r, [['windows', 'Windows'], ['late_events_ignored', 'Late events ignored'], ['unscorable_names', 'Unscorable names']]);
+        const fl = r.flags || [];
+        box.appendChild(el('h4', 'Flagged windows'));
+        if (fl.length) {
+          const tb = uiTable(box, ['Window start', 'Kind', 'Domain', 'Score', 'Distinct', 'Lookups', 'Reasons']);
+          fl.forEach((f) => tableRow(tb, [mdTime(f.window_start_unix), f.kind, f.domain, mdNum(f.score, 1), f.distinct, f.lookups, (f.reasons || []).join('; ')]));
+        } else box.appendChild(el('p', 'No flagged windows.', 'hint'));
+        if (r.open_window) {
+          const o = r.open_window;
+          box.appendChild(el('h4', 'Open (partial) window'));
+          uiMeta(box, ['Started: ' + mdTime(o.window_start_unix), 'Lookups: ' + o.lookups, 'Domains tracked: ' + o.domains_tracked, o.status ? 'State: ' + o.status : 'Would flag: ' + (o.would_flag ? JSON.stringify(o.would_flag) : 'no')]);
+        }
+        return;
+      }
+      const hs = r.hosts || [];
+      if (!hs.length) { uiEmpty(box, 'No DNS data yet', 'No host has produced domain or DNS lookups. This model reports not_enough_data until it does.'); return; }
+      const tb = uiTable(box, ['Host', 'State', 'Lookups', 'Windows', 'Flagged windows', 'Top score', 'Last flagged']);
+      hs.forEach((h) => tableRow(tb, [h.host, mdStatusTag(h.status), h.sample_count, h.windows, h.flagged_windows, h.status === 'ok' ? mdNum(h.top_score, 1) : '-', h.last_flagged ? pxTime(h.last_flagged) : '-']));
+      if (r.total > hs.length) uiNote(box, 'Showing ' + hs.length + ' of ' + r.total + ' hosts.');
+    }, mdDns);
+  }
+  function mdUsers() {
+    const u = $('md-usr-user').value.trim();
+    mdGet('md-users-out', '/v1/ml/users' + (u ? '?user=' + encodeURIComponent(u) : ''), (box, r) => {
+      mdMethod(box, r);
+      mdKV(box, r, [['users_tracked', 'Users tracked'], ['dropped_users', 'Users dropped at cap'], ['min_logons', 'Minimum logons'], ['min_process_events', 'Minimum process events']]);
+      if (r.note) uiNote(box, r.note);
+      if (u) {
+        box.appendChild(el('h3', 'User ' + (r.user || u)));
+        mdState(box, r);
+        if (r.status !== 'ok') uiNote(box, 'Not enough data for this user. No baseline is shown.');
+        if (r.sub_models) {
+          const tb = uiTable(box, ['Sub-model', 'State']);
+          Object.keys(r.sub_models).forEach((k) => { const v = r.sub_models[k]; tableRow(tb, [k.replace(/_/g, ' '), typeof v === 'object' && v ? mdStatusTag(v.status || '') : String(v)]); });
+        }
+        mdKV(box, r, [['failed_logons', 'Failed logons']]);
+        if ((r.logon_hours_utc || []).length) {
+          box.appendChild(el('h4', 'Logons by hour (UTC)'));
+          box.appendChild(el('p', r.logon_hours_utc.map((n, i) => (i < 10 ? '0' : '') + i + 'h:' + n).join('  '), 'hint'));
+        }
+        if ((r.top_executables || []).length) {
+          box.appendChild(el('h4', 'Top executables'));
+          const tb = uiTable(box, ['Executable', 'Count']);
+          r.top_executables.forEach((x) => tableRow(tb, [x.executable, x.count]));
+        }
+        const ac = r.anomaly_counts || {};
+        if (Object.keys(ac).length) { box.appendChild(el('h4', 'Anomaly counts')); uiMeta(box, Object.keys(ac).map((k) => k.replace(/_/g, ' ') + ': ' + ac[k])); }
+        if ((r.recent_anomalies || []).length) {
+          box.appendChild(el('h4', 'Recent anomalies'));
+          const tb = uiTable(box, ['Time', 'Kind', 'Detail', 'Surprisal bits', 'Host']);
+          r.recent_anomalies.forEach((a) => tableRow(tb, [mdTime(a.time_unix), a.kind, a.detail, a.surprisal_bits !== undefined ? mdNum(a.surprisal_bits, 2) : '-', a.host || '-']));
+        }
+        return;
+      }
+      const us = r.users || [];
+      if (!us.length) { uiEmpty(box, 'No user data yet', 'No logons or per-user process events have been learned. This model reports not_enough_data until they are.'); return; }
+      const tb = uiTable(box, ['User', 'State', 'Logons', 'Process events', 'Anomalies']);
+      us.forEach((x) => tableRow(tb, [x.user, mdStatusTag(x.status), x.logons, x.process_events, Object.keys(x.anomalies || {}).map((k) => k.replace(/_/g, ' ') + ' ' + x.anomalies[k]).join(', ') || '-']));
+      if (r.total > us.length) uiNote(box, 'Showing ' + us.length + ' of ' + r.total + ' users.');
+    }, mdUsers);
+  }
+  function mdPeerViews(box, views) {
+    const tb = uiTable(box, ['View', 'State', 'Samples', 'JSD bits', 'Robust z', 'Outlier', 'Most distinct items']);
+    (views || []).forEach((v) => tableRow(tb, [v.view, mdStatusTag(v.status), v.sample_count, v.status === 'ok' ? mdNum(v.jsd_bits, 3) : '-', v.status === 'ok' ? mdNum(v.robust_z, 2) : '-', v.status === 'ok' ? (v.outlier ? 'yes' : 'no') : '-', (v.most_distinct_items || []).map((i) => i.item + ' (host ' + mdNum(i.host_share, 2) + ', peers ' + mdNum(i.peer_share, 2) + ')').join('; ') || '-']));
+  }
+  function mdPeers() {
+    const host = $('md-peer-host').value.trim();
+    mdGet('md-peers-out', '/v1/ml/peers' + (host ? '?host=' + encodeURIComponent(host) : ''), (box, r) => {
+      mdMethod(box, r);
+      if (r.peer_group) uiNote(box, 'Peer group: ' + r.peer_group + '. Distance: ' + (r.distance || '-'));
+      const pv = r.process_view || {}, dv = r.destination_view || {};
+      uiMeta(box, ['Hosts tracked: ' + (r.hosts_tracked ?? '-'), 'Outlier z threshold: ' + (r.z_threshold ?? '-'), 'Process view: ' + (pv.status || '-') + ', ' + (pv.ready_hosts ?? 0) + ' ready hosts, needs ' + (pv.min_hosts ?? '-') + ' with ' + (pv.min_events_per_host ?? '-') + ' events each', 'Destination view: ' + (dv.status || '-') + ', ' + (dv.ready_hosts ?? 0) + ' ready hosts, needs ' + (dv.min_hosts ?? '-') + ' with ' + (dv.min_events_per_host ?? '-') + ' events each']);
+      if (host) {
+        box.appendChild(el('h3', 'Host ' + host));
+        mdState(box, r);
+        if (r.status !== 'ok') uiNote(box, 'Not enough hosts or events for a peer comparison. No score is shown.');
+        else uiMeta(box, ['Max z: ' + mdNum(r.max_z, 2), 'Score: ' + mdNum(r.score, 1) + ' / 100', 'Outlier: ' + (r.outlier ? 'yes' : 'no')]);
+        if ((r.views || []).length) mdPeerViews(box, r.views);
+        return;
+      }
+      const hs = r.hosts || [];
+      if (!hs.length) { uiEmpty(box, 'No peer data yet', 'No host has produced process or destination events. This model reports not_enough_data until enough hosts do.'); return; }
+      const tb = uiTable(box, ['Host', 'State', 'Max z', 'Score', 'Outlier', 'Views']);
+      hs.forEach((h) => tableRow(tb, [h.host, mdStatusTag(h.status), h.status === 'ok' ? mdNum(h.max_z, 2) : '-', h.status === 'ok' ? mdNum(h.score, 1) : '-', h.status === 'ok' ? (h.outlier ? 'yes' : 'no') : '-', (h.views || []).map((v) => v.view + ': ' + v.status + ' (' + v.sample_count + ')').join(', ')]));
+      if (r.total > hs.length) uiNote(box, 'Showing ' + hs.length + ' of ' + r.total + ' hosts.');
+    }, mdPeers);
+  }
+  function mdFatRow(box, x) {
+    box.appendChild(el('h3', (x.name ? x.name + ' ' : '') + '(' + x.rule + ')'));
+    const row = el('div', '', 'ui-row');
+    row.appendChild(mdStatusTag(x.status));
+    if (x.status === 'ok') { row.appendChild(el('p', mdNum(x.fatigue_score, 1) + ' / 100', 'px-score')); if (x.retune_candidate) row.appendChild(uiTag('retune candidate', 'warn')); }
+    box.appendChild(row);
+    uiMeta(box, ['Hits 30d: ' + x.hits_30d, 'Hits 7d: ' + x.hits_7d, 'Hosts 30d: ' + x.distinct_hosts_30d, 'Decided verdicts: ' + x.decided_verdicts, x.status === 'ok' ? 'Coverage: ' + mdNum(x.coverage, 2) : '']);
+    if (x.note) uiNote(box, x.note);
+    mdFactorTable(box, x.factors, x.omitted);
+    if ((x.suggestions || []).length) { box.appendChild(el('h4', 'Suggestions (advisory)')); uiList(box, x.suggestions); }
+  }
+  function mdFatigue() {
+    const rule = $('md-fat-rule').value.trim();
+    const cand = $('md-fat-cand').checked;
+    const qs = [];
+    if (rule) qs.push('rule=' + encodeURIComponent(rule));
+    if (cand) qs.push('candidates=1');
+    mdGet('md-fatigue-out', '/v1/ml/fatigue' + (qs.length ? '?' + qs.join('&') : ''), (box, r) => {
+      mdMethod(box, r);
+      mdState(box, { status: r.status });
+      uiMeta(box, ['Rules evaluated: ' + r.rules_evaluated, 'With enough data: ' + r.rules_with_enough_data, 'Retune candidates: ' + r.retune_candidates, 'Minimum hits (30d): ' + r.min_hits_30d, 'Retune score threshold: ' + r.retune_score_threshold, 'Minimum verdicts: ' + r.min_verdicts]);
+      if (r.note) uiNote(box, r.note);
+      if (r.status !== 'ok') uiNote(box, 'No rule has enough findings yet (cold start). Rules below the minimum hits show not_enough_data and no score.');
+      if (r.rule) { mdFatRow(box, r.rule); return; }
+      const rs = r.rules || [];
+      if (!rs.length) { uiEmpty(box, cand ? 'No retune candidates' : 'No rules with findings', cand ? 'No rule currently scores at or above the retune threshold.' : 'No rule has produced findings yet.'); return; }
+      const tb = uiTable(box, ['Rule', 'State', 'Fatigue score', 'Hits 30d', 'Hits 7d', 'Hosts', 'Verdicts', 'Retune']);
+      rs.forEach((x) => tableRow(tb, [x.name ? x.name + ' (' + x.rule + ')' : x.rule, mdStatusTag(x.status), x.status === 'ok' ? mdNum(x.fatigue_score, 1) : '-', x.hits_30d, x.hits_7d, x.distinct_hosts_30d, x.decided_verdicts, x.status === 'ok' ? (x.retune_candidate ? 'yes' : 'no') : '-']));
+      uiNote(box, 'Type a rule id above to see its factor breakdown.');
+    }, mdFatigue);
+  }
+  (function mdPriRef() {
+    const box = $('md-pri-ref');
+    const tb = uiTable(box, ['Factor', 'Nominal weight', 'What it uses']);
+    [['severity', '0.30', 'Rule severity'], ['rule_trust', '0.15', 'Rule noisiness and analyst verdict precision'], ['rarity', '0.20', 'Lineage rarity from the similarity model'], ['beaconing', '0.20', 'Beacon score toward the destination'], ['asset_criticality', '0.15', 'Posture asset criticality'],
+      ['dns_anomaly', '0.10', 'Tunneling or DGA-burst window near the finding (DNS tunneling tab)'], ['user_behaviour', '0.08', 'Baseline deviations for the account near the finding (Users tab)'], ['peer_outlier', '0.07', 'Divergence from peer hosts (Peers tab)'], ['rule_fatigue', '0.05', 'Inverse of the rule fatigue score (Alert fatigue tab)']]
+      .forEach((r) => tableRow(tb, r));
+  })();
+  const mdLoaders = { status: mdStatus, lineage: mdLineage, beacons: mdBeacons, dns: mdDns, users: mdUsers, peers: mdPeers, fatigue: mdFatigue };
   const mdTabSel = uiTabs('md-tabs', 'data-md-tab', (t) => {
     md.tab = t;
-    ['status', 'lineage', 'similar', 'baseline', 'beacons', 'synth', 'priority'].forEach((k) => { $('md-pane-' + k).hidden = k !== t; });
+    ['status', 'lineage', 'similar', 'baseline', 'beacons', 'synth', 'priority', 'dns', 'users', 'peers', 'fatigue'].forEach((k) => { $('md-pane-' + k).hidden = k !== t; });
     if (mdLoaders[t] && !md.loaded[t]) { md.loaded[t] = true; mdLoaders[t](); }
   });
   function loadModels() { md.loaded = {}; mdTabSel(md.tab, false); }
@@ -7483,6 +7713,10 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   $('md-syn-go').addEventListener('click', mdSynth);
   $('md-syn-in').addEventListener('keydown', (e) => { if (e.key === 'Enter') mdSynth(); });
   $('md-pri-go').addEventListener('click', mdPriority);
+  [['dns-host', 'dns-go', mdDns], ['usr-user', 'usr-go', mdUsers], ['peer-host', 'peer-go', mdPeers], ['fat-rule', 'fat-go', mdFatigue]].forEach((a) => {
+    $('md-' + a[1]).addEventListener('click', a[2]);
+    $('md-' + a[0]).addEventListener('keydown', (e) => { if (e.key === 'Enter') a[2](); });
+  });
   $('md-pri-id').addEventListener('keydown', (e) => { if (e.key === 'Enter') mdPriority(); });
   const mdActions = {
     reset: { path: '/v1/ml/reset', text: 'Reset models? This erases everything the console has learned: process lineage, command history and per-host baselines. Until enough events are seen again every model reports not_enough_data, and lineage, similarity-to-history and baseline hints disappear. Findings, events and rules are not changed.' },
@@ -10375,50 +10609,266 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   ['ex-format', 'ex-kind'].forEach((id) => $(id).addEventListener('change', exSync));
   /* === end adversaries / rule health / export pages === */
 
+
+  /* === console usability: table sort / columns / export, saved views === */
+  const tblState = new WeakMap();
+  const SKIP_TBL = '.kbd-table, .pv-break, #palette-root table, #help-root table, #drawer-root table';
+  function tblDataRows(table) {
+    const tb = table.tBodies[0];
+    const ths = table.tHead ? table.tHead.rows[table.tHead.rows.length - 1].cells.length : 0;
+    const out = { rows: [], mixed: false, ths };
+    if (!tb) return out;
+    let placeholders = 0;
+    Array.from(tb.rows).forEach((tr) => {
+      if (tr.classList.contains('skeleton-rows')) { out.loading = true; placeholders++; return; }
+      if (tr.cells.length === 1 && tr.cells[0].colSpan > 1) { placeholders++; return; }
+      if (tr.cells.length !== ths) { out.mixed = true; return; }
+      out.rows.push(tr);
+    });
+    if (placeholders && out.rows.length) out.mixed = true;
+    return out;
+  }
+  function tblKey(table, idx) { return (table.tBodies[0] && table.tBodies[0].id) || ('t' + idx); }
+  function tblCsvCell(v) {
+    let t = String(v == null ? '' : v).replace(/\s+/g, ' ').trim();
+    if (/^[=+@\t]/.test(t) || (/^-/.test(t) && !/^-?[\d.,]+%?$/.test(t))) t = "'" + t;
+    return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+  }
+  function tblCollect(table) {
+    const st = tblState.get(table);
+    const heads = Array.from(table.tHead.rows[table.tHead.rows.length - 1].cells);
+    const keep = heads.map((h, i) => !st.hide.has(i));
+    const d = tblDataRows(table);
+    return { cols: heads.map((h) => h.textContent.trim()).filter((x, i) => keep[i]), rows: d.rows.map((tr) => Array.from(tr.cells).map((c) => c.textContent.replace(/\s+/g, ' ').trim()).filter((x, i) => keep[i])) };
+  }
+  function tblExport(table, fmt, label) {
+    const c = tblCollect(table);
+    if (!c.rows.length) return false;
+    const base = 'kavach-' + (label || 'table').replace(/[^a-z0-9-]+/gi, '-').toLowerCase();
+    if (fmt === 'csv') rxSave(base + '.csv', [c.cols].concat(c.rows).map((r) => r.map(tblCsvCell).join(',')).join('\r\n') + '\r\n', 'text/csv');
+    else rxSave(base + '.json', JSON.stringify(c.rows.map((r) => { const o = {}; c.cols.forEach((k, i) => { o[k || ('col' + (i + 1))] = r[i]; }); return o; }), null, 2), 'application/json');
+    return true;
+  }
+  function tblCmp(a, b) {
+    const num = (v) => { const m = /^\s*(-?[\d,]*\.?\d+)\s*(%|ms|s|m|h|d|kb|mb|gb|b)?\s*$/i.exec(v); return m ? parseFloat(m[1].replace(/,/g, '')) : NaN; };
+    const x = num(a), y = num(b);
+    if (!isNaN(x) && !isNaN(y)) return x - y;
+    const dx = /^\d{4}-\d\d-\d\d/.test(a) ? Date.parse(a) : NaN, dy = /^\d{4}-\d\d-\d\d/.test(b) ? Date.parse(b) : NaN;
+    if (!isNaN(dx) && !isNaN(dy)) return dx - dy;
+    return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+  }
+  function tblRefresh(table) {
+    const st = tblState.get(table);
+    if (!st) return;
+    const d = tblDataRows(table);
+    const heads = Array.from(table.tHead.rows[table.tHead.rows.length - 1].cells);
+    if (st.sort && !d.mixed && d.rows.length > 1) {
+      const i = st.sort.col, dir = st.sort.dir === 'desc' ? -1 : 1;
+      const keyed = d.rows.map((tr, n) => ({ tr, n, v: tr.cells[i] ? tr.cells[i].textContent.trim() : '' }));
+      keyed.sort((p, q) => dir * tblCmp(p.v, q.v) || p.n - q.n);
+      if (keyed.some((k, n) => k.tr !== d.rows[n])) { const tb = table.tBodies[0]; keyed.forEach((k) => tb.appendChild(k.tr)); }
+    }
+    heads.forEach((h, i) => {
+      if (h.classList.contains('is-sortable')) h.setAttribute('aria-sort', st.sort && st.sort.col === i ? (st.sort.dir === 'desc' ? 'descending' : 'ascending') : 'none');
+    });
+    Array.from(table.rows).forEach((tr) => {
+      if (tr.cells.length === 1 && tr.cells[0].colSpan > 1) return;
+      Array.from(tr.cells).forEach((c, i) => { const hide = st.hide.has(i); if (hide !== (c.style.display === 'none')) c.style.display = hide ? 'none' : ''; });
+    });
+    const msg = d.loading ? 'Loading…' : (d.rows.length ? d.rows.length + ' row' + (d.rows.length === 1 ? '' : 's') : (d.mixed ? 'Detail rows shown' : 'No rows to show'));
+    if (st.status.textContent !== msg) st.status.textContent = msg;
+    st.csv.disabled = st.json.disabled = !d.rows.length;
+  }
+  function tblEnhance(table, idx, label) {
+    if (tblState.has(table) || !table.tHead || !table.tBodies.length || table.matches(SKIP_TBL) || table.parentElement.closest('table')) return;
+    const hrow = table.tHead.rows[table.tHead.rows.length - 1];
+    if (!hrow || hrow.cells.length < 2) return;
+    const st = { hide: new Set(), sort: null, key: tblKey(table, idx) };
+    const tools = document.createElement('div');
+    tools.className = 'tbl-tools';
+    st.status = el('span', '', 'tbl-status');
+    st.status.setAttribute('role', 'status');
+    const det = document.createElement('details');
+    det.className = 'tbl-cols';
+    det.appendChild(el('summary', 'Columns'));
+    st.cbs = [];
+    Array.from(hrow.cells).forEach((h, i) => {
+      const name = h.textContent.trim();
+      if (name && !/^actions?$/i.test(name)) {
+        h.classList.add('is-sortable');
+        h.tabIndex = 0;
+        const go = () => { st.sort = st.sort && st.sort.col === i ? (st.sort.dir === 'asc' ? { col: i, dir: 'desc' } : null) : { col: i, dir: 'asc' }; tblRefresh(table); tblObs.takeRecords(); };
+        h.addEventListener('click', go);
+        h.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+      }
+      const lab = document.createElement('label');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.checked = true;
+      cb.addEventListener('change', () => { if (cb.checked) st.hide.delete(i); else st.hide.add(i); tblRefresh(table); tblObs.takeRecords(); });
+      lab.appendChild(cb); lab.append(' ' + (name || 'Column ' + (i + 1)));
+      det.appendChild(lab);
+      st.cbs.push(cb);
+    });
+    const mk = (t, f) => { const b = el('button', t, 'secondary ui-copy'); b.type = 'button'; b.setAttribute('aria-label', 'Export ' + label + ' as ' + t); b.addEventListener('click', () => { if (!tblExport(table, f, label)) st.status.textContent = 'Nothing to export'; }); return b; };
+    st.csv = mk('CSV', 'csv'); st.json = mk('JSON', 'json');
+    tools.append(st.status, det, st.csv, st.json);
+    table.parentElement.insertBefore(tools, table);
+    tblState.set(table, st);
+    tblRefresh(table);
+  }
+  function tblScan() {
+    const sec = $('page-' + current);
+    if (!sec) return;
+    Array.from(sec.querySelectorAll('table')).forEach((t, i) => {
+      tblEnhance(t, i, (pageLabels[current] || current) + (i ? '-' + ((t.tBodies[0] && t.tBodies[0].id) || i) : ''));
+      tblRefresh(t);
+    });
+  }
+  let tblTimer = 0;
+  const tblObs = new MutationObserver(() => { clearTimeout(tblTimer); tblTimer = setTimeout(() => { tblScan(); viewBar(); tblObs.takeRecords(); }, 120); });
+
+  // Saved views: per page, kept in localStorage only (never sent anywhere).
+  const VIEW_SKIP = /token|secret|pass|key|cursor/i;
+  function viewsLoad(page) { try { const v = JSON.parse(localStorage.getItem('kavach-views-' + page) || '[]'); return Array.isArray(v) ? v.filter((x) => x && typeof x.name === 'string') : []; } catch (_) { return []; } }
+  function viewsStore(page, list) { try { localStorage.setItem('kavach-views-' + page, JSON.stringify(list.slice(0, 20))); return true; } catch (_) { return false; } }
+  function viewFields(sec) {
+    return Array.from(sec.querySelectorAll('input[id], select[id]')).filter((f) => !f.closest('.view-bar') && !/^(password|file|hidden|button|submit)$/.test(f.type) && !VIEW_SKIP.test(f.id));
+  }
+  function viewCapture(sec) {
+    const fields = {};
+    viewFields(sec).forEach((f) => { fields[f.id] = f.type === 'checkbox' || f.type === 'radio' ? (f.checked ? '1' : '0') : f.value; });
+    const tables = {};
+    sec.querySelectorAll('table').forEach((t) => { const st = tblState.get(t); if (st && (st.sort || st.hide.size)) tables[st.key] = { sort: st.sort, hide: Array.from(st.hide) }; });
+    return { fields, tables };
+  }
+  function viewApply(sec, v) {
+    viewFields(sec).forEach((f) => {
+      if (!v.fields || !(f.id in v.fields)) return;
+      if (f.type === 'checkbox' || f.type === 'radio') f.checked = v.fields[f.id] === '1'; else f.value = v.fields[f.id];
+      f.dispatchEvent(new Event('input', { bubbles: true }));
+      f.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    sec.querySelectorAll('table').forEach((t) => {
+      const st = tblState.get(t);
+      if (!st) return;
+      const o = (v.tables || {})[st.key] || {};
+      st.sort = o.sort && Number.isInteger(o.sort.col) ? { col: o.sort.col, dir: o.sort.dir === 'desc' ? 'desc' : 'asc' } : null;
+      st.hide = new Set((o.hide || []).filter(Number.isInteger));
+      st.cbs.forEach((cb, i) => { cb.checked = !st.hide.has(i); });
+      tblRefresh(t);
+    });
+  }
+  function viewBar() {
+    const sec = $('page-' + current);
+    if (!sec || sec.querySelector(':scope > .view-bar')) return;
+    const page = current;
+    const bar = document.createElement('div');
+    bar.className = 'view-bar';
+    bar.setAttribute('role', 'group');
+    bar.setAttribute('aria-label', 'Saved views');
+    const sel = document.createElement('select');
+    sel.className = 'select-field';
+    sel.setAttribute('aria-label', 'Saved views');
+    const name = document.createElement('input');
+    name.className = 'input-field';
+    name.placeholder = 'View name';
+    name.maxLength = 40;
+    name.setAttribute('aria-label', 'Name for the current view');
+    const save = el('button', 'Save view', 'secondary'); save.type = 'button';
+    const del = el('button', 'Delete view', 'secondary'); del.type = 'button';
+    const msg = el('span', '', 'tbl-status'); msg.setAttribute('role', 'status');
+    const fill = () => {
+      sel.replaceChildren();
+      const list = viewsLoad(page);
+      const first = el('option', list.length ? 'Saved views (' + list.length + ')' : 'No saved views');
+      first.value = '';
+      sel.appendChild(first);
+      list.forEach((v) => { const o = el('option', v.name); o.value = v.name; sel.appendChild(o); });
+      del.disabled = true;
+    };
+    sel.addEventListener('change', () => {
+      del.disabled = !sel.value;
+      const v = viewsLoad(page).find((x) => x.name === sel.value);
+      if (v) { viewApply(sec, v); msg.textContent = 'Applied "' + v.name + '". Use the page action to run it.'; }
+    });
+    save.addEventListener('click', () => {
+      const n = name.value.trim();
+      if (!n) { msg.textContent = 'Give the view a name first.'; name.focus(); return; }
+      const list = viewsLoad(page).filter((x) => x.name !== n);
+      list.push(Object.assign({ name: n }, viewCapture(sec)));
+      if (!viewsStore(page, list)) { msg.textContent = 'Could not save: browser storage is unavailable.'; return; }
+      fill(); sel.value = n; del.disabled = false; name.value = ''; msg.textContent = 'Saved "' + n + '".';
+    });
+    del.addEventListener('click', () => {
+      const n = sel.value; if (!n) return;
+      viewsStore(page, viewsLoad(page).filter((x) => x.name !== n));
+      fill(); msg.textContent = 'Deleted "' + n + '".';
+    });
+    fill();
+    bar.append(sel, name, save, del, msg);
+    sec.insertBefore(bar, sec.firstChild);
+  }
+  function enhancePage() { tblScan(); viewBar(); tblObs.takeRecords(); }
+  tblObs.observe($('app'), { childList: true, subtree: true });
+  function exportFirstTable(fmt) {
+    const sec = $('page-' + current);
+    const t = sec && Array.from(sec.querySelectorAll('table')).find((x) => tblState.has(x) && tblDataRows(x).rows.length);
+    if (!t) return false;
+    return tblExport(t, fmt, pageLabels[current] || current);
+  }
+  /* === end console usability === */
+
   const appVisible = () => !$('app').hidden;
   let lastFocus = null;
   function overlayOpen(id) { lastFocus = document.activeElement; $(id).hidden = false; }
   function overlayClose(id) { $(id).hidden = true; if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (_) {} } }
 
   let palSel = 0, palItems = [];
+  const palKinds = { host: 'host', cve: 'cve', ioc: 'ioc', rule: 'rule', case: 'case', finding: 'finding', technique: 'technique', huntpack: 'huntpack' };
+  function palLookups(raw) {
+    const out = [];
+    const m = /^(host|cve|ioc|rule|case|finding|technique|huntpack)\s+(.+)$/i.exec(raw);
+    if (m) out.push({ label: 'Look up ' + m[1].toLowerCase() + ' "' + m[2].trim() + '"', hint: 'lookup', run: () => palGo(m[2].trim(), palKinds[m[1].toLowerCase()]) });
+    else if (/^cve-\d{4}-\d{3,}$/i.test(raw)) out.push({ label: 'Look up CVE ' + raw.toUpperCase(), hint: 'lookup', run: () => palGo(raw, 'cve') });
+    else if (/^(\d{1,3}\.){3}\d{1,3}$/.test(raw) || /^[a-f0-9]{32,64}$/i.test(raw) || /^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(raw)) out.push({ label: 'Look up indicator ' + raw, hint: 'lookup', run: () => palGo(raw, 'ioc') });
+    if (raw.length >= 2) out.push({ label: 'Search everything for "' + raw + '"', hint: 'g /', run: () => palGo(raw, '') });
+    return out;
+  }
+  function palGo(q, type) { gsPending = q; gsPendingType = type || ''; closePalette(); showPage('search'); }
+  function palActions() {
+    return [
+      { label: 'Toggle light / dark theme', hint: 'action', run: () => { closePalette(); applyTheme(theme === 'dark' ? 'light' : 'dark'); } },
+      { label: 'Show keyboard shortcuts', hint: '?', run: () => { closePalette(); openHelp(); } },
+      { label: 'Export first table on this page as CSV', hint: 'action', run: () => { closePalette(); exportFirstTable('csv'); } },
+      { label: 'Export first table on this page as JSON', hint: 'action', run: () => { closePalette(); exportFirstTable('json'); } },
+    ];
+  }
   function renderPalette() {
-    const q = ($('palette-input').value || '').trim().toLowerCase();
-    palItems = pages.filter((p) => !q || p.includes(q) || pageLabels[p].toLowerCase().includes(q));
-    palSel = Math.min(palSel, palItems.length + (($('palette-input').value || '').trim().length >= 2 ? 0 : -1));
-    if (palSel < 0) palSel = 0;
+    const raw = ($('palette-input').value || '').trim();
+    const q = raw.toLowerCase();
+    const gOf = (p) => { const k = Object.keys(gKeys).find((x) => gKeys[x] === p); return k ? 'g ' + k : ''; };
+    palItems = palLookups(raw)
+      .concat(pages.filter((p) => !q || p.includes(q) || pageLabels[p].toLowerCase().includes(q)).map((p) => ({ label: pageLabels[p], hint: gOf(p), run: () => { closePalette(); showPage(p); } })))
+      .concat(palActions().filter((a) => !q || a.label.toLowerCase().includes(q)));
+    palSel = Math.max(0, Math.min(palSel, palItems.length - 1));
     const ul = $('palette-list');
     ul.replaceChildren();
-    const gsQ = ($('palette-input').value || '').trim();
-    if (gsQ.length >= 2) {
-      const li = document.createElement('li');
-      li.className = 'pal-search';
-      li.setAttribute('role', 'option');
-      li.id = 'pal-search-all';
-      li.setAttribute('aria-selected', palSel === palItems.length ? 'true' : 'false');
-      li.appendChild(el('span', 'Search everything for "' + gsQ + '"'));
-      li.appendChild(el('small', 'g /'));
-      li.addEventListener('click', () => palSearchAll());
-      ul.dataset.hasSearch = '1';
-      palSearchLi = li;
-    } else { palSearchLi = null; }
-    if (!palItems.length && !palSearchLi) { ul.appendChild(el('li', 'No matching page', 'pal-empty')); return; }
-    palItems.forEach((p, i) => {
+    if (!palItems.length) { ul.appendChild(el('li', 'Nothing matches. Try a page name, "host web01", "cve CVE-2024-1234" or an IP.', 'pal-empty')); return; }
+    palItems.forEach((it, i) => {
       const li = document.createElement('li');
       li.setAttribute('role', 'option');
       li.setAttribute('aria-selected', i === palSel ? 'true' : 'false');
-      li.id = 'pal-' + p;
-      li.appendChild(el('span', pageLabels[p]));
-      const g = Object.keys(gKeys).find((k) => gKeys[k] === p);
-      if (g) li.appendChild(el('small', 'g ' + g));
-      li.addEventListener('click', () => { closePalette(); showPage(p); });
+      li.id = 'pal-opt-' + i;
+      li.className = 'pal-kind';
+      li.appendChild(el('span', it.label));
+      if (it.hint) li.appendChild(el('small', it.hint));
+      li.addEventListener('click', () => it.run());
       ul.appendChild(li);
     });
-    if (palSearchLi) ul.appendChild(palSearchLi);
-    if (palItems[palSel]) $('palette-input').setAttribute('aria-activedescendant', 'pal-' + palItems[palSel]);
-    else if (palSearchLi) $('palette-input').setAttribute('aria-activedescendant', 'pal-search-all');
+    $('palette-input').setAttribute('aria-activedescendant', 'pal-opt-' + palSel);
+    const cur = $('pal-opt-' + palSel);
+    if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: 'nearest' });
   }
-  let palSearchLi = null;
-  function palSearchAll() { gsPending = ($('palette-input').value || '').trim(); closePalette(); showPage('search'); }
   function openPalette() { if (!appVisible()) return; palSel = 0; $('palette-input').value = ''; overlayOpen('palette-root'); renderPalette(); $('palette-input').focus(); }
   function closePalette() { overlayClose('palette-root'); }
   function openHelp() {
@@ -10436,6 +10886,8 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
     add(['/'], 'Open command palette');
     add(['?'], 'Show this help');
     add(['Esc'], 'Close overlay or drawer');
+    add(['Enter', 'on a header'], 'Sort a table column (again to reverse, a third time to clear)');
+    add(['host x'], 'In the palette: look up a host, also cve, ioc, rule, case, technique');
     Object.keys(gKeys).forEach((k) => add(['g', k], 'Go to ' + pageLabels[gKeys[k]]));
     overlayOpen('help-root');
     $('help-close').focus();
@@ -10446,10 +10898,9 @@ code.ad-env { font-family: var(--font-mono); font-size: 13px; background: var(--
   $('help-root').addEventListener('mousedown', (e) => { if (e.target === $('help-root')) closeHelp(); });
   $('palette-input').addEventListener('input', () => { palSel = 0; renderPalette(); });
   $('palette-input').addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowDown') { e.preventDefault(); palSel = Math.min(palItems.length - (($('palette-input').value || '').trim().length >= 2 ? 0 : 1), palSel + 1); renderPalette(); }
+    if (e.key === 'ArrowDown') { e.preventDefault(); palSel = Math.min(palItems.length - 1, palSel + 1); renderPalette(); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); palSel = Math.max(0, palSel - 1); renderPalette(); }
-    else if (e.key === 'Enter' && palSel === palItems.length && palSearchLi) { e.preventDefault(); palSearchAll(); }
-    else if (e.key === 'Enter' && palItems[palSel]) { e.preventDefault(); const p = palItems[palSel]; closePalette(); showPage(p); }
+    else if (e.key === 'Enter' && palItems[palSel]) { e.preventDefault(); palItems[palSel].run(); }
   });
   let gPending = 0;
   document.addEventListener('keydown', (e) => {

@@ -89,11 +89,15 @@ func embeddedRuleIDs() map[string]bool {
 // embedded or built-in rules, positive/negative samples, and the benign-baseline guard.
 func validateCustomRule(r *ContentRule) error {
 	r.Source = ""
+	r.allowUnverified = true
 	if err := r.validateAndCompile(); err != nil {
 		return err
 	}
 	if embeddedRuleIDs()[r.ID] {
 		return fmt.Errorf("rule %q: id collides with an embedded content rule; custom rules cannot override embedded ids", r.ID)
+	}
+	if r.Tests == nil {
+		r.Tests = &ContentTests{}
 	}
 	for i, ev := range r.Tests.Positive {
 		ev.Kind = r.EventType
@@ -279,6 +283,9 @@ func (c *customStore) putAs(actor string, rules []ContentRule, validateOnly bool
 			items[i].Status = "imported"
 			if staged[items[i].ID] != nil {
 				ruleChanged(actor, items[i].ID, prev[items[i].ID], staged[items[i].ID])
+				if staged[items[i].ID].Unverified {
+					ruleSetTesting(actor, items[i].ID, "custom rule has no test samples; watch shadow findings before promoting")
+				}
 			}
 		}
 	}
@@ -344,6 +351,8 @@ func RegisterCustomContent(mux *http.ServeMux, token string, store *Store) {
 		}
 		return b, true
 	}
+
+	registerSigmaImport(mux, token, cs)
 
 	mux.HandleFunc("GET /v1/content/custom", auth(func(w http.ResponseWriter, r *http.Request) {
 		cs.mu.Lock()
@@ -532,25 +541,20 @@ func RegisterCustomContent(mux *http.ServeMux, token string, store *Store) {
 				customJSON(w, 400, map[string]any{"error": "invalid Sigma input: " + err.Error()})
 				return
 			}
-			var rules []ContentRule
-			var idx []int
-			items = make([]customImportItem, len(res))
-			for i, s := range res {
-				items[i] = customImportItem{ID: s.ID, Errors: s.Errors, Unsupported: s.Unsupported}
-				switch {
-				case len(s.Unsupported) > 0:
-					items[i].Status = "unsupported"
-				case len(s.Errors) > 0 || s.Rule == nil:
-					items[i].Status = "rejected"
-				default:
-					rules, idx = append(rules, *s.Rule), append(idx, i)
+			items = make([]customImportItem, 0, len(res))
+			for _, si := range sigmaStage(cs, customActor(r), res, !validateOnly) {
+				st := map[string]string{"converted": "valid", "skipped": "unsupported", "noisy": "rejected"}[si.Status]
+				if st == "" {
+					st = si.Status
 				}
-			}
-			if len(rules) > 0 {
-				for k, it := range cs.putAs(customActor(r), rules, validateOnly) {
-					i := idx[k]
-					items[i].Status, items[i].Errors = it.Status, it.Errors
+				ci := customImportItem{ID: si.ID, Status: st, Errors: si.Errors}
+				if si.Status == "skipped" {
+					ci.Errors = nil
+					for _, g := range si.Gaps {
+						ci.Unsupported = append(ci.Unsupported, g.Detail)
+					}
 				}
+				items = append(items, ci)
 			}
 		default:
 			customJSON(w, 400, map[string]any{"error": "format must be kavach or sigma"})

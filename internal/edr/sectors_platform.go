@@ -1089,6 +1089,7 @@ func RegisterSectorsPlatform(mux *http.ServeMux, token string, store *Store, reg
 		if !requireAuth(w, r, token) {
 			return
 		}
+		r.Body = http.MaxBytesReader(w, r.Body, 4<<20)
 		var body struct {
 			Events []map[string]any `json:"events"`
 		}

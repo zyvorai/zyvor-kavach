@@ -14,7 +14,7 @@ func TestContentCustomToolsRegistered(t *testing.T) {
 			}
 		}
 	}
-	if n := len(contentCustomReadTools()); n != 2 {
-		t.Fatalf("want 2 tools, got %d", n)
+	if n := len(contentCustomReadTools()); n != 3 {
+		t.Fatalf("want 3 tools, got %d", n)
 	}
 }

@@ -156,6 +156,14 @@ func (c *priorityCtx) score(f Finding) PriorityResult {
 	} else {
 		assetNote = "asset_criticality: host not registered in /v1/posture/assets"
 	}
+	var exposureNote string
+	if hk := expPriorityHook.Load(); hk != nil { // optional, KAVACH_EXPOSURE_PRIORITY=1 (exposure.go)
+		if v, note, ok := (*hk)(f.Host); ok {
+			vals["exposure"] = PriorityFactor{"exposure", clamp01(v), 0.10, note}
+		} else {
+			exposureNote = "exposure: " + note
+		}
+	}
 	var sum, wsum float64
 	for _, w := range mlPriorityWeights {
 		if p, ok := vals[w.Name]; ok {
@@ -171,7 +179,7 @@ func (c *priorityCtx) score(f Finding) PriorityResult {
 		}
 		res.Omitted = append(res.Omitted, xo...)
 	}
-	for _, n := range []string{rarityNote, beaconNote, assetNote} {
+	for _, n := range []string{rarityNote, beaconNote, assetNote, exposureNote} {
 		if n != "" {
 			res.Omitted = append(res.Omitted, n)
 		}

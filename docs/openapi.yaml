@@ -675,6 +675,21 @@ paths:
       summary: Cloud CSPM posture (preview)
       security: [{bearerAuth: []}]
       responses: {'200': {description: Controls}}
+  /v1/cloud/audit/events:
+    post:
+      summary: Ingest cloud and SaaS audit records (CloudTrail, Azure Activity and Entra, GCP Audit, Okta System Log, Microsoft 365 unified audit); admin token only
+      description: Body is one record, an array, or a wrapper object (Records, value, events, items, entries). Max 4 MiB and 1000 records. Optional query source=aws|azure|gcp|okta|m365 rejects records of another shape. Records are normalised and evaluated by the cld- content rules; observation only.
+      security: [{bearerAuth: []}]
+      responses:
+        "200": { description: received, normalized, rejected, not_evaluated, findings, by_source and up to 5 example errors }
+        "400": { description: invalid payload or unknown source }
+        "401": { description: missing or non-admin token }
+        "413": { description: body or record count over the cap }
+  /v1/cloud/audit/sources:
+    get:
+      summary: Supported cloud audit sources and loaded cld- rule count
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Sources}}
   /v1/mobile/devices:
     get:
       summary: Mobile devices (preview)
@@ -1045,6 +1060,28 @@ paths:
           application/yaml:
             schema: {type: string}
       responses: {'200': {description: "{imported, valid, rejected, unsupported, results[{id,status,errors,unsupported}]}"}, '400': {description: Bad body or no rule accepted}}
+  /v1/content/import/sigma:
+    post:
+      summary: Offline Sigma importer (subset). Dry run by default; admin token required. Reports converted, skipped (with the exact unsupported fields, modifiers and categories), noisy (benign corpus hits) and rejected rules; noisy rules are never imported and rules without verifiable samples start in the testing lifecycle
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: dry_run, in: query, schema: {type: boolean, default: true}, description: "false stores the clean rules; the query string wins over a body dry_run"}
+      requestBody:
+        content:
+          application/yaml:
+            schema: {type: string, description: "One or more Sigma rules, YAML documents separated by ---, max 1 MiB and 200 rules"}
+          application/json:
+            schema: {type: object, description: "A Sigma rule object or array, or the envelope {sigma: string, dry_run: boolean}"}
+      responses: {'200': {description: "{mode, dry_run, summary{rules,converted,imported,skipped,noisy,rejected,starts_in_testing,samples_derived}, gap_summary{kind:{name:count}}, limits, results[{id,title,status,errors,gaps[{kind,name,detail}],samples,lifecycle,benign_hits}]}"}, '400': {description: Unparseable input or limit exceeded}, '403': {description: Not the admin token}, '413': {description: Body larger than the size limit}}
+  /v1/content/export/sigma:
+    post:
+      summary: Export custom rules as Sigma YAML where the conversion is lossless; rules that cannot be expressed exactly are listed with the reason
+      security: [{bearerAuth: []}]
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object, description: "Optional {ids:[...]}; empty body exports every custom rule"}
+      responses: {'200': {description: "{yaml, exported[], skipped[{id,reason}]}"}, '400': {description: Invalid filter}}
   /v1/lab/rules:
     get:
       summary: List detection-lab rules (sandbox only; never promoted to live detection)
@@ -2669,7 +2706,7 @@ paths:
         content:
           application/octet-stream:
             schema: { type: string, format: binary }
-        description: "raw RFC 5322 message bytes"
+        description: "raw RFC 5322 message bytes, or an Outlook .msg (OLE2; detected by header/string scan only). email-extra adds T1566.001/.002 tagged findings"
       responses:
         "200": { description: "Inspection report with email-* findings" }
         "400": { description: "Empty input" }
@@ -2697,6 +2734,27 @@ paths:
         "200": { description: "Similarity matches" }
         "400": { description: "Malformed or unsupported digest" }
         "404": { description: "Unknown sha256" }
+  /v1/inspect/clusters:
+    get:
+      summary: "Cluster stored inspector reports by shared IOCs, embedded hashes and similarity digests (read-only)"
+      description: "Single-linkage grouping over the capped in-memory report ring (200). Each cluster lists the shared factors and pairwise links that justify it. Shows shared evidence, not a common actor. No input bytes are kept."
+      parameters:
+        - { name: min_score, in: query, schema: { type: number }, description: "Sum of shared-factor weights needed to link two reports (strong factors weigh 1, path/registry/entropy 0.4); default 1" }
+        - { name: limit, in: query, schema: { type: integer }, description: "Clusters returned, default 20, max 50" }
+        - { name: kind, in: query, schema: { type: string }, description: "Only reports of this inspect kind" }
+      responses:
+        "200": { description: "{count, clusters[{id,size,max_score,max_level,members[],shared_factors[],links[],explanation}], considered, singletons, ignored_common_factors[], limits_hit[], min_score, mode, note}" }
+        "400": { description: "Unknown kind" }
+  /v1/inspect/sarif:
+    get:
+      summary: "Export one stored inspector report as SARIF 2.1.0 (pull-only, for CI)"
+      parameters:
+        - { name: id, in: query, schema: { type: string }, description: "Report id, or latest" }
+        - { name: sha256, in: query, schema: { type: string }, description: "Or the sha256 of an inspected input" }
+      responses:
+        "200": { description: "application/sarif+json: a SARIF 2.1.0 log with one run; results mirror the report findings, the artifact location is a base name or sha256:HASH, never a local path" }
+        "400": { description: "Neither id nor sha256 given" }
+        "404": { description: "Report not in the in-memory ring" }
   /v1/ml/status:
     get:
       summary: "Local behaviour model status"
@@ -2943,6 +3001,69 @@ paths:
         - { name: include_custom, in: query, schema: { type: string }, description: "true to include custom rules" }
       responses:
         "200": { description: "Coverage" }
+  /v1/exposure/sboms:
+    get:
+      summary: "List ingested SBOMs (host, format, component count); local and offline"
+      responses:
+        "200": { description: "{count, sboms[]}" }
+  /v1/exposure/sboms/{host}:
+    get:
+      summary: "Component metadata (name, version, purl, type) retained for a host"
+      parameters:
+        - { name: host, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "{host, format, count, components[]}" }
+        "404": { description: "No SBOM for host" }
+    put:
+      summary: "Ingest a CycloneDX or SPDX 2.x JSON SBOM for a host (admin token; 8 MiB, 20000 components)"
+      parameters:
+        - { name: host, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "{host, format, components}" }
+        "400": { description: "Unrecognised or invalid SBOM" }
+        "403": { description: "Admin token required" }
+        "413": { description: "Body too large" }
+    post:
+      summary: "Same as PUT"
+      parameters:
+        - { name: host, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "{host, format, components}" }
+    delete:
+      summary: "Remove the retained SBOM metadata for a host (admin token)"
+      parameters:
+        - { name: host, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Deleted" }
+        "404": { description: "No SBOM for host" }
+  /v1/exposure/advisories:
+    get:
+      summary: "Active advisory dataset: embedded SAMPLE or operator-imported (not a complete feed)"
+      responses:
+        "200": { description: "{source, sample, count, advisories[], format, note, offline}" }
+    delete:
+      summary: "Drop the operator dataset and fall back to the embedded SAMPLE (admin token)"
+      responses:
+        "200": { description: "Reverted" }
+  /v1/exposure/advisories/import:
+    post:
+      summary: "Import advisories offline: kavach-advisories/1, OSV records, or a CISA KEV catalogue to flag KEV (admin token; 8 MiB)"
+      parameters:
+        - { name: mode, in: query, schema: { type: string, enum: [merge, replace] } }
+        - { name: source, in: query, schema: { type: string }, description: "label shown in reports" }
+      responses:
+        "200": { description: "{imported, kev_flagged, total, source, mode}" }
+        "400": { description: "Invalid or unrecognised file" }
+        "403": { description: "Admin token required" }
+        "413": { description: "Body too large" }
+  /v1/exposure/report:
+    get:
+      summary: "Exposed assets with factors, ranked; local offline matching against the loaded dataset"
+      parameters:
+        - { name: host, in: query, schema: { type: string } }
+        - { name: min_score, in: query, schema: { type: number } }
+      responses:
+        "200": { description: "{advisory_source, advisory_sample, assets[{host, score, level, factors[], matches[]}], note}" }
   /v1/vulns/priority:
     get:
       summary: "SSVC + EPSS + CVSS vulnerability prioritisation"

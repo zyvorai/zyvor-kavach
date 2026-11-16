@@ -60,7 +60,19 @@ func (m *Metrics) Middleware(next http.Handler) http.Handler {
 		next.ServeHTTP(rec, r)
 		m.inflight.Add(-1)
 		d := time.Since(start).Seconds()
-		key := fmt.Sprintf("%s|%s|%dxx", r.Method, routeLabel(r.URL.Path), rec.code/100)
+		// Label by the registered mux pattern (bounded) and a known method, never by raw
+		// attacker-controlled path/method text, so unauthenticated probes cannot grow the map.
+		label := "/unmatched"
+		if i := strings.IndexByte(r.Pattern, '/'); i >= 0 {
+			label = routeLabel(r.Pattern[i:])
+		}
+		method := r.Method
+		switch method {
+		case "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS":
+		default:
+			method = "OTHER"
+		}
+		key := fmt.Sprintf("%s|%s|%dxx", method, label, rec.code/100)
 		m.mu.Lock()
 		m.requests[key]++
 		m.histN++

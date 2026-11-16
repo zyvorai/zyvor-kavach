@@ -95,6 +95,39 @@ func MatchIOCs(haystack string) []IOC {
 	return out
 }
 
+const (
+	ioaMaxPattern = 512 // RE2 is linear-time, but compile cost and memory scale with size
+	ioaMaxRules   = 500
+	iocMaxEntries = 20000
+)
+
+var (
+	ioaReMu    sync.Mutex
+	ioaReCache = map[string]*regexp.Regexp{}
+)
+
+// ioaCompile returns the compiled (case-insensitive) pattern, cached so ingest does not
+// recompile every rule for every event. nil means the pattern is invalid or too long.
+func ioaCompile(pat string) *regexp.Regexp {
+	if len(pat) > ioaMaxPattern {
+		return nil
+	}
+	ioaReMu.Lock()
+	defer ioaReMu.Unlock()
+	if re, ok := ioaReCache[pat]; ok {
+		return re
+	}
+	re, err := regexp.Compile("(?i)" + pat)
+	if err != nil {
+		re = nil
+	}
+	if len(ioaReCache) >= 2*ioaMaxRules {
+		ioaReCache = map[string]*regexp.Regexp{}
+	}
+	ioaReCache[pat] = re
+	return re
+}
+
 // MatchIOAs evaluates enabled IOA regex patterns against process/command haystack.
 func MatchIOAs(haystack string) []IOARule {
 	ioaMu.Lock()
@@ -104,8 +137,8 @@ func MatchIOAs(haystack string) []IOARule {
 		if !rule.Enabled || rule.Pattern == "" {
 			continue
 		}
-		re, err := regexp.Compile("(?i)" + rule.Pattern)
-		if err != nil {
+		re := ioaCompile(rule.Pattern)
+		if re == nil {
 			continue
 		}
 		if re.MatchString(haystack) {
@@ -156,6 +189,11 @@ func RegisterIOC(mux *http.ServeMux, token string, store *Store) {
 			i.Source = "custom"
 		}
 		iocMu.Lock()
+		if len(iocs) >= iocMaxEntries {
+			iocMu.Unlock()
+			http.Error(w, "ioc limit reached", 409)
+			return
+		}
 		iocs = append(iocs, i)
 		iocMu.Unlock()
 		AppendAudit(token, "ioc.create", i.Type+":"+i.Value)
@@ -205,6 +243,10 @@ func RegisterIOA(mux *http.ServeMux, token string, store *Store) {
 			http.Error(w, "invalid ioa", 400)
 			return
 		}
+		if ioaCompile(rule.Pattern) == nil {
+			http.Error(w, "invalid ioa: pattern must be a valid regular expression of at most 512 bytes", 400)
+			return
+		}
 		rule.Enabled = true
 		rule.CreatedAt = time.Now().UTC()
 		if rule.ID == "" {
@@ -214,6 +256,11 @@ func RegisterIOA(mux *http.ServeMux, token string, store *Store) {
 			rule.Severity = "high"
 		}
 		ioaMu.Lock()
+		if len(ioas) >= ioaMaxRules {
+			ioaMu.Unlock()
+			http.Error(w, "ioa limit reached", 409)
+			return
+		}
 		ioas = append(ioas, rule)
 		ioaMu.Unlock()
 		AppendAudit(token, "ioa.create", rule.Name)

@@ -3,7 +3,6 @@ package edr
 
 import (
 	"bytes"
-	"crypto/subtle"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -101,7 +100,7 @@ func triageStub(f Finding) string {
 func RegisterAIRoutes(mux *http.ServeMux, token string, store *Store) {
 	mux.HandleFunc("GET /v1/ai/score", func(w http.ResponseWriter, r *http.Request) {
 		got := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-		if subtle.ConstantTimeCompare([]byte(got), []byte(token)) != 1 && !validSession(r, token) {
+		if !secureEqual(got, token) && !validSession(r, token) {
 			http.Error(w, "unauthorized", 401)
 			return
 		}
@@ -123,7 +122,7 @@ func RegisterAIRoutes(mux *http.ServeMux, token string, store *Store) {
 	})
 	mux.HandleFunc("GET /v1/ai/scores", func(w http.ResponseWriter, r *http.Request) {
 		got := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-		if subtle.ConstantTimeCompare([]byte(got), []byte(token)) != 1 && !validSession(r, token) {
+		if !secureEqual(got, token) && !validSession(r, token) {
 			http.Error(w, "unauthorized", 401)
 			return
 		}

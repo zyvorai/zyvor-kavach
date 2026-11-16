@@ -425,7 +425,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 		r.Body = http.MaxBytesReader(w, r.Body, 8192)
 		defer r.Body.Close()
 		var body map[string]any
-		if json.NewDecoder(r.Body).Decode(&body) != nil {
+		if json.NewDecoder(r.Body).Decode(&body) != nil || body == nil {
 			http.Error(w, "invalid", 400)
 			return
 		}
@@ -435,7 +435,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 		body["note"] = "Observation-only: package request recorded, not collected automatically"
 		body["time"] = time.Now().UTC()
 		worldMu.Lock()
-		forensicReqs = append(forensicReqs, body)
+		forensicReqs = capTail(append(forensicReqs, body), worldListMax)
 		worldMu.Unlock()
 		AppendAudit(token, "forensics.request", fmt.Sprint(body["host"]))
 		w.Header().Set("Content-Type", "application/json")
@@ -471,7 +471,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 		r.Body = http.MaxBytesReader(w, r.Body, 8192)
 		defer r.Body.Close()
 		var body map[string]any
-		if json.NewDecoder(r.Body).Decode(&body) != nil {
+		if json.NewDecoder(r.Body).Decode(&body) != nil || body == nil {
 			http.Error(w, "invalid", 400)
 			return
 		}
@@ -479,7 +479,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 			body["id"] = "wl-" + time.Now().UTC().Format("150405")
 		}
 		worldMu.Lock()
-		watchlists = append(watchlists, body)
+		watchlists = capTail(append(watchlists, body), worldListMax)
 		worldMu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(body)
@@ -491,13 +491,13 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 		r.Body = http.MaxBytesReader(w, r.Body, 8192)
 		defer r.Body.Close()
 		var body map[string]any
-		if json.NewDecoder(r.Body).Decode(&body) != nil {
+		if json.NewDecoder(r.Body).Decode(&body) != nil || body == nil {
 			http.Error(w, "invalid", 400)
 			return
 		}
 		body["id"] = "ex-" + time.Now().UTC().Format("150405")
 		worldMu.Lock()
-		exclusions = append(exclusions, body)
+		exclusions = capTail(append(exclusions, body), worldListMax)
 		worldMu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(body)
@@ -509,14 +509,14 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 		r.Body = http.MaxBytesReader(w, r.Body, 8192)
 		defer r.Body.Close()
 		var body map[string]any
-		if json.NewDecoder(r.Body).Decode(&body) != nil {
+		if json.NewDecoder(r.Body).Decode(&body) != nil || body == nil {
 			http.Error(w, "invalid", 400)
 			return
 		}
 		body["id"] = "rule-" + time.Now().UTC().Format("150405")
 		body["enabled"] = true
 		worldMu.Lock()
-		customRules = append(customRules, body)
+		customRules = capTail(append(customRules, body), worldListMax)
 		worldMu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(body)
@@ -566,14 +566,14 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 		r.Body = http.MaxBytesReader(w, r.Body, 8192)
 		defer r.Body.Close()
 		var body map[string]any
-		if json.NewDecoder(r.Body).Decode(&body) != nil {
+		if json.NewDecoder(r.Body).Decode(&body) != nil || body == nil {
 			http.Error(w, "invalid", 400)
 			return
 		}
 		body["id"] = "INC" + time.Now().UTC().Format("150405")
 		body["status"] = "open"
 		worldMu.Lock()
-		itsmTickets = append(itsmTickets, body)
+		itsmTickets = capTail(append(itsmTickets, body), worldListMax)
 		worldMu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(body)
@@ -606,7 +606,7 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 		r.Body = http.MaxBytesReader(w, r.Body, 8192)
 		defer r.Body.Close()
 		var body map[string]any
-		if json.NewDecoder(r.Body).Decode(&body) != nil {
+		if json.NewDecoder(r.Body).Decode(&body) != nil || body == nil {
 			http.Error(w, "invalid", 400)
 			return
 		}
@@ -651,12 +651,14 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 		r.Body = http.MaxBytesReader(w, r.Body, 8192)
 		defer r.Body.Close()
 		var body map[string]any
-		_ = json.NewDecoder(r.Body).Decode(&body)
+		if json.NewDecoder(r.Body).Decode(&body) != nil || body == nil {
+			body = map[string]any{}
+		}
 		body["id"] = "bas-" + time.Now().UTC().Format("150405")
 		body["result"] = "scheduled"
 		body["note"] = "Simulation ledger only — no live attack traffic generated"
 		worldMu.Lock()
-		basRuns = append(basRuns, body)
+		basRuns = capTail(append(basRuns, body), worldListMax)
 		worldMu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(body)
@@ -853,4 +855,16 @@ func matchKQLEvent(q string, e Event) bool {
 		}
 	}
 	return true
+}
+
+// worldListMax bounds every in-memory ledger fed by POST bodies so an
+// authenticated client cannot grow process memory without limit.
+const worldListMax = 1000
+
+// capTail keeps the newest max entries.
+func capTail[T any](s []T, max int) []T {
+	if len(s) > max {
+		return append([]T(nil), s[len(s)-max:]...)
+	}
+	return s
 }

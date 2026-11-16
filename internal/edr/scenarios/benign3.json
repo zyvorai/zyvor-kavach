@@ -1,0 +1,266 @@
+{
+ "scenarios": [
+  {
+   "id": "benign-val3-backup-crontab",
+   "name": "Backup job installed with crontab",
+   "description": "Benign control paired with the val3 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/bash",
+     "command": "bash -c (crontab -l; echo '15 2 * * * /usr/local/bin/backup.sh') | crontab -",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-val3-journal-trim",
+   "name": "journald trimmed to two weeks",
+   "description": "Benign control paired with the val3 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/journalctl",
+     "command": "journalctl --vacuum-time=14d",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-val3-sshd-port",
+   "name": "Admin moves the ssh port",
+   "description": "Benign control paired with the val3 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/sed",
+     "command": "sed -i s/^#Port 22/Port 2222/ /etc/ssh/sshd_config",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-val3-audit-list",
+   "name": "Auditor lists audit rules",
+   "description": "Benign control paired with the val3 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/sbin/auditctl",
+     "command": "auditctl -l",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-val3-docker-ci-bind",
+   "name": "CI container bind-mounting a workspace",
+   "description": "Benign control paired with the val3 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/docker",
+     "command": "docker run --rm -v /home/ci/work:/work -w /work node:20 npm test",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-val3-kubectl-pods-secrets",
+   "name": "Dev inspects pods and secret names",
+   "description": "Benign control paired with the val3 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/kubectl",
+     "command": "kubectl get pods -n prod",
+     "parent_exe": "/bin/bash"
+    },
+    {
+     "type": "process",
+     "executable": "/usr/local/bin/kubectl",
+     "command": "kubectl get secrets -n prod",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-val3-reproducible-touch",
+   "name": "Reproducible build normalizing timestamps",
+   "description": "Benign control paired with the val3 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/touch",
+     "command": "touch -d @1700000000 dist/app.tar",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-val3-imds-instance-id",
+   "name": "Boot script reads the instance id",
+   "description": "Benign control paired with the val3 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/curl",
+     "command": "curl -s http://169.254.169.254/latest/meta-data/instance-id",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-val3-gdb-backtrace",
+   "name": "Developer attaches gdb for a backtrace",
+   "description": "Benign control paired with the val3 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/gdb",
+     "command": "gdb -p 9120 -batch -ex bt",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-val3-pubkey-share",
+   "name": "Admin copies a public key to a host",
+   "description": "Benign control paired with the val3 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/scp",
+     "command": "scp /home/ann/.ssh/id_rsa.pub web01:/tmp/ann.pub",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-val3-mac-signing-lookup",
+   "name": "Build script lists signing identities",
+   "description": "Benign control paired with the val3 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "macos",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/security",
+     "command": "security find-identity -v -p codesigning",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-val3-mac-gatekeeper-assess",
+   "name": "Admin assesses an app with spctl",
+   "description": "Benign control paired with the val3 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "macos",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/sbin/spctl",
+     "command": "spctl --assess -v /Applications/Safari.app",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-val3-mac-log-show",
+   "name": "Admin reads recent unified log",
+   "description": "Benign control paired with the val3 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "macos",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/log",
+     "command": "log show --last 1h --predicate process == \"sshd\"",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-val3-mac-docker-quarantine",
+   "name": "Docker.app quarantine cleared after install",
+   "description": "Benign control paired with the val3 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "macos",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/bin/xattr",
+     "command": "xattr -dr com.apple.quarantine /Applications/Docker.app",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-val3-mac-launchagent-own",
+   "name": "Developer loads own LaunchAgent",
+   "description": "Benign control paired with the val3 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "macos",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/bin/launchctl",
+     "command": "launchctl bootstrap gui/501 /Users/ann/Library/LaunchAgents/com.example.sync.plist",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  },
+  {
+   "id": "benign-val3-mac-localhost-proxy",
+   "name": "Proxy set to localhost for a debugging tool",
+   "description": "Benign control paired with the val3 independent scenarios: everyday activity that resembles the attack shape and must not fire at medium or above. Synthetic data only.",
+   "kind": "benign",
+   "platform": "macos",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "/usr/sbin/networksetup",
+     "command": "networksetup -setwebproxystate Wi-Fi off",
+     "parent_exe": "/bin/bash"
+    }
+   ]
+  }
+ ]
+}

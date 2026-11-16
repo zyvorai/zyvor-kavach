@@ -379,6 +379,11 @@ func RegisterCaseManagement(mux *http.ServeMux, token string, store *Store, ws *
 			c.addTimeline(wsActor(admin), "finding_linked", id)
 		}
 		m.mu.Lock()
+		if len(m.cases) >= maxCases {
+			m.mu.Unlock()
+			http.Error(w, "too many cases", 400)
+			return
+		}
 		m.cases = append(m.cases, c)
 		err := m.saveLocked()
 		v := m.view(c)
@@ -570,3 +575,6 @@ func RegisterCaseManagement(mux *http.ServeMux, token string, store *Store, ws *
 		_, _ = w.Write([]byte(caseMarkdown(c, fs)))
 	})
 }
+
+// maxCases bounds the case ledger so authenticated clients cannot exhaust memory and disk.
+const maxCases = 10000

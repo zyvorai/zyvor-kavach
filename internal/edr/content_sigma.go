@@ -6,6 +6,7 @@ package edr
 import (
 	"encoding/json"
 	"fmt"
+	"path"
 	"regexp"
 	"sort"
 	"strconv"
@@ -20,11 +21,22 @@ import (
 // Optional extensions: `kavach_id` (rule id) and `tests: {positive: [...], negative: [...]}` with
 // Kavach sample events (required by the harness, Sigma itself carries none).
 
+// sigmaGap is one precisely named construct that could not be converted. Kind is one of field,
+// modifier, category, product, logsource, condition, value, regex, key or other.
+type sigmaGap struct {
+	Kind   string `json:"kind"`
+	Name   string `json:"name"`
+	Detail string `json:"detail"`
+}
+
 type sigmaResult struct {
 	ID          string
+	Title       string
 	Rule        *ContentRule
 	Errors      []string
 	Unsupported []string
+	Gaps        []sigmaGap
+	Samples     string // provided | derived | none
 }
 
 var sigmaCategories = map[string]struct {
@@ -40,7 +52,14 @@ var sigmaCategories = map[string]struct {
 	"registry":           {"registry", map[string]string{"targetobject": "key", "details": "value_data"}},
 	"dns_query":          {"dns", map[string]string{"queryname": "query", "queryresults": "answers"}},
 	"dns":                {"dns", map[string]string{"queryname": "query", "queryresults": "answers"}},
+	"authentication":     sigmaAuthCat,
+	"auth":               sigmaAuthCat,
 }
+
+var sigmaAuthCat = struct {
+	eventType string
+	fields    map[string]string
+}{"auth", map[string]string{"targetusername": "user", "user": "user", "ipaddress": "source_ip", "sourceip": "source_ip", "authenticationpackagename": "method"}}
 
 var sigmaTactics = map[string]string{
 	"reconnaissance": "Reconnaissance", "resource_development": "Resource Development", "initial_access": "Initial Access",
@@ -58,6 +77,9 @@ var sigmaSlugRe = regexp.MustCompile(`[^a-z0-9]+`)
 // a JSON object, or a JSON array) and converts each.
 func sigmaConvertDocument(raw []byte) ([]sigmaResult, error) {
 	var docs []map[string]any
+	if len(raw) > sigmaMaxBytes {
+		return nil, fmt.Errorf("input is %d bytes; the limit is %d", len(raw), sigmaMaxBytes)
+	}
 	trim := strings.TrimSpace(string(raw))
 	if trim == "" {
 		return nil, fmt.Errorf("empty body")
@@ -108,8 +130,8 @@ func sigmaConvertDocument(raw []byte) ([]sigmaResult, error) {
 	if len(docs) == 0 {
 		return nil, fmt.Errorf("no rules found")
 	}
-	if len(docs) > 200 {
-		return nil, fmt.Errorf("at most 200 rules per import")
+	if len(docs) > sigmaMaxRules {
+		return nil, fmt.Errorf("at most %d rules per import", sigmaMaxRules)
 	}
 	out := make([]sigmaResult, len(docs))
 	for i, d := range docs {
@@ -128,9 +150,15 @@ func sigmaStr(m map[string]any, k string) string {
 func sigmaConvert(doc map[string]any, idx int) sigmaResult {
 	res := sigmaResult{ID: fmt.Sprintf("(rule %d)", idx+1)}
 	bad := func(f string, a ...any) { res.Errors = append(res.Errors, fmt.Sprintf(f, a...)) }
-	unsup := func(f string, a ...any) { res.Unsupported = append(res.Unsupported, fmt.Sprintf(f, a...)) }
+	gap := func(kind, name, f string, a ...any) {
+		msg := fmt.Sprintf(f, a...)
+		res.Unsupported = append(res.Unsupported, msg)
+		res.Gaps = append(res.Gaps, sigmaGap{Kind: kind, Name: name, Detail: msg})
+	}
+	unsup := func(f string, a ...any) { gap("other", "", f, a...) }
 
 	title := sigmaStr(doc, "title")
+	res.Title = title
 	id := sigmaStr(doc, "kavach_id")
 	if id == "" && title != "" {
 		id = "sigma-" + strings.Trim(sigmaSlugRe.ReplaceAllString(strings.ToLower(title), "-"), "-")
@@ -144,7 +172,11 @@ func sigmaConvert(doc map[string]any, idx int) sigmaResult {
 	if title == "" {
 		bad("title is required")
 	}
-	r := &ContentRule{ID: id, Name: title, Description: sigmaStr(doc, "description"), OS: "any", Batch: "sigma"}
+	r := &ContentRule{ID: id, Name: title, Description: sigmaStr(doc, "description"), OS: "any", Batch: "sigma",
+		TechniqueName: sigmaStr(doc, "kavach_technique_name")}
+	if b := sigmaStr(doc, "kavach_batch"); b != "" {
+		r.Batch = b
+	}
 	if r.Description == "" {
 		r.Description = title
 	}
@@ -190,7 +222,7 @@ func sigmaConvert(doc map[string]any, idx int) sigmaResult {
 	cat := strings.ToLower(sigmaStr(ls, "category"))
 	catInfo, okCat := sigmaCategories[cat]
 	if !okCat {
-		unsup("logsource category %q (supported: process_creation, network_connection, file_event, registry_set, dns_query)", cat)
+		gap("category", cat, "logsource category %q (supported: process_creation, network_connection, file_event, registry_set, dns_query, authentication)", cat)
 	} else {
 		r.EventType = catInfo.eventType
 	}
@@ -199,17 +231,18 @@ func sigmaConvert(doc map[string]any, idx int) sigmaResult {
 	case "windows", "linux", "macos":
 		r.OS = p
 	default:
-		unsup("logsource product %q", p)
+		gap("product", p, "logsource product %q (supported: windows, linux, macos)", p)
 	}
 	for k := range ls {
 		if k != "category" && k != "product" {
-			unsup("logsource key %q", k)
+			gap("logsource", k, "logsource key %q is not supported (only category and product)", k)
 		}
 	}
 	detection, _ := doc["detection"].(map[string]any)
 	handled := map[string]bool{"title": true, "description": true, "level": true, "tags": true, "logsource": true, "detection": true,
 		"tests": true, "kavach_id": true, "id": true, "status": true, "author": true, "date": true, "modified": true,
-		"references": true, "falsepositives": true}
+		"references": true, "falsepositives": true, "fields": true, "license": true, "related": true, "scope": true,
+		"taxonomy": true, "kavach_technique_name": true, "kavach_batch": true}
 	var extra []string
 	for k := range doc {
 		if !handled[k] {
@@ -218,7 +251,7 @@ func sigmaConvert(doc map[string]any, idx int) sigmaResult {
 	}
 	sort.Strings(extra)
 	for _, k := range extra {
-		unsup("top-level key %q is not supported", k)
+		gap("key", k, "top-level key %q is not supported", k)
 	}
 
 	if t, ok := doc["tests"]; ok {
@@ -241,12 +274,24 @@ func sigmaConvert(doc map[string]any, idx int) sigmaResult {
 	}
 	cond, isStr := detection["condition"].(string)
 	if !isStr || strings.TrimSpace(cond) == "" {
-		unsup("condition must be a single string expression")
+		gap("condition", "", "condition must be a single string expression (multiple conditions or non-string values are not supported)")
 		return res
 	}
-	cv := &sigmaCond{toks: sigmaTokenize(cond), sels: detection, fields: fields, cache: map[string]*ContentMatch{}, bad: bad, unsup: unsup}
+	cv := &sigmaCond{toks: sigmaTokenize(cond), sels: detection, fields: fields, cache: map[string]*ContentMatch{}, failedSel: map[string]bool{},
+		bad: bad, unsup: unsup, gap: gap}
 	if _, has := detection["timeframe"]; has {
-		unsup("timeframe / aggregation is not supported")
+		gap("condition", "timeframe", "timeframe / aggregation is not supported")
+	}
+	// Convert every selection first so that all unsupported fields and modifiers are reported, not just the first.
+	names := make([]string, 0, len(detection))
+	for k := range detection {
+		if k != "condition" && k != "timeframe" {
+			names = append(names, k)
+		}
+	}
+	sort.Strings(names)
+	for _, n := range names {
+		cv.convertSel(n)
 	}
 	node := cv.parseOr()
 	if cv.pos < len(cv.toks) && !cv.failed {
@@ -254,8 +299,10 @@ func sigmaConvert(doc map[string]any, idx int) sigmaResult {
 	}
 	if node != nil && len(res.Errors) == 0 && len(res.Unsupported) == 0 {
 		r.Match = *node
+		sigmaAttachTests(&res, r)
 		res.Rule = r
 	}
+	res.Gaps = sigmaDedupGaps(res.Gaps)
 	return res
 }
 
@@ -266,8 +313,28 @@ type sigmaCond struct {
 	fields map[string]string
 	cache  map[string]*ContentMatch
 	failed bool
-	bad    func(string, ...any)
-	unsup  func(string, ...any)
+	// failedSel marks selections that could not be converted; their gaps were already reported.
+	failedSel map[string]bool
+	bad       func(string, ...any)
+	unsup     func(string, ...any)
+	gap       func(kind, name, f string, a ...any)
+}
+
+// convertSel converts one named selection once and caches the outcome.
+func (c *sigmaCond) convertSel(name string) *ContentMatch {
+	if n, ok := c.cache[name]; ok {
+		return n
+	}
+	if c.failedSel[name] {
+		return nil
+	}
+	n := c.selection(name, c.sels[name])
+	if n == nil {
+		c.failedSel[name] = true
+		return nil
+	}
+	c.cache[name] = n
+	return n
 }
 
 var sigmaTokRe = regexp.MustCompile(`\(|\)|[^\s()]+`)
@@ -375,26 +442,100 @@ func (c *sigmaCond) parsePrimary() *ContentMatch {
 		return c.fail(true, "condition aggregation (%s) is not supported", tok)
 	}
 	if c.pos+1 < len(c.toks) && strings.ToLower(c.toks[c.pos+1]) == "of" {
-		return c.fail(true, "quantifier condition %q (\"N of\" / \"all of\") is not supported; list the selections with and/or", tok+" of ...")
+		return c.quantifier()
 	}
 	if strings.Contains(tok, "*") {
-		return c.fail(true, "wildcard selection reference %q is not supported", tok)
+		return c.fail(true, "wildcard selection reference %q is not supported outside \"N of\" / \"all of\"", tok)
 	}
 	c.pos++
-	if n, ok := c.cache[tok]; ok {
-		return n
-	}
-	v, ok := c.sels[tok]
-	if !ok || tok == "condition" || tok == "timeframe" {
+	if _, ok := c.sels[tok]; !ok || tok == "condition" || tok == "timeframe" {
 		return c.fail(false, "condition references unknown selection %q", tok)
 	}
-	n := c.selection(tok, v)
+	n := c.convertSel(tok)
 	if n == nil {
 		c.failed = true
 		return nil
 	}
-	c.cache[tok] = n
 	return n
+}
+
+// quantifier handles "1 of X", "all of X" and small "N of X" where X is "them" or a selection glob.
+func (c *sigmaCond) quantifier() *ContentMatch {
+	q, target := strings.ToLower(c.toks[c.pos]), ""
+	if c.pos+2 >= len(c.toks) {
+		return c.fail(false, "condition: %q of ... needs a selection name, glob or \"them\"", q)
+	}
+	target = c.toks[c.pos+2]
+	c.pos += 3
+	need := 0
+	switch q {
+	case "all":
+	default:
+		n, err := strconv.Atoi(q)
+		if err != nil || n < 1 {
+			return c.fail(true, "condition quantifier %q of %s is not supported (use 1 of, all of or a small N of)", q, target)
+		}
+		need = n
+	}
+	var names []string
+	for k := range c.sels {
+		if k == "condition" || k == "timeframe" || strings.HasPrefix(k, "_") && strings.ToLower(target) == "them" {
+			continue
+		}
+		if strings.ToLower(target) == "them" {
+			names = append(names, k)
+		} else if ok, err := path.Match(target, k); err == nil && ok {
+			names = append(names, k)
+		}
+	}
+	sort.Strings(names)
+	if len(names) == 0 {
+		return c.fail(false, "condition: %s of %s matches no selection", q, target)
+	}
+	var nodes []ContentMatch
+	bad := false
+	for _, n := range names {
+		m := c.convertSel(n)
+		if m == nil {
+			bad = true
+			continue
+		}
+		nodes = append(nodes, *m)
+	}
+	if bad {
+		c.failed = true
+		return nil
+	}
+	switch {
+	case q == "all":
+		return sigmaJoin("all", nodes)
+	case need == 1:
+		return sigmaJoin("any", nodes)
+	case need > len(nodes):
+		return c.fail(false, "condition: %d of %s needs %d selections but only %d match", need, target, need, len(nodes))
+	case need == len(nodes):
+		return sigmaJoin("all", nodes)
+	}
+	// N of k: OR over every N-subset, bounded.
+	var combos []ContentMatch
+	var rec func(start int, cur []ContentMatch)
+	rec = func(start int, cur []ContentMatch) {
+		if len(combos) > 50 {
+			return
+		}
+		if len(cur) == need {
+			combos = append(combos, *sigmaJoin("all", append([]ContentMatch(nil), cur...)))
+			return
+		}
+		for i := start; i < len(nodes); i++ {
+			rec(i+1, append(cur, nodes[i]))
+		}
+	}
+	rec(0, nil)
+	if len(combos) > 50 {
+		return c.fail(true, "condition: %d of %s expands to more than 50 combinations", need, target)
+	}
+	return sigmaJoin("any", combos)
 }
 
 func (c *sigmaCond) selection(name string, v any) *ContentMatch {
@@ -461,68 +602,6 @@ func sigmaScalar(v any) (string, bool) {
 		return strconv.FormatBool(t), true
 	}
 	return "", false
-}
-
-func (c *sigmaCond) leaf(sel, key string, val any) *ContentMatch {
-	parts := strings.Split(key, "|")
-	field, ok := c.fields[strings.ToLower(parts[0])]
-	if !ok {
-		c.unsup("selection %s: field %q is not supported for this logsource category", sel, parts[0])
-		return nil
-	}
-	op, all, cased := "equals", false, false
-	for _, m := range parts[1:] {
-		switch strings.ToLower(m) {
-		case "contains", "startswith", "endswith", "re":
-			if op != "equals" {
-				c.unsup("selection %s: field %q combines several match modifiers", sel, key)
-				return nil
-			}
-			op = strings.ToLower(m)
-		case "all":
-			all = true
-		case "cased":
-			cased = true
-		default:
-			c.unsup("selection %s: modifier %q (in %q) is not supported", sel, m, key)
-			return nil
-		}
-	}
-	var raw []any
-	if l, isList := val.([]any); isList {
-		raw = l
-	} else {
-		raw = []any{val}
-	}
-	if len(raw) == 0 {
-		c.bad("selection %s: field %q has no values", sel, key)
-		return nil
-	}
-	var vals []string
-	for _, x := range raw {
-		s, okv := sigmaScalar(x)
-		if !okv {
-			c.unsup("selection %s: field %q has a null, empty or non-scalar value", sel, key)
-			return nil
-		}
-		if op != "re" && strings.ContainsAny(s, "*?") {
-			c.unsup("selection %s: wildcard in value %q (use |contains, |startswith or |endswith instead)", sel, s)
-			return nil
-		}
-		vals = append(vals, s)
-	}
-	kop := map[string]string{"equals": "equals", "contains": "contains", "startswith": "prefix", "endswith": "suffix", "re": "regex"}[op]
-	if len(vals) == 1 {
-		return &ContentMatch{Field: field, Op: kop, Pattern: vals[0], CaseSensitive: cased}
-	}
-	if all {
-		nodes := make([]ContentMatch, len(vals))
-		for i, s := range vals {
-			nodes[i] = ContentMatch{Field: field, Op: kop, Pattern: s, CaseSensitive: cased}
-		}
-		return &ContentMatch{All: nodes}
-	}
-	return &ContentMatch{Field: field, Op: kop, Patterns: vals, CaseSensitive: cased}
 }
 
 // ---- minimal YAML subset (block mappings, block sequences, flow lists, quoted/plain scalars,
