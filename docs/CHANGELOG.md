@@ -8,7 +8,7 @@ There was no changelog file before this one, and no version string in the source
 
 ## Unreleased
 
-Nothing yet.
+- Compliance framework verification pass (2026-11-17): Singapore CCoP ids now follow the official 2026 edition section numbers, Canada CCCS ids follow baseline controls 3.1-3.13 (two non-baseline controls removed), South Korea ISMS-P breach control moved to 2.11, FedRAMP CA family title corrected. Australia ISM, Japan METI/NISC, UAE IA, HKMA/PCPD, `ae-pdpl` and `hk-pdpo` stay UNVERIFIED (official sources unreachable). See [verification-log](verification-log.md).
 
 ## v0.2.3 (2026-11-17)
 
