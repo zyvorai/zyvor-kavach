@@ -8,7 +8,9 @@ There was no changelog file before this one, and no version string in the source
 
 ## Unreleased
 
-Nothing yet.
+### Security
+- SIEM push webhook: URL validation (http/https, blocks loopback, link-local/metadata, unspecified, multicast, and private ranges unless `KAVACH_SIEM_ALLOW_PRIVATE=1`), dial-time IP re-check against DNS rebinding, redirect checks, and 3 attempts with capped backoff that stop at shutdown.
+- `scripts/deploy-remote.sh` no longer prints the admin token; it logs only that one is set and whether the lab default is in use. Behaviour otherwise unchanged.
 
 ## v0.2.3 (2026-11-17)
 
