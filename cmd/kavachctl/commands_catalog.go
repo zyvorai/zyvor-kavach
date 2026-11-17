@@ -282,6 +282,7 @@ func allCLICommands() []cliCommand {
 		// rules_health.go: detection rule health and lifecycle.
 		{Name: "rules-health", Args: []string{"rules", "health"}},
 		{Name: "regulatory-regimes", Args: []string{"regulatory", "regimes"}},
+		{Name: "ioc-stats", Args: []string{"ioc", "stats"}},
 		{Name: "regulatory-clocks", Args: []string{"regulatory", "clocks"}},
 		{Name: "cloudaudit-sources", Args: []string{"cloudaudit", "sources"}},
 		{Name: "regulatory-profile", Args: []string{"regulatory", "profile"}},

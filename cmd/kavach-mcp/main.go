@@ -79,6 +79,9 @@ func buildServer(c *client, allowMutations bool) (*mcpserver.Server, error) {
 	if err := registerRegulatoryTools(srv, c); err != nil {
 		return nil, err
 	}
+	if err := registerIOCImportTools(srv, c); err != nil {
+		return nil, err
+	}
 	if err := registerPostureReportTools(srv, c); err != nil {
 		return nil, err
 	}
