@@ -2,11 +2,15 @@
 
 Kavach is an observation-only security platform: every change below detects, reports or stores records. Nothing here contains, kills or blocks.
 
-This file was written from `git log` and the docs on 2026-11-16, grouped by area. It is a summary, not a release process: the repository has tags `v0.1.0`, `v0.2.0`, `v0.2.1`, `v0.2.2` and `v0.2.3`; each section describes the commits since the previous tag. Changes after `v0.2.3` are under Unreleased. Counts such as rule totals come from the commit messages and the linked docs and were not recounted.
+This file was written from `git log` and the docs on 2026-11-16, grouped by area. It is a summary, not a release process: the repository has tags `v0.1.0`, `v0.2.0`, `v0.2.1`, `v0.2.2`, `v0.2.3` and `v0.2.4`; each section describes the commits since the previous tag. Changes after `v0.2.4` are under Unreleased. Counts such as rule totals come from the commit messages and the linked docs and were not recounted.
 
 There was no changelog file before this one, and no version string in the source tree, so the tag is the only version marker.
 
 ## Unreleased
+
+Nothing yet.
+
+## v0.2.4 (2026-11-17)
 
 ### Security
 - SIEM push webhook: URL validation (http/https, blocks loopback, link-local/metadata, unspecified, multicast, and private ranges unless `KAVACH_SIEM_ALLOW_PRIVATE=1`), dial-time IP re-check against DNS rebinding, redirect checks, and 3 attempts with capped backoff that stop at shutdown.
