@@ -115,8 +115,8 @@ func registerDashboard(mux *http.ServeMux, token string, store *Store) {
 		store.mu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]any{
-			"process": events,
-			"network": net,
+			"process":  events,
+			"network":  net,
 			"findings": store.List(),
 			"product":  "kavach",
 			"note":     "Insight timeline — observation only",

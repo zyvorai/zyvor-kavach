@@ -12,11 +12,11 @@ import (
 
 // RiskScore is a heuristic (not ML-trained) score for analyst assist.
 type RiskScore struct {
-	Score      int      `json:"score"`
-	Level      string   `json:"level"`
-	Factors    []string `json:"factors"`
-	Assistive  bool     `json:"assistive"`
-	LLMNote    string   `json:"llm_note,omitempty"`
+	Score      int       `json:"score"`
+	Level      string    `json:"level"`
+	Factors    []string  `json:"factors"`
+	Assistive  bool      `json:"assistive"`
+	LLMNote    string    `json:"llm_note,omitempty"`
 	ComputedAt time.Time `json:"computed_at"`
 }
 

@@ -339,14 +339,14 @@ func EBPFCoverage(registry *CredentialRegistry) []map[string]any {
 	out := []map[string]any{}
 	for _, h := range hosts {
 		out = append(out, map[string]any{
-			"host":       h,
-			"exec":       featureRuntimeStatus("exec", featureMode("exec")),
-			"file":       featureRuntimeStatus("file", featureMode("file")),
-			"net":        featureRuntimeStatus("net", featureMode("net")),
-			"priv":       featureRuntimeStatus("priv", featureMode("priv")),
-			"backend":    string(ProbeSensor()),
+			"host":        h,
+			"exec":        featureRuntimeStatus("exec", featureMode("exec")),
+			"file":        featureRuntimeStatus("file", featureMode("file")),
+			"net":         featureRuntimeStatus("net", featureMode("net")),
+			"priv":        featureRuntimeStatus("priv", featureMode("priv")),
+			"backend":     string(ProbeSensor()),
 			"observation": true,
-			"enforce":    false,
+			"enforce":     false,
 		})
 	}
 	return out

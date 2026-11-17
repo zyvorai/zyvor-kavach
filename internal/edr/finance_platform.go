@@ -387,14 +387,14 @@ func financeMarketData() []map[string]any {
 
 func financeSummary(store *Store, registry *CredentialRegistry) map[string]any {
 	return map[string]any{
-		"product":       "kavach-finance",
-		"mode":          "observe-only",
-		"enforce":       false,
-		"modules":       len(FinanceModules()),
-		"institutions":  len(financeInstitutions()),
-		"exchanges":     len(financeExchanges()),
-		"workstations":  len(financeWorkstations(store, registry)),
-		"payment_rails": len(financePaymentRails()),
+		"product":         "kavach-finance",
+		"mode":            "observe-only",
+		"enforce":         false,
+		"modules":         len(FinanceModules()),
+		"institutions":    len(financeInstitutions()),
+		"exchanges":       len(financeExchanges()),
+		"workstations":    len(financeWorkstations(store, registry)),
+		"payment_rails":   len(financePaymentRails()),
 		"open_fraud":      len(financeFraud()),
 		"insurance":       len(financeInsurance()) - 1,
 		"insurance_lines": len(financeInsuranceLines()),

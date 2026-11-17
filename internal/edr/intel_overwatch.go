@@ -10,24 +10,24 @@ import (
 )
 
 type ThreatActor struct {
-	ID          string   `json:"id"`
-	Name        string   `json:"name"`
-	Aliases     []string `json:"aliases"`
-	Motivation  string   `json:"motivation"`
-	Origins     []string `json:"origins"`
+	ID            string   `json:"id"`
+	Name          string   `json:"name"`
+	Aliases       []string `json:"aliases"`
+	Motivation    string   `json:"motivation"`
+	Origins       []string `json:"origins"`
 	TargetSectors []string `json:"target_sectors"`
-	TTPs        []string `json:"ttps"`
-	Description string   `json:"description"`
+	TTPs          []string `json:"ttps"`
+	Description   string   `json:"description"`
 }
 
 type IntelIndicator struct {
-	ID        string    `json:"id"`
-	Type      string    `json:"type"`
-	Value     string    `json:"value"`
-	ActorID   string    `json:"actor_id,omitempty"`
-	Malware   string    `json:"malware,omitempty"`
-	Confidence string   `json:"confidence"`
-	Published time.Time `json:"published"`
+	ID         string    `json:"id"`
+	Type       string    `json:"type"`
+	Value      string    `json:"value"`
+	ActorID    string    `json:"actor_id,omitempty"`
+	Malware    string    `json:"malware,omitempty"`
+	Confidence string    `json:"confidence"`
+	Published  time.Time `json:"published"`
 }
 
 type OverWatchAlert struct {
