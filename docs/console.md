@@ -26,7 +26,7 @@ Sign out calls `POST /v1/logout` and reloads.
 - Shell max width **1800px** (`--shell-max`, Netra sister), so wide displays are used fully.
 - Sticky translucent nav with the primary tabs and a **Browse** overflow menu.
 - Observation-only banner on every page.
-- Light / dark theme toggle. The choice is stored in `localStorage` (`kavach-theme`) and defaults to light; the console does not read the operating-system colour scheme.
+- Theme: system, light or dark. The default follows the operating-system colour scheme (`prefers-color-scheme`) and tracks live changes; the toggle (and the palette action "Cycle theme") cycles system, light, dark. The choice is stored in `localStorage` (`kavach-theme`: `auto`, `light` or `dark`) inside try/catch, so a blocked store just falls back to the OS setting.
 - Hash routing: opening a page sets `#/<id>` (for example `#/models`). A link with a valid `#/<id>` opens that page, and the last page is remembered in `localStorage` (`kavach-page`). The URL is replaced, not pushed, so the browser Back button leaves the console rather than stepping through pages you visited. An id that is not a page is ignored.
 - Netra-matching button system: blue primary CTA, quiet secondary, danger only for destructive-looking ledgers.
 - Phone width: CSS breakpoints at 860px (sequence-hunt grid), 820px and 640px. See "Dark mode and phone width" for what has and has not been checked.
@@ -159,7 +159,7 @@ Known limits: pages that render lists as cards rather than tables get no sort or
 
 ### Dark mode and phone width
 
-All of the above use the same CSS tokens as the rest of the console (dark values under `[data-theme="dark"]`), and the tool rows and view bars wrap at phone width. The initial usability pass (palette, tables, saved views) and the later Models and Inspector tabs were each checked only in headless Chrome at desktop width in the light theme. **Dark theme and 390px phone width for the palette, table tools, saved views, the four newer Models tabs and the Inspector url, email and lockfile modes are unverified in a browser.** See [console-qa](console-qa.md).
+All of the above use the same CSS tokens as the rest of the console (dark values under `[data-theme="dark"]`), and the tool rows and view bars wrap at phone width. The initial usability pass (palette, tables, saved views) and the later Models and Inspector tabs were each checked only in headless Chrome at desktop width in the light theme. **These were later checked in headless Chrome in light and dark at 1280px and 390px against synthetic data (palette, table tools, saved views, all 11 Models tabs, Inspector modes and results, Competitive); see [console-qa](console-qa.md) for exactly what was and was not exercised.** At phone width the section tabs wrap to their own row under the brand, and the Browse menu scrolls if the screen is short.
 
 ---
 
