@@ -2,11 +2,17 @@
 
 Kavach is an observation-only security platform: every change below detects, reports or stores records. Nothing here contains, kills or blocks.
 
-This file was written from `git log` and the docs on 2026-11-16, grouped by area. It is a summary, not a release process: the repository has two tags, `v0.1.0` and `v0.2.0`. The v0.2.0 section describes the commits between them. Changes after `v0.2.0` are under Unreleased. Counts such as rule totals come from the commit messages and the linked docs and were not recounted.
+This file was written from `git log` and the docs on 2026-11-16, grouped by area. It is a summary, not a release process: the repository has tags `v0.1.0`, `v0.2.0` and `v0.2.1`; each section describes the commits since the previous tag. Changes after `v0.2.1` are under Unreleased. Counts such as rule totals come from the commit messages and the linked docs and were not recounted.
 
 There was no changelog file before this one, and no version string in the source tree, so the tag is the only version marker.
 
 ## Unreleased
+
+- Competitive matrix: backlog items 21 (cloud audit logs) and 24 (offline vulnerability matching) moved from open to partial, with evidence and limits.
+- Changelog: v0.2.1 section corrected.
+
+
+## v0.2.1 (2026-11-16)
 
 ### Fixes
 - `/v1/ml/priority`: the optional factors `dns_anomaly`, `user_behaviour`, `peer_outlier` and `rule_fatigue` now influence score, coverage and the factor list (they were computed after the weighted sum and dropped). Regression test `TestMLExtFactorsReachPriorityScore`.
