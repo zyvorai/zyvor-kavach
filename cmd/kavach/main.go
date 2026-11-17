@@ -24,6 +24,7 @@ func main() {
 	tlsCert := flag.String("tls-cert", "", "server TLS certificate PEM")
 	tlsKey := flag.String("tls-key", "", "server TLS private key PEM")
 	clientCA := flag.String("client-ca", "", "optional client CA for mTLS on server")
+	clientAuth := flag.String("client-auth", "require", "with -client-ca: require (strict) or optional (verify a certificate only if presented)")
 	ca := flag.String("ca", "", "agent trusted CA bundle")
 	agentCert := flag.String("agent-cert", "", "agent client certificate PEM")
 	agentKey := flag.String("agent-key", "", "agent client key PEM")
@@ -71,7 +72,7 @@ func main() {
 				log.Fatal("non-loopback listener requires TLS")
 			}
 		} else {
-			cfg, err := edr.ServerTLSConfig(*clientCA)
+			cfg, err := edr.ServerTLSConfigMode(*clientCA, *clientAuth)
 			if err != nil {
 				log.Fatal(err)
 			}

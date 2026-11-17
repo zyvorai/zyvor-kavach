@@ -87,9 +87,8 @@ checkout directory is removed on the next deploy.
   how freshly imported content takes effect) followed by `rollout status` (180 s).
 - On the remote host, `~/.kavach/admin-token` and `~/.kavach/env` (`KAVACH_URL`,
   `KAVACH_TLS_INSECURE=true`, `KAVACH_ADMIN_TOKEN`), mode 600. `kavachctl` picks up `KAVACH_URL` and
-  `KAVACH_TLS_INSECURE` from `~/.kavach/env`, but it reads the token from `KAVACH_TOKEN` or `~/.kavach/api-key`,
-  not from `KAVACH_ADMIN_TOKEN`, so on that host run `export KAVACH_TOKEN=$(cat ~/.kavach/admin-token)` (or copy the file
-  to `~/.kavach/api-key`) before using it.
+  `KAVACH_TLS_INSECURE` from `~/.kavach/env`, and also reads `KAVACH_ADMIN_TOKEN` from it as a token fallback
+  (lowest precedence, after `KAVACH_TOKEN` and `ZYVOR_EDR_TOKEN`), so `kavachctl` works on that host without further setup.
 
 The script logs `ADMIN_TOKEN=...` at the end of a run. Treat deploy logs as secret
 material and do not paste them into tickets.

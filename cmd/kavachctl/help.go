@@ -23,7 +23,7 @@ func printHelp(w io.Writer) {
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Auth / config:")
 	fmt.Fprintln(w, "  KAVACH_URL            Controller base (default https://127.0.0.1:30899)")
-	fmt.Fprintln(w, "  KAVACH_TOKEN          Bearer token (or ~/.kavach/api-key / ZYVOR_EDR_TOKEN)")
+	fmt.Fprintln(w, "  KAVACH_TOKEN          Bearer token (or ~/.kavach/api-key / ZYVOR_EDR_TOKEN / KAVACH_ADMIN_TOKEN, lowest precedence)")
 	fmt.Fprintln(w, "  KAVACH_TLS_INSECURE   true to skip TLS verify (auto on loopback)")
 	fmt.Fprintln(w, "  ~/.kavach/env         Optional dotenv (skipped if KAVACH_SKIP_DOTENV=1)")
 	fmt.Fprintln(w)

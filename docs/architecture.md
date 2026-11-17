@@ -79,7 +79,7 @@ CONTAIN / KILL / ISOLATE / DROP  ✗
 | `-state` | `./data/findings.jsonl` | server | Findings store path; every other state file is `<state>` plus a suffix ([persistence-files.md](persistence-files.md)) |
 | `-credentials` | `./data/agents.json` | server | Hashed per-host agent credential registry |
 | `-tls-cert`, `-tls-key` | empty | server | Serve HTTPS (both or neither) |
-| `-client-ca` | empty | server | Require verified client certificates ([agent-mtls.md](agent-mtls.md)) |
+| `-client-ca` | empty | server | Verify client certificates; `-client-auth require` (default) or `optional` ([agent-mtls.md](agent-mtls.md)) |
 | `-url` | `http://127.0.0.1:8099` | agent | Server URL; `http://` is refused for any non-loopback host |
 | `-queue` | `./data/outbox` | agent | Durable event queue directory (limit 10,000 queued events; when full the agent refuses to drop silently and returns an error) |
 | `-ca`, `-agent-cert`, `-agent-key` | empty | agent | Trusted CA and client certificate pair |

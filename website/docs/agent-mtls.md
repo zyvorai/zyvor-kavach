@@ -36,6 +36,7 @@ controller mounts the CA only — never the agents' private key.
 | Side | Setting |
 |---|---|
 | Server | `-client-ca` (PEM CA); requires `-tls-cert` / `-tls-key` |
+| Server | `-client-auth require` (default) or `optional` (verify a certificate only if presented) |
 | Agent | `-agent-cert`, `-agent-key`, optional `-ca` |
 
 Tokens remain mandatory. A certificate is a second factor, not a replacement.

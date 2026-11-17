@@ -74,6 +74,8 @@ spec:
         {{- if ne $mtls "off" }}
         - -client-ca
         - /run/mtls/ca.crt
+        - -client-auth
+        - {{ if eq $mtls "optional" }}optional{{ else }}require{{ end }}
         {{- end }}
         ports:
         - name: {{ if .Values.tls.enabled }}https{{ else }}http{{ end }}

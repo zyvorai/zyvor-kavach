@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -39,16 +40,25 @@ func NewIncidentStore(s *Store) (*IncidentStore, error) {
 	if err != nil {
 		return nil, err
 	}
+	entries := map[string]IncidentAction{}
 	for _, line := range strings.Split(strings.TrimSpace(string(b)), "\n") {
 		if line == "" {
 			continue
 		}
 		var a IncidentAction
 		if json.Unmarshal([]byte(line), &a) != nil {
-			return nil, fmt.Errorf("corrupt incident ledger")
+			// Never abort startup on a corrupt ledger: move it aside for inspection and
+			// start empty.
+			bad := fmt.Sprintf("%s.corrupt-%d", x.path, time.Now().Unix())
+			if rerr := os.Rename(x.path, bad); rerr != nil {
+				return nil, fmt.Errorf("corrupt incident ledger %s and it could not be moved aside: %w", x.path, rerr)
+			}
+			log.Printf("incidents: ledger %s is corrupt; moved aside to %s and starting empty", x.path, bad)
+			return x, nil
 		}
-		x.entries[a.FindingID] = a
+		entries[a.FindingID] = a
 	}
+	x.entries = entries
 	return x, nil
 }
 func (x *IncidentStore) Register(mux *http.ServeMux, token string) {

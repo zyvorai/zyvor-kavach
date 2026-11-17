@@ -40,12 +40,35 @@ func NewMutualTLSClient(caPath, certPath, keyPath string) (*http.Client, error) 
 	return &http.Client{Timeout: 5 * time.Second, Transport: &http.Transport{TLSClientConfig: tlsConfig}}, nil
 }
 
-// ServerTLSConfig enables optional verification of enrolled client certificate
-// identities. Enrollment bearer tokens remain necessary; certificate identity
-// mapping and automated CA issuance are outside this milestone.
+// Client certificate modes for ServerTLSConfigMode.
+const (
+	ClientAuthRequire  = "require"  // handshake fails without a verified client certificate
+	ClientAuthOptional = "optional" // certificate verified only when presented; none is accepted
+)
+
+// ServerTLSConfig is the strict form: with a client CA every client must present a
+// verified certificate.
 func ServerTLSConfig(caPath string) (*tls.Config, error) {
+	return ServerTLSConfigMode(caPath, ClientAuthRequire)
+}
+
+// ServerTLSConfigMode configures client certificate verification. "require" (default
+// when empty) uses RequireAndVerifyClientCert. "optional" uses VerifyClientCertIfGiven:
+// clients without a certificate (kubelet probes, kavachctl, browsers) still connect,
+// but a certificate that is presented must verify against the CA. Bearer tokens remain
+// mandatory in both modes; mode has no effect without a CA.
+func ServerTLSConfigMode(caPath, mode string) (*tls.Config, error) {
 	cfg := &tls.Config{MinVersion: tls.VersionTLS12}
 	if caPath != "" {
+		var auth tls.ClientAuthType
+		switch mode {
+		case "", ClientAuthRequire:
+			auth = tls.RequireAndVerifyClientCert
+		case ClientAuthOptional:
+			auth = tls.VerifyClientCertIfGiven
+		default:
+			return nil, errors.New("invalid client auth mode " + mode + " (want require or optional)")
+		}
 		b, err := os.ReadFile(caPath)
 		if err != nil {
 			return nil, err
@@ -54,7 +77,7 @@ func ServerTLSConfig(caPath string) (*tls.Config, error) {
 		if !pool.AppendCertsFromPEM(b) {
 			return nil, errors.New("invalid client CA bundle")
 		}
-		cfg.ClientAuth = tls.RequireAndVerifyClientCert
+		cfg.ClientAuth = auth
 		cfg.ClientCAs = pool
 	}
 	return cfg, nil

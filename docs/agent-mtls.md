@@ -13,39 +13,45 @@ rotation; certificates are provisioned out of band.
 
 The behaviour is defined by two small functions in `internal/edr/secure_transport.go`:
 
-- `ServerTLSConfig(caPath)`: TLS 1.2 minimum. When a client CA file is given it sets
-  `ClientAuth = tls.RequireAndVerifyClientCert`. There is no code path that requests a
-  certificate but accepts a connection without one.
+- `ServerTLSConfigMode(caPath, mode)`: TLS 1.2 minimum. With a client CA file:
+  `-client-auth require` (the default) sets `tls.RequireAndVerifyClientCert`;
+  `-client-auth optional` sets `tls.VerifyClientCertIfGiven`, so a client without a
+  certificate still connects, but a certificate that is presented must verify against the
+  CA (a bad certificate is rejected). Without `-client-ca` no certificate is requested
+  and `-client-auth` has no effect. Any other value makes the server exit at start.
 - `NewMutualTLSClient(ca, cert, key)`: TLS 1.2 minimum, 5 second client timeout, the
   CA bundle is appended to the system roots, and the cert/key pair must be given
   together. It never sets `InsecureSkipVerify`.
 
 Consequences, stated plainly:
 
-- Passing `-client-ca` makes the **TLS handshake itself** require a verified client
-  certificate from every client of that listener: agents, but also browsers,
-  `kavachctl`, Prometheus and Kubernetes HTTPS probes, if they connect to the same port.
-  The same listener serves the console and the API, so there is no separate agent port.
-- The Helm chart passes `-client-ca` whenever `mtls.mode` is not `off`
-  (`helm/kavach/templates/deployment.yaml`). `optional` and `required` therefore render
-  the same controller arguments. **The "optional" behaviour described in the chart
-  comments (agents without a certificate still work) is not confirmed in the code; the
-  server code only implements require-and-verify.** Verify this on a throwaway install
-  before relying on `optional` as a migration step, and note that the chart's own
-  readiness and liveness probes are plain HTTPS `httpGet` probes without a client
-  certificate. Not verified on a live cluster in this documentation pass.
-- The agent binary does not read `KAVACH_TLS_INSECURE`. The chart exports it into the
-  DaemonSet when `tls.agentInsecureSkipVerify=true`, but only `kavachctl` and `kavach-mcp`
-  read that variable. An agent trusting the chart's self-signed certificate needs the CA
-  passed with `-ca`.
+- In `require` mode the **TLS handshake itself** requires a verified client certificate
+  from every client of that listener: agents, but also browsers, `kavachctl`, Prometheus
+  and Kubernetes HTTPS probes. The same listener serves the console and the API, so
+  there is no separate agent port. Use `optional` as the migration step, or when probes,
+  `kavachctl` and browsers must keep working.
+- `optional` is a migration mode, not a second factor: a client that omits the certificate
+  is accepted and then authenticated by the bearer token alone. Only `required` makes the
+  certificate mandatory. The bearer token is mandatory in both modes.
+- The Helm chart passes `-client-ca` and `-client-auth optional|require` according to
+  `mtls.mode`. The chart's readiness and liveness probes are plain HTTPS `httpGet` probes
+  without a client certificate, so with `mtls.mode=required` they fail the handshake and
+  the pod will not become Ready; use `optional`, or probe through something that holds a
+  certificate. Both modes are unit-tested at the `tls.Config` level and `helm template`
+  renders were checked; neither has been tried on a live cluster.
+- The agent binary does not read `KAVACH_TLS_INSECURE` and never skips verification. The
+  chart no longer sets it (the former `tls.agentInsecureSkipVerify` value was removed
+  because it did nothing and implied a bypass that did not exist). An agent trusting the
+  chart's self-signed certificate needs the CA passed with `-ca` (the chart does this
+  when `mtls.secretName` is set).
 
 ## Modes (Helm)
 
 | Mode | Chart behaviour | Verified controller behaviour |
 |---|---|---|
 | `off` (default) | No `-client-ca`; no client certificate requested | Confirmed |
-| `optional` | Mounts the CA and passes `-client-ca` | Same as `required` (see above) |
-| `required` | Mounts the CA and passes `-client-ca` | Every TLS connection needs a verified client certificate |
+| `optional` | Mounts the CA, passes `-client-ca` and `-client-auth optional` | `VerifyClientCertIfGiven`: no certificate accepted, a presented one must verify |
+| `required` | Mounts the CA, passes `-client-ca` and `-client-auth require` | Every TLS connection needs a verified client certificate |
 
 The chart refuses to render (`helm template` fails) if `mtls.mode` is not one of the three
 values, if `tls.enabled=false` (a client certificate cannot be requested over plain HTTP)
@@ -66,6 +72,7 @@ agents' private key.
 
 | Side | Flag | Meaning |
 |---|---|---|
+| Server | `-client-auth require\|optional` | With `-client-ca`: `require` (default) or `optional` (verify a certificate only if presented) |
 | Server | `-client-ca FILE` | PEM CA bundle for client certificates; requires `-tls-cert` and `-tls-key` (a listener without TLS on a non-loopback address is refused at start) |
 | Agent | `-agent-cert FILE`, `-agent-key FILE` | Client certificate and key; give both or neither |
 | Agent | `-ca FILE` | Extra trusted CA for the controller certificate |
@@ -116,8 +123,8 @@ HTTPS"), so a remote agent always needs TLS regardless of mTLS.
 |---|---|
 | Agent log `remote error: tls: bad certificate` / `certificate required` | Client certificate missing, expired, not signed by the `-client-ca` bundle, or lacks the `clientAuth` extended key usage |
 | Agent log `x509: certificate signed by unknown authority` | The agent does not trust the controller certificate: pass `-ca` |
-| Pod never becomes Ready after enabling mTLS | The kubelet probes carry no client certificate; see "What the code actually does" |
-| `kavachctl` or the browser cannot connect after enabling mTLS | They also lack a client certificate. `kavachctl` has no client-certificate option in this tree (not found in `cmd/kavachctl`); front the API with Envoy Gateway or a proxy that holds the certificate, or keep mTLS off |
+| Pod never becomes Ready after enabling `mtls.mode=required` | The kubelet probes carry no client certificate; use `optional` |
+| `kavachctl` or the browser cannot connect after enabling mTLS | They also lack a client certificate. `kavachctl` has no client-certificate option in this tree (not found in `cmd/kavachctl`); front the API with Envoy Gateway or a proxy that holds the certificate, or keep mTLS off or use `-client-auth optional` |
 | Server exits at start `invalid client CA bundle` | `-client-ca` file is not valid PEM |
 | `client certificate and key must both be supplied` | Only one of `-agent-cert` / `-agent-key` was given |
 | 401 despite a valid certificate | The bearer token is still checked; per-host enrollment tokens are host-scoped |
