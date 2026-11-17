@@ -204,8 +204,8 @@ func RegisterWorldPlatform(mux *http.ServeMux, token string, store *Store, regis
 		for _, f := range store.List() {
 			out = append(out, map[string]any{
 				"finding_id": f.ID, "status": "suggested",
-				"steps": []string{"Collect process tree", "Run AI classify", "Check similarity", "NL hunt same host", "Draft case"},
-				"verdict_hint": classifyBehavior(f).Family,
+				"steps":          []string{"Collect process tree", "Run AI classify", "Check similarity", "NL hunt same host", "Draft case"},
+				"verdict_hint":   classifyBehavior(f).Family,
 				"auto_remediate": false,
 			})
 		}

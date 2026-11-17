@@ -17,14 +17,14 @@ type HostGroup struct {
 }
 
 type ContainmentRequest struct {
-	ID        string    `json:"id"`
-	Host      string    `json:"host"`
-	Action    string    `json:"action"` // contain_request | lift_request
-	Actor     string    `json:"actor"`
-	Note      string    `json:"note"`
-	Status    string    `json:"status"` // recorded (never enforced)
-	Time      time.Time `json:"time"`
-	Enforced  bool      `json:"enforced"`
+	ID       string    `json:"id"`
+	Host     string    `json:"host"`
+	Action   string    `json:"action"` // contain_request | lift_request
+	Actor    string    `json:"actor"`
+	Note     string    `json:"note"`
+	Status   string    `json:"status"` // recorded (never enforced)
+	Time     time.Time `json:"time"`
+	Enforced bool      `json:"enforced"`
 }
 
 type RTRSession struct {
@@ -54,11 +54,11 @@ var (
 )
 
 var rtrAllowlist = map[string]string{
-	"ps":           "List recent observed processes for host from controller store",
-	"netstat":      "List recent network destinations for host from controller store",
-	"findings":     "List findings for host",
-	"sensor":       "Return sensor probe metadata",
-	"help":         "List allowed diagnostic commands",
+	"ps":       "List recent observed processes for host from controller store",
+	"netstat":  "List recent network destinations for host from controller store",
+	"findings": "List findings for host",
+	"sensor":   "Return sensor probe metadata",
+	"help":     "List allowed diagnostic commands",
 }
 
 func RegisterHostMgmt(mux *http.ServeMux, token string, store *Store, registry *CredentialRegistry) {
@@ -226,7 +226,7 @@ func RegisterRTR(mux *http.ServeMux, token string, store *Store, registry *Crede
 			body.Actor = "console"
 		}
 		s := &RTRSession{
-			ID: "rtr-" + time.Now().UTC().Format("20060102150405.000"),
+			ID:   "rtr-" + time.Now().UTC().Format("20060102150405.000"),
 			Host: body.Host, Actor: body.Actor, Status: "open", CreatedAt: time.Now().UTC(),
 		}
 		rtrMu.Lock()

@@ -140,6 +140,7 @@ only from the server environment (or the Helm `siem.*` values), never from reque
 |---|---|
 | `KAVACH_SIEM_WEBHOOK` (alias `KAVACH_SIEM_WEBHOOK_URL`) | HTTP endpoint that receives one JSON POST per finding (5 s client timeout) |
 | `KAVACH_SIEM_SYSLOG` (alias `KAVACH_SIEM_SYSLOG_ADDR`) | `host:port` of a UDP syslog receiver; one RFC 5424-style datagram per finding (`<134>1 <time> kavach - - - <json>`) |
+| `KAVACH_SIEM_ALLOW_PRIVATE` | `1` allows RFC1918/ULA webhook targets (internal collectors). Loopback, link-local (including `169.254.169.254`), unspecified and multicast stay refused |
 | `KAVACH_SIEM_HEADERS` | Extra webhook headers as `k=v,k2=v2` |
 | `KAVACH_SIEM_SINK` | `webhook`, `syslog`, `both` (default) or `none` |
 | `KAVACH_SIEM_FORMAT` | `json`, `ecs` or `syslog`; default `ecs` |
@@ -148,9 +149,9 @@ only from the server environment (or the Helm `siem.*` values), never from reque
 Behaviour read from `internal/edr/siem.go`: the payload is always the ECS-flavoured document
 (`@timestamp`, `message`, `event.kind=alert`, `rule.id`, `host.name`, `kavach.finding_id`, tags) whatever
 `KAVACH_SIEM_FORMAT` says; that variable is only echoed in the status. Delivery is fire and forget:
-each finding is sent once in its own goroutine, there is no retry, queue, signature or TLS pinning, and
-a failure only increments `err_count` and sets `last_error`. UDP can drop silently. The webhook URL is
-operator supplied and is not subject to the SSRF guards used for alert rules. Check it with
+each finding is sent in its own goroutine; the webhook is tried up to 3 times (backoff 0.5 s doubling, capped at 5 s; retried on network errors, 5xx and 429, not on other 4xx; retries stop at shutdown), there is no queue, signature or TLS pinning, and
+a final failure increments `err_count` and sets `last_error`. UDP can drop silently. The webhook URL is
+checked at start: only http/https, and a host that resolves to a loopback, link-local/metadata, unspecified, multicast or (without `KAVACH_SIEM_ALLOW_PRIVATE=1`) private address is refused and the webhook is disabled with the reason in `last_error`. The IP is checked again when connecting (DNS rebinding) and redirects to blocked addresses fail; proxy environment variables are ignored. The syslog address is not filtered. Check it with
 `kavachctl siem status` or `GET /v1/siem/status`:
 
 ```json

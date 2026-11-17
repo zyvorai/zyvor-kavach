@@ -23,7 +23,7 @@ type ransomWindow struct {
 }
 
 var hostRansom = struct {
-	mu   sync.Mutex
+	mu     sync.Mutex
 	byHost map[string]*ransomWindow
 }{byHost: map[string]*ransomWindow{}}
 

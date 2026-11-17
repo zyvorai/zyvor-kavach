@@ -128,7 +128,7 @@ named in the evidence column.
 | Cloud audit ingest (`POST /v1/cloud/audit/events`, [cloud-audit.md](cloud-audit.md)) | Admin token only (agent credentials and sessions refused). 4 MiB body, 1,000 records per request (413), 2 s evaluation budget | Reads records you send; never calls a cloud API |
 | Syslog listener ([syslog-listener.md](syslog-listener.md)) | Off by default; explicit `proto:host:port` binds; mandatory source allowlist; `POST /v1/syslog/parse` is admin or session and never ingests | Plaintext syslog is unauthenticated and spoofable by nature. Host names are namespaced `syslog:<name>` |
 | Parse-only inspectors (URL, e-mail extras, .NET, OneNote, packages) | Same 32 MiB inspect bound as other kinds | `TestURLNeverFetches` and `TestInspectorsNeverFetch` prove no outbound request |
-| SIEM push sink (`KAVACH_SIEM_*`, `internal/edr/siem.go`) | Operator environment only, never request data | The webhook client has a 5 s timeout but does not use the SSRF dial guard of alert rules, has no retry and no signature; point it only at trusted receivers |
+| SIEM push sink (`KAVACH_SIEM_*`, `internal/edr/siem.go`) | Operator environment only, never request data | Webhook URL validated at start (http/https only; loopback, link-local/metadata, unspecified, multicast refused; RFC1918/ULA refused unless `KAVACH_SIEM_ALLOW_PRIVATE=1`), the resolved IP is re-checked at dial time (anti DNS rebinding), redirects to blocked addresses are refused, proxies are not used, 3 attempts with capped backoff. No signature; the UDP syslog target is not address-filtered; point it only at trusted receivers |
 | Console login | `POST /v1/session` takes `{"token": ...}`; the form's username `admin` is cosmetic (the password is the token) | One shared token; see accepted risks |
 
 ## Known gaps found while documenting (items 1-3 and the token fallback now fixed)
@@ -139,7 +139,7 @@ These came out of a documentation pass that compared docs to code. They are obse
 2. **Fixed:** a corrupt `<store>.incidents` file is moved aside to `.corrupt-<unixtime>` and the ledger starts empty (`TestIncidentLedgerCorruptMovedAside`). The credential registry stays fail-closed on invalid JSON, now with a clear error instead of a bare JSON error (`TestCredentialRegistryCorruptFailsClosedClearly`); see [persistence-files.md](persistence-files.md).
 3. **Fixed:** the chart no longer sets `KAVACH_TLS_INSECURE` for agents and `tls.agentInsecureSkipVerify` was removed. The agent never skips verification (the safer option); use `-ca` / `mtls.secretName`.
 4. **`KAVACH_SIEM_FORMAT` is cosmetic:** the push payload is always ECS-flavoured JSON.
-5. **`deploy-remote.sh`** logs the admin token at the end of a run and its random-token fallback is unreachable
+5. **`deploy-remote.sh`** no longer logs the admin token (fixed: it logs only that a token is set and whether the lab default is in use). Its random-token fallback is still unreachable
    (`${KAVACH_ADMIN_TOKEN:-Admin@321}`), so the lab default is used whenever the variable is empty ([deploy-remote.md](deploy-remote.md)).
    (`kavachctl` now accepts `KAVACH_ADMIN_TOKEN` as the lowest-precedence token fallback, so the `~/.kavach/env` the script writes works.)
 

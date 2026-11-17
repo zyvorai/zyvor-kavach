@@ -53,10 +53,10 @@ type PreventionPolicy struct {
 }
 
 var (
-	iocMu   sync.Mutex
-	iocs    = defaultIOCs()
-	ioaMu   sync.Mutex
-	ioas    = defaultIOAs()
+	iocMu    sync.Mutex
+	iocs     = defaultIOCs()
+	ioaMu    sync.Mutex
+	ioas     = defaultIOAs()
 	policyMu sync.Mutex
 	policies = defaultPolicies()
 )

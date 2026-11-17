@@ -90,8 +90,9 @@ checkout directory is removed on the next deploy.
   `KAVACH_TLS_INSECURE` from `~/.kavach/env`, and also reads `KAVACH_ADMIN_TOKEN` from it as a token fallback
   (lowest precedence, after `KAVACH_TOKEN` and `ZYVOR_EDR_TOKEN`), so `kavachctl` works on that host without further setup.
 
-The script logs `ADMIN_TOKEN=...` at the end of a run. Treat deploy logs as secret
-material and do not paste them into tickets.
+The script no longer prints the token. At the end of a run it logs only that `ADMIN_TOKEN` is set and
+whether the lab default (`Admin@321`) is in use; read the value from `~/.kavach/admin-token` on the
+host. The lab default still applies when `KAVACH_ADMIN_TOKEN` is unset or empty, so the flow is unchanged.
 
 ### State and persistence
 

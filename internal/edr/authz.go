@@ -33,7 +33,7 @@ func requireAdminOrSession(w http.ResponseWriter, r *http.Request, token string)
 
 // Role catalog + optional enforcement via KAVACH_RBAC=1 and X-Kavach-Role / KAVACH_ROLE.
 var (
-	roleMu sync.Mutex
+	roleMu    sync.Mutex
 	rbacRoles = []map[string]any{
 		{"id": "role-admin", "name": "Administrator", "permissions": []string{"*"}},
 		{"id": "role-analyst", "name": "Analyst", "permissions": []string{"read", "triage", "hunt", "cases", "write", "ingest"}},

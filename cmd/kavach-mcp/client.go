@@ -15,10 +15,10 @@ import (
 )
 
 type client struct {
-	base   string
-	token  string
-	http   *http.Client
-	actor  string
+	base  string
+	token string
+	http  *http.Client
+	actor string
 }
 
 func newClient() *client {

@@ -12,14 +12,14 @@ import (
 )
 
 type Asset struct {
-	Hostname     string    `json:"hostname"`
-	Platform     string    `json:"platform"`
-	Sensor       string    `json:"sensor"`
-	Online       bool      `json:"online"`
-	Apps         int       `json:"apps"`
-	LastSeen     time.Time `json:"last_seen,omitempty"`
-	Unmanaged    bool      `json:"unmanaged"`
-	Tags         []string  `json:"tags,omitempty"`
+	Hostname  string    `json:"hostname"`
+	Platform  string    `json:"platform"`
+	Sensor    string    `json:"sensor"`
+	Online    bool      `json:"online"`
+	Apps      int       `json:"apps"`
+	LastSeen  time.Time `json:"last_seen,omitempty"`
+	Unmanaged bool      `json:"unmanaged"`
+	Tags      []string  `json:"tags,omitempty"`
 }
 
 type AppInventory struct {
