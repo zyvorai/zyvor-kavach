@@ -22,26 +22,30 @@ Sections 3 to 10 below are dated snapshots, kept as the record of how each pass 
 | Scenario files (embedded) | `singles.json` 171 (`emu-*`), `singles2.json` 87 (`val2-*`), `unix2.json` 112 (`val3-*`), `chains.json` 19 (`chain-*`), `cloud_audit.json` 118 (115 `emu-cld-*` plus 3 `benign-*`), `benign.json` 38, `benign2.json` 6, `benign3.json` 16 |
 | Scenarios | 567: 485 single, 19 chain, 63 benign (platform: 371 linux, 130 windows, 66 macos; all cloud scenarios are labelled `linux`). The loader cap is 600 |
 | Claimed techniques (built-in, IOA and content rules) | 268 |
-| Detected | 225 (83.9% of claimed) |
-| Partial / Missed | 6 / 2 |
+| Detected | 231 (86.1% of claimed) |
+| Partial / Missed | 0 / 2 (T1137.001, T1568) |
 | Not-testable | 18 |
 | Untested (claimed, no scenario) | 17, all cloud or SaaS techniques claimed by `cld-` rules (T1069.003, T1070.008, T1098.002, T1098.005, T1114.002, T1114.003, T1484.002, T1531, T1556, T1556.006, T1564.008, T1578.001 to T1578.003, T1619, T1621, T1666) |
-| Detect rate over tested techniques | 96.5% (matrix field `tested_detection_rate_pct`) |
-| Non-benign scenarios passing | 486 of 504 = 0.964; floor 0.93 |
+| Detect rate over tested techniques | 99.1% (matrix field `tested_detection_rate_pct`) |
+| Non-benign scenarios passing | 501 of 504 = 0.994; floor 0.93 |
 | Benign controls firing at medium or above | 0 of 63 |
 | Claimed tactic coverage (matrix) | 50% |
 
 Not-testable techniques (reasons in `scenarios/not_testable.json`): T1014, T1027.002, T1030, T1055, T1055.001, T1055.009, T1055.012, T1068, T1078.003, T1078.004, T1110.002, T1204.001, T1205.002, T1221, T1550.003, T1554, T1565.001, T1573.002.
 
-Measured by tactic (Detected / claimed): Initial Access 6/7, Execution 24/28, Persistence 52/58, Privilege Escalation 12/14, Defense Evasion 58/76, Credential Access 32/38, Discovery 19/22, Lateral Movement 15/18, Collection 12/15, Command and Control 16/19, Exfiltration 9/10, Impact 11/13. Defense Evasion is the weakest (76.3%) because 10 of its 76 techniques are not testable.
+Measured by tactic (Detected / claimed): Initial Access 6/7, Execution 26/28, Persistence 53/58, Privilege Escalation 12/14, Defense Evasion 60/76, Credential Access 33/38, Discovery 19/22, Lateral Movement 16/18, Collection 12/15, Command and Control 17/19, Exfiltration 9/10, Impact 12/13. Defense Evasion is the weakest (78.9%) because 10 of its 76 techniques are not testable.
 
-**Scenarios that did not pass: cause and fix.** Before the fix, 18 of 504 non-benign scenarios did not pass (Detected 486, Partial/Missed at technique level 6/2 as in the table above). After adding the `labfix` content pack (`internal/edr/content/labfix.json`, 14 rules, `lab-*`) 3 of 504 do not pass: 501 of 504 = 0.994. Technique level after: Detected 231, Partial 0, Missed 2, Not-testable 18, Untested 17 (the table above shows the "before" measurement). Benign controls firing: 0 of 63, unchanged; the benign corpus tests and the guard were not touched.
+**Scenarios that did not pass: cause and fix.** Before the fix, 18 of 504 non-benign scenarios did not pass (Detected 486, Partial/Missed at technique level 6/2 as in the table above). After adding the `labfix` content pack (`internal/edr/content/labfix.json`, 14 rules, `lab-*`) 3 of 504 do not pass: 501 of 504 = 0.994. Technique level after: Detected 231, Partial 0, Missed 2, Not-testable 18, Untested 17 (the table above shows this measurement; re-measured 2026-11-17 on the shipped packs, which corrected the stale pre-fix figures of 225 detected, 6 partial and 486 of 504 passing). Benign controls firing: 0 of 63, unchanged; the benign corpus tests and the guard were not touched.
 
 Cause (found by reading rule history, not a code regression): no matcher, id collision or load-order change was involved. The three `emu-` Missed scenarios and the lsass one date from the first lab commit; the later "closed" claims (gaps-v1, section 9) were measured at technique level, where a sibling scenario (`certutil`, `rar`, `net user`) turned the technique Detected, so the specific single-step scenarios stayed Missed, and the pass-rate floor (0.93) hid them. The existing rules for those techniques had been narrowed during the benign tuning (`28b2f57`) to rarer variants: `lx-download-to-shm-or-hidden-tmp` needs `/dev/shm` or a dot-file target, `lx-uid0-account-created` needs `-o -u 0`, `lx-archive-sensitive-credential-dirs` needs credential directories, and `ioa-ioa-1` maps procdump-on-lsass only to the parent T1003. The Partial `val2-`/`val3-` entries and the chain failures were the same problem: a rule fired under a neighbouring technique (T1569.002 for PsExec, T1204.002 for Office shells, T1059 for web-server shells) and the two chains inherited the wget and web-shell gaps.
 
 Fix: new narrow rules with positive and negative samples, each cross-checked against the benign corpus: raw-IP curl/wget saving under /tmp, /dev/shm or /var/tmp (T1105); `useradd` with an interactive shell and an admin group (T1136.001); archive written to a hidden temp file (T1560.001); procdump/comsvcs against lsass (T1003.001); base64 decode piped to a shell (T1140); and companion mappings for T1190, T1021.002, T1090.001, T1112, T1562.006, T1204.002, T1203 and T1552.001. Scenarios and expectations were not edited. `TestValPinnedScenariosPass` pins 15 scenarios as passing and fails if one is deleted.
 
-Still failing (3, left as recorded precision trade-offs, not hidden): `val2-t1137-001-office-template-macro-persis`, `val2-t1568-fast-flux-style-lookups-of-r` (both Missed) and `val2-t1553-002-module-with-a-revoked-style` (Partial: only the module-path rule fires; a rule keyed on a "REVOKED" signer string would be synthetic-only).
+Still failing (3, investigated and deliberately left, no rule added):
+
+* `val2-t1137-001-office-template-macro-persis` (Missed): the scenario is a single `file modify` of `...\\Microsoft\\Templates\\Normal.dotm`. File events carry no writing process (`FileEvent.PID` is optional and the scanner cannot attribute writers). Word itself rewrites Normal.dotm on routine close, so a rule on that path would fire on every ordinary Word session; `win-file-office-startup-macro` excludes it for exactly that reason. Telling a malicious macro injection from a normal save needs writer attribution or content inspection, which this telemetry does not have. Not detectable from the event as modelled.
+* `val2-t1568-fast-flux-style-lookups-of-r` (Missed): three DNS lookups of random-looking labels under one parent domain. Fast flux is a rotation property across many lookups and answers (short TTL, changing A records); the DNS rules are stateless per query and the event has no answer or TTL. A per-query rule on a 12-character random label would match CDN and cloud hostnames, and keying on the scenario's `dyn-update.example` parent would overfit. It would need a windowed aggregate over distinct labels per parent domain, which is an engine feature, not a content rule.
+* `val2-t1553-002-module-with-a-revoked-style` (Partial: only `module-injection-prone-path-load`, T1055.001, fires): the only signal that the certificate is revoked is the synthetic `(REVOKED)` suffix in the signer string. Real module telemetry has `signed` and `signer` but no revocation status, so a rule on that string would match only this scenario. Left as a scenario/telemetry mismatch.
 
 Historical list before the fix, kept for the record:
 
