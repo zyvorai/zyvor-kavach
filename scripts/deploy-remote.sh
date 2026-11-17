@@ -441,7 +441,12 @@ elif kubectl -n kavach-system get deploy -l app.kubernetes.io/name=kavach -o nam
   kubectl -n kavach-system rollout status "\$dep" --timeout=180s || true
 fi
 
-log "ADMIN_TOKEN=\${ADMIN_TOKEN}"
+# Never print the token value (deploy logs get pasted into tickets).
+if [[ "\${ADMIN_TOKEN}" == "Admin@321" ]]; then
+  log "ADMIN_TOKEN is set (the lab default is in use; set KAVACH_ADMIN_TOKEN for anything beyond a lab). Value not logged; see \$HOME/.kavach/admin-token on this host."
+else
+  log "ADMIN_TOKEN is set (custom value). Value not logged; see \$HOME/.kavach/admin-token on this host."
+fi
 log "KAVACH_URL=https://\${HOST_IP}:\${NODE_PORT}"
 curl -skf "https://127.0.0.1:\${NODE_PORT}/healthz" \\
   || curl -skf "https://\${HOST_IP}:\${NODE_PORT}/healthz" \\

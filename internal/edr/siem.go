@@ -23,6 +23,8 @@ type SIEMConfig struct {
 	Enabled    bool
 	Sink       string // webhook|syslog|both|none — from KAVACH_SIEM_SINK
 	Format     string // json|ecs|syslog — from KAVACH_SIEM_FORMAT
+
+	allowLoopback bool // test only; never set from the environment
 }
 
 type SIEMExporter struct {
@@ -33,6 +35,34 @@ type SIEMExporter struct {
 	errCount atomic.Uint64
 	lastErr  string
 	lastOK   time.Time
+
+	attempts int           // webhook attempts per finding (default 3)
+	backoff  time.Duration // first retry delay, doubled each time, capped at 5 s
+	stop     chan struct{}
+	stopOnce sync.Once
+}
+
+// Close stops pending webhook retries.
+func (s *SIEMExporter) Close() {
+	if s != nil {
+		s.stopOnce.Do(func() { close(s.stop) })
+	}
+}
+
+// newSIEMExporter builds an exporter, validating the webhook URL. An unsafe
+// webhook is dropped (and reported via status) rather than used.
+func newSIEMExporter(cfg SIEMConfig) *SIEMExporter {
+	s := &SIEMExporter{cfg: cfg, attempts: 3, backoff: 500 * time.Millisecond, stop: make(chan struct{})}
+	allowPriv := siemAllowPrivate()
+	if cfg.WebhookURL != "" {
+		if _, err := validateSIEMURL(cfg.WebhookURL, allowPriv, cfg.allowLoopback); err != nil {
+			s.cfg.WebhookURL = ""
+			s.cfg.Enabled = s.cfg.SyslogAddr != ""
+			s.noteErr(err)
+		}
+	}
+	s.client = newSIEMHTTPClient(allowPriv, cfg.allowLoopback)
+	return s
 }
 
 // DefaultSIEM is set by the server process for finding export side-effects.
@@ -91,7 +121,7 @@ func NewSIEMExporterFromEnv() *SIEMExporter {
 		cfg.WebhookURL, cfg.SyslogAddr = "", ""
 		cfg.Enabled = false
 	}
-	return &SIEMExporter{cfg: cfg, client: &http.Client{Timeout: 5 * time.Second}}
+	return newSIEMExporter(cfg)
 }
 
 // ECSEvent is a minimal Elastic Common Schema flavored document.
@@ -161,10 +191,38 @@ func (s *SIEMExporter) ExportFinding(f Finding) {
 }
 
 func (s *SIEMExporter) postWebhook(b []byte) {
+	delay := s.backoff
+	var err error
+	for attempt := 1; attempt <= s.attempts; attempt++ {
+		var retry bool
+		retry, err = s.postWebhookOnce(b)
+		if err == nil {
+			s.noteOK()
+			return
+		}
+		if !retry || attempt == s.attempts {
+			break
+		}
+		t := time.NewTimer(delay)
+		select {
+		case <-s.stop:
+			t.Stop()
+			s.noteErr(fmt.Errorf("%w (retry cancelled by shutdown)", err))
+			return
+		case <-t.C:
+		}
+		if delay *= 2; delay > 5*time.Second {
+			delay = 5 * time.Second
+		}
+	}
+	s.noteErr(err)
+}
+
+// postWebhookOnce makes one attempt and reports whether a retry may help.
+func (s *SIEMExporter) postWebhookOnce(b []byte) (retry bool, err error) {
 	req, err := http.NewRequest(http.MethodPost, s.cfg.WebhookURL, bytes.NewReader(b))
 	if err != nil {
-		s.noteErr(err)
-		return
+		return false, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	for k, v := range s.cfg.Headers {
@@ -172,15 +230,13 @@ func (s *SIEMExporter) postWebhook(b []byte) {
 	}
 	resp, err := s.client.Do(req)
 	if err != nil {
-		s.noteErr(err)
-		return
+		return !strings.Contains(err.Error(), "destination refused"), err
 	}
 	resp.Body.Close()
 	if resp.StatusCode >= 300 {
-		s.noteErr(fmt.Errorf("webhook HTTP %d", resp.StatusCode))
-		return
+		return resp.StatusCode >= 500 || resp.StatusCode == 429, fmt.Errorf("webhook HTTP %d", resp.StatusCode)
 	}
-	s.noteOK()
+	return false, nil
 }
 
 func (s *SIEMExporter) sendSyslog(f Finding, jsonBody []byte) {

@@ -9,6 +9,9 @@ There was no changelog file before this one, and no version string in the source
 ## Unreleased
 
 - Validation lab: investigated the 3 remaining failing scenarios (Normal.dotm persistence, fast-flux DNS, revoked-signer module). None is detectable from the telemetry as modelled without overfitting, so no rule was added; reasons documented. Refreshed the stale top-table numbers in `docs/research-validation-lab.md` to the measured 501/504 pass, 231 detected, 0 partial, 2 missed, 0/63 benign false positives.
+### Security
+- SIEM push webhook: URL validation (http/https, blocks loopback, link-local/metadata, unspecified, multicast, and private ranges unless `KAVACH_SIEM_ALLOW_PRIVATE=1`), dial-time IP re-check against DNS rebinding, redirect checks, and 3 attempts with capped backoff that stop at shutdown.
+- `scripts/deploy-remote.sh` no longer prints the admin token; it logs only that one is set and whether the lab default is in use. Behaviour otherwise unchanged.
 
 ## v0.2.3 (2026-11-17)
 
