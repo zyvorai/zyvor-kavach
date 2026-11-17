@@ -1414,7 +1414,7 @@
    "risk": "Low",
    "conflicts_with_observation_only": "No",
    "status": "partial",
-   "evidence": "GET /v1/content/versions, /changes, /changelog (content_versions_*.go, <store>.contentversions.json): hash snapshots of embedded packs diffed per item, 50-snapshot history. Limits: custom rules are not included; Sigma rule to telemetry mapping is not a separate report (see /v1/content/coverage and /v1/coverage/blindspots)."
+   "evidence": "GET /v1/content/versions, /changes, /changelog (content_versions_*.go, <store>.contentversions.json): hash snapshots of embedded packs diffed per item, 50-snapshot history. Rule-level detection-as-code: GET /v1/content/manifest (pack SHA-256, batches, per-rule hashes, optional HMAC via KAVACH_CONTENT_SIGN_KEY), GET/POST /v1/content/snapshots (admin, <store>.contentsnaps.json, cap 20), GET /v1/content/diff (added/removed/changed with severity, patterns, ATT&CK mapping, enabled state) (content_manifest.go, docs/content-versioning.md). Limits: custom rules are not included; the HMAC is a shared-secret integrity check, not a PKI; upstream Sigma version tracking and a Sigma rule to telemetry mapping report are not built (see /v1/content/coverage and /v1/coverage/blindspots)."
   },
   {
    "id": 18,
