@@ -27,7 +27,7 @@ Titles are original summaries of public control themes, not quotations.
 | za-popia | South Africa POPIA s19-22 | 9 |
 | us-cmmc-l2 | US CMMC 2.0 L2 / NIST SP 800-171 | 16 |
 | us-fedramp-moderate | US FedRAMP Moderate | 19 |
-| ca-cccs | Canada CCCS + PIPEDA | 12 |
+| ca-cccs | Canada CCCS + PIPEDA | 10 |
 | kr-ismsp | South Korea ISMS-P | 15 |
 | hk-hkma | Hong Kong HKMA C-RAF / PCPD | 10 |
 
@@ -44,17 +44,17 @@ Web access is unreliable (EUR-Lex, legislation.gov.uk and several regulator site
 | EU DORA | https://eur-lex.europa.eu/eli/reg/2022/2554/oj/eng | partial (2026-11-16, search excerpts): topics of Art. 5, 8, 9, 11, 12, 13, 17, 18, 19, 24, 26, 28 consistent with the control titles; Art. 6 and 10 not confirmed (Art. 10 only a fragment) |
 | EU GDPR Art.32 | https://eur-lex.europa.eu/legal-content/EN/ALL/?uri=celex:32016R0679 | verified (2026-11-16, search excerpt): four listed measures (pseudonymisation/encryption, CIA and resilience, restoration, regular testing) |
 | Australia Essential Eight | https://www.cyber.gov.au/business-government/asds-cyber-security-frameworks/essential-eight/essential-eight-explained | partial (2026-11-16, search excerpt): the eight strategies are confirmed; maturity entries remain themes, not exact ML text. Note: ASD now publishes "Transitioning from the Essential Eight" describing a principles-based model with no target maturity level; the catalog still follows the maturity-model layout |
-| Australia ISM | https://www.cyber.gov.au/resources-business-and-government/essential-cyber-security/ism | UNVERIFIED; guideline names approximate; not checked in the 2026-11-16 pass beyond reachability |
-| Singapore CCoP | https://www.csa.gov.sg | UNVERIFIED; control ids are Kavach labels |
-| Japan | https://www.meti.go.jp / https://www.nisc.go.jp | UNVERIFIED; ids are Kavach labels |
+| Australia ISM | https://www.cyber.gov.au/resources-business-and-government/essential-cyber-security/ism | UNVERIFIED; guideline names approximate; retried 2026-11-17, official pages and PDF did not load |
+| Singapore CCoP | https://www.csa.gov.sg/docs/default-source/legislation/ccop---second-edition_revision-one.pdf | verified and corrected (2026-11-17, official PDF read): ids are now CCoP section numbers of the 2026 edition (Release 1, effective 29 July 2026); file-integrity control replaced by 5.9 System Hardening |
+| Japan | https://www.meti.go.jp / https://www.nisc.go.jp | UNVERIFIED; ids are Kavach labels; METI PDF returned 403 on 2026-11-17 |
 | Saudi NCA ECC | https://cdn.nca.gov.sa/ar/ecc-en.pdf | verified (2026-11-16, PDF read directly) and corrected: Cryptography is 2-8 (2-7 is Data and Information Protection), so the id `ECC-2-7` became `ECC-2-8`; domain 4 is "Third-Party and Cloud Computing Cybersecurity" but 4-1 is Third-Party Cybersecurity (4-2 is cloud), so the `ECC-4-1` title was shortened. Other subdomain numbers used (1-1, 1-3, 1-5, 1-9, 1-10, 2-1 to 2-3, 2-5, 2-9 to 2-14, 3-1) match |
-| UAE IA | https://www.tdra.gov.ae / https://u.ae | UNVERIFIED; ids are Kavach labels |
+| UAE IA | https://www.tdra.gov.ae / https://u.ae | UNVERIFIED; ids are Kavach labels; official PDF not retrievable on 2026-11-17 |
 | Brazil LGPD | https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm | verified (2026-11-16, search excerpts of Planalto and government copies): art. 37 records, 41 encarregado, 46 security measures, 47 duty after processing, 48 incident communication, 49 systems, 50 good practice and governance |
 | South Africa POPIA | https://inforegulator.org.za/wp-content/uploads/2025/08/PROTECTION-OF-PERSONAL-INFORMATION-ACT-4-OF-2013.pdf | verified (2026-11-16, Act read directly): s19(1), 19(2)(a)-(d), s20, s21 and s22 match the control titles |
-| FedRAMP Moderate | https://www.fedramp.gov | UNVERIFIED; family-level only |
-| Canada CCCS / PIPEDA | https://www.cyber.gc.ca / https://www.priv.gc.ca | partial: PIPEDA s10.1-10.3 breach provisions read (see regional-reporting.md); CCCS baseline controls UNVERIFIED |
-| South Korea ISMS-P | https://isms.kisa.or.kr | UNVERIFIED; ids are Kavach labels |
-| Hong Kong | https://www.hkma.gov.hk / https://www.pcpd.org.hk | UNVERIFIED (HKMA C-RAF not checked; PCPD breach guidance see regional-reporting.md) |
+| FedRAMP Moderate | https://fedramp.gov/2026/reference/controls/ | partial (2026-11-17): family ids and names read against the official Rev 5 reference (CA title corrected); Moderate applicability per family not read |
+| Canada CCCS / PIPEDA | https://www.cyber.gc.ca/en/guidance/baseline-cyber-security-controls-small-and-medium-organizations / https://www.priv.gc.ca | verified and corrected (2026-11-17): CCCS baseline v1.2 controls 3.1-3.13 read; ids now `CCCS-3.x`; two non-baseline controls removed; PIPEDA s10.1-10.3 read earlier |
+| South Korea ISMS-P | https://www.pipc.go.kr/eng/user/lgp/bnp/certification.do | verified at domain level and corrected (2026-11-17, PIPC page): breach control moved from 3.4 to 2.11; sub-item numbers not read; KISA site not read |
+| Hong Kong | https://www.hkma.gov.hk / https://www.pcpd.org.hk | UNVERIFIED (2026-11-17: only CFI 2.0 and iCAST confirmed from the HKMA press release; C-RAF domain structure and PDPO DPP4 text not read; PCPD breach guidance see regional-reporting.md) |
 
 Where an id is described as a "Kavach label" it is a stable local identifier, not an official clause number.
 
@@ -101,7 +101,7 @@ kavachctl compliance score --framework dora
 
 As of the 2026-11-16 pass (see [verification-log.md](verification-log.md) for per-item evidence; nothing here was upgraded without it):
 
-- `UNVERIFIED`: Australia ISM (guideline names approximate), Singapore CCoP (ids are Kavach labels), Japan METI/NISC (ids are Kavach labels), UAE IA (ids are Kavach labels), FedRAMP Moderate (family-level only), South Korea ISMS-P (ids are Kavach labels), Hong Kong HKMA C-RAF / PCPD (HKMA not checked), and the CCCS baseline controls of Canada CCCS / PIPEDA.
+- `UNVERIFIED` (after the 2026-11-17 retry): Australia ISM (guideline names approximate), Japan METI/NISC (ids are Kavach labels), UAE IA (ids are Kavach labels), Hong Kong HKMA C-RAF / PCPD (C-RAF domains not read). Singapore CCoP, Canada CCCS and South Korea ISMS-P (domain level) were verified and corrected on 2026-11-17; FedRAMP Moderate is now `partial`.
 - `partial`: EU NIS2 Art.21 (items (b), (c), (f) headings only), EU DORA (Art. 6 and 10 not confirmed), Australia Essential Eight (maturity entries are themes; ASD now describes a principles-based model), US CMMC / NIST SP 800-171 (CMMC family mapping not checked against DoD text), Singapore MAS TRM (page reachable, section topics unverified).
 - `verified` or `verified and corrected`: UK Cyber Essentials, EU GDPR Art.32, Brazil LGPD, South Africa POPIA, Saudi NCA ECC (one id and one title corrected).
 
