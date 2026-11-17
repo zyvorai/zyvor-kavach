@@ -38,13 +38,13 @@ tls:
   opensslImage: alpine/openssl:3.5.9
   # kubernetes.io/tls Secret to serve instead of a cert minted per pod start.
   existingSecret: ""
-  # Bypass verify for the chart-generated self-signed cert (agent → controller).
-  agentInsecureSkipVerify: true
+  # There is deliberately no agent "insecure skip verify" switch: the agent binary never
+  # skips verification. To trust a self-signed controller cert, use mtls.secretName (ca.crt).
 
 # Mutual TLS between agents and the controller.
 #   off       no client certificate requested
-#   optional  mount client CA; controller may verify when presented
-#   required  mount client CA; controller requires verified client certs
+#   optional  mount client CA, -client-auth optional: a presented certificate must verify, none is accepted
+#   required  mount client CA, -client-auth require: every TLS client needs a verified certificate
 # Needs tls.enabled. secretName must hold ca.crt (and, for agents, tls.crt/tls.key).
 mtls:
   mode: "off"

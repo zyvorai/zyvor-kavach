@@ -71,9 +71,6 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        {{- if and .Values.tls.enabled .Values.tls.agentInsecureSkipVerify }}
-        - {name: KAVACH_TLS_INSECURE, value: "true"}
-        {{- end }}
         volumeMounts:
         - name: outbox
           mountPath: {{ .Values.agent.queuePath | quote }}

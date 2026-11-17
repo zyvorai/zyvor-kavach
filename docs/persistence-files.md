@@ -2,10 +2,10 @@
 
 `<store>` is the path given to the server flag `-state` (default `./data/findings.jsonl`; the container and Helm chart use `/app/data/findings.jsonl`). The agent credential registry is a separate flag, `-credentials` (default `./data/agents.json`). Every derived file below is `<store>` plus a suffix, so for the default it is `./data/findings.jsonl.exposure.json` and so on. Nothing is written anywhere else (no request field reaches a filesystem path; see [security-review.md](security-review.md)).
 
-Unless a row says otherwise, files are written atomically (temp file + rename) with mode 0600. For most derived files, a missing or corrupt file is logged or ignored and treated as empty at startup. There are three stricter exceptions to know about:
+Unless a row says otherwise, files are written atomically (temp file + rename) with mode 0600. For most derived files, a missing or corrupt file is logged or ignored and treated as empty at startup. There are two stricter exceptions plus the moved-aside incident ledger to know about:
 
-* `<store>.incidents`: a line that is not valid JSON makes startup fail with `corrupt incident ledger` (the API constructor panics). Fix or remove the bad line, or move the file aside.
-* The credential registry (`-credentials`): invalid JSON is a startup error (`log.Fatal`). A missing file is fine (empty registry).
+* `<store>.incidents`: a line that is not valid JSON no longer aborts startup. The file is moved aside to `<store>.incidents.corrupt-<unixtime>`, a log line says so, and the ledger starts empty. If the file cannot be moved, startup exits with a clear error (no panic).
+* The credential registry (`-credentials`): invalid JSON is deliberately fail-closed. Startup exits with a clear error naming the file (not a panic, contents never printed) rather than starting empty, because an empty registry would silently drop every enrolled host credential. Restore from backup or move the file aside to re-enroll. A missing file is fine (empty registry).
 * `<store>.events.telemetry`: a corrupt file is moved aside to `<store>.events.telemetry.corrupt-<timestamp>` and persistence restarts empty (see [telemetry-types.md](telemetry-types.md)).
 
 The findings file itself is read line by line; lines that do not parse are skipped, and only the newest 1000 findings are kept in memory (the server is started with a 1000-finding window), although the file on disk keeps growing until the retention purge rewrites it.
@@ -34,7 +34,7 @@ The findings file itself is read line by line; lines that do not parse are skipp
 | `<store>.reportschedules.json` | Scheduled report definitions (template, params, frequency, retention, format, next/last run; max 100). Rendered reports live in the directory `<store>.reports/` as `<run_id>.md|json|csv` plus `<run_id>.meta.json` (template, params, generated_at, bytes, sha256, status), capped per schedule by retention, and globally at 500 reports / 64 MB. Pull-only via `GET /v1/reports/archive/{run_id}`; Kavach never emails or pushes reports. Deleting a schedule deletes its reports |
 | `<store>.fleetslo.json` | Fleet SLO targets and the bounded series (5-minute samples, max 72 h, 500 agents: heartbeat freshness flag and event count per sample), persisted at most every 10 minutes. Derived only from data agents already send |
 | `<store>` (the path itself) | The findings store: one JSON finding per line, appended; rewritten by the retention purge |
-| `<store>.incidents` | Append-only JSON-lines incident workflow ledger (finding id, status, actor, time). Feeds `GET /v1/incidents` and the SOC metrics (`docs/observability.md`). Corrupt lines abort startup, see above |
+| `<store>.incidents` | Append-only JSON-lines incident workflow ledger (finding id, status, actor, time). Feeds `GET /v1/incidents` and the SOC metrics (`docs/observability.md`). A corrupt file is moved aside to `.corrupt-<unixtime>` and the ledger restarts empty, see above |
 | `<store>.transitions` | Append-only log of detection-triage status transitions, merged with `.incidents` when computing MTTA/MTTR (`GET /v1/soc/metrics`) |
 | `<store>.events.telemetry` | Ring buffer of typed telemetry (registry, dns, auth, module; 5000 per type; `docs/telemetry-types.md`). Corrupt file is renamed aside at startup |
 | `<store>.events` | Append-only JSON-lines ledger of process, network and file events (retention purge rewrites it; contains full command lines and paths, so treat as personal data) |

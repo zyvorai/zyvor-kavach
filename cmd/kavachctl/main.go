@@ -850,7 +850,7 @@ func loadKavachDotenv() {
 		return
 	}
 	loadEnvFile(filepath.Join(home, ".kavach", "env"))
-	if firstEnv("KAVACH_TOKEN", "ZYVOR_EDR_TOKEN") == "" {
+	if firstEnv("KAVACH_TOKEN", "ZYVOR_EDR_TOKEN", "KAVACH_ADMIN_TOKEN") == "" {
 		if b, err := os.ReadFile(filepath.Join(home, ".kavach", "api-key")); err == nil {
 			if k := strings.TrimSpace(string(b)); k != "" {
 				_ = os.Setenv("KAVACH_TOKEN", k)
@@ -929,7 +929,8 @@ func httpClient(timeout time.Duration) *http.Client {
 }
 
 func apiToken() string {
-	return firstEnv("KAVACH_TOKEN", "ZYVOR_EDR_TOKEN")
+	// KAVACH_ADMIN_TOKEN is lowest precedence: deploy-remote.sh writes it to ~/.kavach/env.
+	return firstEnv("KAVACH_TOKEN", "ZYVOR_EDR_TOKEN", "KAVACH_ADMIN_TOKEN")
 }
 
 func doRequest(method, path string, body []byte, headers map[string]string) ([]byte, int, error) {

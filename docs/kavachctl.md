@@ -17,6 +17,7 @@ go build -o bin/kavachctl ./cmd/kavachctl
 | `KAVACH_URL` | Controller base (default `https://127.0.0.1:30899`) |
 | `KAVACH_TOKEN` | Bearer token (alias `ZYVOR_EDR_TOKEN`) |
 | `KAVACH_TLS_INSECURE=true` | Skip TLS verify (auto on loopback) |
+| `KAVACH_ADMIN_TOKEN` | Token fallback (lowest precedence; written to `~/.kavach/env` by `deploy-remote.sh`) |
 | `~/.kavach/api-key` | Token file if env unset |
 | `~/.kavach/env` | Optional dotenv (`KEY=VALUE` lines; real environment variables win). Skipped when `KAVACH_SKIP_DOTENV=1` |
 | `KAVACH_CLI_ACTOR` | Value sent as `X-Kavach-Actor` on requests (default `kavachctl`); shows up as the actor on notes, journal and ledger entries |

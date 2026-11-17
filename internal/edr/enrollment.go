@@ -46,7 +46,10 @@ func OpenCredentialRegistry(path string) (*CredentialRegistry, error) {
 		return nil, err
 	}
 	if err = json.Unmarshal(b, &r.agents); err != nil {
-		return nil, err
+		// Fail closed: a credential registry silently reset to empty would drop every
+		// enrolled host's credential. Refuse to start, with an actionable message, and
+		// never print the file contents (they are credential hashes).
+		return nil, fmt.Errorf("credential registry %s is not valid JSON (%v); refusing to start. Restore it from backup, or move it aside to re-enroll hosts", path, err)
 	}
 	return r, nil
 }
