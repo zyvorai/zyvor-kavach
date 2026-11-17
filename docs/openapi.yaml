@@ -2163,6 +2163,36 @@ paths:
       responses:
         "200": { description: "{from, to, diff{added, removed, modified}}" }
         "404": { description: "Unknown from/to snapshot" }
+  /v1/content/manifest:
+    get:
+      summary: "Rule-pack manifest: pack SHA-256, rule counts, per-rule hashes, optional detached HMAC"
+      responses:
+        "200": { description: "{manifest{packs, rule_count, rules}, manifest_sha256, signed, signature?}" }
+  /v1/content/snapshots:
+    get:
+      summary: "Stored manifest snapshots (counts and hashes only), newest first"
+      responses:
+        "200": { description: "{cap, count, snapshots[]}" }
+    post:
+      summary: "Store a manifest snapshot (admin token only, body max 4 KiB)"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { type: object, properties: { label: { type: string, maxLength: 120 } } }
+      responses:
+        "201": { description: "{seq, time, label, manifest_sha256, pack_count, rule_count}" }
+        "400": { description: "Invalid or oversize body" }
+        "403": { description: "Admin token required" }
+  /v1/content/diff:
+    get:
+      summary: "Rule-level diff between manifest snapshots or the embedded set"
+      parameters:
+        - { name: from, in: query, schema: { type: string }, description: "Snapshot seq, latest (default) or embedded" }
+        - { name: to, in: query, schema: { type: string }, description: "Snapshot seq, latest or embedded (default)" }
+      responses:
+        "200": { description: "{diff{added, removed, changed[] with fields_changed: severity, patterns, attack_mapping, enabled_state, other}}" }
+        "404": { description: "Unknown from/to" }
   /v1/content/changelog:
     get:
       summary: "Human-readable changelog entry per snapshot (newest first)"

@@ -270,5 +270,6 @@ func RegisterBlindspots(mux *http.ServeMux, token string, store *Store) {
 // RegisterContentVersionsAndBlindspots is the single registration hook for edr.go.
 func RegisterContentVersionsAndBlindspots(mux *http.ServeMux, token string, store *Store) {
 	RegisterContentVersions(mux, token, store)
+	RegisterContentManifest(mux, token, store)
 	RegisterBlindspots(mux, token, store)
 }

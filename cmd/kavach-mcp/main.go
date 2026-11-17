@@ -70,6 +70,9 @@ func buildServer(c *client, allowMutations bool) (*mcpserver.Server, error) {
 	if err := registerCertFeedTools(srv, c); err != nil {
 		return nil, err
 	}
+	if err := registerContentManifestTools(srv, c); err != nil {
+		return nil, err
+	}
 	if err := registerRuleHealthTools(srv, c); err != nil {
 		return nil, err
 	}
