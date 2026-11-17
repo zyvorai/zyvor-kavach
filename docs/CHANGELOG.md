@@ -2,11 +2,17 @@
 
 Kavach is an observation-only security platform: every change below detects, reports or stores records. Nothing here contains, kills or blocks.
 
-This file was written from `git log` and the docs on 2026-11-16, grouped by area. It is a summary, not a release process: the repository has tags `v0.1.0`, `v0.2.0`, `v0.2.1`, `v0.2.2`, `v0.2.3` and `v0.2.4`; each section describes the commits since the previous tag. Changes after `v0.2.4` are under Unreleased. Counts such as rule totals come from the commit messages and the linked docs and were not recounted.
+This file was written from `git log` and the docs on 2026-11-16, grouped by area. It is a summary, not a release process: the repository has tags `v0.1.0`, `v0.2.0`, `v0.2.1`, `v0.2.2`, `v0.2.3`, `v0.2.4` and `v0.2.5`; each section describes the commits since the previous tag. Changes after `v0.2.5` are under Unreleased. Counts such as rule totals come from the commit messages and the linked docs and were not recounted.
 
 There was no changelog file before this one, and no version string in the source tree, so the tag is the only version marker.
 
 ## Unreleased
+
+Nothing yet.
+
+## v0.2.5 (2026-11-17)
+
+Docs only; no code changes since v0.2.4.
 
 - Docs: `-client-auth optional` and `require` verified end to end against a local server with a throwaway CA; recorded in `docs/agent-mtls.md` and `docs/verification-log.md`. Still not run on a live cluster.
 
