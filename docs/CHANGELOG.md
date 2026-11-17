@@ -8,7 +8,7 @@ There was no changelog file before this one, and no version string in the source
 
 ## Unreleased
 
-Nothing yet.
+- Docs: `-client-auth optional` and `require` verified end to end against a local server with a throwaway CA; recorded in `docs/agent-mtls.md` and `docs/verification-log.md`. Still not run on a live cluster.
 
 ## v0.2.4 (2026-11-17)
 
