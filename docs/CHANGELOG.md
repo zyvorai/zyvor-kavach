@@ -8,7 +8,7 @@ There was no changelog file before this one, and no version string in the source
 
 ## Unreleased
 
-Nothing yet.
+- Validation lab: investigated the 3 remaining failing scenarios (Normal.dotm persistence, fast-flux DNS, revoked-signer module). None is detectable from the telemetry as modelled without overfitting, so no rule was added; reasons documented. Refreshed the stale top-table numbers in `docs/research-validation-lab.md` to the measured 501/504 pass, 231 detected, 0 partial, 2 missed, 0/63 benign false positives.
 
 ## v0.2.3 (2026-11-17)
 
