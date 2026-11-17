@@ -30,6 +30,7 @@ Consequences, stated plainly:
   and Kubernetes HTTPS probes. The same listener serves the console and the API, so
   there is no separate agent port. Use `optional` as the migration step, or when probes,
   `kavachctl` and browsers must keep working.
+- Local end-to-end check (2026-11-17, `kavach` binary, throwaway CA): with `require` a client with no certificate or an untrusted one fails the handshake; with `optional` no certificate is accepted on `/healthz`, an untrusted certificate is still rejected, and `/v1/*` still returns 401 without a token. Not run on a live cluster.
 - `optional` is a migration mode, not a second factor: a client that omits the certificate
   is accepted and then authenticated by the bearer token alone. Only `required` makes the
   certificate mandatory. The bearer token is mandatory in both modes.
