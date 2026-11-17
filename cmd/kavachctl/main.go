@@ -56,6 +56,9 @@ func run(args []string) error {
 	if handled, err := rhDispatch(args, os.Stdout); handled {
 		return err
 	}
+	if handled, err := iocImportDispatch(args, os.Stdout); handled {
+		return err
+	}
 	if handled, err := regDispatch(args, os.Stdout); handled {
 		return err
 	}
