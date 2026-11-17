@@ -2,15 +2,34 @@
 
 Kavach is an observation-only security platform: every change below detects, reports or stores records. Nothing here contains, kills or blocks.
 
-This file was written from `git log` and the docs on 2026-11-16, grouped by area. It is a summary, not a release process: the repository has tags `v0.1.0`, `v0.2.0` and `v0.2.1`; each section describes the commits since the previous tag. Changes after `v0.2.1` are under Unreleased. Counts such as rule totals come from the commit messages and the linked docs and were not recounted.
+This file was written from `git log` and the docs on 2026-11-16, grouped by area. It is a summary, not a release process: the repository has tags `v0.1.0`, `v0.2.0`, `v0.2.1`, `v0.2.2` and `v0.2.3`; each section describes the commits since the previous tag. Changes after `v0.2.3` are under Unreleased. Counts such as rule totals come from the commit messages and the linked docs and were not recounted.
 
 There was no changelog file before this one, and no version string in the source tree, so the tag is the only version marker.
 
 ## Unreleased
 
+Nothing yet.
+
+## v0.2.3 (2026-11-17)
+
+### Security and robustness
+- Server flag `-client-auth require|optional` (default `require`); `optional` verifies a client certificate only when one is presented. The Helm chart passes it from `mtls.mode`. With `mtls.mode=required` kubelet plain-HTTPS probes still fail the handshake (documented). Not tested on live Kubernetes.
+- A corrupt `<store>.incidents` file is moved to `.incidents.corrupt-<unixtime>` instead of blocking start; a corrupt credentials file still fails closed with a clear error and never prints its contents.
+- Removed `KAVACH_TLS_INSECURE` and `tls.agentInsecureSkipVerify` from the chart.
+- `kavachctl` accepts `KAVACH_ADMIN_TOKEN` (environment or `~/.kavach/env`) as the lowest-precedence token source.
+
+### Content
+- Content versioning: `GET /v1/content/manifest`, admin `POST /v1/content/snapshots` (cap 20), `GET /v1/content/snapshots`, `GET /v1/content/diff`, optional HMAC with `KAVACH_CONTENT_SIGN_KEY`; `kavachctl content`, MCP tools. See [content-versioning](content-versioning.md).
+- Validation lab fix: pack `labfix.json` (14 `lab-` rules). Scenarios passing 486/504 to 501/504; benign controls firing 0/63; three scenarios still fail. The earlier shortfall was scenarios that never passed, not a regression.
+- IOC import: admin `POST /v1/ioc/import` (dry-run by default; STIX 2.1, MISP, CSV, text), IOC aging, `GET /v1/ioc/stats`, `kavachctl ioc`. See [ioc-import](ioc-import.md).
+
+### Console
+- Theme follows the OS (system, light, dark); Browse menu moved out of the scrolling strip; phone navigation wraps; contrast and table fixes. Checked in headless Chrome on synthetic data only.
+
+## v0.2.2 (2026-11-16)
+
 - Competitive matrix: backlog items 21 (cloud audit logs) and 24 (offline vulnerability matching) moved from open to partial, with evidence and limits.
 - Changelog: v0.2.1 section corrected.
-
 
 ## v0.2.1 (2026-11-16)
 

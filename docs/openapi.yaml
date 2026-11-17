@@ -331,6 +331,26 @@ paths:
       summary: DELETE /v1/ioc
       security: [{bearerAuth: []}]
       responses: {'204': {description: Deleted}}
+  /v1/ioc/import:
+    post:
+      summary: Offline threat-intel import (STIX 2.1 bundle, MISP event/attribute JSON, CSV or TXT list) from the request body; nothing is fetched. Dry run by default; admin token required. Unsupported or invalid items are rejected with a per-item reason, never guessed. TLP and valid_from/valid_until are carried through; indicators without valid_until get the per-source default expiry
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: dry_run, in: query, schema: {type: boolean, default: true}, description: "false stores the valid indicators"}
+        - {name: format, in: query, schema: {type: string, enum: [auto, stix, misp, csv, txt], default: auto}}
+        - {name: source, in: query, schema: {type: string}, description: "Source label (1-64 of letters, digits, . _ -); default import-<format>. Selects the expiry from KAVACH_IOC_SOURCE_TTL_DAYS"}
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object, description: "STIX 2.1 bundle or MISP export"}
+          text/plain:
+            schema: {type: string, description: "CSV (header with value, optional type, tlp, valid_from, valid_until, severity, description) or one indicator per line; max 5 MiB and 5000 items"}
+      responses: {'200': {description: "{mode, dry_run, format, source, default_ttl_days, ignored_objects, summary{candidates,valid,imported,updated,duplicate,rejected}, items[{n,ref,type,value,status,reason,tlp,valid_until}], items_truncated, limits}"}, '400': {description: Unparseable input or limit exceeded}, '403': {description: Not the admin token}, '413': {description: Body larger than the size limit}}
+  /v1/ioc/stats:
+    get:
+      summary: IOC lifecycle statistics - totals, active, expired and not-yet-valid counts, by type, by source (with sightings) and by TLP. Expired indicators no longer match but are retained
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: statistics}}
   /v1/ioa:
     get:
       summary: Custom IOA rules
@@ -2163,6 +2183,36 @@ paths:
       responses:
         "200": { description: "{from, to, diff{added, removed, modified}}" }
         "404": { description: "Unknown from/to snapshot" }
+  /v1/content/manifest:
+    get:
+      summary: "Rule-pack manifest: pack SHA-256, rule counts, per-rule hashes, optional detached HMAC"
+      responses:
+        "200": { description: "{manifest{packs, rule_count, rules}, manifest_sha256, signed, signature?}" }
+  /v1/content/snapshots:
+    get:
+      summary: "Stored manifest snapshots (counts and hashes only), newest first"
+      responses:
+        "200": { description: "{cap, count, snapshots[]}" }
+    post:
+      summary: "Store a manifest snapshot (admin token only, body max 4 KiB)"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { type: object, properties: { label: { type: string, maxLength: 120 } } }
+      responses:
+        "201": { description: "{seq, time, label, manifest_sha256, pack_count, rule_count}" }
+        "400": { description: "Invalid or oversize body" }
+        "403": { description: "Admin token required" }
+  /v1/content/diff:
+    get:
+      summary: "Rule-level diff between manifest snapshots or the embedded set"
+      parameters:
+        - { name: from, in: query, schema: { type: string }, description: "Snapshot seq, latest (default) or embedded" }
+        - { name: to, in: query, schema: { type: string }, description: "Snapshot seq, latest or embedded (default)" }
+      responses:
+        "200": { description: "{diff{added, removed, changed[] with fields_changed: severity, patterns, attack_mapping, enabled_state, other}}" }
+        "404": { description: "Unknown from/to" }
   /v1/content/changelog:
     get:
       summary: "Human-readable changelog entry per snapshot (newest first)"

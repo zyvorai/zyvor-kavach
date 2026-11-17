@@ -131,21 +131,17 @@ named in the evidence column.
 | SIEM push sink (`KAVACH_SIEM_*`, `internal/edr/siem.go`) | Operator environment only, never request data | The webhook client has a 5 s timeout but does not use the SSRF dial guard of alert rules, has no retry and no signature; point it only at trusted receivers |
 | Console login | `POST /v1/session` takes `{"token": ...}`; the form's username `admin` is cosmetic (the password is the token) | One shared token; see accepted risks |
 
-## Known gaps found while documenting (not fixed here)
+## Known gaps found while documenting (items 1-3 and the token fallback now fixed)
 
 These came out of a documentation pass that compared docs to code. They are observations, not new test-proven findings.
 
-1. **mTLS "optional" is not implemented as described.** `ServerTLSConfig` uses `RequireAndVerifyClientCert` whenever
-   `-client-ca` is set, and the Helm chart passes `-client-ca` for both `optional` and `required`. Every TLS client of that
-   listener then needs a certificate, including kubelet probes, browsers and `kavachctl`. See [agent-mtls.md](agent-mtls.md).
-2. **A corrupt `<store>.incidents` line aborts startup** (`NewIncidentStore` error is turned into a panic in the API
-   constructor), unlike most other state files, which are ignored when corrupt ([persistence-files.md](persistence-files.md)).
-3. **Chart/agent mismatch:** the DaemonSet sets `KAVACH_TLS_INSECURE` for agents (`tls.agentInsecureSkipVerify`) but the
-   agent binary never reads it and its client never skips verification, so an agent needs `-ca` for the chart's self-signed
-   certificate.
+1. **Fixed:** mTLS `optional` is now real. `-client-auth optional` uses `VerifyClientCertIfGiven`; the chart passes it for `mtls.mode=optional` and `require` for `required`. Tests: `TestServerTLSConfigModes`. See [agent-mtls.md](agent-mtls.md). Not tried on a live cluster.
+2. **Fixed:** a corrupt `<store>.incidents` file is moved aside to `.corrupt-<unixtime>` and the ledger starts empty (`TestIncidentLedgerCorruptMovedAside`). The credential registry stays fail-closed on invalid JSON, now with a clear error instead of a bare JSON error (`TestCredentialRegistryCorruptFailsClosedClearly`); see [persistence-files.md](persistence-files.md).
+3. **Fixed:** the chart no longer sets `KAVACH_TLS_INSECURE` for agents and `tls.agentInsecureSkipVerify` was removed. The agent never skips verification (the safer option); use `-ca` / `mtls.secretName`.
 4. **`KAVACH_SIEM_FORMAT` is cosmetic:** the push payload is always ECS-flavoured JSON.
 5. **`deploy-remote.sh`** logs the admin token at the end of a run and its random-token fallback is unreachable
    (`${KAVACH_ADMIN_TOKEN:-Admin@321}`), so the lab default is used whenever the variable is empty ([deploy-remote.md](deploy-remote.md)).
+   (`kavachctl` now accepts `KAVACH_ADMIN_TOKEN` as the lowest-precedence token fallback, so the `~/.kavach/env` the script writes works.)
 
 ## Accepted risks
 

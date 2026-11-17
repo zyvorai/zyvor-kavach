@@ -195,6 +195,39 @@ func TestValDetectedRateFloor(t *testing.T) {
 	}
 }
 
+// TestValPinnedScenariosPass pins scenarios that were once Missed or Partial (see
+// docs/research-validation-lab.md, "Scenarios that did not pass"). They are fixed by the labfix
+// content pack; the benign corpus guard keeps them honest from the other side.
+func TestValPinnedScenariosPass(t *testing.T) {
+	pinned := map[string]bool{}
+	for _, id := range []string{
+		"emu-t1105-ingress-wget", "emu-t1136-001-new-local-user", "emu-t1560-001-archive-staging",
+		"emu-t1003-001-lsass-procdump", "emu-t1140-base64-decode-run",
+		"chain-windows-phish-to-ransom", "chain-linux-c2-tunnel", "chain-linux-miner-infection",
+		"val2-t1021-psexec-remote-service-execut", "val2-t1090-001-internal-host-exposed-as-a-r",
+		"val2-t1112-reg-add-disabling-a-security", "val2-t1203-office-spawning-a-command-sh",
+		"val2-t1204-user-opened-lure-launches-a", "val2-t1562-006-stop-the-audit-daemon",
+		"val3-t1552-001-tar-dotdirs",
+	} {
+		pinned[id] = false
+	}
+	scs, _ := mustScenarios(t)
+	for _, r := range RunValidation(scs, ValOptions{}) {
+		if _, ok := pinned[r.ID]; !ok {
+			continue
+		}
+		pinned[r.ID] = true
+		if !r.Pass {
+			t.Errorf("pinned scenario %s no longer passes: %s fired=%v", r.ID, r.Detail, r.Fired)
+		}
+	}
+	for id, seen := range pinned {
+		if !seen {
+			t.Errorf("pinned scenario %s is missing from the pack (scenarios must not be deleted to improve numbers)", id)
+		}
+	}
+}
+
 func TestValEndpoints(t *testing.T) {
 	mux := http.NewServeMux()
 	RegisterValidationLab(mux, "tok", nil)

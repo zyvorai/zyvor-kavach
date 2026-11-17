@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -333,7 +334,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	registerHuntSeq(mux, token, store)
 	incidents, incidentErr := NewIncidentStore(store)
 	if incidentErr != nil {
-		panic(incidentErr)
+		log.Fatalf("incident ledger: %v", incidentErr)
 	}
 	incidents.Register(mux, token)
 	siem := NewSIEMExporterFromEnv()

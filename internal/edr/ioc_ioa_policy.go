@@ -20,6 +20,12 @@ type IOC struct {
 	Source      string    `json:"source"`
 	CreatedAt   time.Time `json:"created_at"`
 	Enabled     bool      `json:"enabled"`
+	// Lifecycle (offline import, docs/ioc-import.md). Zero values mean "no expiry" / unmarked.
+	TLP        string     `json:"tlp,omitempty"`
+	ValidFrom  *time.Time `json:"valid_from,omitempty"`
+	ValidUntil *time.Time `json:"valid_until,omitempty"`
+	Sightings  int        `json:"sightings,omitempty"` // match counter only; no event content is stored
+	LastSeen   *time.Time `json:"last_seen,omitempty"`
 }
 
 type IOARule struct {
@@ -86,11 +92,20 @@ func MatchIOCs(haystack string) []IOC {
 	iocMu.Lock()
 	defer iocMu.Unlock()
 	h := strings.ToLower(haystack)
+	now := time.Now().UTC()
 	var out []IOC
-	for _, i := range iocs {
-		if i.Enabled && strings.Contains(h, strings.ToLower(i.Value)) {
-			out = append(out, i)
+	for k := range iocs {
+		i := &iocs[k]
+		if i.Enabled && iocActive(*i, now) && strings.Contains(h, strings.ToLower(i.Value)) {
+			i.Sightings++
+			t := now
+			i.LastSeen = &t
+			iocDirty = true
+			out = append(out, *i)
 		}
+	}
+	if iocDirty {
+		iocFlushSoonLocked(now)
 	}
 	return out
 }
@@ -149,6 +164,8 @@ func MatchIOAs(haystack string) []IOARule {
 }
 
 func RegisterIOC(mux *http.ServeMux, token string, store *Store) {
+	iocImportInit(store)
+	registerIOCImport(mux, token)
 	mux.HandleFunc("GET /v1/ioc", func(w http.ResponseWriter, r *http.Request) {
 		if !requireAuth(w, r, token) {
 			return
