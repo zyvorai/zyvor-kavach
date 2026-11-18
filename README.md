@@ -1,5 +1,7 @@
 # Kavach.
 
+[Client overview (PDF)](docs/Kavach-Client-Overview.pdf)
+
 **Security without compromise.**
 
 Observation-first endpoint, cloud, and AI security by [ZYVOR](https://zyvor.dev) — sister to [Netra](https://github.com/zyvorai/netra).
