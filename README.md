@@ -160,14 +160,14 @@ go test ./...                      # full corpora, no race detector
 
 ## Pricing
 
-Free for evaluation and non-production use (30-day evaluation). A production licence is priced per endpoint per year, in rupees including 18% GST:
+Free for evaluation and non-production use (30-day evaluation). A production licence is priced per endpoint per year: INR including 18% GST in India, US dollars excluding tax elsewhere:
 
-| Plan | Price | Minimum |
-|---|---|---|
-| Kavach Pro | INR 3,999 per endpoint per year (about USD 40) | 25 endpoints (INR 99,975) |
-| Kavach Enterprise | INR 6,499 per endpoint per year (about USD 66) | 100 endpoints (INR 649,900) |
+| Plan | India (INR incl. 18% GST) | Worldwide (USD excl. tax) | Minimum |
+|---|---|---|---|
+| Kavach Pro | INR 3,999 per endpoint per year | USD 40 per endpoint per year | 25 endpoints (INR 99,975 / USD 1,009) |
+| Kavach Enterprise | INR 6,499 per endpoint per year | USD 66 per endpoint per year | 100 endpoints (INR 649,900 / USD 6,557) |
 
-A server counts as 3 endpoints. Volume: 256-499 endpoints -10%, 500-999 -15%, 1,000+ -20%. Multi-year: 2 years -5%, 3 years -10%. Volume and multi-year together are capped at 25%. Kavach detects and reports only; it never contains or blocks. After payment you receive a GST invoice, and the Zyvor team issues your licence and onboarding help. Online payment opens on [zyvor.dev/buy](https://zyvor.dev/buy#kavach) shortly; until then, write to [sales@zyvor.dev](mailto:sales@zyvor.dev) for an invoice or a quote. USD figures are for reference (INR / 1.18 / 84); the rupee price is the real price.
+A server counts as 3 endpoints. Volume: 256-499 endpoints -10%, 500-999 -15%, 1,000+ -20%. Multi-year: 2 years -5%, 3 years -10%. Volume and multi-year together are capped at 25%. Kavach detects and reports only; it never contains or blocks. After payment you receive a GST invoice (India) or a US-dollar invoice, and the Zyvor team issues your licence and onboarding help. A 30-day trial key is available for production evaluation. Buy or get a quote: [zyvor.dev/buy](https://zyvor.dev/buy#kavach) (online payment opens shortly). Prices: INR incl. 18% GST in India; US dollars excl. tax elsewhere (VAT, GST or sales tax added where applicable). Pay online by UPI, card or netbanking where a buy page exists; international cards work (charged in rupees); or request a US-dollar invoice by bank transfer. Custom pricing: contact [sales@zyvor.dev](mailto:sales@zyvor.dev).
 
 ---
 
