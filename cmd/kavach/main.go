@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/zyvorai/zyvor-kavach/internal/edr"
+	"github.com/zyvorai/zyvor-kavach/internal/licence"
 	"log"
 	"net/http"
 	"os"
@@ -54,6 +55,7 @@ func main() {
 		if poller := edr.NewNetraPollerFromEnv(); poller != nil {
 			go poller.Run(edr.LifecycleContext()) // cancelled by StopAll
 		}
+		log.Printf("Licence: %s", licence.Current().Message) // soft: informational only, nothing is disabled
 		handler := edr.APIWithCredentials(token, store, registry)
 		log.Printf("Kavach API listening on %s (sensor probe: %s)", *listen, edr.ProbeSensor())
 		if (*tlsCert == "") != (*tlsKey == "") {

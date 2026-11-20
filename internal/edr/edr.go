@@ -15,6 +15,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/zyvorai/zyvor-kavach/internal/licence"
 )
 
 type Event struct {
@@ -354,6 +356,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 		json.NewEncoder(w).Encode(map[string]any{
 			"backend": string(ProbeSensor()),
 			"product": "kavach",
+			"licence": licence.Current(),
 			"netra":   NetraPollerStatus(),
 			"siem":    siem.Status(),
 		})

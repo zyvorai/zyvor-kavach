@@ -171,6 +171,10 @@ A server counts as 3 endpoints. Volume: 256-499 endpoints -10%, 500-999 -15%, 1,
 
 ---
 
+## Licence key (30-day trial)
+
+Kavach verifies a signed licence key (`ZYV1.`) offline against a public key built into the binary; nothing is sent to Zyvor. A 30-day trial key from [sales@zyvor.dev](mailto:sales@zyvor.dev) applies to the paid production licence and support. Enforcement is soft: nothing is disabled when a trial or licence ends or when there is no key. Set `KAVACH_LICENCE_KEY` or put the key in `./data/licence.key` (or the file named by `KAVACH_LICENCE_FILE`). The status (`licensed`, `trial`, `licence_expired`, `unlicensed`, `invalid`) is logged at server start and returned as `licence` by `GET /v1/sensor`.
+
 ## License
 
 Zyvor Production License v1.0 — free for evaluation and non-production use; commercial license required for production. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
