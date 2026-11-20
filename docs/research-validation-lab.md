@@ -1,0 +1,552 @@
+# Detection validation lab: research, design and honest findings
+
+The validation lab measures which ATT&CK techniques Kavach actually detects, instead of trusting
+the rule-to-technique mappings in the ATT&CK matrix. It is the open, in-process analogue of
+breach-and-attack-simulation and ATT&CK-Evaluations-style scoring.
+
+Safety model: the lab only replays SYNTHETIC EVENTS (data) through the detection engines in memory.
+It never executes anything, never touches the host, never writes findings to the real store, ledger or
+SIEM exporter, and never changes any process-wide detection list. A test (`TestValReplayIsolation`)
+snapshots the store, its ledger bytes, the IOC and IOA lists and the content registry pointer before
+and after a full replay and fails on any difference.
+
+Every API response carries the note: "Synthetic data replayed in memory; measured on Kavach's own
+scenarios; not a guarantee against real attacks."
+
+## Current status (measured 2026-11-16)
+
+Sections 3 to 10 below are dated snapshots, kept as the record of how each pass went; their counts are not current. The numbers in this section were produced by running the lab on the shipped packs (`go test ./internal/edr/ -run 'TestVal' -v` for the gate line, plus a throwaway test that called `RunValidation` and `BuildValidationCoverage`). Re-measure with `kavachctl validate coverage` (or `GET /v1/validate/coverage`) rather than trusting this paragraph after content changes.
+
+| Measure | Value |
+|---|---|
+| Scenario files (embedded) | `singles.json` 171 (`emu-*`), `singles2.json` 87 (`val2-*`), `unix2.json` 112 (`val3-*`), `chains.json` 19 (`chain-*`), `cloud_audit.json` 118 (115 `emu-cld-*` plus 3 `benign-*`), `benign.json` 38, `benign2.json` 6, `benign3.json` 16 |
+| Scenarios | 567: 485 single, 19 chain, 63 benign (platform: 371 linux, 130 windows, 66 macos; all cloud scenarios are labelled `linux`). The loader cap is 600 |
+| Claimed techniques (built-in, IOA and content rules) | 268 |
+| Detected | 231 (86.1% of claimed) |
+| Partial / Missed | 0 / 2 (T1137.001, T1568) |
+| Not-testable | 18 |
+| Untested (claimed, no scenario) | 17, all cloud or SaaS techniques claimed by `cld-` rules (T1069.003, T1070.008, T1098.002, T1098.005, T1114.002, T1114.003, T1484.002, T1531, T1556, T1556.006, T1564.008, T1578.001 to T1578.003, T1619, T1621, T1666) |
+| Detect rate over tested techniques | 99.1% (matrix field `tested_detection_rate_pct`) |
+| Non-benign scenarios passing | 501 of 504 = 0.994; floor 0.93 |
+| Benign controls firing at medium or above | 0 of 63 |
+| Claimed tactic coverage (matrix) | 50% |
+
+Not-testable techniques (reasons in `scenarios/not_testable.json`): T1014, T1027.002, T1030, T1055, T1055.001, T1055.009, T1055.012, T1068, T1078.003, T1078.004, T1110.002, T1204.001, T1205.002, T1221, T1550.003, T1554, T1565.001, T1573.002.
+
+Measured by tactic (Detected / claimed): Initial Access 6/7, Execution 26/28, Persistence 53/58, Privilege Escalation 12/14, Defense Evasion 60/76, Credential Access 33/38, Discovery 19/22, Lateral Movement 16/18, Collection 12/15, Command and Control 17/19, Exfiltration 9/10, Impact 12/13. Defense Evasion is the weakest (78.9%) because 10 of its 76 techniques are not testable.
+
+**Scenarios that did not pass: cause and fix.** Before the fix, 18 of 504 non-benign scenarios did not pass (Detected 486, Partial/Missed at technique level 6/2 as in the table above). After adding the `labfix` content pack (`internal/edr/content/labfix.json`, 14 rules, `lab-*`) 3 of 504 do not pass: 501 of 504 = 0.994. Technique level after: Detected 231, Partial 0, Missed 2, Not-testable 18, Untested 17 (the table above shows this measurement; re-measured 2026-11-17 on the shipped packs, which corrected the stale pre-fix figures of 225 detected, 6 partial and 486 of 504 passing). Benign controls firing: 0 of 63, unchanged; the benign corpus tests and the guard were not touched.
+
+Cause (found by reading rule history, not a code regression): no matcher, id collision or load-order change was involved. The three `emu-` Missed scenarios and the lsass one date from the first lab commit; the later "closed" claims (gaps-v1, section 9) were measured at technique level, where a sibling scenario (`certutil`, `rar`, `net user`) turned the technique Detected, so the specific single-step scenarios stayed Missed, and the pass-rate floor (0.93) hid them. The existing rules for those techniques had been narrowed during the benign tuning (`28b2f57`) to rarer variants: `lx-download-to-shm-or-hidden-tmp` needs `/dev/shm` or a dot-file target, `lx-uid0-account-created` needs `-o -u 0`, `lx-archive-sensitive-credential-dirs` needs credential directories, and `ioa-ioa-1` maps procdump-on-lsass only to the parent T1003. The Partial `val2-`/`val3-` entries and the chain failures were the same problem: a rule fired under a neighbouring technique (T1569.002 for PsExec, T1204.002 for Office shells, T1059 for web-server shells) and the two chains inherited the wget and web-shell gaps.
+
+Fix: new narrow rules with positive and negative samples, each cross-checked against the benign corpus: raw-IP curl/wget saving under /tmp, /dev/shm or /var/tmp (T1105); `useradd` with an interactive shell and an admin group (T1136.001); archive written to a hidden temp file (T1560.001); procdump/comsvcs against lsass (T1003.001); base64 decode piped to a shell (T1140); and companion mappings for T1190, T1021.002, T1090.001, T1112, T1562.006, T1204.002, T1203 and T1552.001. Scenarios and expectations were not edited. `TestValPinnedScenariosPass` pins 15 scenarios as passing and fails if one is deleted.
+
+Still failing (3, investigated and deliberately left, no rule added):
+
+* `val2-t1137-001-office-template-macro-persis` (Missed): the scenario is a single `file modify` of `...\\Microsoft\\Templates\\Normal.dotm`. File events carry no writing process (`FileEvent.PID` is optional and the scanner cannot attribute writers). Word itself rewrites Normal.dotm on routine close, so a rule on that path would fire on every ordinary Word session; `win-file-office-startup-macro` excludes it for exactly that reason. Telling a malicious macro injection from a normal save needs writer attribution or content inspection, which this telemetry does not have. Not detectable from the event as modelled.
+* `val2-t1568-fast-flux-style-lookups-of-r` (Missed): three DNS lookups of random-looking labels under one parent domain. Fast flux is a rotation property across many lookups and answers (short TTL, changing A records); the DNS rules are stateless per query and the event has no answer or TTL. A per-query rule on a 12-character random label would match CDN and cloud hostnames, and keying on the scenario's `dyn-update.example` parent would overfit. It would need a windowed aggregate over distinct labels per parent domain, which is an engine feature, not a content rule.
+* `val2-t1553-002-module-with-a-revoked-style` (Partial: only `module-injection-prone-path-load`, T1055.001, fires): the only signal that the certificate is revoked is the synthetic `(REVOKED)` suffix in the signer string. Real module telemetry has `signed` and `signer` but no revocation status, so a rule on that string would match only this scenario. Left as a scenario/telemetry mismatch.
+
+Historical list before the fix, kept for the record:
+
+* Missed (nothing fired): `emu-t1105-ingress-wget` (wget to a raw IP into /tmp), `emu-t1136-001-new-local-user` (`useradd -m -s /bin/bash -G sudo support`), `emu-t1560-001-archive-staging` (`tar czf /tmp/.d.tgz` of documents), `val2-t1137-001-office-template-macro-persis` (Normal.dotm, a deliberate precision gap), `val2-t1568-fast-flux-style-lookups-of-r` (deliberate precision gap).
+* Partial: `emu-t1003-001-lsass-procdump` and `chain-windows-phish-to-ransom` (only the parent T1003 fires), `emu-t1140-base64-decode-run` (fires under a neighbouring technique), `chain-linux-c2-tunnel`, `chain-linux-miner-infection`, and the `val2-` mapping disagreements already described in section 9 (`T1021`, `T1090.001`, `T1112`, `T1203`, `T1204`, `T1553.002`, `T1562.006`), plus `val3-t1552-001-tar-dotdirs`.
+
+The gate still passes because 18 of 504 is under the 7% the floor allows. Before raising the floor, fix or consciously accept these.
+
+**Rules never exercised by a scenario.** Replaying every scenario and collecting the rules that fired in non-benign scenarios gives 666 distinct rules out of 1,475. Per pack (rules / fired): `cld` 159/115, `ux2` 134/100, `gap` 46/45, `gp2` 105/70, `ioa` 153/70, `win` 201/63, `lx` 170/77, `macos` 137/55, `cloud` 195/40, `rgn` 120/11, telemetry `reg` 19/8, `auth` 10/3, `module` 9/3, `dns` 9/0 (the `macos`, `win` and `lx` keys include a few `seed` rules). So 809 rules are exercised only by their own samples. The regional pack and the Linux cloud-tooling pack are the least measured; DNS telemetry rules have no scenario at all.
+
+## Running the lab
+
+```sh
+go test ./internal/edr/ -run 'TestVal' -v           # gate: detect rate vs floor, benign false positives, schema, isolation
+go test ./internal/edr/ -run 'TestContentBenignCorpus|TestCloudAuditBenignCorpus' -v   # the benign-corpus guards
+kavachctl validate scenarios [--kind K] [--platform P] [--technique T]   # list
+kavachctl validate show ID
+kavachctl validate run --all [--include-custom]       # or --ids A,B
+kavachctl validate coverage [--include-custom]        # per technique and per tactic
+```
+
+HTTP: `GET /v1/validate/scenarios`, `GET /v1/validate/scenarios/{id}`, `POST /v1/validate/run` with `{"all":true}` or `{"ids":[...]}` (optional `include_custom`), `GET /v1/validate/coverage`. All require auth; the POST computes in memory and records nothing. The scheduled re-run and gate are in [regression-tracking.md](regression-tracking.md).
+
+## Authoring a scenario
+
+Worked example (illustrative; checked against the scenario loader and the example rule from [content-framework.md](content-framework.md), not shipped):
+
+```json
+{ "scenarios": [ {
+  "id": "ex-t1140-base64-pipe-shell",
+  "name": "Encoded payload piped to shell",
+  "description": "Synthetic. A decoded payload is piped into sh. Data only; nothing is executed.",
+  "kind": "single", "platform": "linux",
+  "tactics": ["Defense Evasion"], "techniques": ["T1140"], "benign": false,
+  "steps": [ { "type": "process", "executable": "/bin/bash",
+               "command": "bash -c 'cat /tmp/p.b64 | base64 --decode | bash'",
+               "parent_exe": "/usr/sbin/sshd" } ],
+  "expect": ["T1140"] } ] }
+```
+
+1. Pick the technique and write the behaviour from the public ATT&CK procedure description, using a different tool, flag order or path from the rule's own positive sample. If you write the scenario by reading the rule you are only re-testing the rule.
+2. Choose the file: add to an existing scenario file or create `internal/edr/scenarios/<name>.json` (embedded automatically; any `*.json` there is loaded, except `not_testable.json`, which holds the `{"not_testable": {"T1234": "reason"}}` map).
+3. Respect the schema (strict, unknown fields rejected): kebab-case unique `id` (max 64), `name` (max 120), `description` (max 1000), `kind` `single|chain|benign`, `platform` `linux|macos|windows`, `tactics` as exact ATT&CK Enterprise tactic names. A `single` lists exactly one technique; a `chain` needs at least 3 steps; non-benign scenarios need `techniques`, `tactics` and at least one expectation (scenario `expect` or a step-level `expect`); benign scenarios set `"benign": true`, `kind` `benign` and declare no techniques or expectations. Steps: `type` is `process`, `network`, `file`, `registry`, `dns`, `auth` or `module`; process needs `executable` and `command`, network `destination`, file `path` and `operation`; telemetry steps put their fields as the telemetry validator expects; `at` is an offset in seconds (0 to 86400); a step may only carry fields of its own type.
+4. Expectations: a technique id (`T1140`, which also credits a sub-technique rule firing) or a rule id (`cld-aws-stop-logging`). Expect a rule id when the technique is not testable or when you are validating one specific rule.
+5. Add a near-miss benign control in a `benign*.json` file for every new rule family: the same tool with a harmless argument. A benign control fails the run if anything at medium severity or above fires.
+6. Run `go test ./internal/edr/ -run TestVal -v`. A missing technique shows up in the `missed` or `partial` list; decide whether the rule is wrong, the scenario is wrong or the technique cannot be seen with the available telemetry. If the last, add it to `not_testable.json` with the reason, instead of loosening the scenario.
+7. Record the result honestly: if a miss is a deliberate precision trade-off, say so here (see "Still Missed" in section 9), and never lower `valDetectedFloor` without a recorded reason.
+
+The benign guard for rules (not scenarios) is `TestContentBenignCorpus`; see [content-tuning.md](content-tuning.md).
+
+## 1. Research
+
+Sources are listed in two groups. "Opened" means the page content was actually fetched and read in this
+session. "Snippet only" means only a search-result summary was read.
+
+### 1.1 Opened
+
+1. **MITRE Caldera, GitHub README** (https://github.com/mitre/caldera). Caldera is a platform for
+   automated adversary emulation, assisted manual red teaming and automated incident response, built on
+   ATT&CK. It has a core (an asynchronous command-and-control server with a REST API and web UI) plus
+   plugins that add agents, reporting and TTP collections. The README names plugins such as Stockpile
+   (technique and profile storehouse) and Atomic and Emu (sources of TTPs and emulation plans). It does
+   not explain the data model itself.
+2. **Caldera documentation, "Learning the terminology"**
+   (https://caldera.readthedocs.io/en/latest/Learning-the-terminology.html). Agents are programs that
+   check in periodically and are grouped (red or blue). Abilities are single implementations of an
+   ATT&CK tactic or technique, carrying commands, supported platforms and executors, payloads and an
+   output parser. An adversary profile is a collection of abilities representing a threat actor, and an
+   operation joins an adversary profile to an agent group with a planner deciding order. This split
+   (what runs / where it runs / in which order) shaped the lab's separation of scenario (what), platform
+   (where) and step order (when).
+3. **MITRE Center for Threat-Informed Defense, Attack Flow**
+   (https://center-for-threat-informed-defense.github.io/attack-flow/). Attack Flow is a language for
+   describing how adversaries chain and sequence techniques toward a goal, maintained by the Center.
+   The landing page does not describe the data model, so only its purpose is used here: chains of
+   techniques are a first-class thing to represent, which is why the lab has ~20 multi-step campaign
+   scenarios in addition to single-technique emulations.
+4. **DeTT&CT wiki, home page** (https://github.com/rabobank-cdc/DeTTECT/wiki). DeTT&CT lets a team
+   administer and score data source quality, visibility and detection coverage per technique, and
+   links to scoring pages and a scoring table spreadsheet. The home page only names the three areas.
+5. **DeTT&CT wiki, "Detection scoring"** (https://github.com/rabobank-cdc/DeTTECT/wiki/Detection-scoring).
+   Detection is scored on a scale from -1 (none) through 0 (logged for forensics or context only) to 5
+   (excellent), where the middle levels rise with analytic sophistication, real-time operation, how
+   many known variants are covered and how easy false positives are to filter. The key idea used here:
+   coverage is a graded property of evidence, not a yes/no tick, and a score is only meaningful against
+   the variants actually tested. The lab uses a coarser four-state outcome (Detected, Partial, Missed,
+   Not-testable) plus an explicit "untested" bucket, because it measures only one or a few variants per
+   technique.
+6. **Atomic Red Team, GitHub README** (https://github.com/redcanaryco/atomic-red-team). A library of
+   tests mapped to ATT&CK, kept in an `atomics` folder, documented through the wiki. The README does not
+   describe the test file structure.
+7. **Atomic Red Team wiki, "Atomic Test Structure"**
+   (https://github.com/redcanaryco/atomic-red-team/wiki/Atomic-Test-Structure). The page says tests are
+   defined in a structured format usable by automation, are focused and have few dependencies, and
+   points to a separate YAML schema page. The field list (technique id, platforms, inputs, commands) was
+   NOT confirmed from the fetched pages; it comes from the task brief. Nothing from Atomic Red Team's
+   test commands or text was copied: Atomic is a catalogue of commands to run, whereas the lab's
+   scenarios are original synthetic event sequences that are never run.
+
+### 1.2 Snippet only (search-result summaries, not opened pages)
+
+8. **ATT&CK Evaluations detection categories** (web search; summaries of vendor blogs and a MITRE
+   Medium post, the primary MITRE pages could not be fetched). Reported categories: General Behavior,
+   Specific Behavior, Indicators of Compromise, Telemetry and None in early rounds, later Enrichment,
+   Delayed, Configuration Change and Tainted modifiers; later rounds describe levels as General, Tactic
+   and Technique. The Delayed modifier is reported as applying when detection needed human augmentation
+   or was not timely; Configuration Change as a change to the product during the evaluation. One
+   summary says the Telemetry category was dropped in 2024. These are secondary descriptions and may
+   be inexact. The lab borrows the technique/tactic/general distinction (see Partial below) but does
+   not model Delayed or Configuration Change.
+9. **Top ATT&CK Techniques methodology** (web search; CTID GitHub repository listing, Microsoft,
+   CrowdStrike and MITRE Engenuity Medium coverage, none opened). Summaries describe a score combining
+   prevalence, choke point and actionability. The lab does not rank techniques by this methodology; it
+   only reports per-technique results so a team can combine them with such a ranking.
+10. **Academic and industry coverage studies** (web search). A University of Illinois paper on endpoint
+    detection rulesets (Carbon Black, Splunk, Elastic, Sigma) is summarized as finding that many ATT&CK
+    techniques are hard to realise as rules and that technique labels do not consistently imply
+    coverage of the same real-world threats. Vendor reports (CardinalOps and others) measure rule
+    configuration, not whether rules fire on adversary behavior. The takeaway used: "covered on paper"
+    and "detected in practice" differ, which is the gap this lab quantifies.
+
+### 1.3 Could not be fetched
+
+`attackevals.mitre-engenuity.org` and `top-attack-techniques.mitre-engenuity.org` did not resolve from
+this environment, and the MITRE Medium post returned HTTP 403. Their content is therefore not cited
+beyond the snippets above.
+
+## 2. Design
+
+* **Scenario** (`internal/edr/scenarios/*.json`, embedded): `id`, `name`, `description`, `kind`
+  (`single|chain|benign`), `platform` (`linux|macos|windows`), `tactics`, `techniques`, `benign`,
+  ordered `steps`, and `expect` (technique ids or rule ids). A step has a `type`
+  (process, network, file, registry, dns, auth, module), an optional `at` offset, its type's event
+  fields (the same fields the engines read) and an optional step-level `expect`. Loading is strict:
+  unknown fields, fields belonging to another event type, bad enums (validated through the telemetry
+  validator) and duplicate ids are rejected.
+* **Replay** (`validate_replay.go`): process events run through `Detect` (built-in rules, IOC, IOA),
+  network events through the content matcher plus the denied-flow correlation, file events through a
+  fresh `FileDetections` plus the content matcher, telemetry events through the same telemetry view and
+  content matcher the live POST handlers use. Content rules are evaluated against a private registry
+  built from the embedded packs (`contentEvaluateWith`, a small refactor of `contentEvaluate` that
+  takes the registry as a parameter), and customer rules are excluded unless the request passes
+  `include_custom`. The lab never calls `Store.Ingest*`.
+* **Scoring**, per technique: Detected (a rule mapped to the technique, or to a sub-technique of an
+  expected parent, fired), Partial (rules fired, but only for the parent technique, a different technique
+  in the same tactic, or other tactics or unmapped rules), Missed (nothing fired), Not-testable
+  (needs telemetry Kavach does not collect; reason recorded in `scenarios/not_testable.json`) and
+  Untested (claimed but no scenario: the claimed-but-not-measured gap). Benign controls pass only if
+  nothing at medium severity or above fires.
+* **Endpoints** (all `requireAuth`; the POST is read-only compute): `GET /v1/validate/scenarios`,
+  `GET /v1/validate/scenarios/{id}`, `POST /v1/validate/run {ids|all, include_custom?}`,
+  `GET /v1/validate/coverage`. CLI: `kavachctl validate` (see "Running the lab" above).
+* **Regression gate** (`TestValDetectedRateFloor`): the share of non-benign scenarios whose
+  expectations are all Detected must stay at or above `valDetectedFloor` (0.93; measured 0.964 on 2026-11-16, 0.947 after the gap-closure
+  pass, 0.649 originally), and benign false positives must stay at 0. Raise the floor as detection improves; lowering
+  it needs a recorded reason here.
+
+## 3. Results (original measurement, superseded by the current-status section above)
+
+| Measure | Value |
+|---|---|
+| Scenarios | 152 single-technique, 19 campaign chains, 33 benign controls (204 total) |
+| Claimed techniques (built-in + live content rules) | 245 |
+| Claimed tactic coverage (ATT&CK matrix, 14 tactics) | 42% (matrix field `coverage_pct`) |
+| Detected | 95 techniques = 38.7% of claimed |
+| Detected or Partial | 112 = 45.7% of claimed |
+| Partial | 17 |
+| Missed | 26 |
+| Not-testable | 11 |
+| Untested (claimed, no scenario) | 96 |
+| Detected rate over tested techniques | 68.8% (95 of 138) |
+| Scenario pass rate (non-benign, strict) | 64.9% (111 of 171) |
+| Benign controls firing at medium or above | 0 of 33 |
+
+So the claim "245 techniques covered" is, at this moment, verified for 95 of them. 107 of the 245 have
+no scenario or cannot be tested, and 43 were tested and not cleanly detected.
+
+Per tactic (Detected / claimed): Initial Access 2/7, Execution 12/27, Persistence 21/52, Privilege
+Escalation 6/13, Defense Evasion 24/66, Credential Access 16/34, Discovery 8/18, Lateral Movement 8/18,
+Collection 6/11, Command and Control 5/19, Exfiltration 3/10, Impact 6/12. Command and Control (26%)
+and Exfiltration (30%) are the weakest measured tactics; Defense Evasion is the largest claim and the
+largest unmeasured block.
+
+### 3.1 Missed techniques (every one)
+
+Scenario fired nothing at all:
+
+`T1021.003` DCOM lateral movement, `T1021.006` WinRM (Invoke-Command), `T1048.003` DNS exfiltration
+(hex-labelled TXT queries), `T1059.007` JavaScript via node, `T1074.001` local data staging, `T1082`
+systeminfo, `T1083` file and directory discovery (find over the whole disk), `T1095` socat relay,
+`T1102.001` dead-drop TXT lookup, `T1110` failed-login burst (auth events), `T1115` pbpaste clipboard
+read, `T1135` smbclient share listing, `T1491.001` wallpaper defacement (file modify), `T1497.001`
+sysctl VM check, `T1498` hping3 flood, `T1518.001` WMIC securitycenter2 query, `T1529` shutdown -h now,
+`T1546.003` WMI subscription via PowerShell, `T1548.002` ms-settings UAC bypass registry write,
+`T1552.003` reading `.bash_history`, `T1555.003` copying the Chrome Login Data file, `T1564.001` hidden
+dot-directory, `T1568.002` DGA-like lookups, `T1580` aws ec2 describe-instances, `T1613` kubectl get
+pods, `T1651` aws ssm send-command.
+
+Caveats on reading this list: each scenario is one variant written by this project, not a sample of
+real attacker tooling. A miss means "this variant was not detected", not "the technique is
+undetected". Several of these (T1082, T1083, T1135, T1580, T1613, T1115) are discovery or collection
+behaviors that are common on healthy systems, so a miss may be a deliberate precision trade-off; the
+lab reports it without judging. T1110 is expected: the content framework is per-event and states that
+failure-burst rules are out of scope.
+
+### 3.2 Partial techniques (17)
+
+`T1021.004`, `T1048`, `T1190`, `T1195.002`, `T1485`, `T1537`, `T1543.001`, `T1550.002`, `T1566.001`,
+`T1609`, `T1610`, `T1620` had rules fire for other tactics or only unmapped rules; `T1055.008`,
+`T1071.004`, `T1090`, `T1204.004`, `T1546.004` had a different technique in the same tactic fire
+(usually a more specific or differently mapped rule: ptrace injection mapped to `T1055.001`, DNS tunnel
+tools mapped to `T1572`, SSH SOCKS mapped to `T1572`, a PowerShell cradle mapped to `T1059.001`).
+Some Partial results are mapping disagreements rather than missing detections: the behavior was seen but
+filed under a neighbouring technique.
+
+### 3.3 Not-testable (11)
+
+`T1014`, `T1027.002`, `T1030`, `T1055`, `T1055.001`, `T1055.009`, `T1055.012`, `T1205.002`,
+`T1550.003`, `T1565.001`, `T1573.002`. Reasons are in `scenarios/not_testable.json` (memory/API,
+flow-volume, TLS or file-content telemetry that Kavach does not collect). The matrix still claims some
+of them through command-line string rules; the lab cannot show those rules detect the behavior.
+
+### 3.4 Claimed but not measured (96)
+
+No scenario was written for these claimed techniques (full list via `GET /v1/validate/coverage` under
+`claimed_not_measured`). They include parent-level ids (`T1003`, `T1059`, `T1071`, `T1546`, `T1548`,
+`T1552`, `T1555`, `T1562`, `T1564`, `T1567`) whose sub-techniques are measured, plus many Windows and
+telemetry-only items (for example `T1218.001`, `T1218.003`, `T1218.008`, `T1220`, `T1221`, `T1546.007`,
+`T1546.008`, `T1546.009`, `T1547.005`, `T1553.005`, `T1558.001`, `T1562.002`, `T1574.001`,
+`T1574.002`) and cloud or container items (`T1078.004`, `T1098.001`, `T1098.006`, `T1136.003`,
+`T1528`, `T1555.006`, `T1562.007`, `T1648`). Closing this gap is the next coverage-validation task.
+
+## 4. Other findings about the product
+
+These came out of reading the code while building the lab. Nothing was changed.
+
+* `MapDetection` silently maps a finding whose rule has no ATT&CK entry to `T1082` (Discovery). Built-in
+  rules `unsafe-permissions`, `persistence-attempt`, `script-inline-execution` and `root-history-clear`
+  have no `ruleMITRE` entry, so they would be reported as System Information Discovery. The lab reports
+  such findings as "unmapped" instead.
+* By code reading (not exercised by a scenario): `Detect` emits IOC findings with rule ids of the form
+  `ioc-<type>` (for example `ioc-domain`), while `ruleMITRE` keys are `ioc-domain-match`,
+  `ioc-ip-match` and `ioc-hash-match`, so IOC findings would also fall to the `T1082` default.
+* IOA findings carry the technique only as a tag (`ioa-ioa-1` and so on), not in `ruleMITRE`, so they
+  are absent from the ATT&CK matrix coverage even though they fire.
+* The matrix reports 42% tactic coverage, a count of tactics with at least one rule, which says
+  little about technique-level detection. Technique-level measured coverage is 38.7% of claimed.
+
+## 5. Honest limits
+
+* Synthetic data authored by this project. Scenarios were written from public ATT&CK knowledge
+  without consulting rule patterns, but a single variant per technique is a weak sample, and the same
+  author wrote scenarios and read the rules' descriptions.
+* One scenario per technique mostly; no evasion variants (obfuscation, renaming, living off other
+  binaries). "Detected" says nothing about robustness.
+* Per-event content rules are evaluated; stateful and process-global detectors are not driven:
+  `RansomwareFindings` (per-host global windows) is deliberately not invoked to avoid touching live state, and
+  `mass-file-activity` uses a private fresh detector.
+* IOC, IOA and exclusion lists are the process's live lists (read only); customer custom-content rules
+  and legacy custom rules are excluded by default.
+* No model of Delayed or Configuration Change modifiers, of timeliness, of alert triage, or of
+  telemetry loss. Telemetry types (registry, dns, auth, module) are evaluated at the engine level; a
+  collector that supplies them must exist in the deployment.
+* Detected means a rule mapped to the technique fired, not that the mapping is right, and not that the
+  alert was actionable. Benign controls are 33 everyday sequences, not a measure of production noise.
+
+## 6. Follow-up: ATT&CK mapping fixes (before / after)
+
+Section 4 recorded defects in how findings are mapped to ATT&CK. They are fixed as follows. Sections 1
+to 5 above are the original measurement and are kept unchanged as the "before" record.
+
+**Fixes**
+
+1. `MapDetection` no longer defaults an unmapped rule to T1082. It returns `unmapped: true` with empty
+   `tactic`, `technique` and `technique_id`. The ATT&CK matrix response has a new `unmapped_rules` list
+   (built-in rules that can fire but have no technique, plus rule ids seen in findings) and
+   `unmapped_hits`; unmapped findings count toward neither coverage nor `observed_hits`. The generic AI
+   behaviour class (`suspicious_generic`) no longer claims T1082 either; narratives and incident reports
+   say "no ATT&CK technique is mapped" instead.
+2. Four built-in rules that silently relied on the default now carry a justified mapping:
+
+   | Rule | Trigger | Technique | Why |
+   |---|---|---|---|
+   | `unsafe-permissions` | `chmod 777 /etc/...` | T1222.002 (Defense Evasion) | Loosening permissions on sensitive config is Linux and Mac File and Directory Permissions Modification. |
+   | `persistence-attempt` | `crontab`, `at`, `systemctl enable` | T1053 (Persistence) | Scheduled Task/Job covers cron and at. `systemctl enable` is strictly T1543.002, which the rule does not distinguish, so the parent is used and no sub-technique is over-claimed. |
+   | `script-inline-execution` | `python/perl/ruby/node/php` with `-c`, base64 or `/dev/tcp` | T1059 (Execution) | Interpreter-driven execution; same technique as `lolbin-netcat-shell`. |
+   | `root-history-clear` | root shell running `history -c` | T1070.003 (Defense Evasion) | Clear Command History. |
+
+   Every other built-in rule id was run through the mapper (test `TestNoRuleDefaultsToT1082`). Two
+   remain intentionally unmapped and are reported in `unmapped_rules`: `ransomware-churn` (a weak
+   canary-path churn signal, not a specific technique) and `identity-from-finding` (an identity event
+   derived from findings, not a finding rule). A test fails if any rule maps to T1082 without T1082
+   being its technique.
+3. IOC findings are emitted as `ioc-<type>` (`ioc-domain`, `ioc-ipv4`, `ioc-sha256`, ...) while
+   `ruleMITRE` is keyed `ioc-*-match`. The lookup now aliases `ioc-domain` to the domain match,
+   `ioc-ipv4`/`ioc-ipv6` to the IP match and `ioc-sha256`/`ioc-md5`/`ioc-sha1` to the hash match
+   (T1071, T1071, T1204). Operator-added IOC types without an alias stay unmapped. Verified by driving
+   real IOC matches through `Detect`.
+4. IOA findings (`ioa-<id>`) are resolved through the IOA rule's `TechniqueID`, and enabled IOAs with a
+   known technique count toward matrix coverage. Findings from an IOA that was later edited or deleted
+   still map through the technique tag on the finding. An IOA with an unknown technique id contributes
+   no coverage.
+5. The lab's technique resolver also applies the IOC aliasing, and two scenarios were added so the
+   newly mapped techniques are measured rather than merely claimed: `emu-t1053-crontab-persist` and
+   `emu-t1059-python-inline-b64`.
+
+**Measured before / after** (same harness, shipped packs, no live content registry loaded for the matrix
+figures; the lab figures use the embedded packs)
+
+| Measure | Before | After |
+|---|---|---|
+| ATT&CK matrix tactics covered (of 14) | 6 (42%) | 7 (50%) |
+| ATT&CK matrix techniques listed (built-in + IOA) | 13 | 17 |
+| Lab claimed techniques | 245 | 246 |
+| Lab Detected | 95 (38.7%) | 97 (39.4%) |
+| Lab Partial / Missed / Not-testable | 17 / 26 / 11 | 17 / 26 / 11 |
+| Lab Untested (claimed, no scenario) | 96 | 95 |
+| Scenarios | 204 | 206 |
+| Non-benign scenarios passing | 111 of 171 (64.9%) | 113 of 173 (65.3%) |
+| Benign controls firing at medium or above | 0 of 33 | 0 of 33 |
+| Findings fired in replay with no ATT&CK mapping | 10 of 427 (`persistence-attempt` 4, `script-inline-execution` 3, `root-history-clear` 2, `unsafe-permissions` 1) | 0 of 431 |
+
+Reading the numbers: the 4 remapped rules did not change any pre-existing technique's Detected count,
+because the lab already reported their findings as unmapped (it never used the T1082 default), so the
+gain there is the removal of 10 unmapped fires. The matrix gain (42% to 50% tactic coverage) is real:
+Persistence is now covered by a built-in rule, and IOA techniques (T1003, T1059, T1490) appear in the
+matrix. The two added scenarios account for the +2 Detected. The detected-rate floor
+(`valDetectedFloor`, 0.60) is unchanged; measured rate is 0.653.
+
+Limits that remain: the 50% figure counts tactics with at least one mapped rule, not detection quality;
+the IOC alias for `ioc-sha256` maps all hash matches to T1204 (User Execution), which is a coarse label
+for "a known-bad hash was seen in a command line"; and the IOA mapping trusts the technique id an
+operator typed.
+
+## 7. Gap-closure pass (measured at the time; see the current-status section for what still holds)
+
+Before: 95 Detected, 17 Partial, 26 Missed (scenario pass rate 64.9%). After: 139 Detected, 0 Partial,
+0 Missed, 11 Not-testable, 95 Untested (scenario pass rate 94.7% of 188 non-benign scenarios; 38
+benign controls fire nothing at medium or above). Floor raised from 0.60 to 0.93.
+
+* All 26 Missed and 17 Partial techniques are now Detected: 46 original rules in
+  `content/gaps.json` (batch `gaps-v1`, ids `gap-*`, positive and negative samples each) plus one
+  built-in detector, `auth_burst.go` (T1110 and T1110.003: 8 failures or 5 distinct accounts from one
+  source in 60s, 5 minute cooldown, fed from `IngestTelemetry`; the lab replays it with a fresh
+  per-scenario instance). No technique was declared not detectable: each has some telemetry hook.
+* Honest caveat: the original scenario for each technique was one variant, and the new rules were
+  written after seeing it. To measure that the rules are not tied to one sample, 17 second-variant
+  scenarios (`emu-*-variant`, differently worded) and 5 benign controls were added; all variants
+  pass. This is still synthetic data written by the same author.
+* Weak spots that remain by design: T1498 only sees flood tooling by name (no flow volume), T1491.001
+  only sees the cached wallpaper file (file events carry no writer), T1564.001, T1568.002, T1102.001
+  and T1048.003 are string heuristics on the DNS or command line, and rate or volume signals are not
+  available. Low-severity `noisy-risk` rules (clipboard, share and cloud enumeration, shutdown,
+  container exec, systeminfo, VM fingerprint, wallpaper, hidden tmp dirs, DGA-like names, paste-site TXT,
+  WinRM remoting, LaunchAgent create) are informational and are expected to fire on
+  healthy systems.
+
+## 8. Second gap pass: untested techniques (rules only)
+
+The 94 techniques the lab reports as `untested` (claimed, no scenario; `GET /v1/validate/coverage`,
+`claimed_not_measured`) were reviewed for detectability from process, file, network, registry, auth and
+module telemetry. `content/gap2.json` (batch `gap2-v1`, ids `gp2-*`) adds 97 original rules, each with
+at least one positive and one near-miss negative sample, covering 92 of those 94 technique ids (parent
+and sub-technique ids both; `T1546` and `T1562` have no rule, only their sub-techniques are covered elsewhere). 24 rules are
+severity `low` because the behavior is routine for administrators or developers (cloud CLI use, `at`,
+timers, group enumeration); the benign corpus guard (`TestContentBenignCorpus`) stays green. During
+authoring it flagged five drafts (a socat relay, `usermod -aG docker`, `cipher /w:C:\Temp`, a
+`forfiles ... del` cleanup, an installer Startup shortcut), which were narrowed or had the broad part dropped;
+the guard was not loosened.
+
+Mapping: the built-in rule `ransomware-churn` now maps to T1486 (Data Encrypted for Impact), the technique
+the guidance catalog already named for it. Four ids stay intentionally unmapped because they are
+placeholders or derived events, not detections of a behavior: `custom-rule`, `ioc-generic`,
+`ioa-generic`, `identity-from-finding`.
+
+What this does not change: the lab status of those techniques. They stay `untested` until an
+independent scenario is written for each; the pack's own samples were written by the rule author and are
+not a measurement. Several rules are string or name heuristics (tool names, command-line shapes) that a
+renamed binary evades, and none of them has been run against real attacker activity. Telemetry limits
+apply: file events carry no writer, network events carry only a destination, so the file and network
+rules are path or port heuristics. Overlap with older packs is possible (for example other
+sticky-keys, COM-hijack and Run-key rules); overlapping hits are not deduplicated.
+
+## 9. Independent validation of the second gap pass (measured)
+
+Section 8 added `content/gap2.json` and left its techniques `untested`. This pass writes one scenario per
+untested technique, in `scenarios/singles2.json` (87 scenarios, ids `val2-*`) and `scenarios/benign2.json`
+(6 near-miss benign controls). The scenarios were written from public ATT&CK procedure descriptions
+(tool names, switches, registry keys, file paths the technique page and its public procedure examples
+describe), NOT copied from the rules' own positive samples; the rules' match patterns were read only
+after the first run, to diagnose misses. Rules were never loosened to fit a scenario without a recorded
+reason, scenarios were never loosened, and the benign corpus guard (`TestContentBenignCorpus`) stayed green.
+
+| Measure | Before (section 7) | First run of val2 | After rule fixes |
+|---|---|---|---|
+| Detected | 141 | 209 (+68) | 219 (+78) |
+| Partial | 0 | 8 | 7 |
+| Missed | 0 | 12 | 2 |
+| Not-testable | 11 | 17 | 18 |
+| Untested | 94 | 0 | 0 |
+| Scenario pass rate (non-benign, strict) | 94.7% (188) | 89.2% | 93.1% (249 non-benign) |
+| Benign controls firing at medium or above | 0 | 0 | 0 of 44 |
+
+Of the 94 techniques: 87 now have a scenario (78 Detected, 7 Partial, 2 Missed) and 7 are Not-testable
+(6 declared up front, plus T1221 reclassified after its first scenario missed, see below). The regression
+floor stays at 0.93 (measured 0.931); it was not lowered.
+
+**Not-testable (reasons in `scenarios/not_testable.json`)**: `T1068` (exploitation needs crash, memory or
+syscall telemetry), `T1078.003` (valid local-account login needs a baseline), `T1078.004` (cloud-account use is
+control-plane telemetry), `T1110.002` (offline cracking leaves no victim event), `T1204.001` (user clicking a
+link), `T1554` (needs file-content integrity), `T1221` (remote-template fetch happens inside the document;
+the network event has no owning process and the command line holds only a local path). T1221 first ran as a
+network-only scenario and was Missed; it was reclassified as not testable rather than fixed because no
+telemetry field could carry the evidence. The existing rule only catches the rarer variant where the Office
+command line itself contains a template URL.
+
+**Missed on first run, fixed by rules (9)**, added to `gap2.json` with positive and negative samples:
+`T1053.006` (`systemd-run --on-calendar`, the rule only saw `.timer` file creation), `T1070.004` (`shred -u`
+of a hidden file in /tmp; rule only covered log and history wiping), `T1071` (curl with an MSIE 6 user
+agent), `T1071.001` (PowerShell WebClient with a Cookie header to a raw IP; rule needed POST),
+`T1563.001` (ssh `-S` control socket in /tmp; rule only covered agent-socket hijack), `T1564.002`
+(registry write to `Winlogon\SpecialAccounts\UserList`; rule only saw the `reg add` command line),
+`T1574.001` (unsigned `version.dll` loaded from an application folder; rule only covered phantom DLL
+creation in System32), `T1574.004` (unsigned shared object or dylib loaded from /tmp or /Users/Shared; rule
+only covered `DYLD_INSERT_LIBRARIES` env). `T1078.001` was fixed by extending the default-account list
+(`pi`, `ubnt`, `vagrant`, `cisco`). These fixes were written after seeing the miss and are not themselves
+validated by a second independent variant, so treat them as one-variant results. Six near-miss benign
+controls cover the new rules.
+
+**Still Missed (2, real misses, not loosened)**:
+* `T1137.001`: a modified `Normal.dotm`. Word rewrites that file on ordinary preference changes and file
+  events carry no writer, so a rule would fire on healthy desktops. Left as a deliberate precision gap.
+* `T1568`: fast-flux or generated lookups of 12-character mixed alphanumeric labels under a made-up
+  domain. The existing DGA rules need long labels (30+) or consonant-only labels on throwaway TLDs; a
+  broader rule would fire on CDN and hash-named hosts. No stateful NXDOMAIN-rate signal exists.
+
+**Partial (7)** (behavior seen, filed under a neighbouring technique; mostly mapping disagreements):
+`T1021` (PsExec fires as `T1569.002`), `T1090.001` (ssh `-R` fires `T1572`), `T1112` (Defender policy
+`reg add` fires `T1562.001`), `T1203` (Office spawning cmd fires `T1204.002` and `T1566.001`), `T1204`
+(wscript from Downloads fires `T1059.005`/`T1059.007`), `T1553.002` (the scenario is a module event with a
+revoked-style signer string, which is contrived: module telemetry carries no revocation data, so only an
+injection-path rule fired), `T1562.006` (stopping auditd fires `T1562.001`).
+
+One detector change: the failed-login detector (`auth_burst.go`) now reports a burst against a single
+account as `auth-password-guessing` (`T1110.001`) instead of the generic `auth-failed-login-burst`
+(`T1110`); bursts across 2 to 4 accounts keep the generic rule, 5 or more are still `T1110.003`. This fixed
+the T1110.001 Partial; the unit test was updated to match.
+
+**Caveats.** Still synthetic data authored by the same team that wrote the rules; one variant per
+technique; parent-technique ids (for example `T1003`, `T1071`, `T1548`) are credited when any
+sub-technique rule fires, so a parent Detected does not prove the parent-level behavior is covered beyond
+that variant. No evasion variants (renamed binaries defeat the name heuristics). Rule fixes were authored
+after the miss was seen. "Detected" means a mapped rule fired, not that the alert is actionable. Several new
+rules are low severity or informational by design.
+
+## 10. Linux, macOS, container and Kubernetes depth (`ux2-*`, measured)
+
+**Audit before the pass** (embedded packs, snapshot taken at the start of this work; live numbers come from
+`GET /v1/content/coverage`): 1182 rules at that time (1,475 now), of which 447 were `os: linux`, 140 `macos`, 411 `windows`, 184 `any`.
+Linux rules by tactic: Credential Access 95, Defense Evasion 61, Privilege Escalation 57, Persistence 51,
+Execution 39, Impact 34, Command and Control 31, Discovery 20, Exfiltration 20, Collection 16, Lateral Movement 15,
+Initial Access 8. macOS rules by tactic: Defense Evasion 43, Persistence 34, Credential Access 21, Execution 11,
+Collection 9, Impact 10, Privilege Escalation 4, Command and Control 4, Discovery 3, Lateral Movement 1. The thin spots were macOS
+Privilege Escalation, Discovery, C2 and Lateral Movement, container escape beyond a few `docker run` shapes,
+Kubernetes API and kubelet abuse, and procedure-level coverage of several Linux persistence mechanisms (udev,
+XDG autostart, PAM edits, `ld.so.conf.d`).
+
+**Rules.** `content/unix2.json` (batch `unix2-v1`, ids `ux2-*`) adds rules for those gaps, each mapped to an
+ATT&CK technique with positive and near-miss negative samples; run `GET /v1/content/coverage` for the current
+count, OS and tactic split. Severity is `low` where the event alone cannot separate admin from attacker (file
+events carry no writer): user-level systemd units, TCC.db and LaunchAgent plist writes, `crontab` of a temp file, `insmod ./x.ko`,
+`--privileged` runs, `unshare -r`, metadata connections. `profiles install` is filed under the generic T1553 because
+ATT&CK has no profile-specific technique.
+
+**Independent scenarios.** `scenarios/unix2.json` (ids `val3-*`) and `scenarios/benign3.json` (ids
+`benign-val3-*`) were written from public ATT&CK procedure descriptions and common tradecraft (different tools,
+paths and flag orders from the rule samples where possible, deliberately including variants a name heuristic would
+miss). The same author wrote the rules and the scenarios in one sitting, so independence is partial; the rule
+patterns were read before the scenarios were written, which is a weaker separation than section 9.
+
+| Measure | First run of val3 | After rule fixes |
+|---|---|---|
+| val3 non-benign scenarios Detected | 100 of 112 | 111 of 112 |
+| Partial (fired under a neighbouring technique) | 4 | 1 |
+| Missed (nothing fired) | 8 | 0 |
+| Benign controls firing at medium or above (val3 controls) | 2 of 17 | 0 of 16 |
+
+Misses on first run, fixed by rule changes (one-variant results, not re-validated by a second variant):
+`gcore -a` (flag before pid), `plutil`/`cat` of the user hash plist (no `ShadowHashData` literal),
+`sed -i` into rc.local, `echo ... >> /etc/cron.d/x` with a temp-path job, `find /var/log -exec truncate`, `install` of a
+staged key into authorized_keys, `ls` of `/Library/Objective-See`, `falconctl -d`. Partial and fixed with new rules:
+`crontab -u user /tmp/file`, a Python one-liner reading `/etc/shadow`, `insmod ./x.ko`.
+**Still Partial (1):** `tar` of `~/.aws ~/.kube` fires T1560.001 (the older `lx-archive-sensitive-credential-dirs` and
+`ux2-tar-sensitive-staging`), not T1552.001; a mapping disagreement, left as is.
+
+Benign false positives found and handled: `macos-ssh-private-key-sweep` (older rule) fired on `scp ... id_rsa.pub`;
+tightened to exclude public keys, negative sample added. The builtin `persistence-attempt` fires at medium on any
+`systemctl enable ...` (for example `systemctl enable --now nginx.service`); not changed here, and that scenario was not
+kept as a control. `TestContentBenignCorpus` stays green and was not loosened; it was extended (see `docs/content-tuning.md`).
+
+Run `go test ./internal/edr/ -run 'TestVal' -v` for the live measured numbers (Detected/Partial/Missed totals,
+detect rate against the unchanged 0.93 floor). Caveats: synthetic data; name and command-line heuristics are
+evaded by renamed binaries; "Detected" means a mapped rule fired, not that the alert is actionable; container
+rules cannot know whether a process runs inside a container (events carry no container context).

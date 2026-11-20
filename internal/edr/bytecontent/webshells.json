@@ -1,0 +1,718 @@
+{
+ "pack": "webshells",
+ "rules": [
+  {
+   "id": "byte-webshell-php-eval-request",
+   "name": "PHP eval of request input",
+   "description": "eval()/assert() fed directly by $_POST, $_GET, $_REQUEST or $_COOKIE: the classic one-line PHP webshell.",
+   "tactic": "Persistence",
+   "technique": "T1505.003",
+   "severity": "critical",
+   "weight": 70,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "e",
+     "type": "regex",
+     "value": "(?:eval|assert)\\s*\\(\\s*(?:@?\\s*)?(?:base64_decode\\s*\\(\\s*)?\\$_(?:POST|GET|REQUEST|COOKIE)\\b"
+    },
+    {
+     "name": "t",
+     "type": "ascii",
+     "value": "<?php",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "e"
+     },
+     {
+      "str": "t"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "<?php @eval($_POST['x']);?>"
+     }
+    ],
+    "negative": [
+     {
+      "text": "<?php echo htmlspecialchars($_POST['x']); ?>"
+     },
+     {
+      "text": "eval($_POST['x']) in a python comment"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-webshell-php-system-request",
+   "name": "PHP command execution from request input",
+   "description": "system/exec/passthru/shell_exec/popen/proc_open called with request data as the argument.",
+   "tactic": "Persistence",
+   "technique": "T1505.003",
+   "severity": "critical",
+   "weight": 65,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "e",
+     "type": "regex",
+     "value": "\\b(?:system|exec|passthru|shell_exec|popen|proc_open|pcntl_exec)\\s*\\(\\s*\\$_(?:POST|GET|REQUEST|COOKIE)\\b"
+    },
+    {
+     "name": "t",
+     "type": "ascii",
+     "value": "<?php",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "e"
+     },
+     {
+      "str": "t"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "<?php if(isset($_GET['c'])){ system($_GET['c']); } ?>"
+     }
+    ],
+    "negative": [
+     {
+      "text": "<?php system('ls -l'); ?>"
+     },
+     {
+      "text": "<?php echo $_GET['c']; ?>"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-webshell-php-obfuscated-eval",
+   "name": "PHP eval of an inflated or decoded blob",
+   "description": "eval over gzinflate/gzuncompress/str_rot13 of base64_decode: packed webshell and dropper bodies.",
+   "tactic": "Defense Evasion",
+   "technique": "T1027",
+   "severity": "high",
+   "weight": 55,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "e",
+     "type": "regex",
+     "value": "eval\\s*\\(\\s*(?:gzinflate|gzuncompress|gzdecode|str_rot13|strrev)\\s*\\(\\s*(?:base64_decode|str_rot13)\\s*\\("
+    },
+    {
+     "name": "t",
+     "type": "ascii",
+     "value": "<?php",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "e"
+     },
+     {
+      "str": "t"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "<?php eval(gzinflate(base64_decode('c3lzdGVtKCdpZCcpOw==')));"
+     }
+    ],
+    "negative": [
+     {
+      "text": "<?php $x = gzinflate(base64_decode($data)); echo $x;"
+     },
+     {
+      "text": "eval(gzinflate(base64_decode"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-webshell-php-preg-e",
+   "name": "PHP preg_replace /e code execution",
+   "description": "preg_replace with the removed /e modifier and request data in the replacement: a long-known code execution trick.",
+   "tactic": "Persistence",
+   "technique": "T1505.003",
+   "severity": "high",
+   "weight": 50,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "e",
+     "type": "regex",
+     "value": "preg_replace\\s*\\(\\s*['\\\"]/[^'\\\"]{1,80}/[a-z]*e[a-z]*['\\\"]\\s*,\\s*[^;]{0,80}\\$_(?:POST|GET|REQUEST)"
+    },
+    {
+     "name": "t",
+     "type": "ascii",
+     "value": "<?php",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "e"
+     },
+     {
+      "str": "t"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "<?php preg_replace('/.*/e', $_POST['c'], '');"
+     }
+    ],
+    "negative": [
+     {
+      "text": "<?php preg_replace('/a/i', 'b', $_POST['c']);"
+     },
+     {
+      "text": "<?php preg_replace('/.*/e', 'strtoupper', $x);"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-webshell-php-create-function",
+   "name": "PHP create_function or callback from request",
+   "description": "create_function / call_user_func / array_map with request data as the callable: dynamic code execution.",
+   "tactic": "Persistence",
+   "technique": "T1505.003",
+   "severity": "high",
+   "weight": 50,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "e",
+     "type": "regex",
+     "value": "(?:create_function\\s*\\(\\s*['\\\"]{2}\\s*,\\s*\\$_(?:POST|GET|REQUEST)|(?:call_user_func|array_map|usort|array_filter)\\s*\\(\\s*\\$_(?:POST|GET|REQUEST)\\b)"
+    },
+    {
+     "name": "t",
+     "type": "ascii",
+     "value": "<?php",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "e"
+     },
+     {
+      "str": "t"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "<?php $f = call_user_func($_REQUEST['f'], $_REQUEST['a']);"
+     }
+    ],
+    "negative": [
+     {
+      "text": "<?php call_user_func('strtoupper', $x);"
+     },
+     {
+      "text": "call_user_func($_GET['f'])"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-webshell-php-famous-kits",
+   "name": "Known PHP webshell kit banners",
+   "description": "Banner strings of long-public PHP shell kits (c99, r57, b374k, WSO) together with shell-management feature words.",
+   "tactic": "Persistence",
+   "technique": "T1505.003",
+   "severity": "high",
+   "weight": 55,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "k",
+     "type": "regex",
+     "value": "\\b(?:c99shell|r57shell|b374k|WSO\\s*\\d|FilesMan|Safe[ _]mode bypass)\\b",
+     "nocase": true
+    },
+    {
+     "name": "f",
+     "type": "regex",
+     "value": "(?:file\\s*manager|php\\s*info|sql\\s*manager|command\\s*execut|upload\\s*file|bind\\s*shell|back-?connect)",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "k"
+     },
+     {
+      "str": "f"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "<title>c99shell</title> File Manager | Command execution | Upload file | Bind shell"
+     }
+    ],
+    "negative": [
+     {
+      "text": "The c99shell page is a famous sample"
+     },
+     {
+      "text": "File Manager and upload file feature"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-webshell-php-upload",
+   "name": "PHP file-upload drop shell",
+   "description": "move_uploaded_file writing a client-named file into a web-reachable path plus an exec capability in the same file. Many CMS plug-ins upload files, so the exec requirement matters.",
+   "tactic": "Persistence",
+   "technique": "T1505.003",
+   "severity": "medium",
+   "weight": 25,
+   "applies_to": "both",
+   "format": "script",
+   "tags": [
+    "noisy-risk"
+   ],
+   "strings": [
+    {
+     "name": "u",
+     "type": "ascii",
+     "value": "move_uploaded_file"
+    },
+    {
+     "name": "f",
+     "type": "ascii",
+     "value": "$_FILES"
+    },
+    {
+     "name": "n",
+     "type": "regex",
+     "value": "\\$_FILES\\s*\\[[^\\]]+\\]\\s*\\[\\s*['\\\"]name['\\\"]\\s*\\]"
+    },
+    {
+     "name": "x",
+     "type": "ascii",
+     "value": "shell_exec"
+    },
+    {
+     "name": "y",
+     "type": "ascii",
+     "value": "passthru"
+    },
+    {
+     "name": "z",
+     "type": "ascii",
+     "value": "system("
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "u"
+     },
+     {
+      "str": "f"
+     },
+     {
+      "str": "n"
+     },
+     {
+      "any": [
+       {
+        "str": "x"
+       },
+       {
+        "str": "y"
+       },
+       {
+        "str": "z"
+       }
+      ]
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "<?php move_uploaded_file($_FILES['f']['tmp_name'], $_FILES['f']['name']); system($c);"
+     }
+    ],
+    "negative": [
+     {
+      "text": "<?php move_uploaded_file($_FILES['f']['tmp_name'], $_FILES['f']['name']);"
+     },
+     {
+      "text": "<?php system($c);"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-webshell-php-assert-chain",
+   "name": "PHP dynamic function name from request",
+   "description": "A variable function called with request data: $_POST['f']($_POST['a']) and similar.",
+   "tactic": "Persistence",
+   "technique": "T1505.003",
+   "severity": "high",
+   "weight": 50,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "e",
+     "type": "regex",
+     "value": "\\$_(?:POST|GET|REQUEST|COOKIE)\\s*\\[\\s*['\\\"][^'\\\"]{1,32}['\\\"]\\s*\\]\\s*\\(\\s*\\$_(?:POST|GET|REQUEST|COOKIE)"
+    },
+    {
+     "name": "t",
+     "type": "ascii",
+     "value": "<?php",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "e"
+     },
+     {
+      "str": "t"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "<?php $_POST['f']($_POST['a']);"
+     }
+    ],
+    "negative": [
+     {
+      "text": "<?php $x = $_POST['f'] . $_POST['a'];"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-webshell-jsp-runtime-exec",
+   "name": "JSP command execution from request parameter",
+   "description": "Runtime.getRuntime().exec() or ProcessBuilder fed by request.getParameter.",
+   "tactic": "Persistence",
+   "technique": "T1505.003",
+   "severity": "critical",
+   "weight": 65,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "e",
+     "type": "regex",
+     "value": "(?:Runtime\\s*\\.\\s*getRuntime\\s*\\(\\s*\\)\\s*\\.\\s*exec|new\\s+ProcessBuilder)\\s*\\([^;]{0,120}request\\s*\\.\\s*getParameter"
+    },
+    {
+     "name": "t",
+     "type": "ascii",
+     "value": "<%"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "e"
+     },
+     {
+      "str": "t"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "<% Process p = Runtime.getRuntime().exec(request.getParameter(\"cmd\")); %>"
+     }
+    ],
+    "negative": [
+     {
+      "text": "<% String c = request.getParameter(\"cmd\"); out.print(c); %>"
+     },
+     {
+      "text": "<% Runtime.getRuntime().exec(\"ls\"); %>"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-webshell-jsp-classloader",
+   "name": "JSP defineClass loader shell",
+   "description": "A JSP that defines classes from request-supplied bytes (ClassLoader.defineClass with base64/getParameter), as in behinder-style shells.",
+   "tactic": "Persistence",
+   "technique": "T1505.003",
+   "severity": "high",
+   "weight": 55,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "d",
+     "type": "ascii",
+     "value": "defineClass"
+    },
+    {
+     "name": "c",
+     "type": "ascii",
+     "value": "ClassLoader"
+    },
+    {
+     "name": "r",
+     "type": "regex",
+     "value": "request\\s*\\.\\s*get(?:Parameter|Reader|InputStream)"
+    },
+    {
+     "name": "b",
+     "type": "ascii",
+     "value": "Base64",
+     "nocase": true
+    },
+    {
+     "name": "t",
+     "type": "ascii",
+     "value": "<%"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "d"
+     },
+     {
+      "str": "c"
+     },
+     {
+      "str": "r"
+     },
+     {
+      "str": "b"
+     },
+     {
+      "str": "t"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "<%! class U extends ClassLoader { U(ClassLoader c){super(c);} Class g(byte[] b){return defineClass(b,0,b.length);} } %><% new U(this.getClass().getClassLoader()).g(Base64.decode(request.getParameter(\"p\"))); %>"
+     }
+    ],
+    "negative": [
+     {
+      "text": "<% ClassLoader c = this.getClass().getClassLoader(); %>"
+     },
+     {
+      "text": "defineClass in a java class file without a request"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-webshell-aspx-process-start",
+   "name": "ASPX process start from request input",
+   "description": "System.Diagnostics.Process with Request.Form/QueryString/Item feeding FileName or Arguments.",
+   "tactic": "Persistence",
+   "technique": "T1505.003",
+   "severity": "critical",
+   "weight": 65,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "p",
+     "type": "ascii",
+     "value": "System.Diagnostics.Process"
+    },
+    {
+     "name": "r",
+     "type": "regex",
+     "value": "Request\\s*(?:\\.\\s*(?:Form|QueryString|Params)|\\s*\\[|\\s*\\.\\s*Item)"
+    },
+    {
+     "name": "s",
+     "type": "ascii",
+     "value": "Process.Start",
+     "nocase": true
+    },
+    {
+     "name": "a",
+     "type": "ascii",
+     "value": "<%"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "p"
+     },
+     {
+      "str": "r"
+     },
+     {
+      "str": "s"
+     },
+     {
+      "str": "a"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "<%@ Page Language=\"C#\" %><% var p = new System.Diagnostics.Process(); p.StartInfo.FileName = Request.Form[\"c\"]; p.Start(); Process.Start(p.StartInfo); %>"
+     }
+    ],
+    "negative": [
+     {
+      "text": "<% var p = new System.Diagnostics.Process(); p.Start(); %>"
+     },
+     {
+      "text": "<% var x = Request.Form[\"c\"]; %>"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-webshell-asp-eval-request",
+   "name": "ASP/ASPX eval or Execute of request input",
+   "description": "Classic ASP Execute/Eval(Request(...)) and JScript eval(Request.Item[...]): the one-line ASP shell.",
+   "tactic": "Persistence",
+   "technique": "T1505.003",
+   "severity": "critical",
+   "weight": 65,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "e",
+     "type": "regex",
+     "value": "(?:\\bexecute|\\beval|\\bExecuteGlobal)\\s*\\(?\\s*(?:request|Request)\\s*[\\.\\(\\[]"
+    },
+    {
+     "name": "a",
+     "type": "ascii",
+     "value": "<%"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "e"
+     },
+     {
+      "str": "a"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "<%eval request(\"x\")%>"
+     }
+    ],
+    "negative": [
+     {
+      "text": "<% Response.Write(Request(\"x\")) %>"
+     },
+     {
+      "text": "eval request(\"x\")"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-webshell-generic-b64-exec",
+   "name": "Server script decoding and running a request blob",
+   "description": "A server-side page that base64-decodes request data and hands it to an evaluator in one expression. Looks across PHP, ASP and JSP spellings.",
+   "tactic": "Persistence",
+   "technique": "T1505.003",
+   "severity": "medium",
+   "weight": 30,
+   "applies_to": "both",
+   "format": "script",
+   "tags": [
+    "noisy-risk"
+   ],
+   "strings": [
+    {
+     "name": "d",
+     "type": "regex",
+     "value": "(?:base64_decode|Convert\\.FromBase64String|Base64\\.getDecoder\\(\\)\\.decode|atob)\\s*\\(\\s*(?:\\$_(?:POST|GET|REQUEST)|Request[\\.\\[(]|request\\.getParameter)"
+    },
+    {
+     "name": "e",
+     "type": "regex",
+     "value": "\\b(?:eval|assert|Assembly\\.Load|defineClass|Function|exec|system)\\b"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "d"
+     },
+     {
+      "str": "e"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "<?php $d = base64_decode($_POST['z']); eval($d);"
+     }
+    ],
+    "negative": [
+     {
+      "text": "<?php $d = base64_decode($row['z']); eval($d);"
+     },
+     {
+      "text": "<?php echo base64_decode($_POST['z']);"
+     }
+    ]
+   }
+  }
+ ]
+}

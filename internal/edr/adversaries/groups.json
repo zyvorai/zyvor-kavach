@@ -1,0 +1,1541 @@
+{
+ "pack": "groups",
+ "profiles": [
+  {
+   "id": "apt1",
+   "name": "APT1",
+   "aliases": [
+    "Comment Crew",
+    "Comment Panda"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "China (as publicly attributed)",
+   "motivation": "espionage",
+   "targets": "Broad enterprise sectors, mostly US/English-speaking",
+   "techniques": [
+    "T1566.001",
+    "T1059.003",
+    "T1078",
+    "T1005",
+    "T1560.001",
+    "T1071.001",
+    "T1105",
+    "T1003",
+    "T1547.001",
+    "T1114.001"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0006 APT1",
+     "url": "https://attack.mitre.org/groups/G0006/"
+    }
+   ]
+  },
+  {
+   "id": "apt3",
+   "name": "APT3",
+   "aliases": [
+    "Gothic Panda",
+    "UPS Team",
+    "Buckeye"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "China",
+   "motivation": "espionage",
+   "targets": "Aerospace, defense, technology, telecom",
+   "techniques": [
+    "T1566.001",
+    "T1068",
+    "T1059.001",
+    "T1547.001",
+    "T1003.001",
+    "T1021.001",
+    "T1136.001",
+    "T1070.004",
+    "T1105"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0022 APT3",
+     "url": "https://attack.mitre.org/groups/G0022/"
+    }
+   ]
+  },
+  {
+   "id": "apt10",
+   "name": "APT10",
+   "aliases": [
+    "menuPass",
+    "Stone Panda",
+    "Cloud Hopper"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "China",
+   "motivation": "espionage",
+   "targets": "Managed service providers and their clients, healthcare, aerospace",
+   "techniques": [
+    "T1566.001",
+    "T1078",
+    "T1021.001",
+    "T1003.001",
+    "T1560.001",
+    "T1574.002",
+    "T1105",
+    "T1053.005",
+    "T1218.005"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0045 APT10",
+     "url": "https://attack.mitre.org/groups/G0045/"
+    }
+   ]
+  },
+  {
+   "id": "apt19",
+   "name": "APT19",
+   "aliases": [
+    "Codoso",
+    "C0d0so0",
+    "Sunshop Group"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "China",
+   "motivation": "espionage",
+   "targets": "Legal, investment, pharmaceutical",
+   "techniques": [
+    "T1566.001",
+    "T1059.001",
+    "T1218.011",
+    "T1547.001",
+    "T1027",
+    "T1071.001",
+    "T1190"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0073 APT19",
+     "url": "https://attack.mitre.org/groups/G0073/"
+    }
+   ]
+  },
+  {
+   "id": "apt28",
+   "name": "APT28",
+   "aliases": [
+    "Fancy Bear",
+    "Sofacy",
+    "STRONTIUM",
+    "Forest Blizzard"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "Russia (GRU)",
+   "motivation": "espionage",
+   "targets": "Government, military, defense, media, think tanks",
+   "techniques": [
+    "T1566.001",
+    "T1078",
+    "T1110.003",
+    "T1003",
+    "T1003.001",
+    "T1048",
+    "T1114.002",
+    "T1059.001",
+    "T1547.001",
+    "T1070.004",
+    "T1550.002"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0007 APT28",
+     "url": "https://attack.mitre.org/groups/G0007/"
+    }
+   ]
+  },
+  {
+   "id": "apt29",
+   "name": "APT29",
+   "aliases": [
+    "Cozy Bear",
+    "The Dukes",
+    "Midnight Blizzard",
+    "NOBELIUM"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "Russia (SVR)",
+   "motivation": "espionage",
+   "targets": "Government, diplomatic, technology, cloud tenants",
+   "techniques": [
+    "T1078",
+    "T1078.004",
+    "T1566.001",
+    "T1059.001",
+    "T1546.003",
+    "T1548.002",
+    "T1102",
+    "T1560.001",
+    "T1558",
+    "T1550.001",
+    "T1098.001",
+    "T1195.002"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0016 APT29",
+     "url": "https://attack.mitre.org/groups/G0016/"
+    }
+   ]
+  },
+  {
+   "id": "apt32",
+   "name": "APT32",
+   "aliases": [
+    "OceanLotus",
+    "SeaLotus",
+    "Canvas Cyclone"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "Vietnam",
+   "motivation": "espionage",
+   "targets": "Private sector in Southeast Asia, dissidents, foreign governments",
+   "techniques": [
+    "T1566.001",
+    "T1204.002",
+    "T1059.001",
+    "T1053.005",
+    "T1547.001",
+    "T1027",
+    "T1055",
+    "T1218.010",
+    "T1071.001"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0050 APT32",
+     "url": "https://attack.mitre.org/groups/G0050/"
+    }
+   ]
+  },
+  {
+   "id": "apt33",
+   "name": "APT33",
+   "aliases": [
+    "Elfin",
+    "Refined Kitten",
+    "Peach Sandstorm"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "Iran",
+   "motivation": "espionage, destruction",
+   "targets": "Aviation, energy, defense",
+   "techniques": [
+    "T1566.001",
+    "T1110.003",
+    "T1059.001",
+    "T1003.001",
+    "T1053.005",
+    "T1547.001",
+    "T1486",
+    "T1485",
+    "T1027"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0064 APT33",
+     "url": "https://attack.mitre.org/groups/G0064/"
+    }
+   ]
+  },
+  {
+   "id": "oilrig",
+   "name": "OilRig",
+   "aliases": [
+    "APT34",
+    "Helix Kitten",
+    "Hazel Sandstorm"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "Iran",
+   "motivation": "espionage",
+   "targets": "Government, finance, energy, telecom in the Middle East",
+   "techniques": [
+    "T1566.001",
+    "T1078",
+    "T1059.001",
+    "T1003.001",
+    "T1071.004",
+    "T1048",
+    "T1053.005",
+    "T1505.003",
+    "T1552.001",
+    "T1110"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0049 OilRig",
+     "url": "https://attack.mitre.org/groups/G0049/"
+    }
+   ]
+  },
+  {
+   "id": "magic-hound",
+   "name": "Magic Hound",
+   "aliases": [
+    "APT35",
+    "Charming Kitten",
+    "Phosphorus",
+    "Mint Sandstorm"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "Iran",
+   "motivation": "espionage",
+   "targets": "Academics, journalists, government, defense",
+   "techniques": [
+    "T1566.001",
+    "T1078",
+    "T1059.001",
+    "T1053.005",
+    "T1070.004",
+    "T1105",
+    "T1136.001",
+    "T1562.001",
+    "T1003.001"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0059 Magic Hound",
+     "url": "https://attack.mitre.org/groups/G0059/"
+    }
+   ]
+  },
+  {
+   "id": "apt37",
+   "name": "APT37",
+   "aliases": [
+    "ScarCruft",
+    "Reaper",
+    "Ricochet Chollima"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "North Korea",
+   "motivation": "espionage",
+   "targets": "South Korea, defectors, Middle East, Japan",
+   "techniques": [
+    "T1566.001",
+    "T1204.002",
+    "T1059.001",
+    "T1547.001",
+    "T1055",
+    "T1102",
+    "T1005",
+    "T1113",
+    "T1123"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0067 APT37",
+     "url": "https://attack.mitre.org/groups/G0067/"
+    }
+   ]
+  },
+  {
+   "id": "apt38",
+   "name": "APT38",
+   "aliases": [
+    "BlueNoroff",
+    "Stardust Chollima"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "North Korea",
+   "motivation": "financial gain",
+   "targets": "Banks, SWIFT operators, cryptocurrency",
+   "techniques": [
+    "T1566.001",
+    "T1059.001",
+    "T1053.005",
+    "T1070.004",
+    "T1485",
+    "T1561.002",
+    "T1021.002",
+    "T1078",
+    "T1105"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0082 APT38",
+     "url": "https://attack.mitre.org/groups/G0082/"
+    }
+   ]
+  },
+  {
+   "id": "apt39",
+   "name": "APT39",
+   "aliases": [
+    "Chafer",
+    "Remix Kitten"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "Iran",
+   "motivation": "espionage",
+   "targets": "Telecom, travel, IT services",
+   "techniques": [
+    "T1566.001",
+    "T1078",
+    "T1059.001",
+    "T1053.005",
+    "T1003.001",
+    "T1021.001",
+    "T1560.001",
+    "T1105",
+    "T1090"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0087 APT39",
+     "url": "https://attack.mitre.org/groups/G0087/"
+    }
+   ]
+  },
+  {
+   "id": "apt40",
+   "name": "APT40",
+   "aliases": [
+    "Leviathan",
+    "Kryptonite Panda",
+    "Gingham Typhoon"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "China",
+   "motivation": "espionage",
+   "targets": "Maritime, defense, government, research",
+   "techniques": [
+    "T1190",
+    "T1566.001",
+    "T1505.003",
+    "T1059.001",
+    "T1078",
+    "T1003.001",
+    "T1021.001",
+    "T1053.005",
+    "T1105"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0065 APT40",
+     "url": "https://attack.mitre.org/groups/G0065/"
+    }
+   ]
+  },
+  {
+   "id": "apt41",
+   "name": "APT41",
+   "aliases": [
+    "Winnti",
+    "Barium",
+    "Brass Typhoon"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "China",
+   "motivation": "espionage, financial gain",
+   "targets": "Healthcare, telecom, technology, gaming",
+   "techniques": [
+    "T1190",
+    "T1195.002",
+    "T1566.001",
+    "T1059.001",
+    "T1053.005",
+    "T1505.003",
+    "T1003.001",
+    "T1574.002",
+    "T1070.004",
+    "T1055"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0096 APT41",
+     "url": "https://attack.mitre.org/groups/G0096/"
+    }
+   ]
+  },
+  {
+   "id": "sandworm",
+   "name": "Sandworm Team",
+   "aliases": [
+    "Voodoo Bear",
+    "Seashell Blizzard",
+    "IRIDIUM"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "Russia (GRU)",
+   "motivation": "destruction, espionage",
+   "targets": "Energy, government, telecom, media (notably Ukraine)",
+   "techniques": [
+    "T1190",
+    "T1566.001",
+    "T1078",
+    "T1059.001",
+    "T1485",
+    "T1561.002",
+    "T1490",
+    "T1070.004",
+    "T1003.001",
+    "T1021.002",
+    "T1053.005"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0034 Sandworm Team",
+     "url": "https://attack.mitre.org/groups/G0034/"
+    }
+   ]
+  },
+  {
+   "id": "turla",
+   "name": "Turla",
+   "aliases": [
+    "Snake",
+    "Venomous Bear",
+    "Secret Blizzard"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "Russia (FSB)",
+   "motivation": "espionage",
+   "targets": "Government, diplomatic, military",
+   "techniques": [
+    "T1566.001",
+    "T1059.001",
+    "T1055",
+    "T1014",
+    "T1071.001",
+    "T1102",
+    "T1027",
+    "T1547.001",
+    "T1005",
+    "T1105"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0010 Turla",
+     "url": "https://attack.mitre.org/groups/G0010/"
+    }
+   ]
+  },
+  {
+   "id": "kimsuky",
+   "name": "Kimsuky",
+   "aliases": [
+    "Velvet Chollima",
+    "Emerald Sleet",
+    "Thallium"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "North Korea",
+   "motivation": "espionage",
+   "targets": "Think tanks, government, nuclear policy, South Korea",
+   "techniques": [
+    "T1566.001",
+    "T1204.002",
+    "T1059.001",
+    "T1547.001",
+    "T1056.001",
+    "T1005",
+    "T1102",
+    "T1105",
+    "T1027",
+    "T1036"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0094 Kimsuky",
+     "url": "https://attack.mitre.org/groups/G0094/"
+    }
+   ]
+  },
+  {
+   "id": "lazarus",
+   "name": "Lazarus Group",
+   "aliases": [
+    "Hidden Cobra",
+    "Diamond Sleet",
+    "Zinc"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "North Korea",
+   "motivation": "espionage, financial gain, destruction",
+   "targets": "Finance, cryptocurrency, defense, media",
+   "techniques": [
+    "T1566.001",
+    "T1059.001",
+    "T1059.005",
+    "T1547.001",
+    "T1053.005",
+    "T1070.004",
+    "T1485",
+    "T1561.002",
+    "T1105",
+    "T1055",
+    "T1036"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0032 Lazarus Group",
+     "url": "https://attack.mitre.org/groups/G0032/"
+    }
+   ]
+  },
+  {
+   "id": "muddywater",
+   "name": "MuddyWater",
+   "aliases": [
+    "Seedworm",
+    "Mango Sandstorm",
+    "TEMP.Zagros"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "Iran (MOIS)",
+   "motivation": "espionage",
+   "targets": "Government, telecom, energy in Middle East, Europe, North America",
+   "techniques": [
+    "T1566.001",
+    "T1059.001",
+    "T1059.005",
+    "T1218.005",
+    "T1218.011",
+    "T1547.001",
+    "T1053.005",
+    "T1003",
+    "T1105",
+    "T1219"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0069 MuddyWater",
+     "url": "https://attack.mitre.org/groups/G0069/"
+    }
+   ]
+  },
+  {
+   "id": "gamaredon",
+   "name": "Gamaredon Group",
+   "aliases": [
+    "Primitive Bear",
+    "Armageddon",
+    "Aqua Blizzard"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "Russia (FSB, as attributed by Ukraine)",
+   "motivation": "espionage",
+   "targets": "Ukrainian government and military",
+   "techniques": [
+    "T1566.001",
+    "T1204.002",
+    "T1059.001",
+    "T1059.005",
+    "T1053.005",
+    "T1547.001",
+    "T1221",
+    "T1105",
+    "T1027",
+    "T1091"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0047 Gamaredon Group",
+     "url": "https://attack.mitre.org/groups/G0047/"
+    }
+   ]
+  },
+  {
+   "id": "dragonfly",
+   "name": "Dragonfly",
+   "aliases": [
+    "Energetic Bear",
+    "Berserk Bear",
+    "Crouching Yeti"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "Russia",
+   "motivation": "espionage, pre-positioning",
+   "targets": "Energy, industrial control sector",
+   "techniques": [
+    "T1566.001",
+    "T1195.002",
+    "T1078",
+    "T1003",
+    "T1087",
+    "T1105",
+    "T1056.001",
+    "T1070.004",
+    "T1189"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0035 Dragonfly",
+     "url": "https://attack.mitre.org/groups/G0035/"
+    }
+   ]
+  },
+  {
+   "id": "equation",
+   "name": "Equation",
+   "aliases": [
+    "Equation Group"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "Publicly linked to US (not officially confirmed)",
+   "motivation": "espionage",
+   "targets": "Telecom, government, research worldwide",
+   "techniques": [
+    "T1014",
+    "T1027",
+    "T1055",
+    "T1564",
+    "T1542.002",
+    "T1005",
+    "T1071",
+    "T1140"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0020 Equation",
+     "url": "https://attack.mitre.org/groups/G0020/"
+    }
+   ]
+  },
+  {
+   "id": "darkhotel",
+   "name": "Darkhotel",
+   "aliases": [
+    "DUBNIUM",
+    "Tapaoux"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "South Korea (as reported by vendors)",
+   "motivation": "espionage",
+   "targets": "Executives travelling, government, defense",
+   "techniques": [
+    "T1566.001",
+    "T1189",
+    "T1059.005",
+    "T1547.001",
+    "T1056.001",
+    "T1105",
+    "T1027",
+    "T1036"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0012 Darkhotel",
+     "url": "https://attack.mitre.org/groups/G0012/"
+    }
+   ]
+  },
+  {
+   "id": "patchwork",
+   "name": "Patchwork",
+   "aliases": [
+    "Dropping Elephant",
+    "Chinastrats"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "India (as reported by vendors)",
+   "motivation": "espionage",
+   "targets": "Government, diplomatic, think tanks in Asia",
+   "techniques": [
+    "T1566.001",
+    "T1204.002",
+    "T1059.001",
+    "T1547.001",
+    "T1218.005",
+    "T1053.005",
+    "T1005",
+    "T1105",
+    "T1071.001"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0040 Patchwork",
+     "url": "https://attack.mitre.org/groups/G0040/"
+    }
+   ]
+  },
+  {
+   "id": "transparent-tribe",
+   "name": "Transparent Tribe",
+   "aliases": [
+    "APT36",
+    "Mythic Leopard",
+    "ProjectM"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "Pakistan (as reported by vendors)",
+   "motivation": "espionage",
+   "targets": "Indian government, military, education",
+   "techniques": [
+    "T1566.001",
+    "T1204.002",
+    "T1059.001",
+    "T1547.001",
+    "T1005",
+    "T1113",
+    "T1105",
+    "T1071.001"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0134 Transparent Tribe",
+     "url": "https://attack.mitre.org/groups/G0134/"
+    }
+   ]
+  },
+  {
+   "id": "sidewinder",
+   "name": "SideWinder",
+   "aliases": [
+    "Rattlesnake",
+    "T-APT-04"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "India (as reported by vendors)",
+   "motivation": "espionage",
+   "targets": "Military, government in South Asia",
+   "techniques": [
+    "T1566.001",
+    "T1203",
+    "T1059.001",
+    "T1218.005",
+    "T1053.005",
+    "T1547.001",
+    "T1105",
+    "T1027"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0121 SideWinder",
+     "url": "https://attack.mitre.org/groups/G0121/"
+    }
+   ]
+  },
+  {
+   "id": "tick",
+   "name": "Tick",
+   "aliases": [
+    "Bronze Butler",
+    "REDBALDKNIGHT"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "China",
+   "motivation": "espionage",
+   "targets": "Japanese manufacturing, defense, technology",
+   "techniques": [
+    "T1566.001",
+    "T1190",
+    "T1059.001",
+    "T1547.001",
+    "T1055",
+    "T1560.001",
+    "T1005",
+    "T1105",
+    "T1027"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0060 Tick",
+     "url": "https://attack.mitre.org/groups/G0060/"
+    }
+   ]
+  },
+  {
+   "id": "blacktech",
+   "name": "BlackTech",
+   "aliases": [
+    "Palmerworm",
+    "Circuit Panda"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "China",
+   "motivation": "espionage",
+   "targets": "Taiwan, Japan, US technology and government",
+   "techniques": [
+    "T1566.001",
+    "T1059.001",
+    "T1547.001",
+    "T1053.005",
+    "T1070.004",
+    "T1105",
+    "T1218.011",
+    "T1071.001"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0098 BlackTech",
+     "url": "https://attack.mitre.org/groups/G0098/"
+    }
+   ]
+  },
+  {
+   "id": "ke3chang",
+   "name": "Ke3chang",
+   "aliases": [
+    "APT15",
+    "Vixen Panda",
+    "Nickel"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "China",
+   "motivation": "espionage",
+   "targets": "Government, diplomatic, military",
+   "techniques": [
+    "T1566.001",
+    "T1078",
+    "T1059.001",
+    "T1003.001",
+    "T1005",
+    "T1560.001",
+    "T1105",
+    "T1071.001",
+    "T1090"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0004 Ke3chang",
+     "url": "https://attack.mitre.org/groups/G0004/"
+    }
+   ]
+  },
+  {
+   "id": "mustang-panda",
+   "name": "Mustang Panda",
+   "aliases": [
+    "TA416",
+    "RedDelta",
+    "Bronze President"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "China",
+   "motivation": "espionage",
+   "targets": "Government, NGOs, Asia and Europe",
+   "techniques": [
+    "T1566.001",
+    "T1204.002",
+    "T1059.001",
+    "T1547.001",
+    "T1574.002",
+    "T1091",
+    "T1105",
+    "T1027",
+    "T1036"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0129 Mustang Panda",
+     "url": "https://attack.mitre.org/groups/G0129/"
+    }
+   ]
+  },
+  {
+   "id": "winnti",
+   "name": "Winnti Group",
+   "aliases": [
+    "Wicked Panda",
+    "Blackfly"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "China",
+   "motivation": "espionage, financial gain",
+   "targets": "Gaming, software, pharmaceutical",
+   "techniques": [
+    "T1195.002",
+    "T1190",
+    "T1059.001",
+    "T1574.002",
+    "T1055",
+    "T1014",
+    "T1070.004",
+    "T1105",
+    "T1027"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0044 Winnti Group",
+     "url": "https://attack.mitre.org/groups/G0044/"
+    }
+   ]
+  },
+  {
+   "id": "volt-typhoon",
+   "name": "Volt Typhoon",
+   "aliases": [
+    "Bronze Silhouette",
+    "Vanguard Panda",
+    "Insidious Taurus"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "China",
+   "motivation": "espionage, pre-positioning",
+   "targets": "US critical infrastructure, communications, energy",
+   "techniques": [
+    "T1190",
+    "T1078",
+    "T1059.001",
+    "T1003.003",
+    "T1070.004",
+    "T1090",
+    "T1047",
+    "T1021.001",
+    "T1016"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G1017 Volt Typhoon",
+     "url": "https://attack.mitre.org/groups/G1017/"
+    }
+   ]
+  },
+  {
+   "id": "salt-typhoon",
+   "name": "Salt Typhoon",
+   "aliases": [
+    "GhostEmperor",
+    "FamousSparrow",
+    "Earth Estries"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "China",
+   "motivation": "espionage",
+   "targets": "Telecommunications providers",
+   "techniques": [
+    "T1190",
+    "T1078",
+    "T1059",
+    "T1572",
+    "T1090",
+    "T1070.004",
+    "T1562.001",
+    "T1005",
+    "T1136"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G1045 Salt Typhoon",
+     "url": "https://attack.mitre.org/groups/G1045/"
+    }
+   ]
+  },
+  {
+   "id": "star-blizzard",
+   "name": "Star Blizzard",
+   "aliases": [
+    "Callisto",
+    "COLDRIVER",
+    "SEABORGIUM"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "Russia (FSB)",
+   "motivation": "espionage",
+   "targets": "Government, NGOs, think tanks, journalists",
+   "techniques": [
+    "T1566.002",
+    "T1078",
+    "T1114.002",
+    "T1204.001",
+    "T1056.003",
+    "T1598.003",
+    "T1534"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G1033 Star Blizzard",
+     "url": "https://attack.mitre.org/groups/G1033/"
+    }
+   ]
+  },
+  {
+   "id": "scattered-spider",
+   "name": "Scattered Spider",
+   "aliases": [
+    "Octo Tempest",
+    "UNC3944",
+    "0ktapus"
+   ],
+   "kind": "cybercrime",
+   "attributed_origin": "Loosely organized, English-speaking actors",
+   "motivation": "financial gain, extortion",
+   "targets": "Telecom, hospitality, retail, insurance",
+   "techniques": [
+    "T1566.004",
+    "T1078",
+    "T1621",
+    "T1219",
+    "T1486",
+    "T1556",
+    "T1098.001",
+    "T1021.001",
+    "T1530",
+    "T1567"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G1015 Scattered Spider",
+     "url": "https://attack.mitre.org/groups/G1015/"
+    }
+   ]
+  },
+  {
+   "id": "lapsus",
+   "name": "LAPSUS$",
+   "aliases": [
+    "DEV-0537",
+    "Strawberry Tempest"
+   ],
+   "kind": "cybercrime",
+   "attributed_origin": "Loosely organized",
+   "motivation": "extortion",
+   "targets": "Technology, telecom, government",
+   "techniques": [
+    "T1078",
+    "T1621",
+    "T1566.004",
+    "T1003",
+    "T1098",
+    "T1530",
+    "T1485",
+    "T1567",
+    "T1114"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G1004 LAPSUS$",
+     "url": "https://attack.mitre.org/groups/G1004/"
+    }
+   ]
+  },
+  {
+   "id": "fin7",
+   "name": "FIN7",
+   "aliases": [
+    "Carbon Spider",
+    "Sangria Tempest"
+   ],
+   "kind": "cybercrime",
+   "attributed_origin": "Eastern Europe (as publicly charged)",
+   "motivation": "financial gain",
+   "targets": "Retail, hospitality, restaurants, finance",
+   "techniques": [
+    "T1566.001",
+    "T1204.002",
+    "T1059.001",
+    "T1059.005",
+    "T1053.005",
+    "T1547.001",
+    "T1055",
+    "T1003",
+    "T1105",
+    "T1218.011"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0046 FIN7",
+     "url": "https://attack.mitre.org/groups/G0046/"
+    }
+   ]
+  },
+  {
+   "id": "fin6",
+   "name": "FIN6",
+   "aliases": [
+    "Skeleton Spider",
+    "ITG08"
+   ],
+   "kind": "cybercrime",
+   "attributed_origin": "Unknown (public reporting)",
+   "motivation": "financial gain",
+   "targets": "Point-of-sale environments, retail, hospitality",
+   "techniques": [
+    "T1078",
+    "T1059.001",
+    "T1003.001",
+    "T1021.002",
+    "T1053.005",
+    "T1560.001",
+    "T1048",
+    "T1105",
+    "T1486"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0037 FIN6",
+     "url": "https://attack.mitre.org/groups/G0037/"
+    }
+   ]
+  },
+  {
+   "id": "fin8",
+   "name": "FIN8",
+   "aliases": [
+    "Syssphinx"
+   ],
+   "kind": "cybercrime",
+   "attributed_origin": "Unknown",
+   "motivation": "financial gain",
+   "targets": "Retail, hospitality, finance",
+   "techniques": [
+    "T1566.001",
+    "T1059.001",
+    "T1047",
+    "T1003.001",
+    "T1021.001",
+    "T1053.005",
+    "T1070.004",
+    "T1486",
+    "T1105"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0061 FIN8",
+     "url": "https://attack.mitre.org/groups/G0061/"
+    }
+   ]
+  },
+  {
+   "id": "carbanak",
+   "name": "Carbanak",
+   "aliases": [
+    "Anunak"
+   ],
+   "kind": "cybercrime",
+   "attributed_origin": "Eastern Europe (as publicly reported)",
+   "motivation": "financial gain",
+   "targets": "Banks, financial institutions, retail",
+   "techniques": [
+    "T1566.001",
+    "T1204.002",
+    "T1059.001",
+    "T1021.001",
+    "T1219",
+    "T1113",
+    "T1056.001",
+    "T1053.005",
+    "T1105"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0008 Carbanak",
+     "url": "https://attack.mitre.org/groups/G0008/"
+    }
+   ]
+  },
+  {
+   "id": "cobalt-group",
+   "name": "Cobalt Group",
+   "aliases": [
+    "Cobalt Gang",
+    "Cobalt Spider"
+   ],
+   "kind": "cybercrime",
+   "attributed_origin": "Unknown",
+   "motivation": "financial gain",
+   "targets": "Banks and ATM infrastructure",
+   "techniques": [
+    "T1566.001",
+    "T1204.002",
+    "T1059.001",
+    "T1218.011",
+    "T1218.005",
+    "T1003.001",
+    "T1021.001",
+    "T1219",
+    "T1105"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0080 Cobalt Group",
+     "url": "https://attack.mitre.org/groups/G0080/"
+    }
+   ]
+  },
+  {
+   "id": "wizard-spider",
+   "name": "Wizard Spider",
+   "aliases": [
+    "Trickbot gang",
+    "UNC1878",
+    "Grim Spider"
+   ],
+   "kind": "cybercrime",
+   "attributed_origin": "Russia (as publicly reported)",
+   "motivation": "financial gain",
+   "targets": "Healthcare, enterprises, government (ransomware)",
+   "techniques": [
+    "T1566.001",
+    "T1059.001",
+    "T1003.001",
+    "T1021.002",
+    "T1047",
+    "T1486",
+    "T1490",
+    "T1489",
+    "T1562.001",
+    "T1055",
+    "T1558.003"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0102 Wizard Spider",
+     "url": "https://attack.mitre.org/groups/G0102/"
+    }
+   ]
+  },
+  {
+   "id": "ta505",
+   "name": "TA505",
+   "aliases": [
+    "Hive0065",
+    "Graceful Spider"
+   ],
+   "kind": "cybercrime",
+   "attributed_origin": "Unknown",
+   "motivation": "financial gain",
+   "targets": "Finance, retail, healthcare, broad",
+   "techniques": [
+    "T1566.001",
+    "T1204.002",
+    "T1059.005",
+    "T1218.011",
+    "T1055",
+    "T1486",
+    "T1105",
+    "T1027",
+    "T1190"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0092 TA505",
+     "url": "https://attack.mitre.org/groups/G0092/"
+    }
+   ]
+  },
+  {
+   "id": "evil-corp",
+   "name": "Evil Corp",
+   "aliases": [
+    "Indrik Spider",
+    "Gold Drake"
+   ],
+   "kind": "cybercrime",
+   "attributed_origin": "Russia (as publicly sanctioned)",
+   "motivation": "financial gain",
+   "targets": "Financial institutions, enterprises",
+   "techniques": [
+    "T1566.001",
+    "T1059.001",
+    "T1003.001",
+    "T1021.002",
+    "T1486",
+    "T1490",
+    "T1055",
+    "T1105",
+    "T1078"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0119 Evil Corp",
+     "url": "https://attack.mitre.org/groups/G0119/"
+    }
+   ]
+  },
+  {
+   "id": "silence",
+   "name": "Silence",
+   "aliases": [
+    "Whisper Spider"
+   ],
+   "kind": "cybercrime",
+   "attributed_origin": "Unknown",
+   "motivation": "financial gain",
+   "targets": "Banks in Russia, Europe, Asia",
+   "techniques": [
+    "T1566.001",
+    "T1204.002",
+    "T1059.001",
+    "T1218.011",
+    "T1053.005",
+    "T1056.001",
+    "T1113",
+    "T1219",
+    "T1105"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0091 Silence",
+     "url": "https://attack.mitre.org/groups/G0091/"
+    }
+   ]
+  },
+  {
+   "id": "teamtnt",
+   "name": "TeamTNT",
+   "aliases": [
+    "TeamTNT"
+   ],
+   "kind": "cybercrime",
+   "attributed_origin": "Unknown",
+   "motivation": "cryptomining",
+   "targets": "Cloud and container environments, Docker, Kubernetes",
+   "techniques": [
+    "T1190",
+    "T1610",
+    "T1611",
+    "T1496",
+    "T1552.001",
+    "T1552.005",
+    "T1053.003",
+    "T1105",
+    "T1070.004",
+    "T1562.001",
+    "T1613"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0139 TeamTNT",
+     "url": "https://attack.mitre.org/groups/G0139/"
+    }
+   ]
+  },
+  {
+   "id": "rocke",
+   "name": "Rocke",
+   "aliases": [
+    "Iron Group"
+   ],
+   "kind": "cybercrime",
+   "attributed_origin": "China (as reported)",
+   "motivation": "cryptomining",
+   "targets": "Linux servers and cloud hosts",
+   "techniques": [
+    "T1190",
+    "T1053.003",
+    "T1059.004",
+    "T1496",
+    "T1562.001",
+    "T1070.004",
+    "T1105",
+    "T1543.002",
+    "T1574.006"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0106 Rocke",
+     "url": "https://attack.mitre.org/groups/G0106/"
+    }
+   ]
+  },
+  {
+   "id": "molerats",
+   "name": "Molerats",
+   "aliases": [
+    "Gaza Cybergang",
+    "Extreme Jackal"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "Middle East (as reported)",
+   "motivation": "espionage",
+   "targets": "Government and media in Middle East, Europe",
+   "techniques": [
+    "T1566.001",
+    "T1204.002",
+    "T1059.001",
+    "T1547.001",
+    "T1053.005",
+    "T1102",
+    "T1105",
+    "T1027"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0021 Molerats",
+     "url": "https://attack.mitre.org/groups/G0021/"
+    }
+   ]
+  },
+  {
+   "id": "andariel",
+   "name": "Andariel",
+   "aliases": [
+    "Silent Chollima",
+    "Onyx Sleet"
+   ],
+   "kind": "nation-state",
+   "attributed_origin": "North Korea",
+   "motivation": "espionage, financial gain",
+   "targets": "Defense, healthcare, finance",
+   "techniques": [
+    "T1190",
+    "T1566.001",
+    "T1059.001",
+    "T1486",
+    "T1003.001",
+    "T1078",
+    "T1105",
+    "T1055",
+    "T1071.001"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "MITRE ATT&CK G0138 Andariel",
+     "url": "https://attack.mitre.org/groups/G0138/"
+    }
+   ]
+  }
+ ]
+}

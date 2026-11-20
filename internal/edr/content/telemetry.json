@@ -1,0 +1,3110 @@
+{
+  "pack": "telemetry",
+  "rules": [
+    {
+      "id": "reg-run-value-points-to-user-writable-dir",
+      "name": "Run key value launches from a user-writable directory",
+      "description": "A Run or RunOnce autostart value points into a temp, AppData, ProgramData or Public directory, a common location for dropped payloads that persist across logons.",
+      "tactic": "Persistence",
+      "technique": "T1547.001",
+      "technique_name": "Boot or Logon Autostart Execution: Registry Run Keys",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "registry",
+      "match": {
+        "all": [
+          {
+            "field": "key",
+            "op": "regex",
+            "pattern": "\\\\currentversion\\\\run(once|services|servicesonce)?$"
+          },
+          {
+            "field": "operation",
+            "op": "in",
+            "patterns": [
+              "set",
+              "create"
+            ]
+          },
+          {
+            "field": "value_data",
+            "op": "regex",
+            "pattern": "\\\\(temp|appdata|users\\\\public|programdata|downloads)\\\\"
+          },
+          {
+            "not": {
+              "field": "value_data",
+              "op": "regex",
+              "pattern": "\\\\appdata\\\\(local\\\\(microsoft\\\\(onedrive|teams)|slack|discord|spotify|zoom|google|1password|whatsapp|figma|notion)|roaming\\\\(spotify|zoom|dropbox|slack|discord))\\\\"
+            }
+          }
+        ]
+      },
+      "tags": [
+        "windows",
+        "autostart",
+        "registry"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+              "value_name": "Updater",
+              "value_data": "C:\\Users\\ann\\AppData\\Roaming\\upd\\upd.exe",
+              "operation": "set"
+            }
+          },
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce",
+              "value_name": "x",
+              "value_data": "C:\\ProgramData\\x\\x.exe -s",
+              "operation": "create"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+              "value_name": "Sec",
+              "value_data": "C:\\Program Files\\Vendor\\agent.exe",
+              "operation": "set"
+            }
+          },
+          {
+            "attrs": {
+              "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Run",
+              "value_name": "x",
+              "value_data": "C:\\Users\\ann\\AppData\\x.exe",
+              "operation": "set"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "reg-run-value-script-interpreter",
+      "name": "Run key value invokes a script interpreter or LOLBin",
+      "description": "A Run or RunOnce value launches powershell, mshta, wscript, cscript, rundll32 or regsvr32 directly, a common fileless persistence pattern.",
+      "tactic": "Persistence",
+      "technique": "T1547.001",
+      "technique_name": "Boot or Logon Autostart Execution: Registry Run Keys",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "registry",
+      "match": {
+        "all": [
+          {
+            "field": "key",
+            "op": "regex",
+            "pattern": "\\\\currentversion\\\\run(once|services|servicesonce)?$"
+          },
+          {
+            "field": "operation",
+            "op": "in",
+            "patterns": [
+              "set",
+              "create"
+            ]
+          },
+          {
+            "field": "value_data",
+            "op": "regex",
+            "pattern": "(^|[\\\\ \\\"'])(powershell|pwsh|mshta|wscript|cscript|rundll32|regsvr32|cmd)(\\.exe)?[ \\\"']"
+          }
+        ]
+      },
+      "tags": [
+        "windows",
+        "autostart",
+        "lolbin"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+              "value_name": "Upd",
+              "value_data": "powershell.exe -w hidden -enc SQBFAFgA",
+              "operation": "set"
+            }
+          },
+          {
+            "attrs": {
+              "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce",
+              "value_name": "Upd",
+              "value_data": "C:\\Windows\\System32\\mshta.exe http://x.test/a.hta",
+              "operation": "create"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+              "value_name": "OneDrive",
+              "value_data": "C:\\Program Files\\Microsoft OneDrive\\OneDrive.exe /background",
+              "operation": "set"
+            }
+          },
+          {
+            "attrs": {
+              "key": "HKCU\\Software\\Vendor\\Notes",
+              "value_name": "n",
+              "value_data": "powershell.exe -x",
+              "operation": "set"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "reg-ifeo-debugger-set",
+      "name": "Image File Execution Options Debugger value set",
+      "description": "A Debugger value was written under Image File Execution Options, which makes Windows launch an attacker program in place of the named binary (accessibility-feature backdoors, hijacks).",
+      "tactic": "Persistence",
+      "technique": "T1546.012",
+      "technique_name": "Event Triggered Execution: Image File Execution Options Injection",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "registry",
+      "match": {
+        "all": [
+          {
+            "field": "key",
+            "op": "contains",
+            "pattern": "\\image file execution options\\"
+          },
+          {
+            "field": "value_name",
+            "op": "equals",
+            "pattern": "debugger"
+          },
+          {
+            "field": "operation",
+            "op": "in",
+            "patterns": [
+              "set",
+              "create"
+            ]
+          },
+          {
+            "not": {
+              "field": "value_data",
+              "op": "regex",
+              "pattern": "(procexp(64)?\\.exe|vsjitdebugger\\.exe|windbg(x)?\\.exe|\\bcdb\\.exe|\\bntsd\\.exe)"
+            }
+          }
+        ]
+      },
+      "tags": [
+        "windows",
+        "ifeo",
+        "registry"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\sethc.exe",
+              "value_name": "Debugger",
+              "value_data": "C:\\Windows\\System32\\cmd.exe",
+              "operation": "set"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\app.exe",
+              "value_name": "GlobalFlag",
+              "value_data": "0x200",
+              "operation": "set"
+            }
+          },
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\sethc.exe",
+              "value_name": "Debugger",
+              "operation": "delete"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "reg-ifeo-silentprocessexit-monitor",
+      "name": "SilentProcessExit monitor process configured",
+      "description": "A MonitorProcess value under SilentProcessExit makes Windows launch a program when the target process exits, used for stealthy persistence and credential dumping from lsass.",
+      "tactic": "Persistence",
+      "technique": "T1546.012",
+      "technique_name": "Event Triggered Execution: Image File Execution Options Injection",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "registry",
+      "match": {
+        "all": [
+          {
+            "field": "key",
+            "op": "contains",
+            "pattern": "\\silentprocessexit\\"
+          },
+          {
+            "field": "value_name",
+            "op": "in",
+            "patterns": [
+              "monitorprocess",
+              "reportingmode"
+            ]
+          },
+          {
+            "field": "operation",
+            "op": "in",
+            "patterns": [
+              "set",
+              "create"
+            ]
+          }
+        ]
+      },
+      "tags": [
+        "windows",
+        "ifeo",
+        "registry"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\SilentProcessExit\\notepad.exe",
+              "value_name": "MonitorProcess",
+              "value_data": "C:\\Temp\\m.exe",
+              "operation": "set"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\SilentProcessExit\\notepad.exe",
+              "value_name": "MonitorProcess",
+              "operation": "delete"
+            }
+          },
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Vendor\\Monitor",
+              "value_name": "MonitorProcess",
+              "value_data": "x",
+              "operation": "set"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "reg-appinit-dlls-set",
+      "name": "AppInit_DLLs configured",
+      "description": "AppInit_DLLs lists DLLs injected into every process that loads user32.dll; a non-empty value is a classic persistence and injection mechanism.",
+      "tactic": "Persistence",
+      "technique": "T1546.010",
+      "technique_name": "Event Triggered Execution: AppInit DLLs",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "registry",
+      "match": {
+        "all": [
+          {
+            "field": "key",
+            "op": "contains",
+            "pattern": "\\windows nt\\currentversion\\windows"
+          },
+          {
+            "field": "value_name",
+            "op": "equals",
+            "pattern": "appinit_dlls"
+          },
+          {
+            "field": "value_data",
+            "op": "regex",
+            "pattern": "\\S"
+          },
+          {
+            "field": "operation",
+            "op": "equals",
+            "pattern": "set"
+          }
+        ]
+      },
+      "tags": [
+        "windows",
+        "appinit",
+        "registry"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows",
+              "value_name": "AppInit_DLLs",
+              "value_data": "C:\\Users\\Public\\hook.dll",
+              "operation": "set"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows",
+              "value_name": "AppInit_DLLs",
+              "value_data": "",
+              "operation": "set"
+            }
+          },
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows",
+              "value_name": "LoadAppInit_DLLs",
+              "value_data": "0",
+              "operation": "set"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "reg-appcertdlls-modified",
+      "name": "AppCertDlls key modified",
+      "description": "A value under Session Manager AppCertDlls was written; DLLs listed there are loaded into every process that calls CreateProcess-family APIs.",
+      "tactic": "Persistence",
+      "technique": "T1546.009",
+      "technique_name": "Event Triggered Execution: AppCert DLLs",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "registry",
+      "match": {
+        "all": [
+          {
+            "field": "key",
+            "op": "contains",
+            "pattern": "\\session manager\\appcertdlls"
+          },
+          {
+            "field": "operation",
+            "op": "in",
+            "patterns": [
+              "set",
+              "create"
+            ]
+          }
+        ]
+      },
+      "tags": [
+        "windows",
+        "appcert",
+        "registry"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "key": "HKLM\\System\\CurrentControlSet\\Control\\Session Manager\\AppCertDlls",
+              "value_name": "x",
+              "value_data": "C:\\Windows\\Temp\\a.dll",
+              "operation": "create"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "key": "HKLM\\System\\CurrentControlSet\\Control\\Session Manager\\Memory Management",
+              "value_name": "x",
+              "value_data": "1",
+              "operation": "set"
+            }
+          },
+          {
+            "attrs": {
+              "key": "HKLM\\System\\CurrentControlSet\\Control\\Session Manager\\AppCertDlls",
+              "value_name": "x",
+              "operation": "delete"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "reg-service-imagepath-user-writable-dir",
+      "name": "Service ImagePath points to a user-writable directory",
+      "description": "A service ImagePath was set to a temp, AppData, ProgramData, Public or Downloads path, typical of malware installing itself as a service.",
+      "tactic": "Persistence",
+      "technique": "T1543.003",
+      "technique_name": "Create or Modify System Process: Windows Service",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "registry",
+      "match": {
+        "all": [
+          {
+            "field": "key",
+            "op": "regex",
+            "pattern": "\\\\currentcontrolset\\\\services\\\\[^\\\\]+$"
+          },
+          {
+            "field": "value_name",
+            "op": "equals",
+            "pattern": "imagepath"
+          },
+          {
+            "field": "operation",
+            "op": "in",
+            "patterns": [
+              "set",
+              "create"
+            ]
+          },
+          {
+            "field": "value_data",
+            "op": "regex",
+            "pattern": "\\\\(temp|appdata|users\\\\public|programdata|downloads)\\\\"
+          }
+        ]
+      },
+      "tags": [
+        "windows",
+        "service",
+        "registry"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "key": "HKLM\\System\\CurrentControlSet\\Services\\Svc1",
+              "value_name": "ImagePath",
+              "value_data": "C:\\Users\\Public\\svc.exe",
+              "operation": "set"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "key": "HKLM\\System\\CurrentControlSet\\Services\\Svc1",
+              "value_name": "ImagePath",
+              "value_data": "C:\\Windows\\System32\\svchost.exe -k netsvcs",
+              "operation": "set"
+            }
+          },
+          {
+            "attrs": {
+              "key": "HKLM\\System\\CurrentControlSet\\Services\\Svc1\\Parameters",
+              "value_name": "ImagePath",
+              "value_data": "C:\\Temp\\x.exe",
+              "operation": "set"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "reg-service-imagepath-shell-command",
+      "name": "Service ImagePath runs a shell or script interpreter",
+      "description": "A service ImagePath contains cmd /c, powershell or similar, the pattern left by PsExec-like tooling and many post-exploitation frameworks installing one-shot services.",
+      "tactic": "Persistence",
+      "technique": "T1543.003",
+      "technique_name": "Create or Modify System Process: Windows Service",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "registry",
+      "match": {
+        "all": [
+          {
+            "field": "key",
+            "op": "regex",
+            "pattern": "\\\\currentcontrolset\\\\services\\\\[^\\\\]+$"
+          },
+          {
+            "field": "value_name",
+            "op": "equals",
+            "pattern": "imagepath"
+          },
+          {
+            "field": "operation",
+            "op": "in",
+            "patterns": [
+              "set",
+              "create"
+            ]
+          },
+          {
+            "field": "value_data",
+            "op": "regex",
+            "pattern": "(cmd(\\.exe)?\\s+/[ck]|powershell|pwsh|mshta|%comspec%)"
+          }
+        ]
+      },
+      "tags": [
+        "windows",
+        "service",
+        "registry"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "key": "HKLM\\System\\CurrentControlSet\\Services\\BTOBTO",
+              "value_name": "ImagePath",
+              "value_data": "%COMSPEC% /Q /c echo whoami > \\\\127.0.0.1\\C$\\o 2>&1",
+              "operation": "create"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "key": "HKLM\\System\\CurrentControlSet\\Services\\Spooler",
+              "value_name": "ImagePath",
+              "value_data": "C:\\Windows\\System32\\spoolsv.exe",
+              "operation": "set"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "reg-defender-exclusion-added",
+      "name": "Windows Defender exclusion added",
+      "description": "A value was created under a Windows Defender Exclusions key (paths, extensions or processes), commonly done by malware to hide its files from scanning.",
+      "tactic": "Defense Evasion",
+      "technique": "T1562.001",
+      "technique_name": "Impair Defenses: Disable or Modify Tools",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "registry",
+      "match": {
+        "all": [
+          {
+            "field": "key",
+            "op": "regex",
+            "pattern": "\\\\windows defender\\\\exclusions\\\\(paths|extensions|processes|ipaddresses)"
+          },
+          {
+            "field": "operation",
+            "op": "in",
+            "patterns": [
+              "set",
+              "create"
+            ]
+          },
+          {
+            "not": {
+              "field": "value_name",
+              "op": "regex",
+              "pattern": "\\\\(veeam|ccmcache|ccm\\\\cache|microsoft sql server|softwaredistribution)"
+            }
+          }
+        ]
+      },
+      "tags": [
+        "windows",
+        "defender",
+        "registry"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Microsoft\\Windows Defender\\Exclusions\\Paths",
+              "value_name": "C:\\Users\\Public",
+              "value_data": "0",
+              "operation": "set"
+            }
+          },
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Policies\\Microsoft\\Windows Defender\\Exclusions\\Extensions",
+              "value_name": ".exe",
+              "value_data": "0",
+              "operation": "create"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Microsoft\\Windows Defender\\Exclusions\\Paths",
+              "value_name": "C:\\x",
+              "operation": "delete"
+            }
+          },
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Microsoft\\Windows Defender\\Features",
+              "value_name": "TamperProtection",
+              "value_data": "5",
+              "operation": "set"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "reg-defender-protection-disabled",
+      "name": "Windows Defender protection disabled via registry",
+      "description": "Defender policy or real-time protection values (DisableAntiSpyware, DisableRealtimeMonitoring, DisableBehaviorMonitoring, DisableIOAVProtection) were set to 1.",
+      "tactic": "Defense Evasion",
+      "technique": "T1562.001",
+      "technique_name": "Impair Defenses: Disable or Modify Tools",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "registry",
+      "match": {
+        "all": [
+          {
+            "field": "key",
+            "op": "contains",
+            "pattern": "\\windows defender"
+          },
+          {
+            "field": "value_name",
+            "op": "in",
+            "patterns": [
+              "disableantispyware",
+              "disableantivirus",
+              "disablerealtimemonitoring",
+              "disablebehaviormonitoring",
+              "disableioavprotection",
+              "disableonaccessprotection",
+              "disablescriptscanning"
+            ]
+          },
+          {
+            "field": "value_data",
+            "op": "regex",
+            "pattern": "^(1|0x0*1)$"
+          },
+          {
+            "field": "operation",
+            "op": "equals",
+            "pattern": "set"
+          }
+        ]
+      },
+      "tags": [
+        "windows",
+        "defender",
+        "registry"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Policies\\Microsoft\\Windows Defender",
+              "value_name": "DisableAntiSpyware",
+              "value_data": "1",
+              "operation": "set"
+            }
+          },
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Policies\\Microsoft\\Windows Defender\\Real-Time Protection",
+              "value_name": "DisableRealtimeMonitoring",
+              "value_data": "0x00000001",
+              "operation": "set"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Policies\\Microsoft\\Windows Defender",
+              "value_name": "DisableAntiSpyware",
+              "value_data": "0",
+              "operation": "set"
+            }
+          },
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Vendor",
+              "value_name": "DisableRealtimeMonitoring",
+              "value_data": "1",
+              "operation": "set"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "reg-uac-disabled",
+      "name": "UAC disabled or admin consent prompt removed",
+      "description": "EnableLUA was set to 0 or ConsentPromptBehaviorAdmin to 0 under Policies\\System, turning off User Account Control elevation prompts.",
+      "tactic": "Privilege Escalation",
+      "technique": "T1548.002",
+      "technique_name": "Abuse Elevation Control Mechanism: Bypass User Account Control",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "registry",
+      "match": {
+        "all": [
+          {
+            "field": "key",
+            "op": "contains",
+            "pattern": "\\policies\\system"
+          },
+          {
+            "field": "value_name",
+            "op": "in",
+            "patterns": [
+              "enablelua",
+              "consentpromptbehavioradmin"
+            ]
+          },
+          {
+            "field": "value_data",
+            "op": "regex",
+            "pattern": "^(0|0x0+)$"
+          },
+          {
+            "field": "operation",
+            "op": "equals",
+            "pattern": "set"
+          }
+        ]
+      },
+      "tags": [
+        "windows",
+        "uac",
+        "registry"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System",
+              "value_name": "EnableLUA",
+              "value_data": "0",
+              "operation": "set"
+            }
+          },
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System",
+              "value_name": "ConsentPromptBehaviorAdmin",
+              "value_data": "0x00000000",
+              "operation": "set"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System",
+              "value_name": "EnableLUA",
+              "value_data": "1",
+              "operation": "set"
+            }
+          },
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer",
+              "value_name": "EnableLUA",
+              "value_data": "0",
+              "operation": "set"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "reg-lsa-protection-disabled",
+      "name": "LSA protection (RunAsPPL) disabled",
+      "description": "RunAsPPL under the LSA key was set to 0, removing protected-process shielding for lsass and easing credential dumping.",
+      "tactic": "Defense Evasion",
+      "technique": "T1562.001",
+      "technique_name": "Impair Defenses: Disable or Modify Tools",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "registry",
+      "match": {
+        "all": [
+          {
+            "field": "key",
+            "op": "regex",
+            "pattern": "\\\\control\\\\lsa$"
+          },
+          {
+            "field": "value_name",
+            "op": "in",
+            "patterns": [
+              "runasppl",
+              "runasplboot"
+            ]
+          },
+          {
+            "field": "value_data",
+            "op": "regex",
+            "pattern": "^(0|0x0+)$"
+          },
+          {
+            "field": "operation",
+            "op": "equals",
+            "pattern": "set"
+          }
+        ]
+      },
+      "tags": [
+        "windows",
+        "lsa",
+        "registry"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "key": "HKLM\\System\\CurrentControlSet\\Control\\Lsa",
+              "value_name": "RunAsPPL",
+              "value_data": "0",
+              "operation": "set"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "key": "HKLM\\System\\CurrentControlSet\\Control\\Lsa",
+              "value_name": "RunAsPPL",
+              "value_data": "1",
+              "operation": "set"
+            }
+          },
+          {
+            "attrs": {
+              "key": "HKLM\\System\\CurrentControlSet\\Control\\Lsa\\FipsAlgorithmPolicy",
+              "value_name": "RunAsPPL",
+              "value_data": "0",
+              "operation": "set"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "reg-lsa-security-package-added",
+      "name": "LSA security or authentication package modified",
+      "description": "Security Packages, Authentication Packages or Notification Packages under the LSA key were written; malicious SSP/AP DLLs (for example mimilib) load into lsass this way.",
+      "tactic": "Persistence",
+      "technique": "T1547.005",
+      "technique_name": "Boot or Logon Autostart Execution: Security Support Provider",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "registry",
+      "match": {
+        "all": [
+          {
+            "field": "key",
+            "op": "regex",
+            "pattern": "\\\\control\\\\lsa$"
+          },
+          {
+            "field": "value_name",
+            "op": "in",
+            "patterns": [
+              "security packages",
+              "authentication packages",
+              "notification packages"
+            ]
+          },
+          {
+            "field": "operation",
+            "op": "equals",
+            "pattern": "set"
+          },
+          {
+            "field": "value_data",
+            "op": "regex",
+            "pattern": "\\S"
+          }
+        ]
+      },
+      "tags": [
+        "windows",
+        "lsa",
+        "registry"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "key": "HKLM\\System\\CurrentControlSet\\Control\\Lsa",
+              "value_name": "Security Packages",
+              "value_data": "kerberos msv1_0 schannel wdigest tspkg pku2u mimilib",
+              "operation": "set"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "key": "HKLM\\System\\CurrentControlSet\\Control\\Lsa",
+              "value_name": "Security Packages",
+              "value_data": "",
+              "operation": "set"
+            }
+          },
+          {
+            "attrs": {
+              "key": "HKLM\\System\\CurrentControlSet\\Control\\Lsa",
+              "value_name": "LimitBlankPasswordUse",
+              "value_data": "1",
+              "operation": "set"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "reg-wdigest-uselogoncredential-enabled",
+      "name": "WDigest UseLogonCredential enabled",
+      "description": "UseLogonCredential=1 under WDigest makes Windows keep cleartext passwords in lsass memory, a prerequisite for credential dumping.",
+      "tactic": "Credential Access",
+      "technique": "T1003.001",
+      "technique_name": "OS Credential Dumping: LSASS Memory",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "registry",
+      "match": {
+        "all": [
+          {
+            "field": "key",
+            "op": "contains",
+            "pattern": "\\control\\securityproviders\\wdigest"
+          },
+          {
+            "field": "value_name",
+            "op": "equals",
+            "pattern": "uselogoncredential"
+          },
+          {
+            "field": "value_data",
+            "op": "regex",
+            "pattern": "^(1|0x0*1)$"
+          },
+          {
+            "field": "operation",
+            "op": "equals",
+            "pattern": "set"
+          }
+        ]
+      },
+      "tags": [
+        "windows",
+        "wdigest",
+        "registry"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "key": "HKLM\\System\\CurrentControlSet\\Control\\SecurityProviders\\WDigest",
+              "value_name": "UseLogonCredential",
+              "value_data": "1",
+              "operation": "set"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "key": "HKLM\\System\\CurrentControlSet\\Control\\SecurityProviders\\WDigest",
+              "value_name": "UseLogonCredential",
+              "value_data": "0",
+              "operation": "set"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "reg-rdp-enabled",
+      "name": "Remote Desktop enabled via registry",
+      "description": "fDenyTSConnections was set to 0 under Terminal Server, enabling inbound RDP on the host.",
+      "tactic": "Lateral Movement",
+      "technique": "T1021.001",
+      "technique_name": "Remote Services: Remote Desktop Protocol",
+      "severity": "medium",
+      "os": "windows",
+      "event_type": "registry",
+      "match": {
+        "all": [
+          {
+            "field": "key",
+            "op": "regex",
+            "pattern": "\\\\control\\\\terminal server$"
+          },
+          {
+            "field": "value_name",
+            "op": "equals",
+            "pattern": "fdenytsconnections"
+          },
+          {
+            "field": "value_data",
+            "op": "regex",
+            "pattern": "^(0|0x0+)$"
+          },
+          {
+            "field": "operation",
+            "op": "equals",
+            "pattern": "set"
+          }
+        ]
+      },
+      "tags": [
+        "windows",
+        "rdp",
+        "registry"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "key": "HKLM\\System\\CurrentControlSet\\Control\\Terminal Server",
+              "value_name": "fDenyTSConnections",
+              "value_data": "0",
+              "operation": "set"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "key": "HKLM\\System\\CurrentControlSet\\Control\\Terminal Server",
+              "value_name": "fDenyTSConnections",
+              "value_data": "1",
+              "operation": "set"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "reg-rdp-nla-disabled",
+      "name": "RDP Network Level Authentication disabled",
+      "description": "UserAuthentication was set to 0 for the RDP-Tcp listener, removing NLA and exposing the login screen to pre-authentication attacks.",
+      "tactic": "Defense Evasion",
+      "technique": "T1562.001",
+      "technique_name": "Impair Defenses: Disable or Modify Tools",
+      "severity": "medium",
+      "os": "windows",
+      "event_type": "registry",
+      "match": {
+        "all": [
+          {
+            "field": "key",
+            "op": "contains",
+            "pattern": "\\terminal server\\winstations\\rdp-tcp"
+          },
+          {
+            "field": "value_name",
+            "op": "equals",
+            "pattern": "userauthentication"
+          },
+          {
+            "field": "value_data",
+            "op": "regex",
+            "pattern": "^(0|0x0+)$"
+          },
+          {
+            "field": "operation",
+            "op": "equals",
+            "pattern": "set"
+          }
+        ]
+      },
+      "tags": [
+        "windows",
+        "rdp",
+        "registry"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "key": "HKLM\\System\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp",
+              "value_name": "UserAuthentication",
+              "value_data": "0",
+              "operation": "set"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "key": "HKLM\\System\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp",
+              "value_name": "UserAuthentication",
+              "value_data": "1",
+              "operation": "set"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "reg-winlogon-shell-userinit-modified",
+      "name": "Winlogon Shell or Userinit changed from default",
+      "description": "The Winlogon Shell or Userinit value was set to something other than explorer.exe or userinit.exe, which runs an attacker program at every logon.",
+      "tactic": "Persistence",
+      "technique": "T1547.004",
+      "technique_name": "Boot or Logon Autostart Execution: Winlogon Helper DLL",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "registry",
+      "match": {
+        "all": [
+          {
+            "field": "key",
+            "op": "regex",
+            "pattern": "\\\\windows nt\\\\currentversion\\\\winlogon$"
+          },
+          {
+            "field": "value_name",
+            "op": "in",
+            "patterns": [
+              "shell",
+              "userinit"
+            ]
+          },
+          {
+            "field": "operation",
+            "op": "equals",
+            "pattern": "set"
+          },
+          {
+            "not": {
+              "field": "value_data",
+              "op": "regex",
+              "pattern": "^(explorer\\.exe|(c:)?\\\\windows\\\\system32\\\\userinit\\.exe,?)$"
+            }
+          }
+        ]
+      },
+      "tags": [
+        "windows",
+        "winlogon",
+        "registry"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+              "value_name": "Userinit",
+              "value_data": "C:\\Windows\\system32\\userinit.exe,C:\\Temp\\b.exe",
+              "operation": "set"
+            }
+          },
+          {
+            "attrs": {
+              "key": "HKCU\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+              "value_name": "Shell",
+              "value_data": "explorer.exe, C:\\Users\\Public\\r.exe",
+              "operation": "set"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+              "value_name": "Userinit",
+              "value_data": "C:\\Windows\\system32\\userinit.exe,",
+              "operation": "set"
+            }
+          },
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+              "value_name": "Shell",
+              "value_data": "explorer.exe",
+              "operation": "set"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "reg-com-hijack-user-clsid-server",
+      "name": "COM object server registered in a user-writable location",
+      "description": "A per-user CLSID InprocServer32 or LocalServer32 was set to a temp, AppData or Public path; COM hijacking loads attacker code whenever the legitimate class is instantiated.",
+      "tactic": "Persistence",
+      "technique": "T1546.015",
+      "technique_name": "Event Triggered Execution: Component Object Model Hijacking",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "registry",
+      "match": {
+        "all": [
+          {
+            "field": "key",
+            "op": "regex",
+            "pattern": "\\\\software\\\\classes\\\\clsid\\\\\\{[^}]+\\}\\\\(inprocserver32|localserver32)$"
+          },
+          {
+            "field": "operation",
+            "op": "in",
+            "patterns": [
+              "set",
+              "create"
+            ]
+          },
+          {
+            "field": "value_data",
+            "op": "regex",
+            "pattern": "\\\\(temp|appdata|users\\\\public|programdata|downloads)\\\\"
+          }
+        ]
+      },
+      "tags": [
+        "windows",
+        "com-hijack",
+        "registry"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "key": "HKCU\\Software\\Classes\\CLSID\\{b5f8350b-0548-48b1-a6ee-88bd00b4a5e7}\\InprocServer32",
+              "value_data": "C:\\Users\\ann\\AppData\\Local\\Temp\\evil.dll",
+              "operation": "set"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "key": "HKCU\\Software\\Classes\\CLSID\\{b5f8350b-0548-48b1-a6ee-88bd00b4a5e7}\\InprocServer32",
+              "value_data": "C:\\Windows\\System32\\vendor.dll",
+              "operation": "set"
+            }
+          },
+          {
+            "attrs": {
+              "key": "HKCU\\Software\\Classes\\CLSID\\{b5f8350b-0548-48b1-a6ee-88bd00b4a5e7}\\ProgID",
+              "value_data": "C:\\Temp\\x",
+              "operation": "set"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "reg-scriptblock-logging-disabled",
+      "name": "PowerShell script block logging disabled",
+      "description": "EnableScriptBlockLogging was set to 0 in the PowerShell policy key, blinding the most useful PowerShell audit trail.",
+      "tactic": "Defense Evasion",
+      "technique": "T1562.002",
+      "technique_name": "Impair Defenses: Disable Windows Event Logging",
+      "severity": "medium",
+      "os": "windows",
+      "event_type": "registry",
+      "match": {
+        "all": [
+          {
+            "field": "key",
+            "op": "contains",
+            "pattern": "\\policies\\microsoft\\windows\\powershell\\scriptblocklogging"
+          },
+          {
+            "field": "value_name",
+            "op": "equals",
+            "pattern": "enablescriptblocklogging"
+          },
+          {
+            "field": "value_data",
+            "op": "regex",
+            "pattern": "^(0|0x0+)$"
+          },
+          {
+            "field": "operation",
+            "op": "equals",
+            "pattern": "set"
+          }
+        ]
+      },
+      "tags": [
+        "windows",
+        "powershell",
+        "logging",
+        "registry"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging",
+              "value_name": "EnableScriptBlockLogging",
+              "value_data": "0",
+              "operation": "set"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "key": "HKLM\\Software\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging",
+              "value_name": "EnableScriptBlockLogging",
+              "value_data": "1",
+              "operation": "set"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "dns-dga-long-alnum-label",
+      "name": "DGA-like long random label",
+      "description": "The queried name has a 30+ character alphanumeric label that mixes letters and digits, typical of algorithmically generated domains and some tunnelling payloads.",
+      "tactic": "Command and Control",
+      "technique": "T1568.002",
+      "technique_name": "Dynamic Resolution: Domain Generation Algorithms",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "dns",
+      "match": {
+        "all": [
+          {
+            "field": "query",
+            "op": "regex",
+            "pattern": "(^|\\.)[a-z0-9]{30,}(\\.|$)"
+          },
+          {
+            "field": "query",
+            "op": "regex",
+            "pattern": "(^|\\.)[a-z]*[0-9][a-z0-9]*[0-9][a-z0-9]*(\\.|$)"
+          }
+        ]
+      },
+      "tags": [
+        "dns",
+        "dga"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "query": "k3j9xq0v7z2m4w8n1b5c6d9f0g3h7j2k4l.com",
+              "qtype": "A"
+            }
+          },
+          {
+            "attrs": {
+              "query": "a8f3k2m9q1x7z4w6v0b5n3c8d2f1g9h4j7l6.example.net",
+              "qtype": "A"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "query": "www.example.com",
+              "qtype": "A"
+            }
+          },
+          {
+            "attrs": {
+              "query": "abcdefghijklmnopqrstuvwxyzabcdefghij.example.org",
+              "qtype": "A"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "dns-tunnel-long-txt-query",
+      "name": "Very long TXT query name",
+      "description": "A TXT query name of 100+ characters is characteristic of DNS tunnelling and exfiltration tools that pack data into the question.",
+      "tactic": "Exfiltration",
+      "technique": "T1048.003",
+      "technique_name": "Exfiltration Over Alternative Protocol: Unencrypted Non-C2 Protocol",
+      "severity": "high",
+      "os": "any",
+      "event_type": "dns",
+      "match": {
+        "all": [
+          {
+            "field": "qtype",
+            "op": "equals",
+            "pattern": "txt"
+          },
+          {
+            "field": "query",
+            "op": "regex",
+            "pattern": "^.{100,}$"
+          }
+        ]
+      },
+      "tags": [
+        "dns",
+        "tunnel"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "query": "aGVsbG8gd29ybGQgdGhpcyBpcyBleGZpbHRyYXRlZCBkYXRh.QUFBQUJCQkJDQ0NDRERERA.RUVFRUZGRkZHR0dHSEhISA.t.evil.example",
+              "qtype": "TXT"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "query": "_dmarc.example.com",
+              "qtype": "TXT"
+            }
+          },
+          {
+            "attrs": {
+              "query": "aGVsbG8gd29ybGQgdGhpcyBpcyBleGZpbHRyYXRlZCBkYXRh.QUFBQUJCQkJDQ0NDRERERA.RUVFRUZGRkZHR0dHSEhISA.t.evil.example",
+              "qtype": "A"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "dns-tunnel-null-record-query",
+      "name": "NULL record query",
+      "description": "NULL-type DNS queries have no legitimate everyday use and are the signature transport of iodine-style IP-over-DNS tunnels.",
+      "tactic": "Command and Control",
+      "technique": "T1071.004",
+      "technique_name": "Application Layer Protocol: DNS",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "dns",
+      "match": {
+        "field": "qtype",
+        "op": "equals",
+        "pattern": "null"
+      },
+      "tags": [
+        "dns",
+        "tunnel"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "query": "tunnel.example.com",
+              "qtype": "NULL"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "query": "tunnel.example.com",
+              "qtype": "A"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "dns-tunnel-long-label-subdomain",
+      "name": "Near-maximum length DNS label",
+      "description": "A label of 55+ characters on a name with several more labels is how tunnelling tools maximise bytes per query.",
+      "tactic": "Exfiltration",
+      "technique": "T1048.003",
+      "technique_name": "Exfiltration Over Alternative Protocol: Unencrypted Non-C2 Protocol",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "dns",
+      "match": {
+        "field": "query",
+        "op": "regex",
+        "pattern": "(^|\\.)[a-z0-9_-]{55,}\\.[^.]+\\.[^.]+"
+      },
+      "tags": [
+        "dns",
+        "tunnel"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "query": "mfrggzdfmztwq2lknnwg23tpobyxe43uovwgy3bamjzg63jahixmoylunf.t1.example.com",
+              "qtype": "CNAME"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "query": "mail.example.com",
+              "qtype": "MX"
+            }
+          },
+          {
+            "attrs": {
+              "query": "a1b2c3d4e5.example.com",
+              "qtype": "A"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "dns-exfil-hex-encoded-label",
+      "name": "Hex-encoded data in a DNS label",
+      "description": "A label made of 32+ hexadecimal characters, often a hash or encoded file chunk, prefixes a multi-label name, a common DNS exfiltration encoding.",
+      "tactic": "Exfiltration",
+      "technique": "T1048.003",
+      "technique_name": "Exfiltration Over Alternative Protocol: Unencrypted Non-C2 Protocol",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "dns",
+      "match": {
+        "field": "query",
+        "op": "regex",
+        "pattern": "^[0-9a-f]{32,}\\.([a-z0-9-]+\\.)+[a-z]{2,24}$"
+      },
+      "tags": [
+        "dns",
+        "exfil"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "query": "4d5a90000300000004000000ffff0000b8000000.drop.example.com",
+              "qtype": "A"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "query": "deadbeef.example.com",
+              "qtype": "A"
+            }
+          },
+          {
+            "attrs": {
+              "query": "cdn.example.com",
+              "qtype": "A"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "dns-dynamic-dns-provider-lookup",
+      "name": "Dynamic DNS provider domain queried",
+      "description": "The query is under a free dynamic-DNS provider (duckdns, no-ip, ddns.net, dyndns, hopto and similar) frequently used for attacker infrastructure that changes IP.",
+      "tactic": "Command and Control",
+      "technique": "T1568",
+      "technique_name": "Dynamic Resolution",
+      "severity": "low",
+      "os": "any",
+      "event_type": "dns",
+      "match": {
+        "field": "query",
+        "op": "regex",
+        "pattern": "(^|\\.)(duckdns\\.org|no-ip\\.(com|org|biz|info)|ddns\\.net|dyndns\\.(org|com|info|biz)|hopto\\.org|zapto\\.org|sytes\\.net|servebeer\\.com|serveftp\\.com|myftp\\.(org|biz)|bounceme\\.net|redirectme\\.net|3utilities\\.com)$"
+      },
+      "tags": [
+        "dns",
+        "dyndns"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "query": "c2host.duckdns.org",
+              "qtype": "A"
+            }
+          },
+          {
+            "attrs": {
+              "query": "bot.ddns.net",
+              "qtype": "A"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "query": "www.example.com",
+              "qtype": "A"
+            }
+          },
+          {
+            "attrs": {
+              "query": "ddns.net.example.com",
+              "qtype": "A"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "dns-paste-site-dead-drop-lookup",
+      "name": "Paste site queried (dead-drop resolver pattern)",
+      "description": "The query resolves a text paste service (pastebin, paste.ee, hastebin, rentry, ghostbin, ix.io, termbin), which malware uses to fetch C2 addresses or configuration.",
+      "tactic": "Command and Control",
+      "technique": "T1102.001",
+      "technique_name": "Web Service: Dead Drop Resolver",
+      "severity": "low",
+      "os": "any",
+      "event_type": "dns",
+      "match": {
+        "field": "query",
+        "op": "regex",
+        "pattern": "(^|\\.)(pastebin\\.com|paste\\.ee|hastebin\\.com|rentry\\.co|ghostbin\\.(com|co)|ix\\.io|termbin\\.com|pastes\\.io|controlc\\.com)$"
+      },
+      "tags": [
+        "dns",
+        "paste-site"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "query": "pastebin.com",
+              "qtype": "A"
+            }
+          },
+          {
+            "attrs": {
+              "query": "raw.rentry.co",
+              "qtype": "AAAA"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "query": "notpastebin.com.example.org",
+              "qtype": "A"
+            }
+          },
+          {
+            "attrs": {
+              "query": "docs.example.com",
+              "qtype": "A"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "dns-anonymous-file-drop-lookup",
+      "name": "Anonymous file-drop service queried",
+      "description": "The query resolves an anonymous file-sharing or upload service (transfer.sh, anonfiles, file.io, 0x0.st, temp.sh, gofile, catbox), commonly used to exfiltrate staged data.",
+      "tactic": "Exfiltration",
+      "technique": "T1567",
+      "technique_name": "Exfiltration Over Web Service",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "dns",
+      "match": {
+        "field": "query",
+        "op": "regex",
+        "pattern": "(^|\\.)(transfer\\.sh|anonfiles\\.com|file\\.io|0x0\\.st|temp\\.sh|gofile\\.io|catbox\\.moe|bashupload\\.com|filebin\\.net|oshi\\.at)$"
+      },
+      "tags": [
+        "dns",
+        "exfil",
+        "file-drop"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "query": "transfer.sh",
+              "qtype": "A"
+            }
+          },
+          {
+            "attrs": {
+              "query": "store1.gofile.io",
+              "qtype": "A"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "query": "files.example.com",
+              "qtype": "A"
+            }
+          },
+          {
+            "attrs": {
+              "query": "transfer.sh.internal.example",
+              "qtype": "A"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "dns-onion-gateway-lookup",
+      "name": "Tor onion gateway or .onion name queried",
+      "description": "The query is a .onion name or a clearnet Tor gateway (onion.ly, onion.to, tor2web and similar), a way to reach hidden services without running Tor.",
+      "tactic": "Command and Control",
+      "technique": "T1090.003",
+      "technique_name": "Proxy: Multi-hop Proxy",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "dns",
+      "match": {
+        "field": "query",
+        "op": "regex",
+        "pattern": "(\\.onion(\\.(to|ly|pet|ws|sh|ink|cab|nz|link|city|lt|casa|direct|rip))?$|(^|\\.)tor2web\\.)"
+      },
+      "tags": [
+        "dns",
+        "tor"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "query": "abcdefghij234567.onion",
+              "qtype": "A"
+            }
+          },
+          {
+            "attrs": {
+              "query": "abcdefghij234567.onion.ly",
+              "qtype": "A"
+            }
+          },
+          {
+            "attrs": {
+              "query": "x.tor2web.org",
+              "qtype": "A"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "query": "onion.example.com",
+              "qtype": "A"
+            }
+          },
+          {
+            "attrs": {
+              "query": "www.torproject.org",
+              "qtype": "A"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "auth-root-ssh-success-public-ip",
+      "name": "Root SSH login from a public address",
+      "description": "A successful ssh login as root came from a non-private source address, a direct administrative path that should rarely be reachable from the internet.",
+      "tactic": "Initial Access",
+      "technique": "T1078",
+      "technique_name": "Valid Accounts",
+      "severity": "high",
+      "os": "linux",
+      "event_type": "auth",
+      "match": {
+        "all": [
+          {
+            "field": "user",
+            "op": "equals",
+            "pattern": "root"
+          },
+          {
+            "field": "method",
+            "op": "equals",
+            "pattern": "ssh"
+          },
+          {
+            "field": "outcome",
+            "op": "equals",
+            "pattern": "success"
+          },
+          {
+            "field": "source_ip",
+            "op": "regex",
+            "pattern": "\\S"
+          },
+          {
+            "not": {
+              "field": "source_ip",
+              "op": "regex",
+              "pattern": "^(10\\.|127\\.|192\\.168\\.|172\\.(1[6-9]|2[0-9]|3[01])\\.|169\\.254\\.|100\\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\\.|::1$|f[cd][0-9a-f]{2}:|fe80:)"
+            }
+          }
+        ]
+      },
+      "tags": [
+        "auth",
+        "ssh",
+        "root"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "user": "root",
+              "method": "ssh",
+              "outcome": "success",
+              "source_ip": "203.0.113.50"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "user": "root",
+              "method": "ssh",
+              "outcome": "success",
+              "source_ip": "10.0.0.5"
+            }
+          },
+          {
+            "attrs": {
+              "user": "root",
+              "method": "ssh",
+              "outcome": "failure",
+              "source_ip": "203.0.113.50"
+            }
+          },
+          {
+            "attrs": {
+              "user": "deploy",
+              "method": "ssh",
+              "outcome": "success",
+              "source_ip": "203.0.113.50"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "auth-sudo-success-service-account",
+      "name": "Service account used sudo successfully",
+      "description": "A service or daemon account (www-data, nginx, postgres, nobody, svc-*, _name) ran sudo successfully; these accounts should not have interactive privilege escalation, which points to a compromised service.",
+      "tactic": "Privilege Escalation",
+      "technique": "T1548.003",
+      "technique_name": "Abuse Elevation Control Mechanism: Sudo and Sudo Caching",
+      "severity": "high",
+      "os": "linux",
+      "event_type": "auth",
+      "match": {
+        "all": [
+          {
+            "field": "method",
+            "op": "equals",
+            "pattern": "sudo"
+          },
+          {
+            "field": "outcome",
+            "op": "equals",
+            "pattern": "success"
+          },
+          {
+            "field": "user",
+            "op": "regex",
+            "pattern": "^(www-data|apache|nginx|nobody|daemon|postgres|mysql|redis|tomcat|jenkins|git|mongodb|elasticsearch|svc[-_].+|_[a-z0-9_]+)$"
+          }
+        ]
+      },
+      "tags": [
+        "auth",
+        "sudo",
+        "service-account"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "user": "www-data",
+              "method": "sudo",
+              "outcome": "success"
+            }
+          },
+          {
+            "attrs": {
+              "user": "svc-backup",
+              "method": "sudo",
+              "outcome": "success"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "user": "alice",
+              "method": "sudo",
+              "outcome": "success"
+            }
+          },
+          {
+            "attrs": {
+              "user": "www-data",
+              "method": "sudo",
+              "outcome": "failure"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "auth-ssh-success-service-account",
+      "name": "Service account logged in over SSH",
+      "description": "A service or daemon account authenticated over ssh; such accounts normally have no login shell, so a success suggests a planted key or password.",
+      "tactic": "Persistence",
+      "technique": "T1078.003",
+      "technique_name": "Valid Accounts: Local Accounts",
+      "severity": "high",
+      "os": "linux",
+      "event_type": "auth",
+      "match": {
+        "all": [
+          {
+            "field": "method",
+            "op": "equals",
+            "pattern": "ssh"
+          },
+          {
+            "field": "outcome",
+            "op": "equals",
+            "pattern": "success"
+          },
+          {
+            "field": "user",
+            "op": "regex",
+            "pattern": "^(www-data|apache|nginx|nobody|daemon|postgres|mysql|redis|tomcat|jenkins|git|mongodb|elasticsearch|svc[-_].+|_[a-z0-9_]+)$"
+          }
+        ]
+      },
+      "tags": [
+        "auth",
+        "ssh",
+        "service-account"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "user": "postgres",
+              "method": "ssh",
+              "outcome": "success",
+              "source_ip": "198.51.100.9"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "user": "alice",
+              "method": "ssh",
+              "outcome": "success",
+              "source_ip": "198.51.100.9"
+            }
+          },
+          {
+            "attrs": {
+              "user": "postgres",
+              "method": "ssh",
+              "outcome": "failure"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "auth-console-login-service-account",
+      "name": "Service account interactive console login",
+      "description": "A service or daemon account logged in at the console, which is never expected for non-human accounts.",
+      "tactic": "Persistence",
+      "technique": "T1078.003",
+      "technique_name": "Valid Accounts: Local Accounts",
+      "severity": "high",
+      "os": "any",
+      "event_type": "auth",
+      "match": {
+        "all": [
+          {
+            "field": "method",
+            "op": "equals",
+            "pattern": "console"
+          },
+          {
+            "field": "outcome",
+            "op": "equals",
+            "pattern": "success"
+          },
+          {
+            "field": "user",
+            "op": "regex",
+            "pattern": "^(www-data|apache|nginx|nobody|daemon|postgres|mysql|redis|tomcat|jenkins|git|mongodb|elasticsearch|svc[-_].+|_[a-z0-9_]+)$"
+          }
+        ]
+      },
+      "tags": [
+        "auth",
+        "console",
+        "service-account"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "user": "nobody",
+              "method": "console",
+              "outcome": "success"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "user": "alice",
+              "method": "console",
+              "outcome": "success"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "auth-rdp-success-public-ip",
+      "name": "RDP login from a public address",
+      "description": "A successful RDP logon came from a non-private source address, meaning RDP is exposed to the internet and a credential was accepted.",
+      "tactic": "Initial Access",
+      "technique": "T1133",
+      "technique_name": "External Remote Services",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "auth",
+      "match": {
+        "all": [
+          {
+            "field": "method",
+            "op": "equals",
+            "pattern": "rdp"
+          },
+          {
+            "field": "outcome",
+            "op": "equals",
+            "pattern": "success"
+          },
+          {
+            "field": "source_ip",
+            "op": "regex",
+            "pattern": "\\S"
+          },
+          {
+            "not": {
+              "field": "source_ip",
+              "op": "regex",
+              "pattern": "^(10\\.|127\\.|192\\.168\\.|172\\.(1[6-9]|2[0-9]|3[01])\\.|169\\.254\\.|100\\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\\.|::1$|f[cd][0-9a-f]{2}:|fe80:)"
+            }
+          }
+        ]
+      },
+      "tags": [
+        "auth",
+        "rdp"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "user": "bob",
+              "method": "rdp",
+              "outcome": "success",
+              "source_ip": "198.51.100.77"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "user": "bob",
+              "method": "rdp",
+              "outcome": "success",
+              "source_ip": "192.168.1.20"
+            }
+          },
+          {
+            "attrs": {
+              "user": "bob",
+              "method": "rdp",
+              "outcome": "failure",
+              "source_ip": "198.51.100.77"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "auth-rdp-success-default-account",
+      "name": "RDP login as a default account",
+      "description": "A successful RDP logon used the built-in Administrator, Guest or a default-named admin account, which should be renamed or disabled.",
+      "tactic": "Initial Access",
+      "technique": "T1078.001",
+      "technique_name": "Valid Accounts: Default Accounts",
+      "severity": "medium",
+      "os": "windows",
+      "event_type": "auth",
+      "match": {
+        "all": [
+          {
+            "field": "method",
+            "op": "equals",
+            "pattern": "rdp"
+          },
+          {
+            "field": "outcome",
+            "op": "equals",
+            "pattern": "success"
+          },
+          {
+            "field": "user",
+            "op": "regex",
+            "pattern": "^([a-z0-9.-]+\\\\)?(administrator|guest|admin|defaultaccount)$"
+          }
+        ]
+      },
+      "tags": [
+        "auth",
+        "rdp",
+        "default-account"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "user": "Administrator",
+              "method": "rdp",
+              "outcome": "success",
+              "source_ip": "10.0.0.8"
+            }
+          },
+          {
+            "attrs": {
+              "user": "CORP\\Guest",
+              "method": "rdp",
+              "outcome": "success",
+              "source_ip": "10.0.0.8"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "user": "alice",
+              "method": "rdp",
+              "outcome": "success",
+              "source_ip": "10.0.0.8"
+            }
+          },
+          {
+            "attrs": {
+              "user": "Administrator",
+              "method": "rdp",
+              "outcome": "failure",
+              "source_ip": "10.0.0.8"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "auth-ntlm-success-public-ip",
+      "name": "NTLM authentication accepted from a public address",
+      "description": "An NTLM logon succeeded from a non-private source; NTLM exposed to the internet enables relay, spraying and downgrade attacks.",
+      "tactic": "Initial Access",
+      "technique": "T1078",
+      "technique_name": "Valid Accounts",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "auth",
+      "match": {
+        "all": [
+          {
+            "field": "method",
+            "op": "equals",
+            "pattern": "ntlm"
+          },
+          {
+            "field": "outcome",
+            "op": "equals",
+            "pattern": "success"
+          },
+          {
+            "field": "source_ip",
+            "op": "regex",
+            "pattern": "\\S"
+          },
+          {
+            "not": {
+              "field": "source_ip",
+              "op": "regex",
+              "pattern": "^(10\\.|127\\.|192\\.168\\.|172\\.(1[6-9]|2[0-9]|3[01])\\.|169\\.254\\.|100\\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\\.|::1$|f[cd][0-9a-f]{2}:|fe80:)"
+            }
+          }
+        ]
+      },
+      "tags": [
+        "auth",
+        "ntlm"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "user": "carol",
+              "method": "ntlm",
+              "outcome": "success",
+              "source_ip": "203.0.113.200"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "user": "carol",
+              "method": "ntlm",
+              "outcome": "success",
+              "source_ip": "172.20.1.4"
+            }
+          },
+          {
+            "attrs": {
+              "user": "carol",
+              "method": "kerberos",
+              "outcome": "success",
+              "source_ip": "203.0.113.200"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "auth-ntlm-administrator-success",
+      "name": "NTLM logon as Administrator (pass-the-hash indicator)",
+      "description": "A built-in Administrator account authenticated with NTLM rather than Kerberos, the typical signature of pass-the-hash lateral movement.",
+      "tactic": "Lateral Movement",
+      "technique": "T1550.002",
+      "technique_name": "Use Alternate Authentication Material: Pass the Hash",
+      "severity": "medium",
+      "os": "windows",
+      "event_type": "auth",
+      "match": {
+        "all": [
+          {
+            "field": "method",
+            "op": "equals",
+            "pattern": "ntlm"
+          },
+          {
+            "field": "outcome",
+            "op": "equals",
+            "pattern": "success"
+          },
+          {
+            "field": "user",
+            "op": "regex",
+            "pattern": "^([a-z0-9.-]+\\\\)?administrator$"
+          }
+        ]
+      },
+      "tags": [
+        "auth",
+        "ntlm",
+        "pth"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "user": "CORP\\Administrator",
+              "method": "ntlm",
+              "outcome": "success",
+              "source_ip": "10.1.1.7"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "user": "Administrator",
+              "method": "kerberos",
+              "outcome": "success",
+              "source_ip": "10.1.1.7"
+            }
+          },
+          {
+            "attrs": {
+              "user": "alice",
+              "method": "ntlm",
+              "outcome": "success",
+              "source_ip": "10.1.1.7"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "auth-krbtgt-kerberos-logon",
+      "name": "Kerberos authentication as krbtgt",
+      "description": "The krbtgt account never logs on interactively; a Kerberos authentication attributed to it indicates a forged (golden) ticket.",
+      "tactic": "Credential Access",
+      "technique": "T1558.001",
+      "technique_name": "Steal or Forge Kerberos Tickets: Golden Ticket",
+      "severity": "critical",
+      "os": "windows",
+      "event_type": "auth",
+      "match": {
+        "all": [
+          {
+            "field": "method",
+            "op": "equals",
+            "pattern": "kerberos"
+          },
+          {
+            "field": "user",
+            "op": "regex",
+            "pattern": "^([a-z0-9.-]+\\\\)?krbtgt$"
+          }
+        ]
+      },
+      "tags": [
+        "auth",
+        "kerberos",
+        "golden-ticket"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "user": "krbtgt",
+              "method": "kerberos",
+              "outcome": "success",
+              "source_ip": "10.0.0.4"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "user": "alice",
+              "method": "kerberos",
+              "outcome": "success",
+              "source_ip": "10.0.0.4"
+            }
+          },
+          {
+            "attrs": {
+              "user": "krbtgt",
+              "method": "ntlm",
+              "outcome": "failure"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "auth-oauth-privileged-success-public-ip",
+      "name": "OAuth sign-in to a privileged account from a public address",
+      "description": "An OAuth sign-in succeeded for an admin-style account (admin, root, owner, global admin) from a non-private source, a high-value cloud identity use that merits review.",
+      "tactic": "Initial Access",
+      "technique": "T1078.004",
+      "technique_name": "Valid Accounts: Cloud Accounts",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "auth",
+      "match": {
+        "all": [
+          {
+            "field": "method",
+            "op": "equals",
+            "pattern": "oauth"
+          },
+          {
+            "field": "outcome",
+            "op": "equals",
+            "pattern": "success"
+          },
+          {
+            "field": "user",
+            "op": "regex",
+            "pattern": "(^|[-_.@])(admin|administrator|root|owner|globaladmin|global-admin)([-_.@]|$)"
+          },
+          {
+            "field": "source_ip",
+            "op": "regex",
+            "pattern": "\\S"
+          },
+          {
+            "not": {
+              "field": "source_ip",
+              "op": "regex",
+              "pattern": "^(10\\.|127\\.|192\\.168\\.|172\\.(1[6-9]|2[0-9]|3[01])\\.|169\\.254\\.|100\\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\\.|::1$|f[cd][0-9a-f]{2}:|fe80:)"
+            }
+          }
+        ]
+      },
+      "tags": [
+        "auth",
+        "oauth",
+        "cloud"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "user": "admin@corp.example",
+              "method": "oauth",
+              "outcome": "success",
+              "source_ip": "198.51.100.30"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "user": "alice@corp.example",
+              "method": "oauth",
+              "outcome": "success",
+              "source_ip": "198.51.100.30"
+            }
+          },
+          {
+            "attrs": {
+              "user": "admin@corp.example",
+              "method": "oauth",
+              "outcome": "success",
+              "source_ip": "10.0.0.3"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "module-unsigned-dll-from-temp",
+      "name": "Unsigned module loaded from a temp directory",
+      "description": "An unsigned DLL or shared object was loaded from a temp directory, a staging location for sideloading and injected payloads.",
+      "tactic": "Defense Evasion",
+      "technique": "T1574.002",
+      "technique_name": "Hijack Execution Flow: DLL Side-Loading",
+      "severity": "high",
+      "os": "any",
+      "event_type": "module",
+      "match": {
+        "all": [
+          {
+            "field": "signed",
+            "op": "equals",
+            "pattern": "false"
+          },
+          {
+            "field": "module_kind",
+            "op": "in",
+            "patterns": [
+              "dll",
+              "so"
+            ]
+          },
+          {
+            "field": "module_path",
+            "op": "regex",
+            "pattern": "(\\\\temp\\\\|/tmp/|/var/tmp/|/dev/shm/|\\\\appdata\\\\local\\\\temp\\\\)"
+          }
+        ]
+      },
+      "tags": [
+        "module",
+        "unsigned",
+        "temp"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "module_path": "C:\\Users\\ann\\AppData\\Local\\Temp\\a.dll",
+              "signed": "false",
+              "module_kind": "dll"
+            }
+          },
+          {
+            "attrs": {
+              "module_path": "/tmp/libx.so",
+              "signed": "false",
+              "module_kind": "so"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "module_path": "C:\\Users\\ann\\AppData\\Local\\Temp\\a.dll",
+              "signed": "true",
+              "module_kind": "dll",
+              "signer": "Vendor Inc"
+            }
+          },
+          {
+            "attrs": {
+              "module_path": "/usr/lib/libx.so",
+              "signed": "false",
+              "module_kind": "so"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "module-unsigned-dll-from-user-dir",
+      "name": "Unsigned module loaded from a user download, desktop or profile directory",
+      "description": "An unsigned DLL or shared object was loaded from a user-owned directory such as Downloads, Desktop, AppData, Public or a home cache, where users and droppers place side-loaded libraries.",
+      "tactic": "Defense Evasion",
+      "technique": "T1574.002",
+      "technique_name": "Hijack Execution Flow: DLL Side-Loading",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "module",
+      "match": {
+        "all": [
+          {
+            "field": "signed",
+            "op": "equals",
+            "pattern": "false"
+          },
+          {
+            "field": "module_kind",
+            "op": "in",
+            "patterns": [
+              "dll",
+              "so"
+            ]
+          },
+          {
+            "field": "module_path",
+            "op": "regex",
+            "pattern": "(\\\\users\\\\[^\\\\]+\\\\(appdata|downloads|desktop|documents)\\\\|\\\\users\\\\public\\\\|/home/[^/]+/(\\.cache|\\.local|downloads)/|/users/[^/]+/(downloads|library/caches)/)"
+          }
+        ]
+      },
+      "tags": [
+        "module",
+        "unsigned",
+        "user-dir"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "module_path": "C:\\Users\\ann\\Downloads\\zoom\\ffmpeg.dll",
+              "signed": "false",
+              "module_kind": "dll"
+            }
+          },
+          {
+            "attrs": {
+              "module_path": "/home/dev/.cache/x/lib.so",
+              "signed": "false",
+              "module_kind": "so"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "module_path": "C:\\Users\\ann\\Downloads\\zoom\\ffmpeg.dll",
+              "signed": "true",
+              "module_kind": "dll"
+            }
+          },
+          {
+            "attrs": {
+              "module_path": "C:\\Program Files\\Vendor\\lib.dll",
+              "signed": "false",
+              "module_kind": "dll"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "module-injection-prone-path-load",
+      "name": "Module loaded from an injection-prone directory",
+      "description": "A module was loaded from a directory that is writable by users yet trusted by allow-lists (Windows\\Tasks, Windows\\Debug, PerfLogs, Recycle Bin, Users\\Public), a typical drop spot for injected DLLs.",
+      "tactic": "Defense Evasion",
+      "technique": "T1055.001",
+      "technique_name": "Process Injection: Dynamic-link Library Injection",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "module",
+      "match": {
+        "all": [
+          {
+            "field": "module_kind",
+            "op": "equals",
+            "pattern": "dll"
+          },
+          {
+            "field": "module_path",
+            "op": "regex",
+            "pattern": "(\\\\windows\\\\(tasks|debug|tracing|registration\\\\crmlog)\\\\|\\\\perflogs\\\\|\\\\\\$recycle\\.bin\\\\|\\\\users\\\\public\\\\)"
+          }
+        ]
+      },
+      "tags": [
+        "module",
+        "injection"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "module_path": "C:\\Windows\\Tasks\\x.dll",
+              "signed": "false",
+              "module_kind": "dll"
+            }
+          },
+          {
+            "attrs": {
+              "module_path": "C:\\PerfLogs\\h.dll",
+              "signed": "true",
+              "module_kind": "dll"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "module_path": "C:\\Windows\\System32\\kernel32.dll",
+              "signed": "true",
+              "module_kind": "dll"
+            }
+          },
+          {
+            "attrs": {
+              "module_path": "C:\\Windows\\Tasks\\x.sys",
+              "signed": "false",
+              "module_kind": "driver"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "module-shared-object-from-writable-dir",
+      "name": "Shared object loaded from /tmp, /var/tmp or /dev/shm",
+      "description": "A shared object was loaded from a world-writable memory or temp directory, the staging location for LD_PRELOAD rootkits and in-memory implants.",
+      "tactic": "Persistence",
+      "technique": "T1574.006",
+      "technique_name": "Hijack Execution Flow: Dynamic Linker Hijacking",
+      "severity": "high",
+      "os": "linux",
+      "event_type": "module",
+      "match": {
+        "all": [
+          {
+            "field": "module_kind",
+            "op": "equals",
+            "pattern": "so"
+          },
+          {
+            "field": "module_path",
+            "op": "regex",
+            "pattern": "^(/tmp/|/var/tmp/|/dev/shm/)"
+          }
+        ]
+      },
+      "tags": [
+        "module",
+        "linux",
+        "ld-preload"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "module_path": "/dev/shm/.k.so",
+              "signed": "false",
+              "module_kind": "so"
+            }
+          },
+          {
+            "attrs": {
+              "module_path": "/tmp/libhook.so",
+              "module_kind": "so"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "module_path": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+              "module_kind": "so"
+            }
+          },
+          {
+            "attrs": {
+              "module_path": "/dev/shm/data.bin",
+              "module_kind": "dll"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "module-unsigned-driver-or-kext-from-user-dir",
+      "name": "Unsigned kernel extension or driver loaded from a user directory",
+      "description": "An unsigned driver or kext was loaded from a temp, download, Public or home directory; kernel code staged from user-writable paths is a rootkit and BYOVD indicator.",
+      "tactic": "Persistence",
+      "technique": "T1547.006",
+      "technique_name": "Boot or Logon Autostart Execution: Kernel Modules and Extensions",
+      "severity": "critical",
+      "os": "any",
+      "event_type": "module",
+      "match": {
+        "all": [
+          {
+            "field": "signed",
+            "op": "equals",
+            "pattern": "false"
+          },
+          {
+            "field": "module_kind",
+            "op": "in",
+            "patterns": [
+              "kext",
+              "driver"
+            ]
+          },
+          {
+            "field": "module_path",
+            "op": "regex",
+            "pattern": "(\\\\temp\\\\|/tmp/|/var/tmp/|/dev/shm/|\\\\appdata\\\\local\\\\temp\\\\|\\\\users\\\\[^\\\\]+\\\\(appdata|downloads|desktop|documents)\\\\|\\\\users\\\\public\\\\|/home/[^/]+/(\\.cache|\\.local|downloads)/|/users/[^/]+/(downloads|library/caches)/)"
+          }
+        ]
+      },
+      "tags": [
+        "module",
+        "driver",
+        "kext",
+        "rootkit"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "module_path": "C:\\Users\\ann\\Downloads\\evil.sys",
+              "signed": "false",
+              "module_kind": "driver"
+            }
+          },
+          {
+            "attrs": {
+              "module_path": "/Users/ann/Downloads/x.kext",
+              "signed": "false",
+              "module_kind": "kext"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "module_path": "C:\\Users\\ann\\Downloads\\evil.sys",
+              "signed": "true",
+              "module_kind": "driver"
+            }
+          },
+          {
+            "attrs": {
+              "module_path": "C:\\Windows\\System32\\drivers\\ok.sys",
+              "signed": "false",
+              "module_kind": "driver"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "module-kext-loaded-outside-extensions-dir",
+      "name": "Kernel extension loaded from outside the Extensions directories",
+      "description": "A kext was loaded from a path other than /System/Library/Extensions or /Library/Extensions, which is how unvetted kernel extensions are side-loaded.",
+      "tactic": "Persistence",
+      "technique": "T1547.006",
+      "technique_name": "Boot or Logon Autostart Execution: Kernel Modules and Extensions",
+      "severity": "medium",
+      "os": "macos",
+      "event_type": "module",
+      "match": {
+        "all": [
+          {
+            "field": "module_kind",
+            "op": "equals",
+            "pattern": "kext"
+          },
+          {
+            "not": {
+              "field": "module_path",
+              "op": "regex",
+              "pattern": "^/(system/)?library/extensions/"
+            }
+          }
+        ]
+      },
+      "tags": [
+        "module",
+        "macos",
+        "kext"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "module_path": "/private/tmp/x.kext",
+              "signed": "false",
+              "module_kind": "kext"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "module_path": "/Library/Extensions/Vendor.kext",
+              "signed": "true",
+              "module_kind": "kext"
+            }
+          },
+          {
+            "attrs": {
+              "module_path": "/System/Library/Extensions/IOUSB.kext",
+              "signed": "true",
+              "module_kind": "kext"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "module-known-vulnerable-driver-load",
+      "name": "Known vulnerable signed driver loaded (BYOVD)",
+      "description": "A driver commonly abused for kernel access by attackers (RTCore64, dbutil_2_3, gdrv, iqvw64e, capcom, winring0, asio and others) was loaded.",
+      "tactic": "Privilege Escalation",
+      "technique": "T1068",
+      "technique_name": "Exploitation for Privilege Escalation",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "module",
+      "match": {
+        "all": [
+          {
+            "field": "module_kind",
+            "op": "equals",
+            "pattern": "driver"
+          },
+          {
+            "field": "module_path",
+            "op": "regex",
+            "pattern": "\\\\(rtcore64|rtcore32|dbutil_2_3|gdrv|iqvw64e|capcom|winring0x64|asio|aswarpot|zam64|procexp152)\\.sys$"
+          }
+        ]
+      },
+      "tags": [
+        "module",
+        "driver",
+        "byovd"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "module_path": "C:\\Users\\ann\\AppData\\Local\\Temp\\RTCore64.sys",
+              "signed": "true",
+              "module_kind": "driver"
+            }
+          },
+          {
+            "attrs": {
+              "module_path": "C:\\Windows\\System32\\drivers\\dbutil_2_3.sys",
+              "signed": "true",
+              "module_kind": "driver"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "module_path": "C:\\Windows\\System32\\drivers\\ntfs.sys",
+              "signed": "true",
+              "module_kind": "driver"
+            }
+          },
+          {
+            "attrs": {
+              "module_path": "C:\\Temp\\RTCore64.dll",
+              "signed": "true",
+              "module_kind": "dll"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "module-credential-theft-tool-module",
+      "name": "Credential-theft tool module loaded",
+      "description": "A module named like a well-known credential theft component (mimilib, mimidrv, memssp, wce) was loaded.",
+      "tactic": "Credential Access",
+      "technique": "T1003.001",
+      "technique_name": "OS Credential Dumping: LSASS Memory",
+      "severity": "critical",
+      "os": "windows",
+      "event_type": "module",
+      "match": {
+        "field": "module_path",
+        "op": "regex",
+        "pattern": "\\\\(mimilib|mimidrv|mimikatz|memssp|wceaux|fgexec)\\.(dll|sys|exe)$"
+      },
+      "tags": [
+        "module",
+        "credential-access"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "module_path": "C:\\Windows\\System32\\mimilib.dll",
+              "signed": "false",
+              "module_kind": "dll"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "module_path": "C:\\Windows\\System32\\msv1_0.dll",
+              "signed": "true",
+              "module_kind": "dll"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "module-amsi-dll-outside-system-dirs",
+      "name": "amsi.dll loaded from outside the system directories",
+      "description": "An amsi.dll was loaded from a path other than System32 or SysWOW64, the pattern of AMSI-bypass proxy DLLs placed next to a host executable.",
+      "tactic": "Defense Evasion",
+      "technique": "T1562.001",
+      "technique_name": "Impair Defenses: Disable or Modify Tools",
+      "severity": "high",
+      "os": "windows",
+      "event_type": "module",
+      "match": {
+        "all": [
+          {
+            "field": "module_path",
+            "op": "suffix",
+            "pattern": "\\amsi.dll"
+          },
+          {
+            "not": {
+              "field": "module_path",
+              "op": "regex",
+              "pattern": "^[a-z]:\\\\windows\\\\(system32|syswow64|winsxs)\\\\"
+            }
+          }
+        ]
+      },
+      "tags": [
+        "module",
+        "amsi"
+      ],
+      "batch": "T-telemetry",
+      "tests": {
+        "positive": [
+          {
+            "attrs": {
+              "module_path": "C:\\Users\\ann\\AppData\\Local\\Temp\\amsi.dll",
+              "signed": "false",
+              "module_kind": "dll"
+            }
+          }
+        ],
+        "negative": [
+          {
+            "attrs": {
+              "module_path": "C:\\Windows\\System32\\amsi.dll",
+              "signed": "true",
+              "module_kind": "dll"
+            }
+          },
+          {
+            "attrs": {
+              "module_path": "C:\\Windows\\SysWOW64\\amsi.dll",
+              "signed": "true",
+              "module_kind": "dll"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

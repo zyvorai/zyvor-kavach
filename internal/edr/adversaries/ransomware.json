@@ -1,0 +1,306 @@
+{
+ "pack": "ransomware",
+ "profiles": [
+  {
+   "id": "lockbit",
+   "name": "LockBit 3.0",
+   "aliases": [
+    "LockBit Black"
+   ],
+   "kind": "ransomware",
+   "attributed_origin": "RaaS ecosystem",
+   "motivation": "financial gain, extortion",
+   "targets": "Broad, all sectors",
+   "techniques": [
+    "T1190",
+    "T1078",
+    "T1566.001",
+    "T1059.001",
+    "T1486",
+    "T1490",
+    "T1489",
+    "T1070.001",
+    "T1562.001",
+    "T1021.002",
+    "T1048"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "CISA advisory AA23-165A",
+     "url": "https://www.cisa.gov/news-events/cybersecurity-advisories/aa23-165a"
+    }
+   ]
+  },
+  {
+   "id": "alphv",
+   "name": "ALPHV/BlackCat",
+   "aliases": [
+    "BlackCat",
+    "Noberus"
+   ],
+   "kind": "ransomware",
+   "attributed_origin": "RaaS ecosystem",
+   "motivation": "financial gain, extortion",
+   "targets": "Healthcare, finance, broad",
+   "techniques": [
+    "T1078",
+    "T1190",
+    "T1566.001",
+    "T1059.001",
+    "T1486",
+    "T1490",
+    "T1562.001",
+    "T1003",
+    "T1021.001",
+    "T1567"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "CISA advisory AA23-353A",
+     "url": "https://www.cisa.gov/news-events/cybersecurity-advisories/aa23-353a"
+    }
+   ]
+  },
+  {
+   "id": "akira",
+   "name": "Akira",
+   "aliases": [
+    "Akira ransomware"
+   ],
+   "kind": "ransomware",
+   "attributed_origin": "RaaS ecosystem",
+   "motivation": "financial gain, extortion",
+   "targets": "SMBs, education, finance, healthcare",
+   "techniques": [
+    "T1078",
+    "T1190",
+    "T1133",
+    "T1486",
+    "T1490",
+    "T1003",
+    "T1021.001",
+    "T1562.001",
+    "T1219",
+    "T1567"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "CISA advisory AA24-109A",
+     "url": "https://www.cisa.gov/news-events/cybersecurity-advisories/aa24-109a"
+    }
+   ]
+  },
+  {
+   "id": "play",
+   "name": "Play",
+   "aliases": [
+    "PlayCrypt"
+   ],
+   "kind": "ransomware",
+   "attributed_origin": "Unknown",
+   "motivation": "financial gain, extortion",
+   "targets": "Business and critical infrastructure",
+   "techniques": [
+    "T1078",
+    "T1190",
+    "T1133",
+    "T1486",
+    "T1003",
+    "T1562.001",
+    "T1070.004",
+    "T1021.002",
+    "T1560.001",
+    "T1567"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "CISA advisory AA23-352A",
+     "url": "https://www.cisa.gov/news-events/cybersecurity-advisories/aa23-352a"
+    }
+   ]
+  },
+  {
+   "id": "rhysida",
+   "name": "Rhysida",
+   "aliases": [
+    "Rhysida ransomware"
+   ],
+   "kind": "ransomware",
+   "attributed_origin": "RaaS ecosystem",
+   "motivation": "financial gain, extortion",
+   "targets": "Education, healthcare, government",
+   "techniques": [
+    "T1078",
+    "T1133",
+    "T1566.001",
+    "T1486",
+    "T1021.001",
+    "T1047",
+    "T1059.001",
+    "T1562.001",
+    "T1567"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "CISA advisory AA23-319A",
+     "url": "https://www.cisa.gov/news-events/cybersecurity-advisories/aa23-319a"
+    }
+   ]
+  },
+  {
+   "id": "blackbyte",
+   "name": "BlackByte",
+   "aliases": [
+    "BlackByte 2.0"
+   ],
+   "kind": "ransomware",
+   "attributed_origin": "RaaS ecosystem",
+   "motivation": "financial gain, extortion",
+   "targets": "Critical infrastructure, government, finance",
+   "techniques": [
+    "T1190",
+    "T1078",
+    "T1486",
+    "T1490",
+    "T1003",
+    "T1021.001",
+    "T1562.001",
+    "T1070.001",
+    "T1567"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "CISA advisory AA23-136A",
+     "url": "https://www.cisa.gov/news-events/cybersecurity-advisories/aa23-136a"
+    }
+   ]
+  },
+  {
+   "id": "royal",
+   "name": "Royal",
+   "aliases": [
+    "BlackSuit (successor)"
+   ],
+   "kind": "ransomware",
+   "attributed_origin": "Reported Conti lineage",
+   "motivation": "financial gain, extortion",
+   "targets": "Healthcare, education, critical infrastructure",
+   "techniques": [
+    "T1566.001",
+    "T1190",
+    "T1078",
+    "T1486",
+    "T1490",
+    "T1003",
+    "T1021.001",
+    "T1562.001",
+    "T1219",
+    "T1048"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "CISA advisory AA23-061A",
+     "url": "https://www.cisa.gov/news-events/cybersecurity-advisories/aa23-061a"
+    }
+   ]
+  },
+  {
+   "id": "hive",
+   "name": "Hive",
+   "aliases": [
+    "Hive ransomware"
+   ],
+   "kind": "ransomware",
+   "attributed_origin": "RaaS ecosystem (disrupted Jan 2023)",
+   "motivation": "financial gain, extortion",
+   "targets": "Healthcare, government, IT",
+   "techniques": [
+    "T1078",
+    "T1190",
+    "T1566.001",
+    "T1486",
+    "T1490",
+    "T1489",
+    "T1562.001",
+    "T1003",
+    "T1021.001",
+    "T1070.001"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "CISA advisory AA22-321A",
+     "url": "https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-321a"
+    }
+   ]
+  },
+  {
+   "id": "conti",
+   "name": "Conti",
+   "aliases": [
+    "Conti ransomware"
+   ],
+   "kind": "ransomware",
+   "attributed_origin": "Russia-based (as publicly reported)",
+   "motivation": "financial gain, extortion",
+   "targets": "Healthcare, government, enterprise",
+   "techniques": [
+    "T1566.001",
+    "T1190",
+    "T1059.001",
+    "T1486",
+    "T1490",
+    "T1003",
+    "T1021.002",
+    "T1047",
+    "T1055",
+    "T1562.001",
+    "T1558.003"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "CISA advisory AA21-265A",
+     "url": "https://www.cisa.gov/news-events/cybersecurity-advisories/aa21-265a"
+    }
+   ]
+  },
+  {
+   "id": "medusa",
+   "name": "Medusa",
+   "aliases": [
+    "Medusa ransomware"
+   ],
+   "kind": "ransomware",
+   "attributed_origin": "RaaS ecosystem",
+   "motivation": "financial gain, extortion",
+   "targets": "Healthcare, education, insurance, technology",
+   "techniques": [
+    "T1190",
+    "T1078",
+    "T1486",
+    "T1490",
+    "T1219",
+    "T1059.001",
+    "T1003",
+    "T1562.001",
+    "T1567",
+    "T1021.001"
+   ],
+   "confidence": "medium",
+   "sources": [
+    {
+     "title": "CISA advisory AA25-071A",
+     "url": "https://www.cisa.gov/news-events/cybersecurity-advisories/aa25-071a"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,2975 @@
+{
+ "scenarios": [
+  {
+   "id": "emu-cld-aws-stop-logging",
+   "name": "CloudTrail logging stopped",
+   "description": "Synthetic cloud audit event emulating T1562.008: cloudtrail logging stopped. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "StopLogging outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-stop-logging"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-delete-trail",
+   "name": "CloudTrail trail deleted",
+   "description": "Synthetic cloud audit event emulating T1562.008: cloudtrail trail deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "DeleteTrail outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-delete-trail"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-update-trail",
+   "name": "CloudTrail trail configuration changed",
+   "description": "Synthetic cloud audit event emulating T1562.008: cloudtrail trail configuration changed. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "UpdateTrail outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-update-trail"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-put-event-selectors",
+   "name": "CloudTrail event selectors changed",
+   "description": "Synthetic cloud audit event emulating T1562.008: cloudtrail event selectors changed. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "PutEventSelectors outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-put-event-selectors"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-guardduty-disable",
+   "name": "GuardDuty detector deleted or disassociated",
+   "description": "Synthetic cloud audit event emulating T1562.001: guardduty detector deleted or disassociated. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "DeleteDetector outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-guardduty-disable"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-config-recorder-stop",
+   "name": "AWS Config recorder stopped or deleted",
+   "description": "Synthetic cloud audit event emulating T1562.008: aws config recorder stopped or deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "StopConfigurationRecorder outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-config-recorder-stop"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-flowlogs-delete",
+   "name": "VPC flow logs deleted",
+   "description": "Synthetic cloud audit event emulating T1562.008: vpc flow logs deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "DeleteFlowLogs outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-flowlogs-delete"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-securityhub-disable",
+   "name": "Security Hub disabled",
+   "description": "Synthetic cloud audit event emulating T1562.001: security hub disabled. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "DisableSecurityHub outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-securityhub-disable"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-log-group-delete",
+   "name": "CloudWatch log group or stream deleted",
+   "description": "Synthetic cloud audit event emulating T1562.008: cloudwatch log group or stream deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "DeleteLogGroup outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-log-group-delete"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-alarm-delete",
+   "name": "CloudWatch alarms deleted or disabled",
+   "description": "Synthetic cloud audit event emulating T1562.008: cloudwatch alarms deleted or disabled. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "DeleteAlarms outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-alarm-delete"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-create-access-key",
+   "name": "IAM access key created",
+   "description": "Synthetic cloud audit event emulating T1098.001: iam access key created. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1098.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "CreateAccessKey outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-create-access-key"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-create-user",
+   "name": "IAM user created",
+   "description": "Synthetic cloud audit event emulating T1136.003: iam user created. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1136.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "CreateUser outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-create-user"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-create-login-profile",
+   "name": "IAM console password set for a user",
+   "description": "Synthetic cloud audit event emulating T1098: iam console password set for a user. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1098"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "CreateLoginProfile outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-create-login-profile"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-attach-admin-user",
+   "name": "AdministratorAccess attached to a user or group",
+   "description": "Synthetic cloud audit event emulating T1098.003: administratoraccess attached to a user or group. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1098.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "AttachUserPolicy outcome=success policy/AdministratorAccess",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-attach-admin-user"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-attach-admin-role",
+   "name": "AdministratorAccess attached to a role",
+   "description": "Synthetic cloud audit event emulating T1098.003: administratoraccess attached to a role. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1098.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "AttachRolePolicy outcome=success policy/AdministratorAccess",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-attach-admin-role"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-put-inline-policy",
+   "name": "Inline IAM policy written",
+   "description": "Synthetic cloud audit event emulating T1098.003: inline iam policy written. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1098.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "PutUserPolicy outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-put-inline-policy"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-create-policy-version",
+   "name": "IAM policy version created or set default",
+   "description": "Synthetic cloud audit event emulating T1098.003: iam policy version created or set default. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1098.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "CreatePolicyVersion outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-create-policy-version"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-update-assume-role-policy",
+   "name": "Role trust policy changed",
+   "description": "Synthetic cloud audit event emulating T1098.003: role trust policy changed. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1098.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "UpdateAssumeRolePolicy outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-update-assume-role-policy"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-add-user-to-group",
+   "name": "IAM user added to a group",
+   "description": "Synthetic cloud audit event emulating T1098.003: iam user added to a group. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1098.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "AddUserToGroup outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-add-user-to-group"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-get-password-data",
+   "name": "EC2 Windows password data requested",
+   "description": "Synthetic cloud audit event emulating T1552.005: ec2 windows password data requested. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1552.005"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "GetPasswordData outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-get-password-data"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-account-auth-details",
+   "name": "Full IAM account authorisation details dumped",
+   "description": "Synthetic cloud audit event emulating T1069.003: full iam account authorisation details dumped. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Discovery"
+   ],
+   "techniques": [
+    "T1069.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "GetAccountAuthorizationDetails outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-account-auth-details"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-bucket-acl-public",
+   "name": "S3 bucket ACL granted to everyone",
+   "description": "Synthetic cloud audit event emulating T1530: s3 bucket acl granted to everyone. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1530"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "PutBucketAcl outcome=success AllUsers",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-bucket-acl-public"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-bucket-policy-public",
+   "name": "S3 bucket policy with a wildcard principal",
+   "description": "Synthetic cloud audit event emulating T1530: s3 bucket policy with a wildcard principal. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1530"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "PutBucketPolicy outcome=success \"Principal\":\"*\"",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-bucket-policy-public"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-bucket-block-public-off",
+   "name": "S3 public access block removed",
+   "description": "Synthetic cloud audit event emulating T1562.007: s3 public access block removed. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.007"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "DeletePublicAccessBlock outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-bucket-block-public-off"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-delete-bucket",
+   "name": "S3 bucket deleted",
+   "description": "Synthetic cloud audit event emulating T1485: s3 bucket deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1485"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "DeleteBucket outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-delete-bucket"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-bucket-lifecycle-expire",
+   "name": "S3 lifecycle expiration rule written",
+   "description": "Synthetic cloud audit event emulating T1485: s3 lifecycle expiration rule written. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1485"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "PutBucketLifecycle outcome=success Expiration",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-bucket-lifecycle-expire"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-bucket-versioning-suspend",
+   "name": "S3 versioning suspended",
+   "description": "Synthetic cloud audit event emulating T1485: s3 versioning suspended. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1485"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "PutBucketVersioning outcome=success Suspended",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-bucket-versioning-suspend"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-kms-key-deletion",
+   "name": "KMS key scheduled for deletion or disabled",
+   "description": "Synthetic cloud audit event emulating T1485: kms key scheduled for deletion or disabled. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1485"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "ScheduleKeyDeletion outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-kms-key-deletion"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-kms-put-key-policy",
+   "name": "KMS key policy replaced",
+   "description": "Synthetic cloud audit event emulating T1098: kms key policy replaced. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1098"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "PutKeyPolicy outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-kms-put-key-policy"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-snapshot-share-public",
+   "name": "EBS snapshot shared publicly or cross-account",
+   "description": "Synthetic cloud audit event emulating T1537: ebs snapshot shared publicly or cross-account. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Exfiltration"
+   ],
+   "techniques": [
+    "T1537"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "ModifySnapshotAttribute outcome=success \"group\":\"all\"",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-snapshot-share-public"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-rds-snapshot-share",
+   "name": "RDS snapshot attribute modified",
+   "description": "Synthetic cloud audit event emulating T1537: rds snapshot attribute modified. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Exfiltration"
+   ],
+   "techniques": [
+    "T1537"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "ModifyDBSnapshotAttribute outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-rds-snapshot-share"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-ami-share",
+   "name": "AMI launch permission changed",
+   "description": "Synthetic cloud audit event emulating T1537: ami launch permission changed. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Exfiltration"
+   ],
+   "techniques": [
+    "T1537"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "ModifyImageAttribute outcome=success launchPermission",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-ami-share"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-sg-open-world",
+   "name": "Security group opened to the internet",
+   "description": "Synthetic cloud audit event emulating T1562.007: security group opened to the internet. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.007"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "AuthorizeSecurityGroupIngress outcome=success 0.0.0.0/0",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-sg-open-world"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-mfa-deactivate",
+   "name": "MFA device deactivated or deleted",
+   "description": "Synthetic cloud audit event emulating T1556.006: mfa device deactivated or deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1556.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "DeactivateMFADevice outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-mfa-deactivate"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-password-policy-weaken",
+   "name": "Account password policy changed or removed",
+   "description": "Synthetic cloud audit event emulating T1556: account password policy changed or removed. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1556"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "UpdateAccountPasswordPolicy outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-password-policy-weaken"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-lambda-update-code",
+   "name": "Lambda function code replaced",
+   "description": "Synthetic cloud audit event emulating T1648: lambda function code replaced. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1648"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "UpdateFunctionCode outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-lambda-update-code"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-ssm-send-command",
+   "name": "SSM command sent to instances",
+   "description": "Synthetic cloud audit event emulating T1651: ssm command sent to instances. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1651"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "SendCommand outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-ssm-send-command"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-org-leave",
+   "name": "Account left or was removed from the organisation",
+   "description": "Synthetic cloud audit event emulating T1666: account left or was removed from the organisation. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1666"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "LeaveOrganization outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-org-leave"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-org-create-account",
+   "name": "Organisation member account created",
+   "description": "Synthetic cloud audit event emulating T1136.003: organisation member account created. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1136.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "CreateAccount outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-org-create-account"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-import-keypair",
+   "name": "SSH key pair imported",
+   "description": "Synthetic cloud audit event emulating T1098.004: ssh key pair imported. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1098.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "ImportKeyPair outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-import-keypair"
+   ]
+  },
+  {
+   "id": "emu-cld-aws-imds-v1-allow",
+   "name": "Instance metadata service tokens made optional",
+   "description": "Synthetic cloud audit event emulating T1552.005: instance metadata service tokens made optional. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1552.005"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "ModifyInstanceMetadataOptions outcome=success httpTokens\":\"optional",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-aws-imds-v1-allow"
+   ]
+  },
+  {
+   "id": "emu-cld-azure-role-assignment-write",
+   "name": "Azure role assignment created",
+   "description": "Synthetic cloud audit event emulating T1098.003: azure role assignment created. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1098.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:activity",
+     "command": "Microsoft.Authorization/roleAssignments/write outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-azure-role-assignment-write"
+   ]
+  },
+  {
+   "id": "emu-cld-azure-elevate-access",
+   "name": "Global admin elevated access to all subscriptions",
+   "description": "Synthetic cloud audit event emulating T1098.003: global admin elevated access to all subscriptions. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1098.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:activity",
+     "command": "Microsoft.Authorization/elevateAccess/action outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-azure-elevate-access"
+   ]
+  },
+  {
+   "id": "emu-cld-azure-role-definition-write",
+   "name": "Custom Azure role definition written",
+   "description": "Synthetic cloud audit event emulating T1098.003: custom azure role definition written. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1098.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:activity",
+     "command": "Microsoft.Authorization/roleDefinitions/write outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-azure-role-definition-write"
+   ]
+  },
+  {
+   "id": "emu-cld-azure-policy-assignment-delete",
+   "name": "Azure Policy assignment deleted",
+   "description": "Synthetic cloud audit event emulating T1562.001: azure policy assignment deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:activity",
+     "command": "Microsoft.Authorization/policyAssignments/delete outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-azure-policy-assignment-delete"
+   ]
+  },
+  {
+   "id": "emu-cld-azure-diag-settings-delete",
+   "name": "Diagnostic setting deleted",
+   "description": "Synthetic cloud audit event emulating T1562.008: diagnostic setting deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:activity",
+     "command": "Microsoft.Insights/diagnosticSettings/delete outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-azure-diag-settings-delete"
+   ]
+  },
+  {
+   "id": "emu-cld-azure-flowlog-delete",
+   "name": "Network Watcher flow log deleted",
+   "description": "Synthetic cloud audit event emulating T1562.008: network watcher flow log deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:activity",
+     "command": "Microsoft.Network/networkWatchers/flowLogs/delete outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-azure-flowlog-delete"
+   ]
+  },
+  {
+   "id": "emu-cld-azure-firewall-delete",
+   "name": "Azure Firewall or policy deleted",
+   "description": "Synthetic cloud audit event emulating T1562.007: azure firewall or policy deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.007"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:activity",
+     "command": "Microsoft.Network/azureFirewalls/delete outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-azure-firewall-delete"
+   ]
+  },
+  {
+   "id": "emu-cld-azure-defender-contact-delete",
+   "name": "Defender for Cloud contact or plan removed",
+   "description": "Synthetic cloud audit event emulating T1562.001: defender for cloud contact or plan removed. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:activity",
+     "command": "Microsoft.Security/securityContacts/delete outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-azure-defender-contact-delete"
+   ]
+  },
+  {
+   "id": "emu-cld-azure-vm-run-command",
+   "name": "VM Run Command executed",
+   "description": "Synthetic cloud audit event emulating T1651: vm run command executed. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1651"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:activity",
+     "command": "Microsoft.Compute/virtualMachines/runCommand/action outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-azure-vm-run-command"
+   ]
+  },
+  {
+   "id": "emu-cld-azure-vm-extension-write",
+   "name": "VM extension installed",
+   "description": "Synthetic cloud audit event emulating T1651: vm extension installed. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1651"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:activity",
+     "command": "Microsoft.Compute/virtualMachines/extensions/write outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-azure-vm-extension-write"
+   ]
+  },
+  {
+   "id": "emu-cld-azure-disk-sas-access",
+   "name": "Managed disk or snapshot SAS access granted",
+   "description": "Synthetic cloud audit event emulating T1537: managed disk or snapshot sas access granted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Exfiltration"
+   ],
+   "techniques": [
+    "T1537"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:activity",
+     "command": "Microsoft.Compute/snapshots/beginGetAccess/action outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-azure-disk-sas-access"
+   ]
+  },
+  {
+   "id": "emu-cld-azure-keyvault-access-policy",
+   "name": "Key Vault access policy written",
+   "description": "Synthetic cloud audit event emulating T1098: key vault access policy written. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1098"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:activity",
+     "command": "Microsoft.KeyVault/vaults/accessPolicies/write outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-azure-keyvault-access-policy"
+   ]
+  },
+  {
+   "id": "emu-cld-azure-keyvault-delete",
+   "name": "Key Vault deleted",
+   "description": "Synthetic cloud audit event emulating T1485: key vault deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1485"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:activity",
+     "command": "Microsoft.KeyVault/vaults/delete outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-azure-keyvault-delete"
+   ]
+  },
+  {
+   "id": "emu-cld-azure-storage-list-keys",
+   "name": "Storage account keys listed",
+   "description": "Synthetic cloud audit event emulating T1528: storage account keys listed. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1528"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:activity",
+     "command": "Microsoft.Storage/storageAccounts/listKeys/action outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-azure-storage-list-keys"
+   ]
+  },
+  {
+   "id": "emu-cld-azure-storage-delete",
+   "name": "Storage account deleted",
+   "description": "Synthetic cloud audit event emulating T1485: storage account deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1485"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:activity",
+     "command": "Microsoft.Storage/storageAccounts/delete outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-azure-storage-delete"
+   ]
+  },
+  {
+   "id": "emu-cld-azure-resource-group-delete",
+   "name": "Resource group deleted",
+   "description": "Synthetic cloud audit event emulating T1485: resource group deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1485"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:activity",
+     "command": "Microsoft.Resources/subscriptions/resourceGroups/delete outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-azure-resource-group-delete"
+   ]
+  },
+  {
+   "id": "emu-cld-azure-runbook-write",
+   "name": "Automation runbook written",
+   "description": "Synthetic cloud audit event emulating T1648: automation runbook written. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Execution"
+   ],
+   "techniques": [
+    "T1648"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:activity",
+     "command": "Microsoft.Automation/automationAccounts/runbooks/write outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-azure-runbook-write"
+   ]
+  },
+  {
+   "id": "emu-cld-azure-webapp-publish-profile",
+   "name": "Web app publishing profile retrieved",
+   "description": "Synthetic cloud audit event emulating T1528: web app publishing profile retrieved. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1528"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:activity",
+     "command": "Microsoft.Web/sites/publishxml/action outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-azure-webapp-publish-profile"
+   ]
+  },
+  {
+   "id": "emu-cld-entra-signin-mfa-failed",
+   "name": "Entra MFA challenge failed or denied",
+   "description": "Synthetic cloud audit event emulating T1621: entra mfa challenge failed or denied. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1621"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:signin",
+     "command": "SignIn outcome=failure error=500121",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-entra-signin-mfa-failed"
+   ]
+  },
+  {
+   "id": "emu-cld-entra-entra-role-add",
+   "name": "Member added to an Entra directory role",
+   "description": "Synthetic cloud audit event emulating T1098.003: member added to an entra directory role. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1098.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:audit",
+     "command": "Add_member_to_role outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-entra-entra-role-add"
+   ]
+  },
+  {
+   "id": "emu-cld-entra-entra-consent",
+   "name": "Application consent granted",
+   "description": "Synthetic cloud audit event emulating T1528: application consent granted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1528"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:audit",
+     "command": "Consent_to_application outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-entra-entra-consent"
+   ]
+  },
+  {
+   "id": "emu-cld-entra-entra-sp-credentials",
+   "name": "Service principal credentials added",
+   "description": "Synthetic cloud audit event emulating T1098.001: service principal credentials added. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1098.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:audit",
+     "command": "Add_service_principal_credentials outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-entra-entra-sp-credentials"
+   ]
+  },
+  {
+   "id": "emu-cld-entra-entra-app-owner",
+   "name": "Owner added to an application",
+   "description": "Synthetic cloud audit event emulating T1098: owner added to an application. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1098"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:audit",
+     "command": "Add_owner_to_application outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-entra-entra-app-owner"
+   ]
+  },
+  {
+   "id": "emu-cld-entra-entra-mfa-disable",
+   "name": "Strong authentication disabled for a user",
+   "description": "Synthetic cloud audit event emulating T1556.006: strong authentication disabled for a user. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1556.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:audit",
+     "command": "Disable_Strong_Authentication outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-entra-entra-mfa-disable"
+   ]
+  },
+  {
+   "id": "emu-cld-entra-entra-ca-delete",
+   "name": "Conditional Access policy deleted",
+   "description": "Synthetic cloud audit event emulating T1562.001: conditional access policy deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:audit",
+     "command": "Delete_conditional_access_policy outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-entra-entra-ca-delete"
+   ]
+  },
+  {
+   "id": "emu-cld-entra-entra-federation",
+   "name": "Domain authentication set to federated",
+   "description": "Synthetic cloud audit event emulating T1484.002: domain authentication set to federated. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1484.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:audit",
+     "command": "Set_domain_authentication outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-entra-entra-federation"
+   ]
+  },
+  {
+   "id": "emu-cld-entra-entra-app-role-grant",
+   "name": "Application permission granted to a service principal",
+   "description": "Synthetic cloud audit event emulating T1098.003: application permission granted to a service principal. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1098.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:audit",
+     "command": "Add_app_role_assignment_to_service_principal outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-entra-entra-app-role-grant"
+   ]
+  },
+  {
+   "id": "emu-cld-gcp-set-iam-policy",
+   "name": "IAM policy changed",
+   "description": "Synthetic cloud audit event emulating T1098.003: iam policy changed. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1098.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "gcp:audit",
+     "command": "SetIamPolicy outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-gcp-set-iam-policy"
+   ]
+  },
+  {
+   "id": "emu-cld-gcp-iam-policy-public",
+   "name": "IAM policy grants access to allUsers or allAuthenticatedUsers",
+   "description": "Synthetic cloud audit event emulating T1530: iam policy grants access to allusers or allauthenticatedusers. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1530"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "gcp:audit",
+     "command": "SetIamPolicy outcome=success allUsers",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-gcp-iam-policy-public"
+   ]
+  },
+  {
+   "id": "emu-cld-gcp-sa-key-create",
+   "name": "Service account key created",
+   "description": "Synthetic cloud audit event emulating T1098.001: service account key created. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1098.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "gcp:audit",
+     "command": "CreateServiceAccountKey outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-gcp-sa-key-create"
+   ]
+  },
+  {
+   "id": "emu-cld-gcp-sa-impersonate",
+   "name": "Service account token or JWT generated",
+   "description": "Synthetic cloud audit event emulating T1550.001: service account token or jwt generated. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1550.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "gcp:audit",
+     "command": "GenerateAccessToken outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-gcp-sa-impersonate"
+   ]
+  },
+  {
+   "id": "emu-cld-gcp-sa-disable",
+   "name": "Service account disabled or deleted",
+   "description": "Synthetic cloud audit event emulating T1531: service account disabled or deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1531"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "gcp:audit",
+     "command": "DisableServiceAccount outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-gcp-sa-disable"
+   ]
+  },
+  {
+   "id": "emu-cld-gcp-firewall-open-world",
+   "name": "VPC firewall rule opened to the internet",
+   "description": "Synthetic cloud audit event emulating T1562.007: vpc firewall rule opened to the internet. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.007"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "gcp:audit",
+     "command": "compute.firewalls.insert outcome=success 0.0.0.0/0",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-gcp-firewall-open-world"
+   ]
+  },
+  {
+   "id": "emu-cld-gcp-firewall-delete",
+   "name": "VPC firewall rule deleted",
+   "description": "Synthetic cloud audit event emulating T1562.007: vpc firewall rule deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.007"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "gcp:audit",
+     "command": "compute.firewalls.delete outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-gcp-firewall-delete"
+   ]
+  },
+  {
+   "id": "emu-cld-gcp-instance-metadata-set",
+   "name": "Instance metadata changed",
+   "description": "Synthetic cloud audit event emulating T1098.004: instance metadata changed. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1098.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "gcp:audit",
+     "command": "compute.instances.setMetadata outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-gcp-instance-metadata-set"
+   ]
+  },
+  {
+   "id": "emu-cld-gcp-project-metadata-set",
+   "name": "Project-wide instance metadata changed",
+   "description": "Synthetic cloud audit event emulating T1098.004: project-wide instance metadata changed. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1098.004"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "gcp:audit",
+     "command": "compute.projects.setCommonInstanceMetadata outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-gcp-project-metadata-set"
+   ]
+  },
+  {
+   "id": "emu-cld-gcp-bucket-delete",
+   "name": "Cloud Storage bucket deleted",
+   "description": "Synthetic cloud audit event emulating T1485: cloud storage bucket deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1485"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "gcp:audit",
+     "command": "storage.buckets.delete outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-gcp-bucket-delete"
+   ]
+  },
+  {
+   "id": "emu-cld-gcp-log-sink-delete",
+   "name": "Log sink deleted",
+   "description": "Synthetic cloud audit event emulating T1562.008: log sink deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "gcp:audit",
+     "command": "logging.sinks.delete outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-gcp-log-sink-delete"
+   ]
+  },
+  {
+   "id": "emu-cld-gcp-log-sink-update",
+   "name": "Log sink updated",
+   "description": "Synthetic cloud audit event emulating T1562.008: log sink updated. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "gcp:audit",
+     "command": "logging.sinks.update outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-gcp-log-sink-update"
+   ]
+  },
+  {
+   "id": "emu-cld-gcp-log-delete",
+   "name": "Cloud Logging log deleted",
+   "description": "Synthetic cloud audit event emulating T1562.008: cloud logging log deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "gcp:audit",
+     "command": "logging.logs.delete outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-gcp-log-delete"
+   ]
+  },
+  {
+   "id": "emu-cld-gcp-log-exclusion",
+   "name": "Log exclusion created",
+   "description": "Synthetic cloud audit event emulating T1562.008: log exclusion created. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "gcp:audit",
+     "command": "logging.exclusions.create outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-gcp-log-exclusion"
+   ]
+  },
+  {
+   "id": "emu-cld-gcp-kms-destroy",
+   "name": "KMS key version destroyed",
+   "description": "Synthetic cloud audit event emulating T1485: kms key version destroyed. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1485"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "gcp:audit",
+     "command": "CryptoKeyVersions.destroy outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-gcp-kms-destroy"
+   ]
+  },
+  {
+   "id": "emu-cld-gcp-k8s-clusterrolebinding",
+   "name": "Kubernetes cluster role binding created",
+   "description": "Synthetic cloud audit event emulating T1098.006: kubernetes cluster role binding created. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1098.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "gcp:audit",
+     "command": "clusterrolebindings.create outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-gcp-k8s-clusterrolebinding"
+   ]
+  },
+  {
+   "id": "emu-cld-gcp-project-delete",
+   "name": "Project deleted",
+   "description": "Synthetic cloud audit event emulating T1485: project deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1485"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "gcp:audit",
+     "command": "DeleteProject outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-gcp-project-delete"
+   ]
+  },
+  {
+   "id": "emu-cld-gcp-org-policy-set",
+   "name": "Organisation policy changed",
+   "description": "Synthetic cloud audit event emulating T1666: organisation policy changed. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1666"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "gcp:audit",
+     "command": "SetOrgPolicy outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-gcp-org-policy-set"
+   ]
+  },
+  {
+   "id": "emu-cld-gcp-sql-instance-delete",
+   "name": "Cloud SQL instance deleted",
+   "description": "Synthetic cloud audit event emulating T1485: cloud sql instance deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Impact"
+   ],
+   "techniques": [
+    "T1485"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "gcp:audit",
+     "command": "sql.instances.delete outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-gcp-sql-instance-delete"
+   ]
+  },
+  {
+   "id": "emu-cld-gcp-sql-export",
+   "name": "Cloud SQL data exported",
+   "description": "Synthetic cloud audit event emulating T1537: cloud sql data exported. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Exfiltration"
+   ],
+   "techniques": [
+    "T1537"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "gcp:audit",
+     "command": "sql.instances.export outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-gcp-sql-export"
+   ]
+  },
+  {
+   "id": "emu-cld-okta-mfa-deactivate",
+   "name": "Okta MFA factor deactivated",
+   "description": "Synthetic cloud audit event emulating T1556.006: okta mfa factor deactivated. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1556.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "okta:system",
+     "command": "user.mfa.factor.deactivate outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-okta-mfa-deactivate"
+   ]
+  },
+  {
+   "id": "emu-cld-okta-mfa-reset-all",
+   "name": "Okta MFA factors reset for a user",
+   "description": "Synthetic cloud audit event emulating T1556.006: okta mfa factors reset for a user. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1556.006"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "okta:system",
+     "command": "user.mfa.factor.reset_all outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-okta-mfa-reset-all"
+   ]
+  },
+  {
+   "id": "emu-cld-okta-push-deny",
+   "name": "Okta Verify push denied by the user",
+   "description": "Synthetic cloud audit event emulating T1621: okta verify push denied by the user. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1621"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "okta:system",
+     "command": "user.mfa.okta_verify.deny_push outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-okta-push-deny"
+   ]
+  },
+  {
+   "id": "emu-cld-okta-policy-weaken",
+   "name": "Okta sign-on or MFA policy deactivated or deleted",
+   "description": "Synthetic cloud audit event emulating T1562.001: okta sign-on or mfa policy deactivated or deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "okta:system",
+     "command": "policy.lifecycle.deactivate outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-okta-policy-weaken"
+   ]
+  },
+  {
+   "id": "emu-cld-okta-privilege-grant",
+   "name": "Okta administrator privilege granted to a user",
+   "description": "Synthetic cloud audit event emulating T1098.003: okta administrator privilege granted to a user. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1098.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "okta:system",
+     "command": "user.account.privilege.grant outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-okta-privilege-grant"
+   ]
+  },
+  {
+   "id": "emu-cld-okta-group-privilege-grant",
+   "name": "Okta administrator privilege granted to a group",
+   "description": "Synthetic cloud audit event emulating T1098.003: okta administrator privilege granted to a group. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1098.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "okta:system",
+     "command": "group.privilege.grant outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-okta-group-privilege-grant"
+   ]
+  },
+  {
+   "id": "emu-cld-okta-api-token-create",
+   "name": "Okta API token created",
+   "description": "Synthetic cloud audit event emulating T1098.001: okta api token created. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1098.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "okta:system",
+     "command": "system.api_token.create outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-okta-api-token-create"
+   ]
+  },
+  {
+   "id": "emu-cld-okta-idp-create",
+   "name": "Identity provider added or activated",
+   "description": "Synthetic cloud audit event emulating T1484.002: identity provider added or activated. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1484.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "okta:system",
+     "command": "system.idp.lifecycle.create outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-okta-idp-create"
+   ]
+  },
+  {
+   "id": "emu-cld-okta-consent-grant",
+   "name": "OAuth consent granted to an application",
+   "description": "Synthetic cloud audit event emulating T1528: oauth consent granted to an application. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1528"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "okta:system",
+     "command": "app.oauth2.as.consent.grant outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-okta-consent-grant"
+   ]
+  },
+  {
+   "id": "emu-cld-okta-zone-weaken",
+   "name": "Okta network zone updated or deleted",
+   "description": "Synthetic cloud audit event emulating T1562.001: okta network zone updated or deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "okta:system",
+     "command": "zone.update outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-okta-zone-weaken"
+   ]
+  },
+  {
+   "id": "emu-cld-m365-inbox-rule-forward",
+   "name": "Inbox rule forwards, redirects or deletes mail",
+   "description": "Synthetic cloud audit event emulating T1114.003: inbox rule forwards, redirects or deletes mail. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1114.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "m365:audit",
+     "command": "New-InboxRule outcome=success ForwardTo=",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-m365-inbox-rule-forward"
+   ]
+  },
+  {
+   "id": "emu-cld-m365-inbox-rule-hide",
+   "name": "Inbox rule moves mail to a rarely-read folder",
+   "description": "Synthetic cloud audit event emulating T1564.008: inbox rule moves mail to a rarely-read folder. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1564.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "m365:audit",
+     "command": "New-InboxRule outcome=success MoveToFolder=RSS",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-m365-inbox-rule-hide"
+   ]
+  },
+  {
+   "id": "emu-cld-m365-mailbox-forwarding",
+   "name": "Mailbox forwarding address configured",
+   "description": "Synthetic cloud audit event emulating T1114.003: mailbox forwarding address configured. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1114.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "m365:audit",
+     "command": "Set-Mailbox outcome=success ForwardingSmtpAddress=",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-m365-mailbox-forwarding"
+   ]
+  },
+  {
+   "id": "emu-cld-m365-transport-rule-new",
+   "name": "Exchange transport rule created",
+   "description": "Synthetic cloud audit event emulating T1114.003: exchange transport rule created. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1114.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "m365:audit",
+     "command": "New-TransportRule outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-m365-transport-rule-new"
+   ]
+  },
+  {
+   "id": "emu-cld-m365-transport-rule-set",
+   "name": "Exchange transport rule changed",
+   "description": "Synthetic cloud audit event emulating T1114.003: exchange transport rule changed. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1114.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "m365:audit",
+     "command": "Set-TransportRule outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-m365-transport-rule-set"
+   ]
+  },
+  {
+   "id": "emu-cld-m365-mailbox-permission",
+   "name": "Full-access mailbox permission added",
+   "description": "Synthetic cloud audit event emulating T1098.002: full-access mailbox permission added. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1098.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "m365:audit",
+     "command": "Add-MailboxPermission outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-m365-mailbox-permission"
+   ]
+  },
+  {
+   "id": "emu-cld-m365-folder-permission",
+   "name": "Mailbox folder permission added",
+   "description": "Synthetic cloud audit event emulating T1098.002: mailbox folder permission added. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1098.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "m365:audit",
+     "command": "AddFolderPermissions outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-m365-folder-permission"
+   ]
+  },
+  {
+   "id": "emu-cld-m365-mailbox-export",
+   "name": "Mailbox export requested",
+   "description": "Synthetic cloud audit event emulating T1114.002: mailbox export requested. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1114.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "m365:audit",
+     "command": "New-MailboxExportRequest outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-m365-mailbox-export"
+   ]
+  },
+  {
+   "id": "emu-cld-m365-compliance-search",
+   "name": "eDiscovery content search created",
+   "description": "Synthetic cloud audit event emulating T1114.002: ediscovery content search created. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1114.002"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "m365:audit",
+     "command": "New-ComplianceSearch outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-m365-compliance-search"
+   ]
+  },
+  {
+   "id": "emu-cld-m365-audit-config-off",
+   "name": "Audit logging configuration changed",
+   "description": "Synthetic cloud audit event emulating T1562.008: audit logging configuration changed. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "m365:audit",
+     "command": "Set-AdminAuditLogConfig outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-m365-audit-config-off"
+   ]
+  },
+  {
+   "id": "emu-cld-m365-mailbox-audit-off",
+   "name": "Mailbox auditing disabled",
+   "description": "Synthetic cloud audit event emulating T1562.008: mailbox auditing disabled. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "m365:audit",
+     "command": "Set-Mailbox outcome=success AuditEnabled=False",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-m365-mailbox-audit-off"
+   ]
+  },
+  {
+   "id": "emu-cld-m365-role-assignment",
+   "name": "Exchange management role assigned",
+   "description": "Synthetic cloud audit event emulating T1098.003: exchange management role assigned. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Privilege Escalation"
+   ],
+   "techniques": [
+    "T1098.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "m365:audit",
+     "command": "New-ManagementRoleAssignment outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-m365-role-assignment"
+   ]
+  },
+  {
+   "id": "emu-cld-m365-site-admin-add",
+   "name": "SharePoint site collection administrator added",
+   "description": "Synthetic cloud audit event emulating T1098: sharepoint site collection administrator added. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Persistence"
+   ],
+   "techniques": [
+    "T1098"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "m365:audit",
+     "command": "SiteCollectionAdminAdded outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-m365-site-admin-add"
+   ]
+  },
+  {
+   "id": "emu-cld-m365-hard-delete",
+   "name": "Mailbox items hard deleted",
+   "description": "Synthetic cloud audit event emulating T1070.008: mailbox items hard deleted. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1070.008"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "m365:audit",
+     "command": "HardDelete outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-m365-hard-delete"
+   ]
+  },
+  {
+   "id": "emu-cld-m365-security-filter-off",
+   "name": "Anti-phishing or malware filter disabled",
+   "description": "Synthetic cloud audit event emulating T1562.001: anti-phishing or malware filter disabled. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Defense Evasion"
+   ],
+   "techniques": [
+    "T1562.001"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "m365:audit",
+     "command": "Disable-AntiPhishRule outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-m365-security-filter-off"
+   ]
+  },
+  {
+   "id": "emu-cld-m365-connector-new",
+   "name": "Mail flow connector created",
+   "description": "Synthetic cloud audit event emulating T1114.003: mail flow connector created. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Collection"
+   ],
+   "techniques": [
+    "T1114.003"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "m365:audit",
+     "command": "New-InboundConnector outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-m365-connector-new"
+   ]
+  },
+  {
+   "id": "emu-cld-m365-app-consent",
+   "name": "Application consent granted in Microsoft 365",
+   "description": "Synthetic cloud audit event emulating T1528: application consent granted in microsoft 365. Data only; nothing is executed.",
+   "kind": "single",
+   "platform": "linux",
+   "tactics": [
+    "Credential Access"
+   ],
+   "techniques": [
+    "T1528"
+   ],
+   "benign": false,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "m365:audit",
+     "command": "Consent_to_application outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ],
+   "expect": [
+    "cld-m365-app-consent"
+   ]
+  },
+  {
+   "id": "benign-cloud-aws-readonly",
+   "name": "AWS read-only operations and healthy console sign-in",
+   "description": "Negative control: aws read-only operations and healthy console sign-in. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "DescribeInstances outcome=success user_type=AssumedRole region=us-east-1",
+     "parent_exe": "cloud-actor"
+    },
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "GetObject outcome=success user_type=AssumedRole",
+     "parent_exe": "cloud-actor"
+    },
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "ConsoleLogin outcome=success user_type=IAMUser mfa=true region=us-east-1",
+     "parent_exe": "cloud-actor"
+    },
+    {
+     "type": "process",
+     "executable": "aws:cloudtrail",
+     "command": "ListBuckets outcome=failure user_type=AssumedRole error=AccessDenied",
+     "parent_exe": "cloud-actor"
+    }
+   ]
+  },
+  {
+   "id": "benign-cloud-azure-routine",
+   "name": "Routine Azure and Entra activity",
+   "description": "Negative control: routine azure and entra activity. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "azure:activity",
+     "command": "MICROSOFT.COMPUTE/VIRTUALMACHINES/READ outcome=success",
+     "parent_exe": "cloud-actor"
+    },
+    {
+     "type": "process",
+     "executable": "azure:signin",
+     "command": "SignIn outcome=success mfa=true client=Browser app=Office_365_Exchange_Online ca=success",
+     "parent_exe": "cloud-actor"
+    },
+    {
+     "type": "process",
+     "executable": "azure:audit",
+     "command": "Update_user outcome=success",
+     "parent_exe": "cloud-actor"
+    }
+   ]
+  },
+  {
+   "id": "benign-cloud-gcp-okta-m365",
+   "name": "Routine GCP, Okta and Microsoft 365 events",
+   "description": "Negative control: routine gcp, okta and microsoft 365 events. Must not raise a detection at medium severity or above.",
+   "kind": "benign",
+   "platform": "linux",
+   "benign": true,
+   "steps": [
+    {
+     "type": "process",
+     "executable": "gcp:audit",
+     "command": "storage.objects.get outcome=success service=storage.googleapis.com",
+     "parent_exe": "cloud-actor"
+    },
+    {
+     "type": "process",
+     "executable": "okta:system",
+     "command": "user.session.start outcome=success risk=low auth=PASSWORD",
+     "parent_exe": "cloud-actor"
+    },
+    {
+     "type": "process",
+     "executable": "m365:audit",
+     "command": "MailItemsAccessed outcome=success workload=Exchange",
+     "parent_exe": "cloud-actor"
+    },
+    {
+     "type": "process",
+     "executable": "m365:audit",
+     "command": "FileAccessed outcome=success workload=SharePoint",
+     "parent_exe": "cloud-actor"
+    }
+   ]
+  }
+ ]
+}
