@@ -16,6 +16,7 @@ const sidebars: SidebarsConfig = {
     'agent-mtls',
     'envoy-gateway',
     'mcp-integration',
+    'pricing',
   ],
 };
 
