@@ -167,7 +167,7 @@ Free for evaluation and non-production use (30-day evaluation). A production lic
 | Kavach Pro | INR 3,999 per endpoint per year (about USD 40) | 25 endpoints (INR 99,975) |
 | Kavach Enterprise | INR 6,499 per endpoint per year (about USD 66) | 100 endpoints (INR 649,900) |
 
-A server counts as 3 endpoints. Volume: 500+ endpoints -15%, 1,000+ -20%. Multi-year: 2 years -5%, 3 years -10%. Kavach detects and reports only; it never contains or blocks. After payment you receive a GST invoice, and the Zyvor team issues your licence and onboarding help. Online payment opens on [zyvor.dev/buy](https://zyvor.dev/buy#kavach) shortly; until then, write to [sales@zyvor.dev](mailto:sales@zyvor.dev) for an invoice or a quote. USD figures are for reference (INR / 1.18 / 84); the rupee price is the real price.
+A server counts as 3 endpoints. Volume: 256-499 endpoints -10%, 500-999 -15%, 1,000+ -20%. Multi-year: 2 years -5%, 3 years -10%. Volume and multi-year together are capped at 25%. Kavach detects and reports only; it never contains or blocks. After payment you receive a GST invoice, and the Zyvor team issues your licence and onboarding help. Online payment opens on [zyvor.dev/buy](https://zyvor.dev/buy#kavach) shortly; until then, write to [sales@zyvor.dev](mailto:sales@zyvor.dev) for an invoice or a quote. USD figures are for reference (INR / 1.18 / 84); the rupee price is the real price.
 
 ---
 
