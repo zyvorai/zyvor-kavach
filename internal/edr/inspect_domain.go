@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+// SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0
 package edr
 
 // Domain inspector analyzer (kind "domain"). Offline and parse-only: it makes

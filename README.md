@@ -177,6 +177,6 @@ Kavach verifies a signed licence key (`ZYV1.`) offline against a public key buil
 
 ## License
 
-Zyvor Production License v1.0 — free for a 30-day evaluation; a commercial license is required for production and after 30 days. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+Zyvor Production Licence v2.0. A 30-day trial is available on request from sales@zyvor.dev (a paid evaluation Order at no charge); production and any other use needs a paid Order under the Zyvor Production Licence v2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
 **Repo:** https://github.com/zyvorai/zyvor-kavach

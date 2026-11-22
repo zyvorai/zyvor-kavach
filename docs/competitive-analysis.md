@@ -40,7 +40,7 @@ UNVERIFIED cells: 44 of 143. A Has/Partial cell marked (U) rests on secondary or
 - **Reporting** (Has): /v1/reports/templates and render, /v1/digests, /v1/compliance/*, /v1/regulatory/*, /v1/trends (report_templates.go, compliance_*.go). Plus scheduled reports to markdown/JSON/CSV, pull-only (/v1/reports/scheduled, /v1/reports/archive/{run_id}).
 - **APIs and automation** (Has): REST under /v1/* with docs/openapi.yaml, kavachctl CLI (cmd/kavachctl), MCP server (cmd/kavach-mcp), webhooks/connectors (/v1/connectors), playbooks (/v1/fusion/playbooks, /v1/hyperautomation).
 - **Deployment and agent footprint** (Partial): Go controller plus agent collectors (agent_collectors.go), eBPF on Linux (ebpf_linux.go, docs/ebpf.md), per-host credentials and mTLS (docs/agent-mtls.md); fleet SLOs for heartbeat/continuity/coverage (/v1/fleet/slo) but no measured agent CPU or memory numbers (listed as not reported).
-- **Licensing model** (Has): Source header LicenseRef-Zyvor-Production-1.0 (commercial/proprietary reference, not an open-source licence).
+- **Licensing model** (Has): Source header LicenseRef-Zyvor-Production-2.0 (commercial/proprietary reference, not an open-source licence).
 
 ## Per-product notes with sources
 

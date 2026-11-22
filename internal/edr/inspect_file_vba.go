@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+// SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0
 package edr
 
 // VBA macro heuristics for kind file (OOXML vbaProject.bin and legacy OLE2

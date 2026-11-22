@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0 */
+/* SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0 */
 /* Shared types for Kavach observation-only CO-RE programs. Never enforce. */
 #ifndef KAVACH_COMMON_H
 #define KAVACH_COMMON_H

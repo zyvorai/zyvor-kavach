@@ -1,5 +1,5 @@
 // Copyright 2026 Zyvor AI Labs · https://zyvor.dev
-// SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+// SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0
 
 // Command kavach-mcp is a Model Context Protocol (MCP) server exposing a
 // running Kavach controller's HTTP API as MCP tools over stdio — sister to

@@ -1,5 +1,5 @@
 // Copyright 2026 Zyvor AI Labs · https://zyvor.dev
-// SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+// SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0
 
 // Command kavachctl is the Zyvor Kavach operator CLI — sister to netractl.
 // Observation-only: it reads the controller HTTP API and never instructs

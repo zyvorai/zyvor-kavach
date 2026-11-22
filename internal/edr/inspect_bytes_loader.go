@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+// SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0
 package edr
 
 // Loader and inspector analyzer for the byte-pattern packs (bytecontent/*.json).

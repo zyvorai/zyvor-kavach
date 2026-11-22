@@ -25,7 +25,7 @@ Because the JPG is a committed binary, rebuilding changes the file even when the
 
 The hero is marketing copy for an observation-only product. Keep claims that appear in it consistent with [console](../console.md) and the rest of the docs: Kavach detects and reports and does not contain, kill or block. Do not add customer names, screenshots of real data, or numbers that are not measured in this repository.
 
-Licence wording follows `LICENSE`: the Zyvor Production License v1.0, with a commercial license required for production.
+Licence wording follows `LICENSE`: the Zyvor Production Licence v2.0, with a commercial license required for production.
 
 ## Known limits
 

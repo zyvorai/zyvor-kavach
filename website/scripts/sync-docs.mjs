@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+// SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0
 // Copies top-level ../docs/*.md into website/docs/ so the site stays aligned
 // with the repo docs. Run by prebuild/prestart.
 import {readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync} from 'node:fs';

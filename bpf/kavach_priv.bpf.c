@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+// SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0
 // Privilege / loader / bpf-abuse observation. Never deny capabilities.
 #include "kavach_common.h"
 

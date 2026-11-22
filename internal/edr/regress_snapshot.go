@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+// SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0
 package edr
 
 // Continuous control validation: the runner replays the whole validation-lab scenario set in memory
