@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+# SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0
 #
 # Admin API token is injected as KAVACH_TOKEN. Docs also accept the legacy
 # name ZYVOR_EDR_TOKEN for the same secret value outside this chart.

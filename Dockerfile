@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+# SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0
 FROM golang:1.27-alpine AS builder
 WORKDIR /src
 COPY go.mod ./

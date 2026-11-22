@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+// SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0
 // Host connect observation (pid+tuple). Never drop or redirect packets.
 // Cluster datapath enforce stays with Netra — Kavach only reports.
 #include "kavach_common.h"

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+# SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0
 {{- /*
   First-class Envoy Gateway front door (Gateway API). Prefer this over classic
   Ingress (nginx Ingress is retiring) and over Cilium gatewayApi.* unless you

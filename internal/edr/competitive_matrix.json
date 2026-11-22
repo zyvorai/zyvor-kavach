@@ -1185,7 +1185,7 @@
    "kavach": {
     "status": "Has",
     "verified": true,
-    "note": "Source header LicenseRef-Zyvor-Production-1.0 (commercial/proprietary reference, not an open-source licence).",
+    "note": "Source header LicenseRef-Zyvor-Production-2.0 (commercial/proprietary reference, not an open-source licence).",
     "sources": []
    }
   }

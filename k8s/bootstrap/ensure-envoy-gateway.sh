@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+# SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0
 # Ensure Envoy Gateway (Gateway API) is ready for Kavach.
 #
 # Prerequisites (cluster-level — not installed by Kavach):

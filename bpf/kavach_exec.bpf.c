@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+// SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0
 // Kavach sched_process_exec observation (CO-RE). Detect/report only.
 #include "kavach_common.h"
 
