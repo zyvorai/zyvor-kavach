@@ -8,7 +8,7 @@
 //
 // Enforcement is soft: the status is information only. Nothing in Kavach is ever disabled, limited or deleted because a
 // trial or licence ended, or because there is no key. A 30-day trial key (edition "trial") applies to the paid
-// production licence and support; free evaluation and non-production use under the Zyvor Production Licence is unchanged.
+// production licence and support.
 //
 // Key source: KAVACH_LICENCE_KEY, else the file named by KAVACH_LICENCE_FILE, else ./data/licence.key, else /etc/kavach/licence.key.
 package licence
