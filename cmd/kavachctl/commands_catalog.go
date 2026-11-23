@@ -292,6 +292,7 @@ func allCLICommands() []cliCommand {
 		{Name: "ransomlog-sources", Args: []string{"ransomlog", "sources"}},
 		{Name: "exploitintel-status", Args: []string{"exploitintel", "status"}},
 		{Name: "tripwire-list", Args: []string{"tripwire", "list"}},
+		{Name: "netlog-sources", Args: []string{"netlog", "sources"}},
 		{Name: "regulatory-profile", Args: []string{"regulatory", "profile"}},
 		{Name: "posture-trend", Args: []string{"posture-trend"}},
 		{Name: "digest", Args: []string{"digest"}},

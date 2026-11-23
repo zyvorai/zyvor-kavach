@@ -53,6 +53,7 @@ Refresh with `ruby docs/tools/inventory.rb --write`. Counts are read from the fi
 - [web-detection.md](web-detection.md): offline web access-log and authentication-log detection: web- rules, API discovery and shadow-API check, flood and credential-stuffing summaries.
 - [RESEARCH-vendors-detection.md](RESEARCH-vendors-detection.md): what endpoint, WAF, NDR vendors and open content detect, mapped to Kavach, with ranked ideas.
 - [RESEARCH-vendors-identity-intel.md](RESEARCH-vendors-identity-intel.md): what identity, e-mail, threat-intelligence, SIEM, deception, ransomware and data-security vendors detect, mapped to Kavach, with ranked ideas.
+- [network-detection.md](network-detection.md): offline Zeek, Suricata EVE, DNS, cloud flow, NetFlow CSV and firewall log analytics (`net-an-*`, `net-eve-*`), with research in [RESEARCH-vendors-network.md](RESEARCH-vendors-network.md).
 - [identity-detection.md](identity-detection.md): offline Okta and Microsoft Entra sign-in and audit log analytics (`idp-an-*`).
 - [ransomware-logs.md](ransomware-logs.md): ransomware indicators from file-activity and backup-job logs (`rwlog-an-*`).
 - [content-testing.md](content-testing.md): detection as code: fixture-driven rule tests (`kavachctl content test`), per-rule self-test examples, benign-corpus false-positive report and ATT&CK coverage by tested rule.

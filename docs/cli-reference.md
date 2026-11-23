@@ -85,6 +85,7 @@ detection.
 | `web sources` | `GET /v1/web/sources` | Formats, `web-` rule count, analytic rule ids, limits |
 | `web analyze FILE [--openapi F] [--format F] [--host H] [--json]` | `POST /v1/web/analyze` (admin) | Offline access-log detection, API inventory, shadow-API check; see [web-detection.md](web-detection.md) |
 | `authlog analyze FILE [--host H] [--json]` | `POST /v1/auth/logs` (admin) | Offline auth-log analytics |
+| `netlog analyze FILE [--format F] [--host H] [--bad-nets F] [--fingerprints F] [--json]`, `netlog sources`, `netlog timeline [--ip A] [--host H]` | `POST /v1/net/logs` and `/v1/net/analyze` (admin), `GET /v1/net/sources`, `GET /v1/net/timeline` | Offline network-log analytics and evidence timeline; see [network-detection.md](network-detection.md) |
 | `idplog analyze FILE [--host H] [--dormant-days N] [--json]`, `idplog sources` | `POST /v1/idp/logs` (admin), `GET /v1/idp/sources` | Offline Okta and Entra log analytics; see [identity-detection.md](identity-detection.md) |
 | `ransomlog analyze FILE [--host H] [--json]`, `ransomlog sources` | `POST /v1/ransom/logs` (admin), `GET /v1/ransom/logs/sources` | Offline file-activity and backup-job log analytics; see [ransomware-logs.md](ransomware-logs.md) |
 | `exploitintel import FILE [--kind K] [--source S] [--ttl-days N] [--min-epss X]`, `status`, `lookup CVE`, `withdraw kev\|epss` | `POST/GET /v1/intel/exploit-feeds[/lookup]`, `DELETE /v1/intel/exploit-feeds/{kind}` | Offline KEV and EPSS import (admin for changes); see [exploit-intel.md](exploit-intel.md) |

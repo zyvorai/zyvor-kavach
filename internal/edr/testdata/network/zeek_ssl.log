@@ -1,0 +1,12 @@
+#separator \x09
+#set_separator	,
+#empty_field	(empty)
+#unset_field	-
+#path	ssl
+#open	2026-11-20-10-00-00
+#fields	ts	uid	id.orig_h	id.orig_p	id.resp_h	id.resp_p	version	server_name	established	subject	issuer	ja3	validation_status
+#types	string	string	string	string	string	string	string	string	string	string	string	string	string
+1790000001	S1	10.0.0.5	41000	203.0.113.9	443	TLSv12	update.example.test	T	CN=update.example.test	CN=update.example.test	e7d705a3286e19ea42f587b344ee6865	self signed certificate
+1790000002	S2	10.0.0.8	41001	203.0.113.10	443	TLSv13	www.example.test	T	CN=www.example.test	CN=Example Test CA	aaaabbbbccccddddeeeeffff00001111	ok
+1790000003	S3	10.0.0.9	41002	10.0.5.5	443	TLSv12	intranet.example.test	T	CN=intranet	CN=intranet	-	self signed certificate
+#close	2026-11-20-12-00-00
