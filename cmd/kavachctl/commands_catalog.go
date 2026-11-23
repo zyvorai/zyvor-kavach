@@ -217,6 +217,8 @@ func allCLICommands() []cliCommand {
 		{Name: "content-list", Args: []string{"content", "list", "--severity", "high"}},
 		{Name: "content-show", Args: []string{"content", "show", "demo"}, Optional: true},
 		{Name: "content-coverage", Args: []string{"content", "coverage"}},
+		{Name: "content-selftest", Args: []string{"content", "selftest"}, Local: true},
+		{Name: "content-tested-coverage", Args: []string{"content", "tested-coverage"}, Local: true},
 		// global_search.go: cross-entity search.
 		{Name: "search", Args: []string{"search", "T1059", "--type", "technique"}},
 

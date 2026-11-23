@@ -53,6 +53,9 @@ func run(args []string) error {
 	if handled, err := sigmaDispatch(args, os.Stdout); handled {
 		return err
 	}
+	if handled, err := chDispatch(args, os.Stdout); handled {
+		return err
+	}
 	if handled, err := cmDispatch(args, os.Stdout); handled {
 		return err
 	}

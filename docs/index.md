@@ -55,6 +55,7 @@ Refresh with `ruby docs/tools/inventory.rb --write`. Counts are read from the fi
 - [RESEARCH-vendors-identity-intel.md](RESEARCH-vendors-identity-intel.md): what identity, e-mail, threat-intelligence, SIEM, deception, ransomware and data-security vendors detect, mapped to Kavach, with ranked ideas.
 - [identity-detection.md](identity-detection.md): offline Okta and Microsoft Entra sign-in and audit log analytics (`idp-an-*`).
 - [ransomware-logs.md](ransomware-logs.md): ransomware indicators from file-activity and backup-job logs (`rwlog-an-*`).
+- [content-testing.md](content-testing.md): detection as code: fixture-driven rule tests (`kavachctl content test`), per-rule self-test examples, benign-corpus false-positive report and ATT&CK coverage by tested rule.
 - [exploit-intel.md](exploit-intel.md): offline CISA KEV and FIRST EPSS import that weights SBOM findings, SSVC and attack paths.
 - [tripwires.md](tripwires.md): declared honey accounts, decoy values, hosts, IPs and paths matched against uploaded logs.
 - [content-framework.md](content-framework.md): JSON rule packs, loader validation and the harness gate.

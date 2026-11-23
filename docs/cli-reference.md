@@ -89,6 +89,7 @@ detection.
 | `ransomlog analyze FILE [--host H] [--json]`, `ransomlog sources` | `POST /v1/ransom/logs` (admin), `GET /v1/ransom/logs/sources` | Offline file-activity and backup-job log analytics; see [ransomware-logs.md](ransomware-logs.md) |
 | `exploitintel import FILE [--kind K] [--source S] [--ttl-days N] [--min-epss X]`, `status`, `lookup CVE`, `withdraw kev\|epss` | `POST/GET /v1/intel/exploit-feeds[/lookup]`, `DELETE /v1/intel/exploit-feeds/{kind}` | Offline KEV and EPSS import (admin for changes); see [exploit-intel.md](exploit-intel.md) |
 | `tripwire list\|add\|delete ID\|scan FILE` | `GET/POST /v1/deception/tripwires`, `DELETE .../{id}`, `POST .../scan` | Declared decoys matched against logs (admin for changes); see [tripwires.md](tripwires.md) |
+| `content test FILE... [--pack P] [--json]`, `content selftest [--rules] [--json]`, `content fp-report --benign PATH... [--builtin] [--kind K] [--threshold N] [--fail-on-noisy] [--json]`, `content tested-coverage [--json]` | none (runs offline in the CLI process) | Detection-as-code harness; see [content-testing.md](content-testing.md) |
 | `posture-trend [diff --from D]` | `GET /v1/posture/trend[/diff]` | Counts only |
 | `digest`, `auditor-bundle` | `GET /v1/reports/digest`, `GET /v1/compliance/auditor-bundle` | `auditor-bundle` needs `--out FILE.zip` or `--manifest` |
 | `fleet health\|gaps\|stale\|slo` | `GET /v1/fleet/*` | `fleet slo set --file F` is an admin write |

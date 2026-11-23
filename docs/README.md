@@ -50,6 +50,7 @@ Published site (synced from these files): https://zyvorai.github.io/zyvor-kavach
 | [RESEARCH-vendors-identity-intel.md](RESEARCH-vendors-identity-intel.md) | Identity, e-mail, threat-intel, SIEM, deception, ransomware and DSPM vendor survey with ranked ideas |
 | [identity-detection.md](identity-detection.md) | Okta and Entra sign-in and audit log analytics |
 | [ransomware-logs.md](ransomware-logs.md) | Ransomware indicators from file-activity and backup-job logs |
+| [content-testing.md](content-testing.md) | Detection as code: rule test files, self-test examples, benign-corpus false-positive report, ATT&CK coverage by tested rule |
 | [exploit-intel.md](exploit-intel.md) | Offline KEV and EPSS import, weighting of SBOM findings and attack paths |
 | [tripwires.md](tripwires.md) | Declared decoys matched against uploaded logs |
 | [exposure.md](exposure.md) | SBOM-based software exposure (offline, sample advisory set until you import data) |
