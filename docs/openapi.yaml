@@ -745,6 +745,39 @@ paths:
         "400": { description: invalid payload or no parseable record }
         "401": { description: missing or non-admin token }
         "413": { description: body or record count over the cap }
+  /v1/net/sources:
+    get:
+      summary: Network-log analytics formats, rule ids, thresholds and limits
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Formats, rules and caps}, '401': {description: Unauthorized}}
+  /v1/net/logs:
+    post:
+      summary: Analyse a Zeek, Suricata EVE, DNS, flow or firewall log offline; admin token only
+      description: Body is the raw log (Zeek TSV or JSON, EVE JSON lines, DNS JSON lines or CSV, AWS VPC flow logs, Azure NSG flow JSON, NetFlow CSV, PAN-OS, FortiGate or Cisco ASA syslog subsets). Optional query format (auto by default) and host label. Max 8 MiB and 100000 records. Nothing is captured, fetched or looked up.
+      security: [{bearerAuth: []}]
+      parameters: [{name: format, in: query, required: false, schema: {type: string, enum: [auto, zeek, zeek-json, eve, dns, dnscsv, vpc, nsg, flowcsv, panos, fortigate, asa]}}, {name: host, in: query, required: false, schema: {type: string}}]
+      responses:
+        "200": { description: report with parsed, rejected, by_kind, by_rule, top_talkers, top_signatures and findings }
+        "400": { description: unknown format, invalid payload or no parseable record }
+        "401": { description: missing or non-admin token }
+        "413": { description: body or record count over the cap }
+  /v1/net/analyze:
+    post:
+      summary: Analyse a network log with your own address list and TLS fingerprint list; admin token only
+      description: Body is a JSON envelope with log (string), format, host, bad_nets (string or array of addresses and CIDRs) and fingerprints (string or array of JA3, JA3S or JA4 values with optional labels). Both lists are capped at 5000 entries and are never downloaded.
+      security: [{bearerAuth: []}]
+      responses:
+        "200": { description: report as for /v1/net/logs }
+        "400": { description: invalid envelope, format or no parseable record }
+        "401": { description: missing or non-admin token }
+        "413": { description: body or record count over the cap }
+  /v1/net/timeline:
+    get:
+      summary: Join stored findings by address, host and time window into one ranked list
+      description: With ip or host, returns findings that carry that address or host label and agent-host findings near them in time. With neither, lists addresses seen in two or more finding families. Reads findings only.
+      security: [{bearerAuth: []}]
+      parameters: [{name: ip, in: query, required: false, schema: {type: string}}, {name: host, in: query, required: false, schema: {type: string}}, {name: window_minutes, in: query, required: false, schema: {type: integer, minimum: 1, maximum: 1440, default: 30}}]
+      responses: {'200': {description: Timeline}, '400': {description: bad ip or window}, '401': {description: Unauthorized}}
   /v1/idp/sources:
     get:
       summary: Identity-provider log analytics rules, providers and limits

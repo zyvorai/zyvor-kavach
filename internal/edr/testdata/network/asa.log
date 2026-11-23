@@ -1,0 +1,7 @@
+<166>Nov 20 2026 10:00:00 asa1 : %ASA-4-106023: Deny tcp src outside:198.51.100.70/40001 dst inside:10.0.0.80/3389 by access-group "outside_in" [0x0, 0x0]
+<166>Nov 20 2026 10:00:01 asa1 : %ASA-6-106100: access-list outside_in denied tcp outside/198.51.100.70(40002) -> inside/10.0.0.80(3389) hit-cnt 1 first hit [0x1, 0x0]
+<166>Nov 20 2026 10:00:02 asa1 : %ASA-6-302013: Built inbound TCP connection 100 for outside:198.51.100.71/40003 (198.51.100.71/40003) to inside:10.0.0.80/443 (203.0.113.1/443)
+<166>Nov 20 2026 10:00:03 asa1 : %ASA-6-605005: Login permitted from 10.0.0.9/5000 to inside:10.0.0.1/ssh for user "admin"
+<166>Nov 20 2026 10:00:04 asa1 : %ASA-4-113005: AAA user authentication Rejected : reason = Invalid password : server = 10.0.0.3 : user = admin : user IP = 203.0.113.210
+<166>Nov 20 2026 10:00:05 asa1 : %ASA-5-111008: User 'admin' executed the 'enable password hunter2' command from 10.0.0.9
+<166>Nov 20 2026 10:00:06 asa1 : %ASA-6-999999: something unsupported
