@@ -48,6 +48,7 @@ Published site (synced from these files): https://zyvorai.github.io/zyvor-kavach
 | [web-detection.md](web-detection.md) | Web access-log and auth-log detection, API discovery, flood and credential-stuffing summaries |
 | [RESEARCH-vendors-detection.md](RESEARCH-vendors-detection.md) | Vendor and open-content detection survey with ranked ideas |
 | [RESEARCH-vendors-identity-intel.md](RESEARCH-vendors-identity-intel.md) | Identity, e-mail, threat-intel, SIEM, deception, ransomware and DSPM vendor survey with ranked ideas |
+| [network-detection.md](network-detection.md) | Zeek, Suricata, DNS, flow and firewall log analytics; research in [RESEARCH-vendors-network.md](RESEARCH-vendors-network.md) |
 | [identity-detection.md](identity-detection.md) | Okta and Entra sign-in and audit log analytics |
 | [ransomware-logs.md](ransomware-logs.md) | Ransomware indicators from file-activity and backup-job logs |
 | [exploit-intel.md](exploit-intel.md) | Offline KEV and EPSS import, weighting of SBOM findings and attack paths |
