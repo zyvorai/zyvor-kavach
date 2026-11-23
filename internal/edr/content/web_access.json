@@ -3462,7 +3462,7 @@
           {
             "field": "command",
             "op": "regex",
-            "pattern": "(?:/boaform/admin/formlogin|/gponform/diag_form|/hnap1/?(?:\\s|$)|/setup\\.cgi\\?next_file=|/cgi-bin/luci/;stok=|/cgi-bin/mainfunction\\.cgi|/shell\\?cd\\+?/tmp)"
+            "pattern": "(?:/boaform/admin/formlogin|/gponform/diag_form|/hnap1/?(?:\\s|$)|/setup\\.cgi\\?next_file=|/cgi-bin/luci/;stok=|/cgi-bin/mainfunction\\.cgi|/shell\\?cd[+\\s]?/tmp)"
           }
         ]
       },
