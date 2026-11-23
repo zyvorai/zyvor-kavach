@@ -89,7 +89,7 @@ func configAnalyzer(ctx context.Context, in InspectInput, b *InspectBuilder) err
 	if a.Format == "" {
 		// CI pipeline YAML is assessed by the config-extra analyzer; do not
 		// report it as unrecognised when that analyzer recognises it.
-		if f, _ := cfgxFormat(in.Name, in.Text); f != "" {
+		if f, _ := cfgxFormat(in.Name, in.Text); f != "" || fwLooksLike(in.Text) != "" {
 			b.Meta("summary", a)
 			return nil
 		}

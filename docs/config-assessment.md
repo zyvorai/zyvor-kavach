@@ -9,7 +9,7 @@ Competitor backlog item 23 (Wazuh SCA, Fleet CIS policies; Defender and Falcon d
 3. Each policy for that format is evaluated: `pass`, `fail`, `not_applicable` or `unknown`.
 4. Findings use ids `cfg-<policy>` (weight 0: a configuration gap is not a malware signal, so the inspector's score/level is not meaningful for this kind). Full results, counts and the compliance percentage are in report meta `config-assess.summary`.
 
-Formats: sshd_config, sysctl.conf, login.defs, sudoers, auditd rules, PAM stacks, nginx, Apache httpd, Kubernetes manifests, Dockerfile, docker-compose, Terraform HCL.
+Formats: sshd_config, sysctl.conf, login.defs, sudoers, auditd rules, PAM stacks, nginx, Apache httpd, Kubernetes manifests, Dockerfile, docker-compose, Terraform HCL, and (added later) F5 BIG-IP tmsh configuration (`bigip`), Terraform plan JSON (`tfplan`) and CloudFormation templates (`cfn`). The three newer formats are described in [appliance-config-review.md](appliance-config-review.md) and [iac-exposure.md](iac-exposure.md); they use the same policy files, loader and self-tests.
 
 Parser depth (honest limits): sshd/sysctl/login.defs/sudoers/auditd/PAM/nginx/Apache are real line or statement parsers. Kubernetes and compose use the YAML subset (block maps and sequences, flow lists, quoted scalars; anchors, flow maps such as `{}` and other YAML features are rejected and reported as a parse note). Terraform is parsed at line level only: blocks, attributes and multi-line values are tracked, but variables, modules, `for_each`, expressions and interpolation are not evaluated, and a few correlations (ingress port with CIDR) are approximated by a per-block summary string. Includes (`Include`, `@includedir`, `@include`) are noted, never followed. sshd `Match` blocks are kept apart from the global settings.
 
@@ -32,7 +32,7 @@ curl -H "Authorization: Bearer $KAVACH_TOKEN" -X POST localhost:8080/v1/inspect/
   -d '{"name":"sshd_config","text":"PermitRootLogin yes\nPasswordAuthentication yes\n"}'
 ```
 
-The `name` helps format sniffing (`sshd_config`, `Dockerfile`, `*.tf`, `docker-compose.yml`); without it the content is sniffed. Read `config-assess.summary` in the report meta: `counts`, `compliance_pct`, per-policy `results`. Severity mix of the 150 shipped policies (counted from the files): 6 critical, 45 high, 56 medium, 43 low.
+The `name` helps format sniffing (`sshd_config`, `Dockerfile`, `*.tf`, `docker-compose.yml`); without it the content is sniffed. Read `config-assess.summary` in the report meta: `counts`, `compliance_pct`, per-policy `results`. Severity mix of the 186 shipped policies (counted from the files on 2026-11-23): 8 critical, 60 high, 68 medium, 50 low.
 
 A second analyzer, `config-extra` (`inspect_config_extra.go`), runs on the same kind and adds regex-based checks for CI pipeline YAML (GitHub Actions, GitLab CI) plus a few Kubernetes and Dockerfile checks outside the 150 policies. It is text matching, not YAML evaluation: anchors, includes, templates, matrix expansion and reusable workflows are not resolved, so it can miss or over-match. Its findings also carry weight 0 and the report is not scored.
 
@@ -59,7 +59,7 @@ Policies live in `internal/edr/configpolicies/<area>.json` as `{"area": "...", "
 1. `check` is the PASS condition. `positive` must make it fail and `negative` must make it pass; `cfgSelfTest` enforces both.
 2. Decide `on_absent` deliberately (`fail`, `pass`, `unknown` or `evaluate`) and write the reason in `absence_note`; the loader rejects a policy without remediation or an absence note.
 3. Keep regexes under 256 characters. Reference public documentation, never copy benchmark text or numbering.
-4. Run `go test ./internal/edr/ -run 'TestConfig|Inspect.*Config' -v`, then `go test ./internal/edr/ -run 'Docs|OpenAPI|Content|Lab'` if you also touched docs. Update the counts table below by recounting the files; the table was recounted on 2026-11-16 and totals 150 policies across 12 files (`audit` 13, `compose` 12, `dockerfile` 14, `kubernetes` 24, `login` 6, `pam` 6, `permissions` 2, `ssh` 17, `sudo` 10, `sysctl` 16, `terraform` 15, `web` 15).
+4. Run `go test ./internal/edr/ -run 'TestConfig|Inspect.*Config' -v`, then `go test ./internal/edr/ -run 'Docs|OpenAPI|Content|Lab'` if you also touched docs. Update the counts table below by recounting the files; the table was recounted on 2026-11-16 and totals 150 policies across 12 files (`audit` 13, `compose` 12, `dockerfile` 14, `kubernetes` 24, `login` 6, `pam` 6, `permissions` 2, `ssh` 17, `sudo` 10, `sysctl` 16, `terraform` 15, `web` 15); recounted on 2026-11-23 after adding `bigip` 12, `iac` 17 and `web2` 7 (nginx extras), 186 policies across 15 files.
 5. Add a hardened and a stock sample to `inspect_config_benign_test.go` when the policy could plausibly fail on a normal file, so a false fail is caught by the test rather than by a user.
 
 ## Honest limits (summary)
@@ -84,7 +84,10 @@ Policies live in `internal/edr/configpolicies/<area>.json` as `{"area": "...", "
 | Dockerfile | 14 | dockerfile |
 | docker-compose | 12 | compose |
 | Terraform | 15 | terraform |
-| Total | 150 | |
+| F5 BIG-IP | 12 | bigip |
+| Terraform plan / CloudFormation | 17 | tfplan (all 17) and cfn (14 of them) |
+| nginx extras | 7 | nginx |
+| Total | 186 | |
 
 ## Report
 

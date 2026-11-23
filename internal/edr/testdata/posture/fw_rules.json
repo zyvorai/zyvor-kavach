@@ -1,0 +1,9 @@
+{"format":"kavach-fwrules/1","vendor":"generic","default_action":"allow",
+ "objects":[{"name":"web-servers","members":["10.1.0.10","10.1.0.11"]},{"name":"old-vpn","members":["172.16.0.0/16"]},{"name":"dmz-net","members":["10.9.0.0/24"]}],
+ "rules":[
+  {"id":"r1","action":"allow","source":["any"],"destination":["any"],"service":["any"],"log":false,"comment":"temporary"},
+  {"id":"r2","action":"allow","source":["any"],"destination":["web-servers"],"service":["tcp/22","tcp/443"],"log":true,"hits":5},
+  {"id":"r3","action":"deny","source":["10.5.0.0/16"],"destination":["web-servers"],"service":["tcp/443"],"hits":0},
+  {"id":"r4","action":"allow","source":["10.0.0.0/8"],"destination":["10.2.0.5"],"service":["tcp/5432"],"hits":9},
+  {"id":"r5","action":"allow","source":["dmz-net"],"destination":["any"],"service":["any"],"enabled":false}
+ ]}

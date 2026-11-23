@@ -167,6 +167,7 @@ All lab commands print a sandbox notice: lab rules never raise alerts or touch p
 kavachctl events auth --host web-01 --limit 20       # also dns, module, registry; events summary
 kavachctl cloudaudit sources                         # supported sources and the loaded cld- rule count
 kavachctl exposure report --min_score 50             # exposed hosts from imported SBOMs and advisories
+kavachctl exposure attack-paths --min_score 40       # ranked toxic combinations per asset (see attack-paths.md)
 kavachctl exposure advisories                        # loaded advisory set (SAMPLE until you import data)
 kavachctl exposure sboms web-01                      # SBOM inventory
 kavachctl coverage blindspots                        # techniques with no telemetry / rules

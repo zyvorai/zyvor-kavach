@@ -1,0 +1,415 @@
+{
+ "area": "bigip",
+ "policies": [
+  {
+   "id": "bigip-httpd-allow-all",
+   "title": "Configuration utility (TMUI) is open to every address",
+   "description": "Checks that the httpd allow list is not all or a world-wide range.",
+   "rationale": "The management web interface is a recurring target of authentication-bypass and remote-code-execution advisories; it should only be reachable from management hosts.",
+   "severity": "critical",
+   "applies_to": {
+    "formats": [
+     "bigip"
+    ]
+   },
+   "check": {
+    "key": "sys.httpd.allow",
+    "op": "not_regex",
+    "value": "(?i)(^|\\s)(all|any|\\*|0\\.0\\.0\\.0(/0|/0\\.0\\.0\\.0)?)(\\s|$)"
+   },
+   "on_absent": "unknown",
+   "absence_note": "The setting is not in the submitted file. It may live in another file (bigip_base.conf versus bigip.conf) or rely on a version default that this file cannot show. The default allow list is version specific and was not verified here.",
+   "remediation": "Restrict sys httpd allow to named management addresses or the management network.",
+   "references": [
+    "F5 community: Security best practices for BIG-IP and BIG-IQ systems (public)",
+    "F5 K-articles on hardening and port lockdown (named by that article; not opened)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 SC-7 (hint)",
+    "ATT&CK T1190 (hint)"
+   ],
+   "positive": "sys httpd {\n    allow { all }\n}\n",
+   "negative": "sys httpd {\n    allow { 10.10.0.0/24 }\n}\n",
+   "applies_when": {
+    "key": "bigip.objects",
+    "op": "present"
+   }
+  },
+  {
+   "id": "bigip-sshd-allow-all",
+   "title": "SSH is open to every address",
+   "description": "Checks that the sshd allow list is not all or a world-wide range.",
+   "rationale": "SSH on the appliance should be limited to management hosts.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "bigip"
+    ]
+   },
+   "check": {
+    "key": "sys.sshd.allow",
+    "op": "not_regex",
+    "value": "(?i)(^|\\s)(all|any|\\*|0\\.0\\.0\\.0(/0|/0\\.0\\.0\\.0)?)(\\s|$)"
+   },
+   "on_absent": "unknown",
+   "absence_note": "The setting is not in the submitted file. It may live in another file (bigip_base.conf versus bigip.conf) or rely on a version default that this file cannot show.",
+   "remediation": "Restrict sys sshd allow to named management addresses.",
+   "references": [
+    "F5 community: Security best practices for BIG-IP and BIG-IQ systems (public)",
+    "F5 K-articles on hardening and port lockdown (named by that article; not opened)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 AC-17 (hint)"
+   ],
+   "positive": "sys sshd {\n    allow { ALL }\n}\n",
+   "negative": "sys sshd {\n    allow { 10.10.0.5 }\n}\n",
+   "applies_when": {
+    "key": "bigip.objects",
+    "op": "present"
+   }
+  },
+  {
+   "id": "bigip-httpd-ssl-protocol",
+   "title": "Management web interface accepts legacy TLS protocols",
+   "description": "Checks that the httpd SSL protocol string excludes TLS 1.0 and 1.1 (an explicit modern list, or all with those removed).",
+   "rationale": "Legacy protocol versions have known weaknesses and are removed from current baselines.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "bigip"
+    ]
+   },
+   "check": {
+    "any": [
+     {
+      "key": "sys.httpd.ssl-protocol",
+      "op": "not_regex",
+      "value": "(?i)(^|\\s)(all|tlsv1|tlsv1\\.1|sslv2|sslv3)(\\s|$)"
+     },
+     {
+      "all": [
+       {
+        "key": "sys.httpd.ssl-protocol",
+        "op": "regex",
+        "value": "(?i)(^|\\s)-tlsv1(\\s|$)"
+       },
+       {
+        "key": "sys.httpd.ssl-protocol",
+        "op": "regex",
+        "value": "(?i)(^|\\s)-tlsv1\\.1(\\s|$)"
+       }
+      ]
+     }
+    ]
+   },
+   "on_absent": "unknown",
+   "absence_note": "The setting is not in the submitted file. It may live in another file (bigip_base.conf versus bigip.conf) or rely on a version default that this file cannot show. The default protocol set differs by version.",
+   "remediation": "Set the httpd ssl-protocol to TLSv1.2 and above only.",
+   "references": [
+    "F5 community: Security best practices for BIG-IP and BIG-IQ systems (public)",
+    "F5 K-articles on hardening and port lockdown (named by that article; not opened)"
+   ],
+   "frameworks": [
+    "ATT&CK T1040 (hint)"
+   ],
+   "positive": "sys httpd {\n    ssl-protocol \"all -SSLv2 -SSLv3\"\n}\n",
+   "negative": "sys httpd {\n    ssl-protocol \"all -SSLv2 -SSLv3 -TLSv1 -TLSv1.1\"\n}\n",
+   "applies_when": {
+    "key": "bigip.objects",
+    "op": "present"
+   }
+  },
+  {
+   "id": "bigip-selfip-allow-all",
+   "title": "Self IP accepts every service",
+   "description": "Flags self IPs with allow-service all.",
+   "rationale": "Port lockdown set to allow all exposes control-plane services (SSH, management web) on a data-plane address.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "bigip"
+    ]
+   },
+   "check": {
+    "key": "risk.bigip-selfip-allow-all",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No self IP with allow-service all in the submitted file.",
+   "remediation": "Use allow-service none, or list only the required service ports.",
+   "references": [
+    "F5 community: Security best practices for BIG-IP and BIG-IQ systems (public)",
+    "F5 K-articles on hardening and port lockdown (named by that article; not opened)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 SC-7 (hint)",
+    "ATT&CK T1133 (hint)"
+   ],
+   "positive": "net self /Common/ext {\n    address 203.0.113.5/24\n    allow-service all\n}\n",
+   "negative": "net self /Common/ext {\n    address 203.0.113.5/24\n    allow-service none\n}\n",
+   "applies_when": {
+    "key": "bigip.objects",
+    "op": "present"
+   }
+  },
+  {
+   "id": "bigip-selfip-allow-default",
+   "title": "Self IP uses the default service allow list",
+   "description": "Flags self IPs with allow-service default.",
+   "rationale": "The default list opens several service ports; an explicit short list is easier to review.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "bigip"
+    ]
+   },
+   "check": {
+    "key": "risk.bigip-selfip-allow-default",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No self IP with allow-service default in the submitted file.",
+   "remediation": "Replace default with an explicit list of required ports.",
+   "references": [
+    "F5 community: Security best practices for BIG-IP and BIG-IQ systems (public)",
+    "F5 K-articles on hardening and port lockdown (named by that article; not opened)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-7 (hint)"
+   ],
+   "positive": "net self /Common/ext {\n    address 203.0.113.5/24\n    allow-service {\n        default\n    }\n}\n",
+   "negative": "net self /Common/ext {\n    address 203.0.113.5/24\n    allow-service {\n        tcp:4353\n    }\n}\n",
+   "applies_when": {
+    "key": "bigip.objects",
+    "op": "present"
+   }
+  },
+  {
+   "id": "bigip-ssl-weak-ciphers",
+   "title": "SSL profile allows weak ciphers",
+   "description": "Flags client-ssl and server-ssl profiles whose cipher string names RC4, DES/3DES, MD5, EXPORT, NULL or LOW.",
+   "rationale": "Weak cipher suites can be broken or downgraded.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "bigip"
+    ]
+   },
+   "check": {
+    "key": "risk.bigip-ssl-weak-ciphers",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No SSL profile with an obviously weak cipher string was found.",
+   "remediation": "Use a cipher string limited to modern AEAD suites.",
+   "references": [
+    "F5 community: Security best practices for BIG-IP and BIG-IQ systems (public)",
+    "F5 K-articles on hardening and port lockdown (named by that article; not opened)"
+   ],
+   "frameworks": [
+    "ATT&CK T1040 (hint)"
+   ],
+   "positive": "ltm profile client-ssl /Common/web {\n    ciphers RC4:DES:DEFAULT\n}\n",
+   "negative": "ltm profile client-ssl /Common/web {\n    ciphers ECDHE+AES-GCM\n}\n",
+   "applies_when": {
+    "key": "bigip.objects",
+    "op": "present"
+   }
+  },
+  {
+   "id": "bigip-virtual-wildcard-port",
+   "title": "Virtual server listens on every port",
+   "description": "Flags virtual servers with a wildcard destination port, no source restriction and a set IP protocol.",
+   "rationale": "A catch-all listener widens the attack surface beyond the intended service.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "bigip"
+    ]
+   },
+   "check": {
+    "key": "risk.bigip-virtual-wildcard-port",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No wildcard-port virtual server found.",
+   "remediation": "Bind the virtual server to the specific service port and restrict the source.",
+   "references": [
+    "F5 community: Security best practices for BIG-IP and BIG-IQ systems (public)",
+    "F5 K-articles on hardening and port lockdown (named by that article; not opened)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-7 (hint)"
+   ],
+   "positive": "ltm virtual /Common/vs {\n    destination 203.0.113.10:any\n    ip-protocol tcp\n}\n",
+   "negative": "ltm virtual /Common/vs {\n    destination 203.0.113.10:443\n    ip-protocol tcp\n}\n",
+   "applies_when": {
+    "key": "bigip.objects",
+    "op": "present"
+   }
+  },
+  {
+   "id": "bigip-snmp-default-community",
+   "title": "SNMP uses a default community string",
+   "description": "Flags the community names public and private.",
+   "rationale": "Default community strings are guessed first.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "bigip"
+    ]
+   },
+   "check": {
+    "key": "risk.bigip-snmp-default-community",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No default SNMP community found.",
+   "remediation": "Use SNMPv3, or a long random community restricted to monitoring hosts.",
+   "references": [
+    "F5 community: Security best practices for BIG-IP and BIG-IQ systems (public)",
+    "F5 K-articles on hardening and port lockdown (named by that article; not opened)"
+   ],
+   "frameworks": [
+    "ATT&CK T1602 (hint)"
+   ],
+   "positive": "sys snmp {\n    communities {\n        /Common/c1 {\n            community-name public\n        }\n    }\n}\n",
+   "negative": "sys snmp {\n    communities {\n        /Common/c1 {\n            community-name Xk29vQ7mPz81\n        }\n    }\n}\n",
+   "applies_when": {
+    "key": "bigip.objects",
+    "op": "present"
+   }
+  },
+  {
+   "id": "bigip-remote-syslog",
+   "title": "No remote syslog destination configured",
+   "description": "Checks that the system logs to at least one remote server.",
+   "rationale": "Off-box logs survive tampering with the appliance and feed detection.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "bigip"
+    ]
+   },
+   "check": {
+    "key": "sys.syslog.remote-servers",
+    "op": "present"
+   },
+   "on_absent": "evaluate",
+   "absence_note": "No remote-servers entry in the submitted file; it may be in another file.",
+   "remediation": "Configure a remote syslog server in sys syslog.",
+   "references": [
+    "F5 community: Security best practices for BIG-IP and BIG-IQ systems (public)",
+    "F5 K-articles on hardening and port lockdown (named by that article; not opened)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 AU-4 (hint)"
+   ],
+   "positive": "sys syslog {\n    include none\n}\n",
+   "negative": "sys syslog {\n    remote-servers {\n        /Common/siem {\n            host 10.0.0.9\n        }\n    }\n}\n",
+   "applies_when": {
+    "key": "bigip.objects",
+    "op": "present"
+   }
+  },
+  {
+   "id": "bigip-password-policy",
+   "title": "Password policy enforcement is not enabled",
+   "description": "Checks auth password-policy policy-enforcement.",
+   "rationale": "Local accounts remain a fallback login even with remote authentication.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "bigip"
+    ]
+   },
+   "check": {
+    "key": "auth.password-policy.policy-enforcement",
+    "op": "equals",
+    "value": "enabled"
+   },
+   "on_absent": "unknown",
+   "absence_note": "The setting is not in the submitted file. It may live in another file (bigip_base.conf versus bigip.conf) or rely on a version default that this file cannot show.",
+   "remediation": "Enable password policy enforcement and set length and lockout values.",
+   "references": [
+    "F5 community: Security best practices for BIG-IP and BIG-IQ systems (public)",
+    "F5 K-articles on hardening and port lockdown (named by that article; not opened)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 IA-5 (hint)"
+   ],
+   "positive": "auth password-policy {\n    policy-enforcement disabled\n}\n",
+   "negative": "auth password-policy {\n    policy-enforcement enabled\n}\n",
+   "applies_when": {
+    "key": "bigip.objects",
+    "op": "present"
+   }
+  },
+  {
+   "id": "bigip-httpd-idle-timeout",
+   "title": "Management web session idle timeout is long",
+   "description": "Checks that the httpd idle timeout (seconds) is at most 1200.",
+   "rationale": "Long-lived idle sessions are easier to hijack.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "bigip"
+    ]
+   },
+   "check": {
+    "key": "sys.httpd.auth-pam-idle-timeout",
+    "op": "le",
+    "value": "1200"
+   },
+   "on_absent": "unknown",
+   "absence_note": "The setting is not in the submitted file. It may live in another file (bigip_base.conf versus bigip.conf) or rely on a version default that this file cannot show.",
+   "remediation": "Set auth-pam-idle-timeout to 1200 or less.",
+   "references": [
+    "F5 community: Security best practices for BIG-IP and BIG-IQ systems (public)",
+    "F5 K-articles on hardening and port lockdown (named by that article; not opened)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 AC-12 (hint)"
+   ],
+   "positive": "sys httpd {\n    auth-pam-idle-timeout 86400\n}\n",
+   "negative": "sys httpd {\n    auth-pam-idle-timeout 900\n}\n",
+   "applies_when": {
+    "key": "bigip.objects",
+    "op": "present"
+   }
+  },
+  {
+   "id": "bigip-sshd-inactivity-timeout",
+   "title": "SSH sessions never time out",
+   "description": "Checks that the sshd inactivity timeout is greater than zero.",
+   "rationale": "Idle shells left open are a standing foothold.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "bigip"
+    ]
+   },
+   "check": {
+    "key": "sys.sshd.inactivity-timeout",
+    "op": "gt",
+    "value": "0"
+   },
+   "on_absent": "unknown",
+   "absence_note": "The setting is not in the submitted file. It may live in another file (bigip_base.conf versus bigip.conf) or rely on a version default that this file cannot show.",
+   "remediation": "Set inactivity-timeout to a few minutes.",
+   "references": [
+    "F5 community: Security best practices for BIG-IP and BIG-IQ systems (public)",
+    "F5 K-articles on hardening and port lockdown (named by that article; not opened)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 AC-12 (hint)"
+   ],
+   "positive": "sys sshd {\n    inactivity-timeout 0\n}\n",
+   "negative": "sys sshd {\n    inactivity-timeout 600\n}\n",
+   "applies_when": {
+    "key": "bigip.objects",
+    "op": "present"
+   }
+  }
+ ]
+}

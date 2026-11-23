@@ -40,6 +40,7 @@ var surfCmds = []surfCmd{
 	{words: []string{"posture", "trend-config"}, path: "/v1/posture/trend/config"},
 	{words: []string{"queries", "library"}, path: "/v1/queries/library", idPath: "/v1/queries/library/{id}", flags: []string{"tactic", "tag", "q"}},
 	{words: []string{"exposure", "report"}, path: "/v1/exposure/report", flags: []string{"host", "min_score=min_score"}},
+	{words: []string{"exposure", "attack-paths"}, path: "/v1/exposure/attack-paths", flags: []string{"host", "min_score=min_score"}},
 	{words: []string{"exposure", "advisories"}, path: "/v1/exposure/advisories"},
 	{words: []string{"exposure", "sboms"}, path: "/v1/exposure/sboms", idPath: "/v1/exposure/sboms/{id}"},
 	{words: []string{"regression", "status"}, path: "/v1/regression/status"},

@@ -31,13 +31,15 @@ Every analyzer registered with `RegisterAnalyzer` (or `registerFileAnalyzer`, th
 | `script-static` | script | `inspect_script_static.go` | See "Script static analysis". | per section |
 | `config-assess` | config | `inspect_config_analyzer.go` | Embedded policy assessment of recognised config formats (compliance percentage over pass/fail); emits info `cfg-unrecognized-format` when no format matches. Not scored. | |
 | `config-extra` | config | `inspect_config_extra.go` | CI YAML, Kubernetes, Dockerfile checks. Not scored. | 2 MiB |
+| `config-advisory` | config | `inspect_config_advisory.go`, `configadvisories/*.json` | Compares a BIG-IP `#TMSH-VERSION:` or an nginx version string with a versioned, operator-replaceable advisory table (`cfg-advisory-<cve>`). See [appliance-config-review.md](appliance-config-review.md). Not scored. | 2 MiB scanned, 5000 advisories |
+| `config-firewall` | config | `inspect_config_firewall.go` | Generic firewall/WAF rule export review (`fw-*`): any-any allows, world-reachable admin and data ports, shadowed and redundant rules, no default deny, unused rules and objects. See [firewall-rule-review.md](firewall-rule-review.md). Not scored. | 5000 rules, 64 atoms per field, 20M comparisons |
 | `lockfile` | lockfile | `inspect_lockfile_analyzer.go` | See [lockfile-inspection.md](lockfile-inspection.md). | |
 | `pkg-manifest` | file, lockfile, script | `inspect_pkg_manifest.go` | Extension manifests, npm install hooks, PyPI `setup.py`. | per section |
 | `domain` | domain | `inspect_domain.go` | See [domain-inspector.md](domain-inspector.md). | |
 | `url` | url | `inspect_url_analyzer.go` | See [url-email-inspection.md](url-email-inspection.md). | |
 | `email`, `email-extra` | email | `inspect_email_analyzer.go`, `inspect_email_extra.go` | See [url-email-inspection.md](url-email-inspection.md) and the email section below. | |
 
-Per kind (from the registrations above): file 12, script 5 (`byte-patterns`, `deobfuscation`, `obfuscation-stats`, `script-static`, `pkg-manifest`), cmdline 2 (`deobfuscation`, `obfuscation-stats`), config 3, lockfile 2 (`lockfile`, `pkg-manifest`), domain 1, url 1, email 2. Use `InspectAnalyzerNames()` for the live list.
+Per kind (from the registrations above): file 12, script 5 (`byte-patterns`, `deobfuscation`, `obfuscation-stats`, `script-static`, `pkg-manifest`), cmdline 2 (`deobfuscation`, `obfuscation-stats`), config 5, lockfile 2 (`lockfile`, `pkg-manifest`), domain 1, url 1, email 2. Use `InspectAnalyzerNames()` for the live list.
 
 Verdict note: findings carry a weight and the score is a capped sum of the strongest ten; `config` reports are `not_scored`. A finding absent from a report means "not matched by this analyzer", never "verified clean".
 

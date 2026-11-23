@@ -1,0 +1,383 @@
+{
+ "format": "kavach-config-advisories/1",
+ "source": "embedded sample compiled 2026-11-23",
+ "note": "A small labelled sample, not a complete or current feed. Replace or extend it with KAVACH_CONFIG_ADVISORIES.",
+ "advisories": [
+  {
+   "id": "CVE-2026-123634",
+   "product": "nginx",
+   "severity": "medium",
+   "summary": "Use-after-free during response processing in the nginx resolver.",
+   "ranges": [
+    {
+     "introduced": "0.6.18",
+     "fixed": "1.30.7"
+    },
+    {
+     "introduced": "1.31.0",
+     "fixed": "1.31.9"
+    }
+   ],
+   "source": "https://nginx.org/en/security_advisories.html",
+   "source_verified": false,
+   "source_note": "nginx.org security advisories page, fetched 2026-11-23 through a summarising fetch tool; ids and ranges not cross-checked against the per-advisory F5 pages"
+  },
+  {
+   "id": "CVE-2026-123007",
+   "product": "nginx",
+   "severity": "high",
+   "summary": "Memory corruption in HTTP/2 flow control.",
+   "ranges": [
+    {
+     "introduced": "1.9.5",
+     "fixed": "1.30.7"
+    },
+    {
+     "introduced": "1.31.0",
+     "fixed": "1.31.9"
+    }
+   ],
+   "source": "https://nginx.org/en/security_advisories.html",
+   "source_verified": false,
+   "source_note": "nginx.org security advisories page, fetched 2026-11-23 through a summarising fetch tool; ids and ranges not cross-checked against the per-advisory F5 pages"
+  },
+  {
+   "id": "CVE-2026-121810",
+   "product": "nginx",
+   "severity": "medium",
+   "summary": "Use-after-free in HTTP/3 (page prints the id with a duplicated CVE- prefix).",
+   "ranges": [
+    {
+     "introduced": "1.25.0",
+     "fixed": "1.30.7"
+    },
+    {
+     "introduced": "1.31.0",
+     "fixed": "1.31.9"
+    }
+   ],
+   "source": "https://nginx.org/en/security_advisories.html",
+   "source_verified": false,
+   "source_note": "nginx.org security advisories page, fetched 2026-11-23 through a summarising fetch tool; ids and ranges not cross-checked against the per-advisory F5 pages The id was normalised from a typo on the page."
+  },
+  {
+   "id": "CVE-2026-123633",
+   "product": "nginx",
+   "severity": "medium",
+   "summary": "Use-after-free in HTTP/2.",
+   "ranges": [
+    {
+     "introduced": "1.19.7",
+     "fixed": "1.30.7"
+    },
+    {
+     "introduced": "1.31.0",
+     "fixed": "1.31.9"
+    }
+   ],
+   "source": "https://nginx.org/en/security_advisories.html",
+   "source_verified": false,
+   "source_note": "nginx.org security advisories page, fetched 2026-11-23 through a summarising fetch tool; ids and ranges not cross-checked against the per-advisory F5 pages"
+  },
+  {
+   "id": "CVE-2026-118899",
+   "product": "nginx",
+   "severity": "high",
+   "summary": "Infinite loop while reading the client request body over TLS 1.3.",
+   "ranges": [
+    {
+     "introduced": "1.13.0",
+     "fixed": "1.30.7"
+    },
+    {
+     "introduced": "1.31.0",
+     "fixed": "1.31.9"
+    }
+   ],
+   "source": "https://nginx.org/en/security_advisories.html",
+   "source_verified": false,
+   "source_note": "nginx.org security advisories page, fetched 2026-11-23 through a summarising fetch tool; ids and ranges not cross-checked against the per-advisory F5 pages"
+  },
+  {
+   "id": "CVE-2026-113425",
+   "product": "nginx",
+   "severity": "high",
+   "summary": "Use-after-free in the mail proxy module.",
+   "ranges": [
+    {
+     "introduced": "0.5.33",
+     "fixed": "1.30.7"
+    },
+    {
+     "introduced": "1.31.0",
+     "fixed": "1.31.9"
+    }
+   ],
+   "source": "https://nginx.org/en/security_advisories.html",
+   "source_verified": false,
+   "source_note": "nginx.org security advisories page, fetched 2026-11-23 through a summarising fetch tool; ids and ranges not cross-checked against the per-advisory F5 pages"
+  },
+  {
+   "id": "CVE-2026-120993",
+   "product": "nginx",
+   "severity": "low",
+   "summary": "NULL pointer dereference with PROXY protocol v2.",
+   "ranges": [
+    {
+     "introduced": "1.31.4",
+     "fixed": "1.31.9"
+    }
+   ],
+   "source": "https://nginx.org/en/security_advisories.html",
+   "source_verified": false,
+   "source_note": "nginx.org security advisories page, fetched 2026-11-23 through a summarising fetch tool; ids and ranges not cross-checked against the per-advisory F5 pages"
+  },
+  {
+   "id": "CVE-2026-125283",
+   "product": "nginx",
+   "severity": "low",
+   "summary": "Buffer overflow when alias is used with try_files.",
+   "ranges": [
+    {
+     "introduced": "0.9.6",
+     "fixed": "1.30.7"
+    },
+    {
+     "introduced": "1.31.0",
+     "fixed": "1.31.9"
+    }
+   ],
+   "source": "https://nginx.org/en/security_advisories.html",
+   "source_verified": false,
+   "source_note": "nginx.org security advisories page, fetched 2026-11-23 through a summarising fetch tool; ids and ranges not cross-checked against the per-advisory F5 pages"
+  },
+  {
+   "id": "CVE-2026-120967",
+   "product": "nginx",
+   "severity": "medium",
+   "summary": "SNI bypass with client certificate validation in the stream module.",
+   "ranges": [
+    {
+     "introduced": "1.25.5",
+     "fixed": "1.30.7"
+    },
+    {
+     "introduced": "1.31.0",
+     "fixed": "1.31.9"
+    }
+   ],
+   "source": "https://nginx.org/en/security_advisories.html",
+   "source_verified": false,
+   "source_note": "nginx.org security advisories page, fetched 2026-11-23 through a summarising fetch tool; ids and ranges not cross-checked against the per-advisory F5 pages"
+  },
+  {
+   "id": "CVE-2026-123640",
+   "product": "nginx",
+   "severity": "low",
+   "summary": "Insufficient validation in the stream ssl_preread module.",
+   "ranges": [
+    {
+     "introduced": "1.15.2",
+     "fixed": "1.30.7"
+    },
+    {
+     "introduced": "1.31.0",
+     "fixed": "1.31.9"
+    }
+   ],
+   "source": "https://nginx.org/en/security_advisories.html",
+   "source_verified": false,
+   "source_note": "nginx.org security advisories page, fetched 2026-11-23 through a summarising fetch tool; ids and ranges not cross-checked against the per-advisory F5 pages"
+  },
+  {
+   "id": "CVE-2026-15176",
+   "product": "nginx",
+   "severity": "medium",
+   "summary": "Buffer overflow when alias is used with rewrite.",
+   "ranges": [
+    {
+     "introduced": "0.1.29",
+     "fixed": "1.30.6"
+    },
+    {
+     "introduced": "1.31.0",
+     "fixed": "1.31.7"
+    }
+   ],
+   "source": "https://nginx.org/en/security_advisories.html",
+   "source_verified": false,
+   "source_note": "nginx.org security advisories page, fetched 2026-11-23 through a summarising fetch tool; ids and ranges not cross-checked against the per-advisory F5 pages"
+  },
+  {
+   "id": "CVE-2026-93479",
+   "product": "nginx",
+   "severity": "medium",
+   "summary": "Buffer overflow in script evaluation.",
+   "ranges": [
+    {
+     "introduced": "1.30.0",
+     "fixed": "1.30.6"
+    },
+    {
+     "introduced": "1.31.2",
+     "fixed": "1.31.7"
+    }
+   ],
+   "source": "https://nginx.org/en/security_advisories.html",
+   "source_verified": false,
+   "source_note": "nginx.org security advisories page, fetched 2026-11-23 through a summarising fetch tool; ids and ranges not cross-checked against the per-advisory F5 pages"
+  },
+  {
+   "id": "CVE-2026-95101",
+   "product": "nginx",
+   "severity": "medium",
+   "summary": "Request body injection in HTTP/3.",
+   "ranges": [
+    {
+     "introduced": "1.25.0",
+     "fixed": "1.30.6"
+    },
+    {
+     "introduced": "1.31.0",
+     "fixed": "1.31.7"
+    }
+   ],
+   "source": "https://nginx.org/en/security_advisories.html",
+   "source_verified": false,
+   "source_note": "nginx.org security advisories page, fetched 2026-11-23 through a summarising fetch tool; ids and ranges not cross-checked against the per-advisory F5 pages"
+  },
+  {
+   "id": "CVE-2026-97629",
+   "product": "nginx",
+   "severity": "medium",
+   "summary": "Session forgery when TLS session tickets are used.",
+   "ranges": [
+    {
+     "introduced": "1.23.2",
+     "fixed": "1.30.6"
+    },
+    {
+     "introduced": "1.31.0",
+     "fixed": "1.31.7"
+    }
+   ],
+   "source": "https://nginx.org/en/security_advisories.html",
+   "source_verified": false,
+   "source_note": "nginx.org security advisories page, fetched 2026-11-23 through a summarising fetch tool; ids and ranges not cross-checked against the per-advisory F5 pages"
+  },
+  {
+   "id": "CVE-2026-97205",
+   "product": "nginx",
+   "severity": "medium",
+   "summary": "Use-after-free when asynchronous file I/O (AIO) is used.",
+   "ranges": [
+    {
+     "introduced": "0.8.11",
+     "fixed": "1.30.6"
+    },
+    {
+     "introduced": "1.31.0",
+     "fixed": "1.31.7"
+    }
+   ],
+   "source": "https://nginx.org/en/security_advisories.html",
+   "source_verified": false,
+   "source_note": "nginx.org security advisories page, fetched 2026-11-23 through a summarising fetch tool; ids and ranges not cross-checked against the per-advisory F5 pages"
+  },
+  {
+   "id": "CVE-2022-1388",
+   "aliases": [
+    "K23605346"
+   ],
+   "product": "bigip",
+   "severity": "critical",
+   "summary": "iControl REST authentication bypass allowing unauthenticated command execution; exploited in the wild.",
+   "ranges": [
+    {
+     "introduced": "16.1.0",
+     "fixed": "16.1.2.2"
+    },
+    {
+     "introduced": "15.1.0",
+     "fixed": "15.1.5.1"
+    },
+    {
+     "introduced": "14.1.0",
+     "fixed": "14.1.4.6"
+    },
+    {
+     "introduced": "13.1.0",
+     "fixed": "13.1.5"
+    },
+    {
+     "introduced": "12.1.0",
+     "last_affected": "12.1.99"
+    },
+    {
+     "introduced": "11.6.1",
+     "last_affected": "11.6.99"
+    }
+   ],
+   "kev": true,
+   "source": "F5 advisory K23605346 (named by third-party pages)",
+   "source_verified": false,
+   "source_note": "Third-party vulnerability database and scanner pages seen in a web search result (Rapid7, Tenable, NVD summaries); the F5 advisory page itself was not opened"
+  },
+  {
+   "id": "CVE-2022-41617",
+   "product": "bigip",
+   "severity": "high",
+   "summary": "Advanced WAF/ASM iControl REST remote code execution (branches and fixes as listed by third-party pages).",
+   "ranges": [
+    {
+     "introduced": "16.1.0",
+     "fixed": "16.1.3.1"
+    },
+    {
+     "introduced": "15.1.0",
+     "fixed": "15.1.6.1"
+    },
+    {
+     "introduced": "14.1.0",
+     "fixed": "14.1.5.1"
+    },
+    {
+     "introduced": "13.1.0",
+     "fixed": "13.1.5.1"
+    }
+   ],
+   "kev": false,
+   "source": "F5 advisory (K-article id not confirmed)",
+   "source_verified": false,
+   "source_note": "Third-party vulnerability database and scanner pages seen in a web search result (Rapid7, Tenable, NVD summaries); the F5 advisory page itself was not opened"
+  },
+  {
+   "id": "CVE-2022-35243",
+   "product": "bigip",
+   "severity": "high",
+   "summary": "Appliance mode bypass through an iControl REST endpoint (branches and fixes as listed by third-party pages).",
+   "ranges": [
+    {
+     "introduced": "16.1.0",
+     "fixed": "16.1.3"
+    },
+    {
+     "introduced": "15.1.0",
+     "fixed": "15.1.5.1"
+    },
+    {
+     "introduced": "14.1.0",
+     "fixed": "14.1.5"
+    },
+    {
+     "introduced": "13.1.0",
+     "last_affected": "13.1.99"
+    }
+   ],
+   "kev": false,
+   "source": "F5 advisory (K-article id not confirmed)",
+   "source_verified": false,
+   "source_note": "Third-party vulnerability database and scanner pages seen in a web search result (Rapid7, Tenable, NVD summaries); the F5 advisory page itself was not opened"
+  }
+ ]
+}

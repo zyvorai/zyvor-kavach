@@ -8,6 +8,7 @@ There was no changelog file before this one, and no version string in the source
 
 ## Unreleased
 
+- Posture, cloud and configuration analysis (observation-only, offline): F5 BIG-IP configuration format with 12 policies, 7 nginx proxy and logging policies, a versioned and operator-replaceable advisory table for BIG-IP and nginx versions (`config-advisory`, `KAVACH_CONFIG_ADVISORIES`; embedded sample entries are unverified against vendor pages), Terraform plan JSON and CloudFormation (JSON and YAML) exposure checks with 17 policies, a generic firewall and WAF rule export review (`config-firewall`, `fw-*` findings), and attack-path scoring that ranks internet exposure, vulnerable software, excess privilege and sensitive-data signals per asset (`GET /v1/exposure/attack-paths`, `POST /v1/exposure/attack-paths/evaluate`, `kavachctl exposure attack-paths`, MCP `kavach_attack_paths`). Config policies are now 186. Research and rationale in `docs/RESEARCH-vendors-posture.md`.
 - Gateway API front door: Setura Gateway (`zyvor.dev/setura-gateway`, GatewayClass `setura`) replaces Envoy Gateway. Helm values `envoyGateway.*` are now `seturaGateway.*`, `--envoy-gateway` is `--setura-gateway`, `ensure-envoy-gateway.sh` is `ensure-setura-gateway.sh` and `docs/envoy-gateway.md` is `docs/setura-gateway.md`. The EnvoyProxy and BackendTrafficPolicy objects are gone. Not run on a live cluster.
 
 ## v0.2.5 (2026-11-17)

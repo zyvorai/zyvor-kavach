@@ -1,0 +1,211 @@
+{
+ "area": "web2",
+ "policies": [
+  {
+   "id": "web-nginx-proxy-pass-client-host",
+   "title": "proxy_pass target is built from client-controlled input",
+   "description": "Flags proxy_pass URLs whose host part is $host, $http_*, $arg_*, $cookie_* or a regex capture.",
+   "rationale": "A client-chosen upstream turns the proxy into a server-side request forgery or open-proxy primitive.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "nginx"
+    ]
+   },
+   "check": {
+    "key": "proxy_pass",
+    "op": "not_regex",
+    "value": "(?i)^(?:https?://)?[^/\\s]*\\$(?:host|http_\\w+|arg_\\w+|cookie_\\w+|[1-9])"
+   },
+   "on_absent": "pass",
+   "absence_note": "No proxy_pass directive.",
+   "remediation": "Proxy to fixed upstream names or an allow-listed map.",
+   "references": [
+    "nginx documentation, module reference (public)"
+   ],
+   "frameworks": [
+    "ATT&CK T1090 (hint)",
+    "ATT&CK T1190 (hint)"
+   ],
+   "positive": "server {\n  location / {\n    proxy_pass http://$http_x_target;\n  }\n}\n",
+   "negative": "server {\n  location / {\n    proxy_pass http://backend;\n  }\n}\n"
+  },
+  {
+   "id": "web-nginx-proxy-ssl-verify",
+   "title": "Upstream TLS certificate is not verified",
+   "description": "For https upstreams, checks that proxy_ssl_verify is on.",
+   "rationale": "Without verification the proxy accepts any certificate from the upstream path.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "nginx"
+    ]
+   },
+   "check": {
+    "key": "proxy_ssl_verify",
+    "op": "regex",
+    "value": "(?i)^on$"
+   },
+   "on_absent": "fail",
+   "absence_note": "proxy_ssl_verify is not set; the module reference documents the default as off.",
+   "remediation": "Set proxy_ssl_verify on and provide proxy_ssl_trusted_certificate.",
+   "references": [
+    "nginx documentation, module reference (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 SC-8 (hint)"
+   ],
+   "positive": "server {\n  location / {\n    proxy_pass https://backend;\n  }\n}\n",
+   "negative": "server {\n  location / {\n    proxy_pass https://backend;\n    proxy_ssl_verify on;\n  }\n}\n",
+   "applies_when": {
+    "key": "proxy_pass",
+    "op": "regex",
+    "value": "(?i)^https://",
+    "occ": "any"
+   }
+  },
+  {
+   "id": "web-nginx-stub-status",
+   "title": "stub_status endpoint is configured",
+   "description": "Flags use of stub_status.",
+   "rationale": "The status page leaks connection counts and should not be public.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "nginx"
+    ]
+   },
+   "check": {
+    "key": "stub_status",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "stub_status is not used.",
+   "remediation": "Restrict the location with allow/deny or serve it on a loopback listener.",
+   "references": [
+    "nginx documentation, module reference (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "server {\n  location /s {\n    stub_status;\n  }\n}\n",
+   "negative": "server {\n  listen 80;\n}\n"
+  },
+  {
+   "id": "web-nginx-ignore-invalid-headers",
+   "title": "Invalid request headers are passed through",
+   "description": "Checks that ignore_invalid_headers is not off.",
+   "rationale": "Passing malformed header names to upstreams aids request smuggling and header-confusion attacks.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "nginx"
+    ]
+   },
+   "check": {
+    "key": "ignore_invalid_headers",
+    "op": "not_regex",
+    "value": "(?i)^off$"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is on.",
+   "remediation": "Remove the directive or set it to on.",
+   "references": [
+    "nginx documentation, module reference (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "http {\n  ignore_invalid_headers off;\n}\n",
+   "negative": "http {\n  ignore_invalid_headers on;\n}\n"
+  },
+  {
+   "id": "web-nginx-underscores-in-headers",
+   "title": "Headers with underscores are accepted",
+   "description": "Checks that underscores_in_headers is not on.",
+   "rationale": "Underscore and hyphen header names can be confused between proxy and application.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "nginx"
+    ]
+   },
+   "check": {
+    "key": "underscores_in_headers",
+    "op": "not_regex",
+    "value": "(?i)^on$"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default is off.",
+   "remediation": "Leave it off.",
+   "references": [
+    "nginx documentation, module reference (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "http {\n  underscores_in_headers on;\n}\n",
+   "negative": "http {\n  underscores_in_headers off;\n}\n"
+  },
+  {
+   "id": "web-nginx-access-log-off",
+   "title": "Access logging is switched off",
+   "description": "Checks that no access_log directive is set to off.",
+   "rationale": "Without access logs there is no record to investigate from.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "nginx"
+    ]
+   },
+   "check": {
+    "key": "access_log",
+    "op": "not_regex",
+    "value": "(?i)^off$"
+   },
+   "on_absent": "pass",
+   "absence_note": "Default logging applies.",
+   "remediation": "Log to a file or syslog target; disable only for health checks on a dedicated location.",
+   "references": [
+    "nginx documentation, module reference (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 AU-2 (hint)"
+   ],
+   "positive": "http {\n  access_log off;\n}\n",
+   "negative": "http {\n  access_log /var/log/nginx/access.log;\n}\n"
+  },
+  {
+   "id": "web-nginx-session-tickets",
+   "title": "TLS session tickets are enabled",
+   "description": "Checks that ssl_session_tickets is not on.",
+   "rationale": "Ticket keys that are never rotated weaken forward secrecy; a published nginx advisory concerned ticket handling.",
+   "severity": "low",
+   "applies_to": {
+    "formats": [
+     "nginx"
+    ]
+   },
+   "check": {
+    "key": "ssl_session_tickets",
+    "op": "not_regex",
+    "value": "(?i)^on$"
+   },
+   "on_absent": "unknown",
+   "absence_note": "The default is on, with per-process keys that are not rotated.",
+   "remediation": "Set ssl_session_tickets off, or rotate ticket keys with ssl_session_ticket_key.",
+   "references": [
+    "nginx documentation, module reference (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "server {\n  listen 443 ssl;\n  ssl_session_tickets on;\n}\n",
+   "negative": "server {\n  listen 443 ssl;\n  ssl_session_tickets off;\n}\n",
+   "applies_when": {
+    "key": "tls.enabled",
+    "op": "present"
+   }
+  }
+ ]
+}

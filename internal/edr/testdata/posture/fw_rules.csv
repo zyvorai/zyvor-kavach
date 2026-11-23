@@ -1,0 +1,4 @@
+id,action,source,destination,service,enabled,log,hits
+1,allow,10.0.0.0/8,10.2.0.0/16,tcp/443;tcp/80,true,true,100
+2,allow,10.0.1.0/24,10.2.0.5,tcp/443,true,true,0
+3,deny,any,any,any,true,true,7

@@ -62,6 +62,12 @@ func parseConfig(format, text string) (*cfgDoc, error) {
 		parseDockerfile(d, text)
 	case CfgTerraform:
 		parseTerraform(d, text)
+	case CfgBigIP:
+		parseBigIP(d, text)
+	case CfgTFPlan:
+		return d, parseTFPlan(d, text)
+	case CfgCFN:
+		return d, parseCFN(d, text)
 	default:
 		return nil, fmt.Errorf("unknown format %q", format)
 	}
@@ -1045,6 +1051,9 @@ var (
 	sniffComposeRe = regexp.MustCompile(`(?m)^services\s*:\s*$`)
 	sniffK8sKind   = regexp.MustCompile(`(?m)^kind\s*:\s*\S+`)
 	sniffK8sAPI    = regexp.MustCompile(`(?m)^apiVersion\s*:\s*\S+`)
+	sniffTFPlanRe  = regexp.MustCompile(`"(?:resource_changes|planned_values)"\s*:`)
+	sniffCFNRe     = regexp.MustCompile(`AWSTemplateFormatVersion|"?Type"?\s*:\s*"?AWS::[A-Za-z0-9]+::[A-Za-z0-9]+`)
+	sniffBigIPRe   = regexp.MustCompile(`(?m)^#TMSH-VERSION:|^(?:ltm|sys|net|auth|gtm|apm|security|wom|pem|cli) [A-Za-z][\w-]*(?: [^\n{]*)? \{\s*$`)
 	sniffDFRe      = regexp.MustCompile(`(?im)^\s*FROM\s+\S+`)
 )
 
@@ -1073,12 +1082,20 @@ func SniffConfigFormat(name, text string) string {
 		return CfgCompose
 	case strings.HasSuffix(base, ".tf"):
 		return CfgTerraform
+	case strings.HasPrefix(base, "bigip") && strings.HasSuffix(base, ".conf"), base == "bigip_base.conf", strings.HasSuffix(base, ".scf"):
+		return CfgBigIP
 	}
 	head := text
 	if len(head) > 256<<10 {
 		head = head[:256<<10]
 	}
 	switch {
+	case sniffTFPlanRe.MatchString(head) && strings.Contains(head, "format_version"):
+		return CfgTFPlan
+	case sniffCFNRe.MatchString(head) && strings.Contains(head, "Resources"):
+		return CfgCFN
+	case sniffBigIPRe.MatchString(head):
+		return CfgBigIP
 	case sniffK8sAPI.MatchString(head) && sniffK8sKind.MatchString(head):
 		return CfgK8s
 	case sniffComposeRe.MatchString(head):

@@ -1,0 +1,122 @@
+{
+ "format_version": "1.2",
+ "resource_changes": [
+  {
+   "address": "aws_security_group.web",
+   "type": "aws_security_group",
+   "change": {
+    "actions": [
+     "create"
+    ],
+    "after": {
+     "ingress": [
+      {
+       "cidr_blocks": [
+        "0.0.0.0/0"
+       ],
+       "from_port": 3389,
+       "to_port": 3389,
+       "protocol": "tcp"
+      },
+      {
+       "cidr_blocks": [
+        "10.0.0.0/8"
+       ],
+       "from_port": 22,
+       "to_port": 22,
+       "protocol": "tcp"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "address": "aws_db_instance.db",
+   "type": "aws_db_instance",
+   "change": {
+    "actions": [
+     "create"
+    ],
+    "after": {
+     "publicly_accessible": true,
+     "storage_encrypted": false
+    }
+   }
+  },
+  {
+   "address": "aws_iam_policy.admin",
+   "type": "aws_iam_policy",
+   "change": {
+    "actions": [
+     "create"
+    ],
+    "after": {
+     "policy": "{\"Statement\": [{\"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\"}]}"
+    }
+   }
+  },
+  {
+   "address": "aws_s3_bucket.gone",
+   "type": "aws_s3_bucket",
+   "change": {
+    "actions": [
+     "delete"
+    ],
+    "after": {
+     "acl": "public-read"
+    }
+   }
+  },
+  {
+   "address": "aws_s3_bucket.ok",
+   "type": "aws_s3_bucket",
+   "change": {
+    "actions": [
+     "create"
+    ],
+    "after": {
+     "acl": "private"
+    }
+   }
+  },
+  {
+   "address": "google_compute_firewall.fw",
+   "type": "google_compute_firewall",
+   "change": {
+    "actions": [
+     "create"
+    ],
+    "after": {
+     "direction": "INGRESS",
+     "source_ranges": [
+      "0.0.0.0/0"
+     ],
+     "allow": [
+      {
+       "protocol": "tcp",
+       "ports": [
+        "22",
+        "8000-9000"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "address": "azurerm_network_security_rule.r",
+   "type": "azurerm_network_security_rule",
+   "change": {
+    "actions": [
+     "create"
+    ],
+    "after": {
+     "direction": "Inbound",
+     "access": "Allow",
+     "source_address_prefix": "*",
+     "destination_port_range": "3306"
+    }
+   }
+  }
+ ]
+}
