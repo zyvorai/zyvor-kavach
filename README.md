@@ -91,6 +91,7 @@ KAVACH_ADMIN_TOKEN='use-a-real-secret' ./scripts/deploy-remote.sh sus@80.79.5.17
 | **Observe** | ATT&CK matrix · compliance grade · live SSE · Prometheus — [observability.md](docs/observability.md) |
 | **MCP** | Agent tooling, 425 read-only tools (499 with `KAVACH_MCP_ALLOW_MUTATIONS=true`, measured at this commit) — [mcp-integration.md](docs/mcp-integration.md) |
 | **Cloud** | CloudTrail, Azure, GCP, Okta, M365 audit-log detection from logs you POST — [cloud-audit.md](docs/cloud-audit.md) |
+| **Web / auth logs** | Offline access-log attack detection (49 `web-` rules), API discovery and shadow-API check against an OpenAPI JSON you send, flood and credential-stuffing summaries, impossible travel from your own geo fields — [web-detection.md](docs/web-detection.md) |
 | **Exposure** | SBOM-based software exposure, offline, SAMPLE advisories until you import data — [exposure.md](docs/exposure.md) |
 | **E-mail / URL** | Parse-only analyzers, no fetching — [url-email-inspection.md](docs/url-email-inspection.md) |
 | **Telemetry / syslog** | Typed events and an opt-in agentless syslog listener — [telemetry-types.md](docs/telemetry-types.md), [syslog-listener.md](docs/syslog-listener.md) |

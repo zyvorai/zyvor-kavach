@@ -10,7 +10,7 @@ Every document in `docs/`, grouped by area. Kavach is observation-only: it recor
 | HTTP operations documented in `docs/openapi.yaml` | 578 |
 | Distinct API paths | 500 |
 | Detection rule packs (`internal/edr/content/*.json`) | 13 |
-| Detection rules | 1488 |
+| Detection rules | 1537 |
 | Byte-pattern (inspector) packs / rules | 12 / 151 |
 | Configuration assessment policies | 150 |
 | Adversary profile files / profiles | 3 / 101 |
@@ -50,6 +50,8 @@ Refresh with `ruby docs/tools/inventory.rb --write`. Counts are read from the fi
 ## Detection content and engineering
 
 - [cloud-audit.md](cloud-audit.md): cloud and SaaS audit-log ingest, normalizers and the cld- rule pack.
+- [web-detection.md](web-detection.md): offline web access-log and authentication-log detection: web- rules, API discovery and shadow-API check, flood and credential-stuffing summaries.
+- [RESEARCH-vendors-detection.md](RESEARCH-vendors-detection.md): what endpoint, WAF, NDR vendors and open content detect, mapped to Kavach, with ranked ideas.
 - [content-framework.md](content-framework.md): JSON rule packs, loader validation and the harness gate.
 - [content-versioning.md](content-versioning.md): rule-pack manifest, snapshots, field-aware diff and optional HMAC signature.
 - [content-tuning.md](content-tuning.md): the benign-event corpus that guards false positives.

@@ -12,7 +12,7 @@ Unknown fields are rejected. Any number of `*.json` files may be added; ids must
 
 ## Shipped packs
 
-Counts below were read from `internal/edr/content/*.json` on 2026-11-16 (1,475 rules in 12 packs). The generated "Detection rules" row in [index.md](index.md#feature-inventory) is the authoritative total; recount with the snippet under "Recounting" if you add rules.
+Counts below were read from `internal/edr/content/*.json` on 2026-11-16 (1,524 rules in 13 packs). The generated "Detection rules" row in [index.md](index.md#feature-inventory) is the authoritative total; recount with the snippet under "Recounting" if you add rules.
 
 | File | Pack / batch | Id prefix | Rules | Event types | Notes |
 |------|--------------|-----------|-------|-------------|-------|
@@ -28,6 +28,7 @@ Counts below were read from `internal/edr/content/*.json` on 2026-11-16 (1,475 r
 | `unix2.json` | `unix2` / `unix2-v1` | `ux2-` | 134 | process, file, network, dns | Linux, macOS, container, Kubernetes depth |
 | `regional.json` | `regional` / `regional-v1` | `rgn-` | 120 | process, file, registry, module, network | region-specific threats, see [regional-threats.md](regional-threats.md) |
 | `cloud_audit.json` | `cloud-audit` / `cloud-audit-v1` | `cld-` | 159 | process (normalised audit records) | see [cloud-audit.md](cloud-audit.md) |
+| `web_access.json` | `web-access` / `web-access-v1` | `web-` | 49 | process (normalised access-log lines, `executable: web:access`) | see [web-detection.md](web-detection.md) |
 
 Severity mix across all packs is read from the same files: `GET /v1/content/coverage` reports the live split by tactic, technique, OS, batch, severity and event type.
 

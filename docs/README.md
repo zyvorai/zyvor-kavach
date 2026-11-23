@@ -45,6 +45,8 @@ Published site (synced from these files): https://zyvorai.github.io/zyvor-kavach
 | [telemetry-types.md](telemetry-types.md) | Registry, DNS, auth and module telemetry |
 | [syslog-listener.md](syslog-listener.md) | Agentless syslog from network gear |
 | [cloud-audit.md](cloud-audit.md) | CloudTrail, Azure, GCP, Okta and M365 audit-log detection |
+| [web-detection.md](web-detection.md) | Web access-log and auth-log detection, API discovery, flood and credential-stuffing summaries |
+| [RESEARCH-vendors-detection.md](RESEARCH-vendors-detection.md) | Vendor and open-content detection survey with ranked ideas |
 | [exposure.md](exposure.md) | SBOM-based software exposure (offline, sample advisory set until you import data) |
 | [siem-export.md](siem-export.md) | OCSF, ECS, CEF, LEEF, Splunk HEC, STIX and Navigator export; optional push sink |
 | [evidence-import.md](evidence-import.md) | Offline evidence import |

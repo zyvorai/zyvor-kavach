@@ -128,6 +128,8 @@ func printHelp(w io.Writer) {
 	row("ioc import FILE [--apply]|stats", "Offline STIX/MISP/CSV IOC import (dry run by default) and IOC lifecycle stats")
 	row("regulatory regimes|clocks|profile [set ID,...]", "Regional incident-reporting regimes and time remaining (informational; no filing)")
 	row("cloudaudit sources", "Cloud / SaaS audit-log sources and cld- rule count (ingest via POST /v1/cloud/audit/events)")
+	row("web analyze FILE [--openapi F] [--format F]|sources", "Offline web access-log detection, API inventory and shadow-API check, flood and credential-abuse summary (admin token)")
+	row("authlog analyze FILE [--host H]", "Offline auth-log analytics: credential stuffing, success after failures, impossible travel (admin token)")
 	row("posture-trend [diff --from D [--to D]] [--days N]", "Posture trend and diff between two dates")
 	row("advisories list|status|refresh", "Worldwide CERT advisory feeds (opt-in, KAVACH_CERT_FEEDS)")
 	row("validate scenarios|show ID|run --ids A,B|--all|coverage", "Detection validation lab (synthetic data, not a guarantee)")

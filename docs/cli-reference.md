@@ -82,6 +82,9 @@ detection.
 | Command | Route | Notes |
 |---|---|---|
 | `cloudaudit sources` | `GET /v1/cloud/audit/sources` | Ingest is `POST /v1/cloud/audit/events` (admin), not a CLI command |
+| `web sources` | `GET /v1/web/sources` | Formats, `web-` rule count, analytic rule ids, limits |
+| `web analyze FILE [--openapi F] [--format F] [--host H] [--json]` | `POST /v1/web/analyze` (admin) | Offline access-log detection, API inventory, shadow-API check; see [web-detection.md](web-detection.md) |
+| `authlog analyze FILE [--host H] [--json]` | `POST /v1/auth/logs` (admin) | Offline auth-log analytics |
 | `posture-trend [diff --from D]` | `GET /v1/posture/trend[/diff]` | Counts only |
 | `digest`, `auditor-bundle` | `GET /v1/reports/digest`, `GET /v1/compliance/auditor-bundle` | `auditor-bundle` needs `--out FILE.zip` or `--manifest` |
 | `fleet health\|gaps\|stale\|slo` | `GET /v1/fleet/*` | `fleet slo set --file F` is an admin write |
@@ -112,7 +115,7 @@ in this group is a `GET` with no request body, and its description says
 - `kavach_sectors_<view>` (42 views) and `kavach_finance_<view>` (16 views)
 
 Gaps at this commit (found by comparing the tool list with the routes): no MCP tool exists for
-`GET /v1/exposure/*` (only the older `kavach_exposure` world scorecard), `GET /v1/cloud/audit/sources`,
+`GET /v1/exposure/*` (only the older `kavach_exposure` world scorecard), `GET /v1/cloud/audit/sources`, `GET /v1/web/sources`,
 or `POST /v1/inspect/email|url` (`kavach_email_threats` for the inventory view does exist). They are available over HTTP and
 `kavachctl` (where listed above). Add them to `cmd/kavach-mcp/tools_surface.go` by hand if an agent needs them.
 

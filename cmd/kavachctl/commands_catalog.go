@@ -285,6 +285,7 @@ func allCLICommands() []cliCommand {
 		{Name: "ioc-stats", Args: []string{"ioc", "stats"}},
 		{Name: "regulatory-clocks", Args: []string{"regulatory", "clocks"}},
 		{Name: "cloudaudit-sources", Args: []string{"cloudaudit", "sources"}},
+		{Name: "web-sources", Args: []string{"web", "sources"}},
 		{Name: "regulatory-profile", Args: []string{"regulatory", "profile"}},
 		{Name: "posture-trend", Args: []string{"posture-trend"}},
 		{Name: "digest", Args: []string{"digest"}},
