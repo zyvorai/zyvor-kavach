@@ -55,6 +55,9 @@ func TestSavedSearchesAndLimits(t *testing.T) {
 }
 
 func TestNotesLimitsAndDelete(t *testing.T) {
+	// The test posts more than the per-note cap in a tight loop. The write limiter (100/s, burst 200)
+	// would answer 429 on a fast machine, so switch it off: this test is about the note limits.
+	t.Setenv("KAVACH_RATE_LIMIT", "0")
 	srv, _, tok := obsServer(t)
 	if code, _ := wsDo(t, "POST", srv.URL+"/v1/notes", tok, `{"finding_id":"f1","text":"`+strings.Repeat("a", 2001)+`"}`); code != 400 {
 		t.Fatal(code)
