@@ -1,0 +1,664 @@
+{
+ "area": "iac",
+ "policies": [
+  {
+   "id": "iac-sg-open-all",
+   "title": "Security group allows all ports from the internet",
+   "description": "Flags ingress rules open to 0.0.0.0/0 or ::/0 for every port or every protocol.",
+   "rationale": "A fully open ingress rule exposes every listening service on attached resources.",
+   "severity": "critical",
+   "applies_to": {
+    "formats": [
+     "tfplan",
+     "cfn"
+    ]
+   },
+   "check": {
+    "key": "risk.sg-open-all",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No resource in the submitted plan or template matched this pattern. Values computed at apply time, variables and intrinsic functions are not resolved, so absence of a match is not proof of safety.",
+   "remediation": "Restrict ingress to the specific ports and source ranges the workload needs.",
+   "references": [
+    "Terraform plan JSON representation (public docs)",
+    "CloudFormation resource reference (public docs)",
+    "Public cloud network exposure concepts"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 SC-7 (hint)",
+    "ATT&CK T1190 (hint)"
+   ],
+   "positive": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_security_group.web\", \"type\": \"aws_security_group\", \"change\": {\"actions\": [\"create\"], \"after\": {\"ingress\": [{\"cidr_blocks\": [\"0.0.0.0/0\"], \"from_port\": 0, \"to_port\": 0, \"protocol\": \"-1\"}]}}}]}",
+   "negative": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_s3_bucket.ok\", \"type\": \"aws_s3_bucket\", \"change\": {\"actions\": [\"create\"], \"after\": {\"acl\": \"private\"}}}]}",
+   "applies_when": {
+    "key": "iac.resources",
+    "op": "present"
+   },
+   "more_samples": [
+    {
+     "format": "cfn",
+     "positive": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"Web\": {\"Type\": \"AWS::EC2::SecurityGroup\", \"Properties\": {\"SecurityGroupIngress\": [{\"CidrIp\": \"0.0.0.0/0\", \"IpProtocol\": \"-1\"}]}}}}",
+     "negative": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"Ok\": {\"Type\": \"AWS::S3::Bucket\", \"Properties\": {\"BucketName\": \"ok\"}}}}"
+    }
+   ]
+  },
+  {
+   "id": "iac-sg-open-admin",
+   "title": "Remote-administration port open to the internet (SSH, RDP, Telnet, VNC, WinRM)",
+   "description": "Flags ingress open to any source on port 22, 23, 3389, 5900, 5985 or 5986.",
+   "rationale": "Internet-reachable administration ports are scanned and brute-forced continuously.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "tfplan",
+     "cfn"
+    ]
+   },
+   "check": {
+    "key": "risk.sg-open-admin",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No resource in the submitted plan or template matched this pattern. Values computed at apply time, variables and intrinsic functions are not resolved, so absence of a match is not proof of safety.",
+   "remediation": "Allow the port only from a bastion, VPN or specific management range.",
+   "references": [
+    "Terraform plan JSON representation (public docs)",
+    "CloudFormation resource reference (public docs)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 SC-7 (hint)",
+    "ATT&CK T1133 (hint)"
+   ],
+   "positive": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_security_group.web\", \"type\": \"aws_security_group\", \"change\": {\"actions\": [\"create\"], \"after\": {\"ingress\": [{\"cidr_blocks\": [\"0.0.0.0/0\"], \"from_port\": 22, \"to_port\": 22, \"protocol\": \"tcp\"}]}}}]}",
+   "negative": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_s3_bucket.ok\", \"type\": \"aws_s3_bucket\", \"change\": {\"actions\": [\"create\"], \"after\": {\"acl\": \"private\"}}}]}",
+   "applies_when": {
+    "key": "iac.resources",
+    "op": "present"
+   },
+   "more_samples": [
+    {
+     "format": "cfn",
+     "positive": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"Web\": {\"Type\": \"AWS::EC2::SecurityGroup\", \"Properties\": {\"SecurityGroupIngress\": [{\"CidrIp\": \"0.0.0.0/0\", \"IpProtocol\": \"tcp\", \"FromPort\": 22, \"ToPort\": 22}]}}}}",
+     "negative": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"Ok\": {\"Type\": \"AWS::S3::Bucket\", \"Properties\": {\"BucketName\": \"ok\"}}}}"
+    }
+   ]
+  },
+  {
+   "id": "iac-sg-open-data",
+   "title": "Database or cache port open to the internet",
+   "description": "Flags ingress open to any source on common datastore ports (SQL Server, Oracle, MySQL, PostgreSQL, Redis, Memcached, MongoDB, Elasticsearch, etcd, Kafka, Cassandra).",
+   "rationale": "Datastores are rarely meant to be directly reachable and often lack authentication by default.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "tfplan",
+     "cfn"
+    ]
+   },
+   "check": {
+    "key": "risk.sg-open-data",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No resource in the submitted plan or template matched this pattern. Values computed at apply time, variables and intrinsic functions are not resolved, so absence of a match is not proof of safety.",
+   "remediation": "Place datastores in private subnets and allow only application tiers.",
+   "references": [
+    "Terraform plan JSON representation (public docs)",
+    "CloudFormation resource reference (public docs)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 SC-7 (hint)",
+    "ATT&CK T1190 (hint)"
+   ],
+   "positive": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_security_group.web\", \"type\": \"aws_security_group\", \"change\": {\"actions\": [\"create\"], \"after\": {\"ingress\": [{\"cidr_blocks\": [\"0.0.0.0/0\"], \"from_port\": 5432, \"to_port\": 5432, \"protocol\": \"tcp\"}]}}}]}",
+   "negative": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_s3_bucket.ok\", \"type\": \"aws_s3_bucket\", \"change\": {\"actions\": [\"create\"], \"after\": {\"acl\": \"private\"}}}]}",
+   "applies_when": {
+    "key": "iac.resources",
+    "op": "present"
+   },
+   "more_samples": [
+    {
+     "format": "cfn",
+     "positive": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"Web\": {\"Type\": \"AWS::EC2::SecurityGroup\", \"Properties\": {\"SecurityGroupIngress\": [{\"CidrIp\": \"0.0.0.0/0\", \"IpProtocol\": \"tcp\", \"FromPort\": 5432, \"ToPort\": 5432}]}}}}",
+     "negative": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"Ok\": {\"Type\": \"AWS::S3::Bucket\", \"Properties\": {\"BucketName\": \"ok\"}}}}"
+    }
+   ]
+  },
+  {
+   "id": "iac-s3-public-acl",
+   "title": "Bucket uses a public or authenticated-read ACL",
+   "description": "Flags S3 bucket ACLs of public-read, public-read-write or authenticated-read.",
+   "rationale": "Public ACLs expose bucket contents to anyone, or to any AWS account holder.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "tfplan",
+     "cfn"
+    ]
+   },
+   "check": {
+    "key": "risk.s3-public-acl",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No resource in the submitted plan or template matched this pattern. Values computed at apply time, variables and intrinsic functions are not resolved, so absence of a match is not proof of safety.",
+   "remediation": "Use private ACLs and grant access through scoped identity or bucket policies.",
+   "references": [
+    "Terraform plan JSON representation (public docs)",
+    "CloudFormation resource reference (public docs)"
+   ],
+   "frameworks": [
+    "ATT&CK T1530 (hint)"
+   ],
+   "positive": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_s3_bucket.b\", \"type\": \"aws_s3_bucket\", \"change\": {\"actions\": [\"create\"], \"after\": {\"acl\": \"public-read\"}}}]}",
+   "negative": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_s3_bucket.ok\", \"type\": \"aws_s3_bucket\", \"change\": {\"actions\": [\"create\"], \"after\": {\"acl\": \"private\"}}}]}",
+   "applies_when": {
+    "key": "iac.resources",
+    "op": "present"
+   },
+   "more_samples": [
+    {
+     "format": "cfn",
+     "positive": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"B\": {\"Type\": \"AWS::S3::Bucket\", \"Properties\": {\"AccessControl\": \"PublicRead\"}}}}",
+     "negative": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"Ok\": {\"Type\": \"AWS::S3::Bucket\", \"Properties\": {\"BucketName\": \"ok\"}}}}"
+    }
+   ]
+  },
+  {
+   "id": "iac-s3-pab-disabled",
+   "title": "Bucket public access block is switched off",
+   "description": "Flags a public access block with any of its four protections set to false.",
+   "rationale": "The public access block is the account-level guard rail against accidental exposure.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "tfplan",
+     "cfn"
+    ]
+   },
+   "check": {
+    "key": "risk.s3-pab-disabled",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No resource in the submitted plan or template matched this pattern. Values computed at apply time, variables and intrinsic functions are not resolved, so absence of a match is not proof of safety.",
+   "remediation": "Set all four public access block settings to true unless a documented exception exists.",
+   "references": [
+    "Terraform plan JSON representation (public docs)",
+    "CloudFormation resource reference (public docs)"
+   ],
+   "frameworks": [
+    "ATT&CK T1530 (hint)"
+   ],
+   "positive": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_s3_bucket_public_access_block.p\", \"type\": \"aws_s3_bucket_public_access_block\", \"change\": {\"actions\": [\"create\"], \"after\": {\"block_public_acls\": true, \"block_public_policy\": false, \"ignore_public_acls\": true, \"restrict_public_buckets\": true}}}]}",
+   "negative": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_s3_bucket.ok\", \"type\": \"aws_s3_bucket\", \"change\": {\"actions\": [\"create\"], \"after\": {\"acl\": \"private\"}}}]}",
+   "applies_when": {
+    "key": "iac.resources",
+    "op": "present"
+   },
+   "more_samples": [
+    {
+     "format": "cfn",
+     "positive": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"B\": {\"Type\": \"AWS::S3::Bucket\", \"Properties\": {\"PublicAccessBlockConfiguration\": {\"BlockPublicAcls\": true, \"BlockPublicPolicy\": false}}}}}",
+     "negative": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"Ok\": {\"Type\": \"AWS::S3::Bucket\", \"Properties\": {\"BucketName\": \"ok\"}}}}"
+    }
+   ]
+  },
+  {
+   "id": "iac-s3-policy-public",
+   "title": "Bucket policy grants access to any principal",
+   "description": "Flags an Allow statement with Principal * and no Condition in a bucket policy.",
+   "rationale": "An unconditioned wildcard principal makes the objects readable or writable by anyone.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "tfplan",
+     "cfn"
+    ]
+   },
+   "check": {
+    "key": "risk.s3-policy-public",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No resource in the submitted plan or template matched this pattern. Values computed at apply time, variables and intrinsic functions are not resolved, so absence of a match is not proof of safety.",
+   "remediation": "Name the principals, or add conditions such as source VPC endpoint or organisation id.",
+   "references": [
+    "Terraform plan JSON representation (public docs)",
+    "CloudFormation resource reference (public docs)"
+   ],
+   "frameworks": [
+    "ATT&CK T1530 (hint)"
+   ],
+   "positive": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_s3_bucket_policy.p\", \"type\": \"aws_s3_bucket_policy\", \"change\": {\"actions\": [\"create\"], \"after\": {\"policy\": \"{\\\"Version\\\": \\\"2012-10-17\\\", \\\"Statement\\\": [{\\\"Effect\\\": \\\"Allow\\\", \\\"Principal\\\": \\\"*\\\", \\\"Action\\\": \\\"s3:GetObject\\\", \\\"Resource\\\": \\\"arn:aws:s3:::b/*\\\"}]}\"}}}]}",
+   "negative": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_s3_bucket.ok\", \"type\": \"aws_s3_bucket\", \"change\": {\"actions\": [\"create\"], \"after\": {\"acl\": \"private\"}}}]}",
+   "applies_when": {
+    "key": "iac.resources",
+    "op": "present"
+   },
+   "more_samples": [
+    {
+     "format": "cfn",
+     "positive": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"P\": {\"Type\": \"AWS::S3::BucketPolicy\", \"Properties\": {\"PolicyDocument\": {\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Principal\": \"*\", \"Action\": \"s3:GetObject\", \"Resource\": \"arn:aws:s3:::b/*\"}]}}}}}",
+     "negative": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"Ok\": {\"Type\": \"AWS::S3::Bucket\", \"Properties\": {\"BucketName\": \"ok\"}}}}"
+    }
+   ]
+  },
+  {
+   "id": "iac-resource-policy-public",
+   "title": "Queue, topic, key, repository or function policy open to any principal",
+   "description": "Flags unconditioned Principal * Allow statements in SQS, SNS, KMS, ECR and Secrets Manager resource policies, and wildcard Lambda permissions without a source ARN.",
+   "rationale": "Resource policies with a wildcard principal let any account act on the resource.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "tfplan",
+     "cfn"
+    ]
+   },
+   "check": {
+    "key": "risk.resource-policy-public",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No resource in the submitted plan or template matched this pattern. Values computed at apply time, variables and intrinsic functions are not resolved, so absence of a match is not proof of safety.",
+   "remediation": "Scope principals and add conditions such as aws:SourceArn or aws:PrincipalOrgID.",
+   "references": [
+    "Terraform plan JSON representation (public docs)",
+    "CloudFormation resource reference (public docs)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_sqs_queue_policy.q\", \"type\": \"aws_sqs_queue_policy\", \"change\": {\"actions\": [\"create\"], \"after\": {\"policy\": \"{\\\"Statement\\\": [{\\\"Effect\\\": \\\"Allow\\\", \\\"Principal\\\": \\\"*\\\", \\\"Action\\\": \\\"sqs:SendMessage\\\", \\\"Resource\\\": \\\"*\\\"}]}\"}}}]}",
+   "negative": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_s3_bucket.ok\", \"type\": \"aws_s3_bucket\", \"change\": {\"actions\": [\"create\"], \"after\": {\"acl\": \"private\"}}}]}",
+   "applies_when": {
+    "key": "iac.resources",
+    "op": "present"
+   },
+   "more_samples": [
+    {
+     "format": "cfn",
+     "positive": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"Q\": {\"Type\": \"AWS::SQS::QueuePolicy\", \"Properties\": {\"PolicyDocument\": {\"Statement\": [{\"Effect\": \"Allow\", \"Principal\": \"*\", \"Action\": \"sqs:SendMessage\", \"Resource\": \"*\"}]}}}}}",
+     "negative": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"Ok\": {\"Type\": \"AWS::S3::Bucket\", \"Properties\": {\"BucketName\": \"ok\"}}}}"
+    }
+   ]
+  },
+  {
+   "id": "iac-iam-admin-wildcard",
+   "title": "IAM policy grants all actions on all resources",
+   "description": "Flags identity policies with an Allow statement for Action * (or *:*) on Resource *.",
+   "rationale": "Full administrator rights on every resource turn any credential theft into account takeover.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "tfplan",
+     "cfn"
+    ]
+   },
+   "check": {
+    "key": "risk.iam-admin-wildcard",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No resource in the submitted plan or template matched this pattern. Values computed at apply time, variables and intrinsic functions are not resolved, so absence of a match is not proof of safety.",
+   "remediation": "Grant only the actions and resources the workload needs.",
+   "references": [
+    "Terraform plan JSON representation (public docs)",
+    "CloudFormation resource reference (public docs)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 AC-6 (hint)",
+    "ATT&CK T1078.004 (hint)"
+   ],
+   "positive": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_iam_policy.p\", \"type\": \"aws_iam_policy\", \"change\": {\"actions\": [\"create\"], \"after\": {\"policy\": \"{\\\"Version\\\": \\\"2012-10-17\\\", \\\"Statement\\\": [{\\\"Effect\\\": \\\"Allow\\\", \\\"Action\\\": \\\"*\\\", \\\"Resource\\\": \\\"*\\\"}]}\"}}}]}",
+   "negative": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_s3_bucket.ok\", \"type\": \"aws_s3_bucket\", \"change\": {\"actions\": [\"create\"], \"after\": {\"acl\": \"private\"}}}]}",
+   "applies_when": {
+    "key": "iac.resources",
+    "op": "present"
+   },
+   "more_samples": [
+    {
+     "format": "cfn",
+     "positive": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"P\": {\"Type\": \"AWS::IAM::ManagedPolicy\", \"Properties\": {\"PolicyDocument\": {\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\"}]}}}}}",
+     "negative": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"Ok\": {\"Type\": \"AWS::S3::Bucket\", \"Properties\": {\"BucketName\": \"ok\"}}}}"
+    }
+   ]
+  },
+  {
+   "id": "iac-iam-service-wildcard",
+   "title": "IAM policy grants every action of a service on all resources",
+   "description": "Flags Allow statements such as s3:* or ec2:* on Resource *.",
+   "rationale": "Service-wide wildcards usually include destructive and permission-changing actions.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "tfplan",
+     "cfn"
+    ]
+   },
+   "check": {
+    "key": "risk.iam-service-wildcard",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No resource in the submitted plan or template matched this pattern. Values computed at apply time, variables and intrinsic functions are not resolved, so absence of a match is not proof of safety.",
+   "remediation": "List the specific actions required and scope resources to ARNs.",
+   "references": [
+    "Terraform plan JSON representation (public docs)",
+    "CloudFormation resource reference (public docs)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 AC-6 (hint)"
+   ],
+   "positive": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_iam_policy.p\", \"type\": \"aws_iam_policy\", \"change\": {\"actions\": [\"create\"], \"after\": {\"policy\": \"{\\\"Statement\\\": [{\\\"Effect\\\": \\\"Allow\\\", \\\"Action\\\": [\\\"s3:*\\\"], \\\"Resource\\\": \\\"*\\\"}]}\"}}}]}",
+   "negative": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_s3_bucket.ok\", \"type\": \"aws_s3_bucket\", \"change\": {\"actions\": [\"create\"], \"after\": {\"acl\": \"private\"}}}]}",
+   "applies_when": {
+    "key": "iac.resources",
+    "op": "present"
+   },
+   "more_samples": [
+    {
+     "format": "cfn",
+     "positive": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"P\": {\"Type\": \"AWS::IAM::Policy\", \"Properties\": {\"PolicyDocument\": {\"Statement\": [{\"Effect\": \"Allow\", \"Action\": [\"s3:*\"], \"Resource\": \"*\"}]}}}}}",
+     "negative": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"Ok\": {\"Type\": \"AWS::S3::Bucket\", \"Properties\": {\"BucketName\": \"ok\"}}}}"
+    }
+   ]
+  },
+  {
+   "id": "iac-iam-passrole-any",
+   "title": "IAM policy allows iam:PassRole on any role",
+   "description": "Flags Allow statements for iam:PassRole with Resource *.",
+   "rationale": "PassRole on any role is a common privilege-escalation step.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "tfplan",
+     "cfn"
+    ]
+   },
+   "check": {
+    "key": "risk.iam-passrole-any",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No resource in the submitted plan or template matched this pattern. Values computed at apply time, variables and intrinsic functions are not resolved, so absence of a match is not proof of safety.",
+   "remediation": "Restrict PassRole to the specific role ARNs and add iam:PassedToService conditions.",
+   "references": [
+    "Terraform plan JSON representation (public docs)",
+    "CloudFormation resource reference (public docs)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 AC-6 (hint)",
+    "ATT&CK T1098 (hint)"
+   ],
+   "positive": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_iam_policy.p\", \"type\": \"aws_iam_policy\", \"change\": {\"actions\": [\"create\"], \"after\": {\"policy\": \"{\\\"Statement\\\": [{\\\"Effect\\\": \\\"Allow\\\", \\\"Action\\\": \\\"iam:PassRole\\\", \\\"Resource\\\": \\\"*\\\"}]}\"}}}]}",
+   "negative": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_s3_bucket.ok\", \"type\": \"aws_s3_bucket\", \"change\": {\"actions\": [\"create\"], \"after\": {\"acl\": \"private\"}}}]}",
+   "applies_when": {
+    "key": "iac.resources",
+    "op": "present"
+   },
+   "more_samples": [
+    {
+     "format": "cfn",
+     "positive": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"P\": {\"Type\": \"AWS::IAM::Policy\", \"Properties\": {\"PolicyDocument\": {\"Statement\": [{\"Effect\": \"Allow\", \"Action\": \"iam:PassRole\", \"Resource\": \"*\"}]}}}}}",
+     "negative": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"Ok\": {\"Type\": \"AWS::S3::Bucket\", \"Properties\": {\"BucketName\": \"ok\"}}}}"
+    }
+   ]
+  },
+  {
+   "id": "iac-iam-trust-any",
+   "title": "Role trust policy lets any principal assume it",
+   "description": "Flags role trust policies with Principal * and no Condition.",
+   "rationale": "Any AWS principal could assume the role.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "tfplan",
+     "cfn"
+    ]
+   },
+   "check": {
+    "key": "risk.iam-trust-any",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No resource in the submitted plan or template matched this pattern. Values computed at apply time, variables and intrinsic functions are not resolved, so absence of a match is not proof of safety.",
+   "remediation": "Name the trusted principals and add conditions such as ExternalId or PrincipalOrgID.",
+   "references": [
+    "Terraform plan JSON representation (public docs)",
+    "CloudFormation resource reference (public docs)"
+   ],
+   "frameworks": [
+    "ATT&CK T1078.004 (hint)"
+   ],
+   "positive": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_iam_role.r\", \"type\": \"aws_iam_role\", \"change\": {\"actions\": [\"create\"], \"after\": {\"assume_role_policy\": \"{\\\"Statement\\\": [{\\\"Effect\\\": \\\"Allow\\\", \\\"Principal\\\": {\\\"AWS\\\": \\\"*\\\"}, \\\"Action\\\": \\\"sts:AssumeRole\\\"}]}\"}}}]}",
+   "negative": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_s3_bucket.ok\", \"type\": \"aws_s3_bucket\", \"change\": {\"actions\": [\"create\"], \"after\": {\"acl\": \"private\"}}}]}",
+   "applies_when": {
+    "key": "iac.resources",
+    "op": "present"
+   },
+   "more_samples": [
+    {
+     "format": "cfn",
+     "positive": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"R\": {\"Type\": \"AWS::IAM::Role\", \"Properties\": {\"AssumeRolePolicyDocument\": {\"Statement\": [{\"Effect\": \"Allow\", \"Principal\": {\"AWS\": \"*\"}, \"Action\": \"sts:AssumeRole\"}]}}}}}",
+     "negative": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"Ok\": {\"Type\": \"AWS::S3::Bucket\", \"Properties\": {\"BucketName\": \"ok\"}}}}"
+    }
+   ]
+  },
+  {
+   "id": "iac-rds-public",
+   "title": "Database is publicly accessible",
+   "description": "Flags RDS instances and clusters with PubliclyAccessible true.",
+   "rationale": "A public endpoint exposes the database listener to the internet.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "tfplan",
+     "cfn"
+    ]
+   },
+   "check": {
+    "key": "risk.rds-public",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No resource in the submitted plan or template matched this pattern. Values computed at apply time, variables and intrinsic functions are not resolved, so absence of a match is not proof of safety.",
+   "remediation": "Set publicly_accessible to false and reach the database through private networking.",
+   "references": [
+    "Terraform plan JSON representation (public docs)",
+    "CloudFormation resource reference (public docs)"
+   ],
+   "frameworks": [
+    "ATT&CK T1190 (hint)"
+   ],
+   "positive": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_db_instance.d\", \"type\": \"aws_db_instance\", \"change\": {\"actions\": [\"create\"], \"after\": {\"publicly_accessible\": true}}}]}",
+   "negative": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_s3_bucket.ok\", \"type\": \"aws_s3_bucket\", \"change\": {\"actions\": [\"create\"], \"after\": {\"acl\": \"private\"}}}]}",
+   "applies_when": {
+    "key": "iac.resources",
+    "op": "present"
+   },
+   "more_samples": [
+    {
+     "format": "cfn",
+     "positive": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"D\": {\"Type\": \"AWS::RDS::DBInstance\", \"Properties\": {\"PubliclyAccessible\": true}}}}",
+     "negative": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"Ok\": {\"Type\": \"AWS::S3::Bucket\", \"Properties\": {\"BucketName\": \"ok\"}}}}"
+    }
+   ]
+  },
+  {
+   "id": "iac-storage-unencrypted",
+   "title": "Storage encryption at rest is explicitly disabled",
+   "description": "Flags databases, clusters and volumes with encryption set to false.",
+   "rationale": "Unencrypted storage widens the impact of snapshot sharing and media loss.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "tfplan",
+     "cfn"
+    ]
+   },
+   "check": {
+    "key": "risk.storage-unencrypted",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No resource in the submitted plan or template matched this pattern. Values computed at apply time, variables and intrinsic functions are not resolved, so absence of a match is not proof of safety.",
+   "remediation": "Enable encryption at rest, with a customer-managed key where required.",
+   "references": [
+    "Terraform plan JSON representation (public docs)",
+    "CloudFormation resource reference (public docs)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 SC-28 (hint)"
+   ],
+   "positive": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_ebs_volume.v\", \"type\": \"aws_ebs_volume\", \"change\": {\"actions\": [\"create\"], \"after\": {\"encrypted\": false}}}]}",
+   "negative": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_s3_bucket.ok\", \"type\": \"aws_s3_bucket\", \"change\": {\"actions\": [\"create\"], \"after\": {\"acl\": \"private\"}}}]}",
+   "applies_when": {
+    "key": "iac.resources",
+    "op": "present"
+   },
+   "more_samples": [
+    {
+     "format": "cfn",
+     "positive": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"V\": {\"Type\": \"AWS::EC2::Volume\", \"Properties\": {\"Encrypted\": false}}}}",
+     "negative": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"Ok\": {\"Type\": \"AWS::S3::Bucket\", \"Properties\": {\"BucketName\": \"ok\"}}}}"
+    }
+   ]
+  },
+  {
+   "id": "iac-ec2-imdsv1",
+   "title": "Instance metadata service allows token-less (v1) requests",
+   "description": "Flags metadata options with http_tokens optional.",
+   "rationale": "IMDSv1 turns server-side request forgery into credential theft.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "tfplan",
+     "cfn"
+    ]
+   },
+   "check": {
+    "key": "risk.ec2-imdsv1",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No resource in the submitted plan or template matched this pattern. Values computed at apply time, variables and intrinsic functions are not resolved, so absence of a match is not proof of safety.",
+   "remediation": "Set http_tokens to required.",
+   "references": [
+    "Terraform plan JSON representation (public docs)",
+    "CloudFormation resource reference (public docs)"
+   ],
+   "frameworks": [
+    "ATT&CK T1552.005 (hint)"
+   ],
+   "positive": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_instance.i\", \"type\": \"aws_instance\", \"change\": {\"actions\": [\"create\"], \"after\": {\"metadata_options\": [{\"http_tokens\": \"optional\"}]}}}]}",
+   "negative": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_s3_bucket.ok\", \"type\": \"aws_s3_bucket\", \"change\": {\"actions\": [\"create\"], \"after\": {\"acl\": \"private\"}}}]}",
+   "applies_when": {
+    "key": "iac.resources",
+    "op": "present"
+   },
+   "more_samples": [
+    {
+     "format": "cfn",
+     "positive": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"L\": {\"Type\": \"AWS::EC2::LaunchTemplate\", \"Properties\": {\"LaunchTemplateData\": {\"MetadataOptions\": {\"HttpTokens\": \"optional\"}}}}}}",
+     "negative": "{\"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": {\"Ok\": {\"Type\": \"AWS::S3::Bucket\", \"Properties\": {\"BucketName\": \"ok\"}}}}"
+    }
+   ]
+  },
+  {
+   "id": "iac-azure-storage-public",
+   "title": "Azure storage account allows public nested items",
+   "description": "Flags azurerm_storage_account with allow_nested_items_to_be_public true.",
+   "rationale": "Containers can then be made anonymously readable.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "tfplan"
+    ]
+   },
+   "check": {
+    "key": "risk.azure-storage-public",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No resource in the submitted plan or template matched this pattern. Values computed at apply time, variables and intrinsic functions are not resolved, so absence of a match is not proof of safety.",
+   "remediation": "Set allow_nested_items_to_be_public to false.",
+   "references": [
+    "azurerm provider documentation (public)"
+   ],
+   "frameworks": [
+    "ATT&CK T1530 (hint)"
+   ],
+   "positive": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"azurerm_storage_account.s\", \"type\": \"azurerm_storage_account\", \"change\": {\"actions\": [\"create\"], \"after\": {\"allow_nested_items_to_be_public\": true}}}]}",
+   "negative": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_s3_bucket.ok\", \"type\": \"aws_s3_bucket\", \"change\": {\"actions\": [\"create\"], \"after\": {\"acl\": \"private\"}}}]}",
+   "applies_when": {
+    "key": "iac.resources",
+    "op": "present"
+   }
+  },
+  {
+   "id": "iac-storage-no-tls",
+   "title": "Azure storage account allows plain HTTP",
+   "description": "Flags https_traffic_only_enabled false.",
+   "rationale": "Traffic to the account can be read or modified in transit.",
+   "severity": "medium",
+   "applies_to": {
+    "formats": [
+     "tfplan"
+    ]
+   },
+   "check": {
+    "key": "risk.storage-no-tls",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No resource in the submitted plan or template matched this pattern. Values computed at apply time, variables and intrinsic functions are not resolved, so absence of a match is not proof of safety.",
+   "remediation": "Require secure transfer.",
+   "references": [
+    "azurerm provider documentation (public)"
+   ],
+   "frameworks": [
+    "NIST SP 800-53 CM-6 (hint)"
+   ],
+   "positive": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"azurerm_storage_account.s\", \"type\": \"azurerm_storage_account\", \"change\": {\"actions\": [\"create\"], \"after\": {\"https_traffic_only_enabled\": false}}}]}",
+   "negative": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_s3_bucket.ok\", \"type\": \"aws_s3_bucket\", \"change\": {\"actions\": [\"create\"], \"after\": {\"acl\": \"private\"}}}]}",
+   "applies_when": {
+    "key": "iac.resources",
+    "op": "present"
+   }
+  },
+  {
+   "id": "iac-bucket-public-principal",
+   "title": "GCP bucket IAM grants access to allUsers or allAuthenticatedUsers",
+   "description": "Flags bucket IAM members or bindings with those principals.",
+   "rationale": "Anyone on the internet (or any Google account) can read the bucket.",
+   "severity": "high",
+   "applies_to": {
+    "formats": [
+     "tfplan"
+    ]
+   },
+   "check": {
+    "key": "risk.bucket-public-principal",
+    "op": "absent"
+   },
+   "on_absent": "pass",
+   "absence_note": "No resource in the submitted plan or template matched this pattern. Values computed at apply time, variables and intrinsic functions are not resolved, so absence of a match is not proof of safety.",
+   "remediation": "Grant specific identities or groups.",
+   "references": [
+    "google provider documentation (public)"
+   ],
+   "frameworks": [
+    "ATT&CK T1530 (hint)"
+   ],
+   "positive": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"google_storage_bucket_iam_member.m\", \"type\": \"google_storage_bucket_iam_member\", \"change\": {\"actions\": [\"create\"], \"after\": {\"member\": \"allUsers\", \"role\": \"roles/storage.objectViewer\"}}}]}",
+   "negative": "{\"format_version\": \"1.2\", \"resource_changes\": [{\"address\": \"aws_s3_bucket.ok\", \"type\": \"aws_s3_bucket\", \"change\": {\"actions\": [\"create\"], \"after\": {\"acl\": \"private\"}}}]}",
+   "applies_when": {
+    "key": "iac.resources",
+    "op": "present"
+   }
+  }
+ ]
+}

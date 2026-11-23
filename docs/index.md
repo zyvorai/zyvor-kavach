@@ -62,6 +62,11 @@ Refresh with `ruby docs/tools/inventory.rb --write`. Counts are read from the fi
 - [domain-inspector.md](domain-inspector.md): the domain analyzer and shared domain helpers.
 - [artifact-analyzers.md](artifact-analyzers.md): LNK, ISO, VBA macro, script and CI/config inspector analyzers.
 - [config-assessment.md](config-assessment.md): configuration assessment policies via the inspector.
+- [appliance-config-review.md](appliance-config-review.md): offline F5 BIG-IP and extra nginx configuration checks plus the versioned advisory table.
+- [firewall-rule-review.md](firewall-rule-review.md): generic firewall/WAF rule export review (any-any, shadowed rules, unused objects).
+- [iac-exposure.md](iac-exposure.md): Terraform plan JSON and CloudFormation exposure checks.
+- [attack-paths.md](attack-paths.md): toxic-combination scoring that ranks exposure, vulnerability, privilege and data signals per asset.
+- [RESEARCH-vendors-posture.md](RESEARCH-vendors-posture.md): posture, cloud and exposure vendor research with ranked gaps and ideas.
 - [lockfile-inspection.md](lockfile-inspection.md): dependency-file inspection, CycloneDX SBOM and advisory matching.
 - [posture-reports.md](posture-reports.md): posture trend snapshots, executive digest and the auditor evidence bundle.
 - [url-email-inspection.md](url-email-inspection.md): parse-only URL and e-mail analyzers.

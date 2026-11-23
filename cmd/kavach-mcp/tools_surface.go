@@ -75,6 +75,11 @@ func surfaceTools() []endpointTool {
 				"max_regressions":     strProp("Maximum allowed regressions"),
 				"max_false_positives": strProp("Maximum allowed benign false positives"),
 			}), queryParams: []string{"min_detected", "max_regressions", "max_false_positives"}},
+		{name: "kavach_attack_paths", method: "GET", path: "/v1/exposure/attack-paths",
+			description: "Ranked toxic combinations per asset (internet exposure + vulnerable software + excess privilege + sensitive data), built from stored findings and SBOM matches. Signals are grouped by host label and classified by keywords; the score orders review work and is not proof of exploitability." + surfaceNote,
+			schema: objSchema(map[string]any{
+				"host": strProp("Only this host"), "min_score": strProp("Minimum path score (0-100)"),
+			}), queryParams: []string{"host", "min_score"}},
 		{name: "kavach_posture_trend_config", method: "GET", path: "/v1/posture/trend/config",
 			description: "Posture trend settings (read only)." + surfaceNote, schema: emptySchema()},
 		{name: "kavach_queries_library", method: "GET", path: "/v1/queries/library",

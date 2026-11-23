@@ -638,6 +638,31 @@ func init() {
 	}{"exposure", 0.10})
 }
 
+// expAssetsFn lists the analysed assets that carry at least one match. It is
+// read by the attack-path scorer (attack_paths.go) and is nil until
+// RegisterExposure has run.
+type expAssetsFn func() []ExpAsset
+
+var expAssetsHook atomic.Pointer[expAssetsFn]
+
+func (s *expSvc) exposedAssets() []ExpAsset {
+	s.mu.Lock()
+	advs, _, _ := s.advisories()
+	hosts := make([]string, 0, len(s.st.SBOMs))
+	for h := range s.st.SBOMs {
+		hosts = append(hosts, h)
+	}
+	sort.Strings(hosts)
+	var out []ExpAsset
+	for _, h := range hosts {
+		if as := expAnalyse(h, s.st.SBOMs[h], advs, 0); len(as.Matches) > 0 {
+			out = append(out, as)
+		}
+	}
+	s.mu.Unlock()
+	return out
+}
+
 func (s *expSvc) hostScore(host string) (float64, string, bool) {
 	s.mu.Lock()
 	sb := s.st.SBOMs[host]
@@ -660,6 +685,10 @@ func RegisterExposure(mux *http.ServeMux, token string, store *Store) {
 		s.path = store.path + ".exposure.json"
 	}
 	s.load()
+	{
+		fn := expAssetsFn(s.exposedAssets)
+		expAssetsHook.Store(&fn)
+	}
 	if os.Getenv("KAVACH_EXPOSURE_PRIORITY") == "1" {
 		fn := expPriorityFn(s.hostScore)
 		expPriorityHook.Store(&fn)

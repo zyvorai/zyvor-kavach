@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  WebSg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: web
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "data-${AWS::AccountId}"
+      AccessControl: PublicRead
+  Db:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      PubliclyAccessible: true
+      StorageEncrypted: false

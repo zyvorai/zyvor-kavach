@@ -37,9 +37,12 @@ const (
 	CfgDockerfile = "dockerfile"
 	CfgCompose    = "compose"
 	CfgTerraform  = "terraform"
+	CfgBigIP      = "bigip"  // F5 BIG-IP tmsh configuration (bigip.conf, bigip_base.conf)
+	CfgTFPlan     = "tfplan" // Terraform plan JSON (`terraform show -json`)
+	CfgCFN        = "cfn"    // CloudFormation template (JSON or YAML)
 )
 
-var cfgFormats = []string{CfgSSHD, CfgSysctl, CfgLoginDefs, CfgSudoers, CfgAuditd, CfgPAM, CfgNginx, CfgApache, CfgK8s, CfgDockerfile, CfgCompose, CfgTerraform}
+var cfgFormats = []string{CfgSSHD, CfgSysctl, CfgLoginDefs, CfgSudoers, CfgAuditd, CfgPAM, CfgNginx, CfgApache, CfgK8s, CfgDockerfile, CfgCompose, CfgTerraform, CfgBigIP, CfgTFPlan, CfgCFN}
 
 const cfgMaxRegex = 256
 

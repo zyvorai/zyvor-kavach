@@ -47,6 +47,7 @@ go build -o bin/kavach-mcp ./cmd/kavach-mcp
 | `posture trend-config` | `GET /v1/posture/trend/config` | Read only; changing it needs the admin API |
 | `queries library [ID] [--tactic T] [--tag T] [--q TEXT]` | `GET /v1/queries/library[/{id}]` | Does not save anything |
 | `exposure report [--host H] [--min_score N]` | `GET /v1/exposure/report` | Exposed hosts from imported SBOMs and advisories (sample data until you import) |
+| `exposure attack-paths [--host H] [--min_score N]` | `GET /v1/exposure/attack-paths` | Ranked toxic combinations (exposure + vulnerable software + excess privilege + data) per asset; see [attack-paths.md](attack-paths.md) |
 | `exposure advisories` | `GET /v1/exposure/advisories` | Loaded advisory set |
 | `exposure sboms [HOST]` | `GET /v1/exposure/sboms` | SBOM inventory per host |
 | `regression status` | `GET /v1/regression/status` | Latest snapshot |

@@ -3114,6 +3114,26 @@ paths:
         - { name: min_score, in: query, schema: { type: number } }
       responses:
         "200": { description: "{advisory_source, advisory_sample, assets[{host, score, level, factors[], matches[]}], note}" }
+  /v1/exposure/attack-paths:
+    get:
+      summary: "Ranked toxic combinations per asset from stored findings and SBOM matches (observation only; keyword classified, grouped by host label)"
+      parameters:
+        - { name: host, in: query, schema: { type: string } }
+        - { name: min_score, in: query, schema: { type: number, minimum: 0, maximum: 100 } }
+      responses:
+        "200": { description: "{mode, signals, count, paths[{host, title, score, level, steps[], factors{}, signals[], break_points[]}], note}" }
+        "400": { description: "min_score outside 0..100" }
+  /v1/exposure/attack-paths/evaluate:
+    post:
+      summary: "Stateless attack-path scoring of posted signals and findings (1 MiB, 5000 items); nothing is stored"
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, properties: { signals: { type: array }, findings: { type: array }, include_stored: { type: boolean }, min_score: { type: number } } }
+      responses:
+        "200": { description: "Same shape as GET /v1/exposure/attack-paths plus stateless: true" }
+        "400": { description: "invalid JSON, unknown signal kind or too many items" }
+        "413": { description: "body too large" }
   /v1/vulns/priority:
     get:
       summary: "SSVC + EPSS + CVSS vulnerability prioritisation"
