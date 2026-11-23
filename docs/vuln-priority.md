@@ -81,3 +81,5 @@ There is no accuracy evaluation of the ranking, because the output is a categori
 ## Limits at a glance
 
 Response `limit` 1-500 (default 50); EPSS cache at most 50,000 CVEs, filtered to CVEs matched here plus KEV; download 16 MiB compressed / 64 MiB decompressed; refresh at start and every 24 h; manual refresh handler budget 2 minutes; the only host contacted is `epss.empiricalsecurity.com` over https.
+
+Operator-imported KEV and EPSS files ([exploit-intel.md](exploit-intel.md)) are used too: imported KEV marks the CVE as actively exploited and imported EPSS is used when the opt-in network cache has no entry. Importing is offline and does not need `KAVACH_EPSS_FEED`.

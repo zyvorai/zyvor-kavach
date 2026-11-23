@@ -22,6 +22,9 @@ configuration or ledgers only, never a host.
 | `GET /v1/exposure/report` and friends | bearer/session (writes: admin) | Software exposure from imported SBOMs; see [exposure.md](exposure.md) |
 | `GET /v1/cloud/audit/sources`, `POST /v1/cloud/audit/events` | bearer; POST is admin only | Cloud and SaaS audit-log detection; see [cloud-audit.md](cloud-audit.md) |
 | `GET /v1/web/sources`, `POST /v1/web/logs`, `POST /v1/web/analyze`, `POST /v1/auth/logs` | bearer; POSTs are admin only | Web access-log and auth-log detection and analytics; see [web-detection.md](web-detection.md) |
+| `GET /v1/idp/sources`, `POST /v1/idp/logs`, `GET /v1/ransom/logs/sources`, `POST /v1/ransom/logs` | bearer; POSTs are admin only | Offline identity-provider and file or backup log analytics; see [identity-detection.md](identity-detection.md), [ransomware-logs.md](ransomware-logs.md) |
+| `GET/POST /v1/intel/exploit-feeds`, `GET .../lookup`, `DELETE .../{kind}` | bearer; changes are admin only | Offline KEV and EPSS import; see [exploit-intel.md](exploit-intel.md) |
+| `GET/POST /v1/deception/tripwires`, `DELETE .../{id}`, `POST .../scan` | bearer; changes are admin only | Declared decoys matched against logs; see [tripwires.md](tripwires.md) |
 | `GET /v1/email/threats`, `POST /v1/inspect/email` | bearer/session | Email signals (inventory domain) and the parse-only e-mail analyzer; see [url-email-inspection.md](url-email-inspection.md) |
 | `GET /v1/syslog/status` | bearer/session | Agentless syslog listener state; see [syslog-listener.md](syslog-listener.md) |
 

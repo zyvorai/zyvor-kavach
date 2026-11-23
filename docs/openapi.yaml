@@ -745,6 +745,83 @@ paths:
         "400": { description: invalid payload or no parseable record }
         "401": { description: missing or non-admin token }
         "413": { description: body or record count over the cap }
+  /v1/idp/sources:
+    get:
+      summary: Identity-provider log analytics rules, providers and limits
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Rules, providers and caps}, '401': {description: Unauthorized}}
+  /v1/idp/logs:
+    post:
+      summary: Analyse Okta or Microsoft Entra sign-in and audit logs offline (MFA fatigue, spray, role grants, session reuse); admin token only
+      description: Body is a JSON array, a wrapper object (events, records, logs, items, entries, value), one object or JSON lines. Only an allow-list of fields is read (time, user, actor, address, outcome, event type, device, geo, session id, role names); secrets and tokens are never read. Optional query host (label) and dormant_days (7..730). Max 8 MiB and 50000 records. No provider is contacted.
+      security: [{bearerAuth: []}]
+      parameters: [{name: host, in: query, required: false, schema: {type: string}}, {name: dormant_days, in: query, required: false, schema: {type: integer, minimum: 7, maximum: 730}}]
+      responses:
+        "200": { description: report with parsed, rejected, by_provider, by_event_class, by_rule and findings }
+        "400": { description: invalid payload, bad dormant_days or no parseable record }
+        "401": { description: missing or non-admin token }
+        "413": { description: body or record count over the cap }
+  /v1/ransom/logs/sources:
+    get:
+      summary: Ransomware log analytics rules and thresholds
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Rules and thresholds}, '401': {description: Unauthorized}}
+  /v1/ransom/logs:
+    post:
+      summary: Analyse file-activity and backup-job logs for ransomware indicators offline; admin token only
+      description: Body is a JSON array, a wrapper object, one object or JSON lines. Reads time, host, user, process, operation, path, new path, command, job, event text, an entropy value or flag, size and retention fields; never file content. Max 8 MiB and 50000 records.
+      security: [{bearerAuth: []}]
+      parameters: [{name: host, in: query, required: false, schema: {type: string}}]
+      responses:
+        "200": { description: report with parsed, rejected, by_operation, by_rule and findings }
+        "400": { description: invalid payload or no parseable record }
+        "401": { description: missing or non-admin token }
+        "413": { description: body or record count over the cap }
+  /v1/intel/exploit-feeds:
+    get:
+      summary: Imported CISA KEV and FIRST EPSS sets, versions, expiry, history and path weights
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Status}, '401': {description: Unauthorized}}
+    post:
+      summary: Import a CISA KEV file (JSON or CSV) or an EPSS file (CSV, CSV.gz or API JSON) you downloaded yourself; admin token only
+      description: The raw file is the request body (max 16 MiB, 64 MiB decompressed). Replaces the active set of the same kind and records a history entry. Optional query kind (auto, kev, epss), source (label), ttl_days (1..365, default 30), min_epss (0..1). Kavach never fetches either source on this path.
+      security: [{bearerAuth: []}]
+      parameters: [{name: kind, in: query, required: false, schema: {type: string, enum: [auto, kev, epss]}}, {name: source, in: query, required: false, schema: {type: string}}, {name: ttl_days, in: query, required: false, schema: {type: integer, minimum: 1, maximum: 365}}, {name: min_epss, in: query, required: false, schema: {type: number, minimum: 0, maximum: 1}}]
+      responses: {'200': {description: Import record}, '400': {description: Unrecognised file or bad parameter}, '401': {description: Unauthorized}, '413': {description: Body too large}}
+  /v1/intel/exploit-feeds/lookup:
+    get:
+      summary: Imported KEV and EPSS evidence for one CVE
+      security: [{bearerAuth: []}]
+      parameters: [{name: cve, in: query, required: true, schema: {type: string}}]
+      responses: {'200': {description: Lookup}, '400': {description: Malformed CVE}}
+  /v1/intel/exploit-feeds/{kind}:
+    delete:
+      summary: Withdraw the imported set of one kind (kev or epss); admin token only
+      security: [{bearerAuth: []}]
+      parameters: [{name: kind, in: path, required: true, schema: {type: string, enum: [kev, epss]}}]
+      responses: {'200': {description: Withdrawn}, '400': {description: Unknown kind}, '401': {description: Unauthorized}}
+  /v1/deception/tripwires:
+    get:
+      summary: Declared decoys (honey accounts, token values, decoy hosts, IPs and paths); token values are masked
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Tripwires}, '401': {description: Unauthorized}}
+    post:
+      summary: Declare a decoy (kind account, ip, value, hostname or path, plus match and label); admin token only
+      security: [{bearerAuth: []}]
+      responses: {'201': {description: Created}, '400': {description: Invalid}, '401': {description: Unauthorized}, '409': {description: Duplicate or limit reached}}
+  /v1/deception/tripwires/{id}:
+    delete:
+      summary: Remove a declared decoy; admin token only
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}]
+      responses: {'200': {description: Deleted}, '404': {description: Not found}}
+  /v1/deception/tripwires/scan:
+    post:
+      summary: Match declared decoys against JSON records or plain text lines you send; admin token only
+      description: Max 8 MiB and 50000 records, 3 second budget. Findings are stored, nothing is contacted.
+      security: [{bearerAuth: []}]
+      parameters: [{name: source, in: query, required: false, schema: {type: string}}]
+      responses: {'200': {description: Scan report}, '400': {description: Empty body}, '401': {description: Unauthorized}, '413': {description: Too many records}}
   /v1/mobile/devices:
     get:
       summary: Mobile devices (preview)

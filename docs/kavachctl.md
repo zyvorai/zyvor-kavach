@@ -169,6 +169,10 @@ kavachctl cloudaudit sources                         # supported sources and the
 kavachctl web analyze access.log --openapi api.json  # offline web-log detection, API inventory, shadow-API check (admin token)
 kavachctl web sources                                # formats, web- rule count, analytic rules
 kavachctl authlog analyze auth.jsonl                 # offline credential-stuffing and impossible-travel analytics (admin token)
+kavachctl idplog analyze okta.jsonl --host okta-prod  # offline Okta / Entra log analytics: MFA fatigue, spray, role grants (admin token)
+kavachctl ransomlog analyze fileaudit.jsonl           # offline file-activity and backup-job analytics (admin token)
+kavachctl exploitintel import known_exploited_vulnerabilities.json --ttl-days 14  # offline KEV / EPSS import, weights SBOM findings and attack paths
+kavachctl tripwire add --kind account --match svc-honey --label "honey admin"    # declare a decoy, matched against uploaded logs
 kavachctl exposure report --min_score 50             # exposed hosts from imported SBOMs and advisories
 kavachctl exposure attack-paths --min_score 40       # ranked toxic combinations per asset (see attack-paths.md)
 kavachctl exposure advisories                        # loaded advisory set (SAMPLE until you import data)

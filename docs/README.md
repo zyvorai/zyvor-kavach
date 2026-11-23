@@ -47,6 +47,11 @@ Published site (synced from these files): https://zyvorai.github.io/zyvor-kavach
 | [cloud-audit.md](cloud-audit.md) | CloudTrail, Azure, GCP, Okta and M365 audit-log detection |
 | [web-detection.md](web-detection.md) | Web access-log and auth-log detection, API discovery, flood and credential-stuffing summaries |
 | [RESEARCH-vendors-detection.md](RESEARCH-vendors-detection.md) | Vendor and open-content detection survey with ranked ideas |
+| [RESEARCH-vendors-identity-intel.md](RESEARCH-vendors-identity-intel.md) | Identity, e-mail, threat-intel, SIEM, deception, ransomware and DSPM vendor survey with ranked ideas |
+| [identity-detection.md](identity-detection.md) | Okta and Entra sign-in and audit log analytics |
+| [ransomware-logs.md](ransomware-logs.md) | Ransomware indicators from file-activity and backup-job logs |
+| [exploit-intel.md](exploit-intel.md) | Offline KEV and EPSS import, weighting of SBOM findings and attack paths |
+| [tripwires.md](tripwires.md) | Declared decoys matched against uploaded logs |
 | [exposure.md](exposure.md) | SBOM-based software exposure (offline, sample advisory set until you import data) |
 | [siem-export.md](siem-export.md) | OCSF, ECS, CEF, LEEF, Splunk HEC, STIX and Navigator export; optional push sink |
 | [evidence-import.md](evidence-import.md) | Offline evidence import |

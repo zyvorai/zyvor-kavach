@@ -473,6 +473,11 @@ type ExpMatch struct {
 	CVSS     float64 `json:"cvss,omitempty"`
 	KEV      bool    `json:"kev"`
 	Summary  string  `json:"summary,omitempty"`
+	// Exploitation evidence from operator-imported KEV and EPSS files (omitted when none is loaded).
+	EPSS          *float64 `json:"epss,omitempty"`
+	EPSSPercentil *float64 `json:"epss_percentile,omitempty"`
+	KEVRansomware bool     `json:"kev_ransomware_use,omitempty"`
+	IntelCVE      string   `json:"intel_cve,omitempty"`
 }
 
 type ExpFactor struct {
@@ -542,7 +547,18 @@ func expAnalyse(host string, sb *expSBOM, advs []ExpAdvisory, crit int) ExpAsset
 					fixed = r.Fixed
 				}
 			}
-			as.Matches = append(as.Matches, ExpMatch{ID: a.ID, Package: key, Version: ver, FixedIn: fixed, Severity: a.Severity, CVSS: a.CVSS, KEV: a.KEV, Summary: a.Summary})
+			m := ExpMatch{ID: a.ID, Package: key, Version: ver, FixedIn: fixed, Severity: a.Severity, CVSS: a.CVSS, KEV: a.KEV, Summary: a.Summary}
+			if k, hk, sc, he, cve := xiIDs(append([]string{a.ID}, a.Aliases...)...); hk || he {
+				m.IntelCVE = cve
+				if hk {
+					m.KEV, m.KEVRansomware = true, k.Ransomware
+				}
+				if he {
+					e, p := sc.EPSS, sc.Percentile
+					m.EPSS, m.EPSSPercentil = &e, &p
+				}
+			}
+			as.Matches = append(as.Matches, m)
 			exposed[key+"@"+ver] = true
 		}
 	}
@@ -557,10 +573,20 @@ func expAnalyse(host string, sb *expSBOM, advs []ExpAdvisory, crit int) ExpAsset
 		return as.Matches[i].ID < as.Matches[j].ID
 	})
 	var kev int
-	var maxCVSS float64
+	var maxCVSS, maxEPSS float64
+	haveEPSS, ransom := false, false
 	for _, m := range as.Matches {
 		if m.KEV {
 			kev++
+		}
+		if m.KEVRansomware {
+			ransom = true
+		}
+		if m.EPSS != nil {
+			haveEPSS = true
+			if *m.EPSS > maxEPSS {
+				maxEPSS = *m.EPSS
+			}
 		}
 		c := m.CVSS
 		if c == 0 {
@@ -580,10 +606,22 @@ func expAnalyse(host string, sb *expSBOM, advs []ExpAdvisory, crit int) ExpAsset
 			{"max_severity", clamp01(maxCVSS / 10), 0.35, "highest CVSS (or severity-derived score) among matches: " + f2(maxCVSS)},
 			{"breadth", clamp01(float64(len(exposed)) / 10), 0.20, fmt.Sprintf("%d exposed package versions (saturates at 10)", len(exposed))},
 		}
+		if haveEPSS || ransom {
+			v := maxEPSS
+			note := fmt.Sprintf("highest imported EPSS among matches: %.5f (modelled 30-day exploitation probability; Kavach adds this factor only when an EPSS or KEV file was imported)", maxEPSS)
+			if ransom {
+				v = 1
+				note = "a matched CVE is marked by CISA KEV as used in known ransomware campaigns"
+			}
+			as.Factors = append(as.Factors, ExpFactor{"exploit_likelihood", clamp01(v), 0.15, note})
+		}
 		for _, f := range as.Factors {
 			as.Score += f.Value * f.Weight
 		}
 		as.Score = float64(int(as.Score*1000+0.5)) / 10
+		if as.Score > 100 {
+			as.Score = 100
+		}
 	}
 	if crit >= 1 {
 		as.Factors = append(as.Factors, ExpFactor{"asset_criticality", float64(crit-1) / 4, 0, fmt.Sprintf("asset criticality %d/5 shown for context; not part of the exposure score (see /v1/ml/priority)", crit)})

@@ -135,6 +135,10 @@ func (f *vpEPSSFeed) Lookup(cve string) (vpEPSSScore, bool) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	s, ok := f.cache.Scores[strings.ToUpper(cve)]
+	if !ok {
+		// operator-imported EPSS file (offline), used only when the opt-in feed has no entry
+		return xiEPSSLookup(cve)
+	}
 	return s, ok
 }
 

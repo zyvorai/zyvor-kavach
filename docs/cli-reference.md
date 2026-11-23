@@ -85,6 +85,10 @@ detection.
 | `web sources` | `GET /v1/web/sources` | Formats, `web-` rule count, analytic rule ids, limits |
 | `web analyze FILE [--openapi F] [--format F] [--host H] [--json]` | `POST /v1/web/analyze` (admin) | Offline access-log detection, API inventory, shadow-API check; see [web-detection.md](web-detection.md) |
 | `authlog analyze FILE [--host H] [--json]` | `POST /v1/auth/logs` (admin) | Offline auth-log analytics |
+| `idplog analyze FILE [--host H] [--dormant-days N] [--json]`, `idplog sources` | `POST /v1/idp/logs` (admin), `GET /v1/idp/sources` | Offline Okta and Entra log analytics; see [identity-detection.md](identity-detection.md) |
+| `ransomlog analyze FILE [--host H] [--json]`, `ransomlog sources` | `POST /v1/ransom/logs` (admin), `GET /v1/ransom/logs/sources` | Offline file-activity and backup-job log analytics; see [ransomware-logs.md](ransomware-logs.md) |
+| `exploitintel import FILE [--kind K] [--source S] [--ttl-days N] [--min-epss X]`, `status`, `lookup CVE`, `withdraw kev\|epss` | `POST/GET /v1/intel/exploit-feeds[/lookup]`, `DELETE /v1/intel/exploit-feeds/{kind}` | Offline KEV and EPSS import (admin for changes); see [exploit-intel.md](exploit-intel.md) |
+| `tripwire list\|add\|delete ID\|scan FILE` | `GET/POST /v1/deception/tripwires`, `DELETE .../{id}`, `POST .../scan` | Declared decoys matched against logs (admin for changes); see [tripwires.md](tripwires.md) |
 | `posture-trend [diff --from D]` | `GET /v1/posture/trend[/diff]` | Counts only |
 | `digest`, `auditor-bundle` | `GET /v1/reports/digest`, `GET /v1/compliance/auditor-bundle` | `auditor-bundle` needs `--out FILE.zip` or `--manifest` |
 | `fleet health\|gaps\|stale\|slo` | `GET /v1/fleet/*` | `fleet slo set --file F` is an admin write |
