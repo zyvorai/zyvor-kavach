@@ -133,6 +133,7 @@ func printHelp(w io.Writer) {
 	row("idplog analyze FILE [--host H] [--dormant-days N]|sources", "Offline Okta / Entra sign-in and audit log analytics: MFA fatigue, spray, role grants, session reuse (admin token)")
 	row("ransomlog analyze FILE [--host H]|sources", "Offline file-activity and backup-job log analytics: mass rename, extension churn, entropy flags, recovery inhibition (admin token)")
 	row("netlog analyze FILE [--format F] [--bad-nets F] [--fingerprints F]|sources|timeline [--ip A] [--host H]", "Offline network-log analytics (Zeek, Suricata EVE, DNS, VPC/NSG/NetFlow flow logs, firewall logs) and a joined evidence timeline (admin token)")
+	row("netcfg analyze FILE [--format F] [--host H]|diff OLD NEW|sources", "Offline network-device configuration posture review (PAN-OS XML, FortiGate, Cisco ASA, iptables, nftables): shadowed rules, any-any permits, management exposure, weak crypto; diff of two exports (admin token)")
 	row("exploitintel import FILE [--kind K] [--ttl-days N]|status|lookup CVE|withdraw kev|epss", "Offline CISA KEV and EPSS file import that weights SBOM findings and attack paths (admin token for changes)")
 	row("tripwire list|add --kind K --match M --label L|delete ID|scan FILE", "Declared decoys (honey accounts, token values, decoy hosts and paths) matched against logs you send")
 	row("posture-trend [diff --from D [--to D]] [--days N]", "Posture trend and diff between two dates")
