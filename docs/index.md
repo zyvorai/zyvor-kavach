@@ -72,6 +72,7 @@ Refresh with `ruby docs/tools/inventory.rb --write`. Counts are read from the fi
 - [artifact-analyzers.md](artifact-analyzers.md): LNK, ISO, VBA macro, script and CI/config inspector analyzers.
 - [config-assessment.md](config-assessment.md): configuration assessment policies via the inspector.
 - [appliance-config-review.md](appliance-config-review.md): offline F5 BIG-IP and extra nginx configuration checks plus the versioned advisory table.
+- [netcfg-posture.md](netcfg-posture.md): offline posture review of PAN-OS XML, FortiGate, Cisco ASA, iptables and nftables configuration exports (`netcfg-*` rules, score, diff), with research in [RESEARCH-network-posture.md](RESEARCH-network-posture.md).
 - [firewall-rule-review.md](firewall-rule-review.md): generic firewall/WAF rule export review (any-any, shadowed rules, unused objects).
 - [iac-exposure.md](iac-exposure.md): Terraform plan JSON and CloudFormation exposure checks.
 - [attack-paths.md](attack-paths.md): toxic-combination scoring that ranks exposure, vulnerability, privilege and data signals per asset.

@@ -778,6 +778,32 @@ paths:
       security: [{bearerAuth: []}]
       parameters: [{name: ip, in: query, required: false, schema: {type: string}}, {name: host, in: query, required: false, schema: {type: string}}, {name: window_minutes, in: query, required: false, schema: {type: integer, minimum: 1, maximum: 1440, default: 30}}]
       responses: {'200': {description: Timeline}, '400': {description: bad ip or window}, '401': {description: Unauthorized}}
+  /v1/netcfg/sources:
+    get:
+      summary: Network-device configuration review formats, rule ids and limits
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Formats, rules and caps}, '401': {description: Unauthorized}}
+  /v1/netcfg/analyze:
+    post:
+      summary: Review a network-device configuration export offline (rule-base analytics, management exposure, weak crypto); admin token only
+      description: Body is the raw export (PAN-OS XML, FortiGate show text, Cisco ASA running-config, iptables-save or nft list ruleset output) or a JSON envelope with config, format, host and an optional RFC 3339 now used for expiry markers. Optional query format (auto by default) and host label. Max 8 MiB; XML with a DOCTYPE or entity declaration is refused. Credential values are never echoed. Nothing connects to a device.
+      security: [{bearerAuth: []}]
+      parameters: [{name: format, in: query, required: false, schema: {type: string, enum: [auto, pan-xml, fortigate, asa, iptables, nft]}}, {name: host, in: query, required: false, schema: {type: string}}]
+      responses:
+        "200": { description: report with posture_score, grade, by_rule, by_severity, items (location, why, benign explanation, reference) and findings stored }
+        "400": { description: unknown format, unreadable configuration or bad now value }
+        "401": { description: missing or non-admin token }
+        "413": { description: body over the cap }
+  /v1/netcfg/diff:
+    post:
+      summary: Compare two exports of the same device (permissive rules added, deny rules removed, new and resolved findings); admin token only
+      description: Body is a JSON envelope with old and new configuration strings and an optional format. Rules are matched by what they match, not by name. Nothing is stored.
+      security: [{bearerAuth: []}]
+      responses:
+        "200": { description: diff with items, score_delta, new_findings and resolved_findings }
+        "400": { description: invalid envelope or unreadable configuration }
+        "401": { description: missing or non-admin token }
+        "413": { description: body over the cap }
   /v1/idp/sources:
     get:
       summary: Identity-provider log analytics rules, providers and limits

@@ -548,6 +548,7 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	RegisterWebLogs(mux, token, store)
 	RegisterAuthLogs(mux, token, store)
 	RegisterNetLogs(mux, token, store)
+	RegisterNetcfg(mux, token, store)
 	RegisterIdpLogs(mux, token, store)
 	RegisterExploitIntel(mux, token, store)
 	RegisterRansomLogs(mux, token, store)

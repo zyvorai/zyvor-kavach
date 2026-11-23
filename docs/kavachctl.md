@@ -169,6 +169,7 @@ kavachctl cloudaudit sources                         # supported sources and the
 kavachctl web analyze access.log --openapi api.json  # offline web-log detection, API inventory, shadow-API check (admin token)
 kavachctl web sources                                # formats, web- rule count, analytic rules
 kavachctl authlog analyze auth.jsonl                 # offline credential-stuffing and impossible-travel analytics (admin token)
+kavachctl netcfg analyze fw-config.xml --format pan-xml   # offline device configuration posture review (admin token); see docs/netcfg-posture.md
 kavachctl netlog analyze conn.log --host edge-1     # offline Zeek / EVE / DNS / flow / firewall log analytics (admin token); see docs/network-detection.md
 kavachctl idplog analyze okta.jsonl --host okta-prod  # offline Okta / Entra log analytics: MFA fatigue, spray, role grants (admin token)
 kavachctl ransomlog analyze fileaudit.jsonl           # offline file-activity and backup-job analytics (admin token)

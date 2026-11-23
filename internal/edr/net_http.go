@@ -204,7 +204,7 @@ type NetTimeline struct {
 
 func netFamily(rule string) string {
 	switch {
-	case strings.HasPrefix(rule, "net-"):
+	case strings.HasPrefix(rule, "net-") || strings.HasPrefix(rule, "netcfg-"):
 		return "network"
 	case strings.HasPrefix(rule, "web-"):
 		return "web"

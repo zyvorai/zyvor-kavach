@@ -57,6 +57,9 @@ func harnessAnalytics() []harnessAnalytic {
 	for _, r := range rwRules {
 		add("ransom-analytic", r.ID, r.Tactic, r.Technique, r.TechID, r.Sev)
 	}
+	for _, r := range netcfgRules {
+		add("netcfg-analytic", r.ID, r.Tactic, r.Technique, r.TechID, r.Sev)
+	}
 	for _, r := range twRules {
 		add("tripwire", r.ID, r.Tactic, r.Technique, r.TechID, r.Sev)
 	}

@@ -77,6 +77,9 @@ func run(args []string) error {
 	if handled, err := identityCmdsDispatch(args, os.Stdout); handled {
 		return err
 	}
+	if handled, err := netcfgDispatch(args, os.Stdout); handled {
+		return err
+	}
 	if handled, err := netLogDispatch(args, os.Stdout); handled {
 		return err
 	}

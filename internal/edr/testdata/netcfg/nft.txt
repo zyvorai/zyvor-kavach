@@ -1,0 +1,14 @@
+table inet filter {
+	chain input {
+		type filter hook input priority filter; policy accept;
+		iif "lo" accept
+		ct state established,related accept
+		tcp dport { 22, 3389 } accept
+		ip saddr 192.0.2.0/24 tcp dport 22 accept
+		tcp dport 3389 drop
+	}
+	chain forward {
+		type filter hook forward priority filter; policy drop;
+		accept comment "all forwarding"
+	}
+}
