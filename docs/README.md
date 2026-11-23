@@ -34,7 +34,7 @@ Published site (synced from these files): https://zyvorai.github.io/zyvor-kavach
 | [posture-reports.md](posture-reports.md) | Posture trend, executive digest, auditor bundle |
 | [persistence-files.md](persistence-files.md) | Every on-disk state file, reset and backup |
 | [deploy-remote.md](deploy-remote.md) | Lab / Kubernetes deploy and the gated deploy flow |
-| [envoy-gateway.md](envoy-gateway.md) | Gateway API front door |
+| [setura-gateway.md](setura-gateway.md) | Gateway API front door |
 | [agent-mtls.md](agent-mtls.md) | Mutual TLS for agents |
 
 ## Data sources and integrations

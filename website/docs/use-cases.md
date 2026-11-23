@@ -221,7 +221,7 @@ Combine with SIEM NDJSON export for long-term retention outside Kavach.
 **Goal:** Validate chart + Gateway + console before production eval.
 
 ```bash
-./scripts/deploy-remote.sh user@lab --k8s --envoy-gateway
+./scripts/deploy-remote.sh user@lab --k8s --setura-gateway
 ./scripts/demo-lab.sh
 go test ./...
 ```

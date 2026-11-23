@@ -50,19 +50,19 @@ mtls:
   mode: "off"
   secretName: ""
 
-# Envoy / Gateway API HTTPRoute in front of the API (attach to an existing Gateway).
-# Off by default. Prefer envoyGateway.* to create a dedicated Envoy Gateway.
-# See docs/envoy-gateway.md.
+# Gateway API HTTPRoute in front of the API (attach to an existing Setura Gateway).
+# Off by default. Prefer seturaGateway.* to create a dedicated Gateway.
+# See docs/setura-gateway.md.
 gateway:
   enabled: false
-  # Gateway to attach to, e.g. [{name: eg, namespace: envoy-gateway-system}].
+  # Gateway to attach to, e.g. [{name: setura, namespace: setura-system}].
   parentRefs: []
   hostnames: []
   path: /
   annotations: {}
-  # "0s" keeps long-lived streams from being cut by Envoy.
+  # "0s" keeps long-lived streams from being cut by the gateway.
   requestTimeout: "0s"
-  # Kavach's Service is HTTPS by default, so Envoy must verify the pod cert.
+  # Kavach's Service is HTTPS by default, so the gateway must verify the pod cert.
   # Point caCertificateRefs at a ConfigMap holding the CA of tls.existingSecret.
   backendTLS:
     enabled: true
@@ -71,21 +71,20 @@ gateway:
     caCertificateRefs: []
     # e.g. [{group: "", kind: ConfigMap, name: kavach-ca}]
     wellKnownCACertificates: ""
-  # Envoy Gateway only. Needed for WebSocket/streams when backendTLS is on.
-  backendTrafficPolicy:
-    enabled: false
-    useClientProtocol: true
 
-# First-class Envoy Gateway front door (recommended Gateway API path).
-# Creates EnvoyProxy + Gateway (GatewayClass eg) + HTTPRoute + stable TLS Secret
+# First-class Setura Gateway front door (recommended Gateway API path).
+# Creates Gateway (GatewayClass setura) + HTTPRoute + stable TLS Secret
 # + BackendTLSPolicy. Use this for cloud-native / microservices edge traffic
-# management (gRPC/HTTP3-ready Envoy data plane) — especially as Ingress Nginx
-# Controllers are retiring in favor of Gateway API.
-# Requires Envoy Gateway installed (GatewayClass "eg"). Off by default; NodePort
-# :30899 remains the direct lab path. Enable with --envoy-gateway on deploy.
-envoyGateway:
+# management, especially as Ingress Nginx Controllers are retiring in favor of
+# Gateway API.
+# Requires the Setura controller (GatewayClass "setura"):
+#   setura gateway install --image ghcr.io/zyvorai/zyvor-setura-gateway:0.7.0 \
+#     --namespace setura-system --expose-gateway-ports | kubectl apply -f -
+# Off by default; NodePort :30899 remains the direct lab path. Enable with
+# --setura-gateway on deploy (it patches the setura-gateway Service to NodePort).
+seturaGateway:
   enabled: false
-  gatewayClassName: eg
+  gatewayClassName: setura
   name: kavach
   # Public hostname for the HTTPS listener (sslip.io-friendly if addressHint set).
   hostname: ""
@@ -96,21 +95,18 @@ envoyGateway:
   httpRedirect: true
   httpsPort: 8443
   httpPort: 8080
+  # NodePorts are applied to the shared setura-gateway Service by deploy-remote.sh.
   httpsNodePort: 30943
   httpNodePort: 30980
-  serviceType: NodePort
   tlsSecretName: kavach-tls
   caConfigMapName: kavach-ca
   # When true, chart also expects tls.existingSecret=kavach-tls (set by deploy).
   backendTLS:
     enabled: true
     apiVersion: gateway.networking.k8s.io/v1
-  backendTrafficPolicy:
-    enabled: true
-    useClientProtocol: true
 
 # PacketWolf-style: create a Cilium Gateway + optional cert-manager Certificate.
-# Prefer envoyGateway.* for Envoy Gateway. Off by default.
+# Prefer seturaGateway.*. Off by default.
 gatewayApi:
   enabled: false
   gatewayClassName: cilium
@@ -127,7 +123,7 @@ gatewayApi:
     issuerRef:
       name: letsencrypt-kavach
       kind: ClusterIssuer
-  # Extra CiliumNetworkPolicy so Gateway Envoy can reach the Service
+  # Extra CiliumNetworkPolicy so the Gateway data plane can reach the Service
   networkPolicy: true
 
 # Classic Ingress (optional). Off by default; prefer gateway / gatewayApi.

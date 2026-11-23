@@ -14,7 +14,7 @@ const sidebars: SidebarsConfig = {
     'sectors',
     'deploy-remote',
     'agent-mtls',
-    'envoy-gateway',
+    'setura-gateway',
     'mcp-integration',
     'pricing',
   ],

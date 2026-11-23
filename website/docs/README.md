@@ -21,7 +21,7 @@ Start here if you cloned the repo and want the full story.
 | [observability.md](observability.md) | Metrics, probes, ATT&CK, compliance score, live stream |
 | [compliance-evidence.md](compliance-evidence.md) | Control-level compliance evidence, CERT-In clock |
 | [deploy-remote.md](deploy-remote.md) | Lab / k8s deploy |
-| [envoy-gateway.md](envoy-gateway.md) | Gateway API |
+| [setura-gateway.md](setura-gateway.md) | Gateway API |
 | [agent-mtls.md](agent-mtls.md) | mTLS agents |
 | [mcp-integration.md](mcp-integration.md) | MCP / AI agents |
 | [openapi.yaml](https://github.com/zyvorai/zyvor-kavach/blob/main/docs/openapi.yaml) | HTTP contract |

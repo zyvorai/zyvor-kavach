@@ -56,7 +56,7 @@ go test ./internal/edr -run '^$' -fuzz FuzzParseSyslog -fuzztime 30s
 
 * Detection and similarity corpora are **synthetic**; thresholds prove the code behaves as designed on those corpora,
   not that it catches real attacks ([research-validation-lab.md](research-validation-lab.md)).
-* The SIEM mappings, syslog parsers, eBPF programs and Helm/Envoy flows have unit or template-level tests only; no
+* The SIEM mappings, syslog parsers, eBPF programs and Helm/Setura Gateway flows have unit or template-level tests only; no
   live SIEM, device, kernel or cluster is exercised by `go test` ([siem-export.md](siem-export.md),
   [syslog-listener.md](syslog-listener.md), [ebpf.md](ebpf.md)).
 * Wall-clock bounds (analyzer budgets) can flake on a heavily loaded machine; the race reductions below exist for that

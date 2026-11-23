@@ -70,12 +70,12 @@ go run ./cmd/kavach -mode server -listen 0.0.0.0:8099
 
 ```bash
 go test -race -timeout 30m ./... && go test ./... && go vet ./...
-KAVACH_ADMIN_TOKEN='use-a-real-secret' ./scripts/deploy-remote.sh sus@80.79.5.173 --k8s --envoy-gateway
+KAVACH_ADMIN_TOKEN='use-a-real-secret' ./scripts/deploy-remote.sh sus@80.79.5.173 --k8s --setura-gateway
 # NodePort  → https://HOST:30899/
-# Envoy     → https://kavach.HOST.sslip.io:30943/
+# Setura    → https://kavach.HOST.sslip.io:30943/
 ```
 
-→ [Tutorial](docs/tutorial.md) · [Remote deploy](docs/deploy-remote.md) · [Envoy](docs/envoy-gateway.md) · [mTLS](docs/agent-mtls.md)
+→ [Tutorial](docs/tutorial.md) · [Remote deploy](docs/deploy-remote.md) · [Setura Gateway](docs/setura-gateway.md) · [mTLS](docs/agent-mtls.md)
 
 ---
 
@@ -114,7 +114,7 @@ KAVACH_ADMIN_TOKEN='use-a-real-secret' ./scripts/deploy-remote.sh sus@80.79.5.17
               │
               ▼
      ┌────────────────────┐
-     │  kavach controller │  HTTPS :30899 / Envoy :30943
+     │  kavach controller │  HTTPS :30899 / Setura :30943
      │  findings · AI Hub │  Apple.com console · /v1/*
      │  eBPF platform API │
      └─────────┬──────────┘

@@ -125,7 +125,7 @@ HTTPS"), so a remote agent always needs TLS regardless of mTLS.
 | Agent log `remote error: tls: bad certificate` / `certificate required` | Client certificate missing, expired, not signed by the `-client-ca` bundle, or lacks the `clientAuth` extended key usage |
 | Agent log `x509: certificate signed by unknown authority` | The agent does not trust the controller certificate: pass `-ca` |
 | Pod never becomes Ready after enabling `mtls.mode=required` | The kubelet probes carry no client certificate; use `optional` |
-| `kavachctl` or the browser cannot connect after enabling mTLS | They also lack a client certificate. `kavachctl` has no client-certificate option in this tree (not found in `cmd/kavachctl`); front the API with Envoy Gateway or a proxy that holds the certificate, or keep mTLS off or use `-client-auth optional` |
+| `kavachctl` or the browser cannot connect after enabling mTLS | They also lack a client certificate. `kavachctl` has no client-certificate option in this tree (not found in `cmd/kavachctl`); front the API with Setura Gateway or a proxy that holds the certificate, or keep mTLS off or use `-client-auth optional` |
 | Server exits at start `invalid client CA bundle` | `-client-ca` file is not valid PEM |
 | `client certificate and key must both be supplied` | Only one of `-agent-cert` / `-agent-key` was given |
 | 401 despite a valid certificate | The bearer token is still checked; per-host enrollment tokens are host-scoped |
@@ -143,5 +143,5 @@ authenticates who may send telemetry; it never lets Kavach act on a host.
 4. Rotation is manual: replace the Secret and restart the pods. Certificates are not
    hot-reloaded (no reload code was found; treat as unverified).
 
-See also: [architecture.md](architecture.md), [envoy-gateway.md](envoy-gateway.md),
+See also: [architecture.md](architecture.md), [setura-gateway.md](setura-gateway.md),
 [deploy-remote.md](deploy-remote.md), [security-review.md](security-review.md).

@@ -37,7 +37,7 @@ Console: http://127.0.0.1:8099/ — sign in **`admin` / `Admin@321`**.
 | [Finance](./finance.md) | Banks / markets / insurance |
 | [Sectors](./sectors.md) | Rail, fleets, industry, space |
 | [Remote deploy](./deploy-remote.md) | Helm / k3s |
-| [Envoy Gateway](./envoy-gateway.md) | Gateway API |
+| [Setura Gateway](./setura-gateway.md) | Gateway API |
 | [Agent mTLS](./agent-mtls.md) | Client certificates |
 | [MCP](./mcp-integration.md) | AI agent tooling |
 
