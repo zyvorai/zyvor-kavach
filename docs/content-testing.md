@@ -25,7 +25,7 @@ Case fields:
 | Field | Meaning |
 |---|---|
 | `case` | Name, 1 to 160 characters. |
-| `kind` | The detection path: `web` (access logs: `web-*` content rules and `web-an-*` analytics), `auth` (`auth-an-*`, plus tripwires), `idp` (`idp-an-*`), `ransom` (`rwlog-an-*`), `tripwire` (declared decoys over any log), `event` (content-pack rules over events). |
+| `kind` | The detection path: `web` (access logs: `web-*` content rules and `web-an-*` analytics), `auth` (`auth-an-*`, plus tripwires), `idp` (`idp-an-*`), `ransom` (`rwlog-an-*`), `tripwire` (declared decoys over any log), `event` (content-pack rules over events), `netcfg` (network-device configuration review, `netcfg-*`: config text in `lines`, optional `format` of auto, pan-xml, fortigate, asa, iptables or nft). |
 | `format` | Web only: `auto` (default), `combined`, `json`, `logfmt`. |
 | `host` | Optional host label. |
 | `lines` | Raw log lines (web, tripwire) or JSON lines. |
