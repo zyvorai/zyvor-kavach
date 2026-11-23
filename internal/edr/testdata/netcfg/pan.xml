@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<config version="10.2.0" urldb="paloaltonetworks">
+  <devices>
+    <entry name="localhost.localdomain">
+      <network>
+        <interface>
+          <ethernet>
+            <entry name="ethernet1/1">
+              <layer3>
+                <interface-management-profile>mgmt-open</interface-management-profile>
+              </layer3>
+            </entry>
+            <entry name="ethernet1/2">
+              <layer3>
+                <interface-management-profile>mgmt-safe</interface-management-profile>
+              </layer3>
+            </entry>
+          </ethernet>
+        </interface>
+        <profiles>
+          <interface-management-profile>
+            <entry name="mgmt-open">
+              <ssh>yes</ssh>
+              <https>yes</https>
+              <telnet>yes</telnet>
+            </entry>
+            <entry name="mgmt-safe">
+              <ssh>yes</ssh>
+              <permitted-ip>
+                <entry name="10.0.0.0/8"/>
+              </permitted-ip>
+            </entry>
+          </interface-management-profile>
+        </profiles>
+      </network>
+      <vsys>
+        <entry name="vsys1">
+          <zone>
+            <entry name="untrust"><network><layer3><member>ethernet1/1</member></layer3></network></entry>
+            <entry name="trust"><network><layer3><member>ethernet1/2</member></layer3></network></entry>
+          </zone>
+          <address>
+            <entry name="web-srv"><ip-netmask>10.1.0.10/32</ip-netmask></entry>
+            <entry name="web-srv-dup"><ip-netmask>10.1.0.10/32</ip-netmask></entry>
+            <entry name="lonely"><ip-netmask>10.99.0.0/24</ip-netmask></entry>
+          </address>
+          <service>
+            <entry name="tcp-8443"><protocol><tcp><port>8443</port></tcp></protocol></entry>
+          </service>
+          <rulebase>
+            <security>
+              <rules>
+                <entry name="allow-all-out">
+                  <from><member>trust</member></from>
+                  <to><member>untrust</member></to>
+                  <source><member>any</member></source>
+                  <destination><member>any</member></destination>
+                  <application><member>any</member></application>
+                  <service><member>any</member></service>
+                  <action>allow</action>
+                  <log-end>yes</log-end>
+                  <description>outbound</description>
+                  <profile-setting><group><member>default</member></group></profile-setting>
+                </entry>
+                <entry name="block-telnet">
+                  <from><member>trust</member></from>
+                  <to><member>untrust</member></to>
+                  <source><member>any</member></source>
+                  <destination><member>any</member></destination>
+                  <application><member>telnet</member></application>
+                  <service><member>application-default</member></service>
+                  <action>deny</action>
+                  <log-end>yes</log-end>
+                  <description>no telnet</description>
+                </entry>
+                <entry name="inbound-rdp">
+                  <from><member>untrust</member></from>
+                  <to><member>trust</member></to>
+                  <source><member>any</member></source>
+                  <destination><member>web-srv</member></destination>
+                  <application><member>ms-rdp</member></application>
+                  <service><member>application-default</member></service>
+                  <action>allow</action>
+                  <log-end>no</log-end>
+                  <description>temporary rdp for vendor, remove 2026-01-31</description>
+                </entry>
+                <entry name="old-disabled">
+                  <from><member>any</member></from>
+                  <to><member>any</member></to>
+                  <source><member>any</member></source>
+                  <destination><member>any</member></destination>
+                  <application><member>any</member></application>
+                  <service><member>any</member></service>
+                  <action>deny</action>
+                  <disabled>yes</disabled>
+                </entry>
+              </rules>
+            </security>
+          </rulebase>
+        </entry>
+      </vsys>
+    </entry>
+  </devices>
+</config>

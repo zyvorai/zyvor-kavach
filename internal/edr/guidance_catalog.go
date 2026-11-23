@@ -123,6 +123,9 @@ var tacticTemplates = map[string]tacticTpl{
 type techDef struct{ id, title, tactic, means string }
 
 var techniqueDefs = []techDef{
+	{"T1600", "Weaken Encryption", "Defense Evasion", "Encryption on a network device may be configured with weak or deprecated algorithms or versions, which makes captured traffic easier to read or tamper with."},
+	{"T1078.001", "Default Accounts", "Initial Access", "A default, shared or empty credential on a device may let anyone who can reach it log in."},
+	{"T1040", "Network Sniffing", "Credential Access", "Cleartext management protocols let anyone on the path read credentials and sessions."},
 	{"T1568", "Dynamic Resolution", "Command and Control", "Command-and-control addresses may be resolved dynamically (generated or rapidly changing domains) to resist blocking."},
 	{"T1568.001", "Fast Flux DNS", "Command and Control", "A domain may be resolving to many rapidly changing addresses to hide the real server."},
 	{"T1568.002", "Domain Generation Algorithms", "Command and Control", "Software may be generating many pseudo-random domain names to find its command server."},
@@ -389,7 +392,7 @@ func techniqueEntries() []GuidanceEntry {
 }
 
 var guidanceCatalog = func() []GuidanceEntry {
-	all := append(rulesCatalog(), techniqueEntries()...)
+	all := append(append(rulesCatalog(), netcfgGuidance()...), techniqueEntries()...)
 	sort.SliceStable(all, func(i, j int) bool {
 		if all[i].Kind != all[j].Kind {
 			return all[i].Kind > all[j].Kind // rule before technique
