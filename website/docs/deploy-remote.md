@@ -37,17 +37,17 @@ mirror and container image import. Set `KAVACH_TOKEN` (or chart `auth.token` /
 export KAVACH_TOKEN="${KAVACH_TOKEN:-Admin@321}"
 curl -k -H "Authorization: Bearer $KAVACH_TOKEN" https://HOST:30899/v1/summary
 
-# Envoy Gateway (if --envoy-gateway):
+# Setura Gateway (if --setura-gateway):
 # https://kavach.HOST.sslip.io:30943/
 ```
 
 ### Console
 
-1. Open `https://HOST:30899/` or the Envoy URL.  
+1. Open `https://HOST:30899/` or the Setura URL.  
 2. Sign in with username **`admin`** and password **`Admin@321`** (must match the chart token).  
 3. Prefer `kavachctl status --wait` for a CLI health board.
 
-See [tutorial.md](tutorial.md), [console.md](console.md), [envoy-gateway.md](envoy-gateway.md).
+See [tutorial.md](tutorial.md), [console.md](console.md), [setura-gateway.md](setura-gateway.md).
 
 Remote checkout defaults to `~/.deployments/kavach` (`KAVACH_REMOTE_SUBDIR`
 overrides).

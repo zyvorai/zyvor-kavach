@@ -1,0 +1,172 @@
+# SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0
+{{- /*
+  First-class Setura Gateway front door (Gateway API). Prefer this over classic
+  Ingress (nginx Ingress is retiring) and over Cilium gatewayApi.* unless you
+  explicitly want Cilium. Creates Gateway + HTTPRoute + stable TLS +
+  BackendTLSPolicy so Setura can verify the HTTPS pod. Needs the Setura
+  controller (GatewayClass "setura"): see k8s/bootstrap/ensure-setura-gateway.sh.
+
+  TODO(setura): Envoy Gateway used BackendTrafficPolicy useClientProtocol and an
+  EnvoyProxy NodePort patch here. Setura documents WebSocket/Upgrade support, so
+  the first is not needed; the NodePort lives on the shared setura-gateway
+  Service (setura-system), which deploy-remote.sh patches.
+*/ -}}
+{{- if .Values.seturaGateway.enabled }}
+{{- $gwName := default .Release.Name .Values.seturaGateway.name }}
+{{- $ns := .Release.Namespace }}
+{{- $class := .Values.seturaGateway.gatewayClassName | default "setura" }}
+{{- $tlsSecret := .Values.seturaGateway.tlsSecretName | default "kavach-tls" }}
+{{- $caConfigMap := .Values.seturaGateway.caConfigMapName | default "kavach-ca" }}
+{{- $httpsPort := int (.Values.seturaGateway.httpsPort | default 8443) }}
+{{- $httpPort := int (.Values.seturaGateway.httpPort | default 8080) }}
+{{- $hostname := .Values.seturaGateway.hostname | default (printf "kavach.%s.sslip.io" (regexReplaceAll "\\." (default "127.0.0.1" .Values.seturaGateway.addressHint) "-")) }}
+{{- /* Stable self-signed cert: reuse existing Secret on upgrade so gateway pinning survives. */ -}}
+{{- $existing := lookup "v1" "Secret" $ns $tlsSecret }}
+{{- $ca := genCA "Zyvor Kavach CA" 3650 }}
+{{- $altNames := list "kavach" (printf "kavach.%s.svc" $ns) (printf "kavach.%s.svc.cluster.local" $ns) "localhost" $hostname }}
+{{- $cert := genSignedCert "kavach" (list "127.0.0.1") $altNames 3650 $ca }}
+{{- $tlsCrt := $cert.Cert }}
+{{- $tlsKey := $cert.Key }}
+{{- $caCrt := $ca.Cert }}
+{{- if $existing }}
+{{- $tlsCrt = index $existing.data "tls.crt" | b64dec }}
+{{- $tlsKey = index $existing.data "tls.key" | b64dec }}
+{{- if hasKey $existing.data "ca.crt" }}
+{{- $caCrt = index $existing.data "ca.crt" | b64dec }}
+{{- else }}
+{{- $caCrt = $tlsCrt }}
+{{- end }}
+{{- end }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ $tlsSecret }}
+  namespace: {{ $ns }}
+  labels:
+    {{- include "kavach.labels" . | nindent 4 }}
+    app.kubernetes.io/component: setura-gateway
+  annotations:
+    helm.sh/resource-policy: keep
+type: kubernetes.io/tls
+data:
+  tls.crt: {{ $tlsCrt | b64enc }}
+  tls.key: {{ $tlsKey | b64enc }}
+  ca.crt: {{ $caCrt | b64enc }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $caConfigMap }}
+  namespace: {{ $ns }}
+  labels:
+    {{- include "kavach.labels" . | nindent 4 }}
+    app.kubernetes.io/component: setura-gateway
+data:
+  ca.crt: |
+{{ $caCrt | indent 4 }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ $gwName }}
+  namespace: {{ $ns }}
+  labels:
+    {{- include "kavach.labels" . | nindent 4 }}
+    app.kubernetes.io/component: setura-gateway
+spec:
+  gatewayClassName: {{ $class | quote }}
+  listeners:
+    - name: https
+      protocol: HTTPS
+      port: {{ $httpsPort }}
+      hostname: {{ $hostname | quote }}
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            group: ""
+            name: {{ $tlsSecret }}
+      allowedRoutes:
+        namespaces:
+          from: Same
+    - name: http
+      protocol: HTTP
+      port: {{ $httpPort }}
+      hostname: {{ $hostname | quote }}
+      allowedRoutes:
+        namespaces:
+          from: Same
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $gwName }}-app
+  namespace: {{ $ns }}
+  labels:
+    {{- include "kavach.labels" . | nindent 4 }}
+    app.kubernetes.io/component: setura-gateway
+spec:
+  parentRefs:
+    - name: {{ $gwName }}
+      namespace: {{ $ns }}
+      sectionName: https
+  hostnames:
+    - {{ $hostname | quote }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: {{ .Values.seturaGateway.path | default "/" | quote }}
+      timeouts:
+        request: {{ .Values.seturaGateway.requestTimeout | default "0s" | quote }}
+      backendRefs:
+        - name: kavach
+          port: {{ .Values.service.port }}
+{{- if .Values.seturaGateway.httpRedirect }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $gwName }}-http-redirect
+  namespace: {{ $ns }}
+  labels:
+    {{- include "kavach.labels" . | nindent 4 }}
+    app.kubernetes.io/component: setura-gateway
+spec:
+  parentRefs:
+    - name: {{ $gwName }}
+      namespace: {{ $ns }}
+      sectionName: http
+  hostnames:
+    - {{ $hostname | quote }}
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
+{{- end }}
+{{- if and .Values.tls.enabled (.Values.seturaGateway.backendTLS.enabled | default true) }}
+---
+apiVersion: {{ .Values.seturaGateway.backendTLS.apiVersion | default "gateway.networking.k8s.io/v1" }}
+kind: BackendTLSPolicy
+metadata:
+  name: {{ $gwName }}-backend-tls
+  namespace: {{ $ns }}
+  labels:
+    {{- include "kavach.labels" . | nindent 4 }}
+    app.kubernetes.io/component: setura-gateway
+spec:
+  targetRefs:
+    - group: ""
+      kind: Service
+      name: kavach
+  validation:
+    hostname: {{ printf "kavach.%s.svc" $ns | quote }}
+    caCertificateRefs:
+      - group: ""
+        kind: ConfigMap
+        name: {{ $caConfigMap }}
+{{- end }}
+{{- end }}

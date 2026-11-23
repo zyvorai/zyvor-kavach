@@ -34,7 +34,7 @@ Refresh with `ruby docs/tools/inventory.rb --write`. Counts are read from the fi
 ## Deployment and integration
 
 - [deploy-remote.md](deploy-remote.md): remote deploy over SSH and Kubernetes.
-- [envoy-gateway.md](envoy-gateway.md): Envoy Gateway (Gateway API) in front of Kavach.
+- [setura-gateway.md](setura-gateway.md): Setura Gateway (Gateway API) in front of Kavach.
 - [agent-mtls.md](agent-mtls.md): mutual TLS between agents and the controller.
 - [persistence-files.md](persistence-files.md): every on-disk state file next to the findings store.
 - [kavachctl.md](kavachctl.md): the operator CLI.

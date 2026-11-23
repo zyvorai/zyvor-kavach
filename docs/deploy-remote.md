@@ -23,7 +23,7 @@ gate is green. They mirror the CI jobs in `.github/workflows/ci.yml` (`go`, `go-
 go test -race -timeout 30m ./... \
   && go test ./... \
   && go vet ./... \
-  && ./scripts/deploy-remote.sh sus@80.79.5.173 --k8s --envoy-gateway
+  && ./scripts/deploy-remote.sh sus@80.79.5.173 --k8s --setura-gateway
 ```
 
 Then verify (the script already curls `/healthz` at the end, but `--verify-only` is the
@@ -52,7 +52,7 @@ different things (race safety versus full statistical coverage).
 | `--k8s` | Helm on an existing kubeconfig (`~/.kube/config` is preferred when readable) |
 | `--quick` | Sync + Helm only (image must already exist on the host) |
 | `--verify-only` | No sync or build; print `kubectl get deploy,svc,pods` and `curl -skf https://127.0.0.1:<nodePort>/healthz` on the host |
-| `--envoy-gateway` | Sets `KAVACH_ENVOY_GATEWAY=1`, runs `k8s/bootstrap/ensure-envoy-gateway.sh` when present and installs the chart with `envoyGateway.enabled=true` (see [envoy-gateway.md](envoy-gateway.md)) |
+| `--setura-gateway` | Sets `KAVACH_SETURA_GATEWAY=1`, runs `k8s/bootstrap/ensure-setura-gateway.sh` when present and installs the chart with `seturaGateway.enabled=true` (see [setura-gateway.md](setura-gateway.md)) |
 | `--cilium-gateway` | Sets `KAVACH_GATEWAY_API=1` (Cilium GatewayClass, optional). NodePort remains the default path |
 | `--dry-run` | Skips rsync and prints the generated remote script instead of running it. It still opens one SSH connection to read the remote `$HOME` |
 
@@ -66,9 +66,9 @@ missing. If Go is absent it installs a toolchain (version pinned in the script) 
 |---|---|---|
 | `KAVACH_ADMIN_TOKEN` | `Admin@321` (lab only) | Admin token installed into the chart as `auth.token`. This is the variable the script reads, not `KAVACH_TOKEN`. An empty value also falls back to `Admin@321` (the script's random-secret branch is unreachable). Set a real secret for anything beyond a lab |
 | `KAVACH_NODE_PORT` | `30899` | HTTPS NodePort for the controller |
-| `KAVACH_ENVOY_HTTPS_NODE_PORT` | `30943` | HTTPS NodePort of the Envoy Gateway listener |
+| `KAVACH_SETURA_HTTPS_NODE_PORT` | `30943` | HTTPS NodePort of the Setura Gateway listener |
 | `KAVACH_REMOTE_SUBDIR` | `.deployments/kavach` | Remote checkout directory, relative to the target user's `$HOME`. Use a path outside `.deployments/` on hosts where sibling projects `rsync --delete` the shared parent |
-| `KAVACH_ENVOY_GATEWAY`, `KAVACH_GATEWAY_API` | `0` | Same as the two gateway flags |
+| `KAVACH_SETURA_GATEWAY`, `KAVACH_GATEWAY_API` | `0` | Same as the two gateway flags |
 
 The rsync uses `--delete` and excludes `.git`, `bin`, `data`, `web/node_modules`,
 `website/node_modules`, `.DS_Store` and `.cursor`. Anything else you leave in the remote
@@ -79,7 +79,7 @@ checkout directory is removed on the next deploy.
 - A **persistent self-signed TLS Secret** `kavach-tls-static` (EC P-256, 10 years, SAN
   includes the host IP), created once so a redeploy does not change the certificate and
   browsers keep their exception. Delete the Secret to rotate it. Skipped when
-  `--envoy-gateway` is used (the chart then manages `kavach-tls`).
+  `--setura-gateway` is used (the chart then manages `kavach-tls`).
 - `helm upgrade --install kavach ./helm/kavach -n kavach-system --create-namespace --wait --timeout 300s`
   with `tls.enabled=true`, `agent.enabled=false`, `service.type=NodePort` and the image tag
   pinned in the script and chart (`0.1.1`).
@@ -128,13 +128,13 @@ curl -sk -H "Authorization: Bearer $KAVACH_TOKEN" https://HOST:30899/v1/summary
 kavachctl doctor                           # URL, token, /livez, /readyz, auth, TLS hint
 kavachctl status --wait                    # waits for a healthy board
 
-# Envoy Gateway (if --envoy-gateway):
+# Setura Gateway (if --setura-gateway):
 curl -sk https://kavach.HOST.sslip.io:30943/healthz
 ```
 
 ### Console
 
-1. Open `https://HOST:30899/` or the Envoy URL.
+1. Open `https://HOST:30899/` or the Setura URL.
 2. Sign in with username **`admin`** and, as the password, the controller token
    (`KAVACH_ADMIN_TOKEN`, lab default `Admin@321`). The console posts the token to
    `POST /v1/session` and receives an HttpOnly, SameSite=Strict cookie valid for 1 hour.
@@ -150,8 +150,8 @@ curl -sk https://kavach.HOST.sslip.io:30943/healthz
 | Helm `--wait` times out | `kubectl -n kavach-system describe pod`; common causes are a missing `tls.existingSecret`, a PVC that cannot bind (no default StorageClass; set `persistence.storageClass` or `existingClaim`) or an image the node cannot pull |
 | `healthz not ready yet` | Retry with `--verify-only`. `/healthz` is served over HTTPS, so use `curl -k` for the self-signed certificate |
 | Console login fails but the token works with curl | The console password is the token itself; confirm `KAVACH_ADMIN_TOKEN` matches what the chart was installed with (`kubectl -n kavach-system get secret`) |
-| Browser warns after every deploy | Only when the TLS Secret was deleted or `--envoy-gateway` mints a new one; keep `kavach-tls-static` |
+| Browser warns after every deploy | Only when the TLS Secret was deleted or `--setura-gateway` mints a new one; keep `kavach-tls-static` |
 | `429` from the API right after deploy scripts | Write requests are limited per client IP (`KAVACH_RATE_LIMIT`, default 100 per second) and repeated bad tokens are throttled per IP; see [observability.md](observability.md) |
 | Previous data missing after redeploy | The PVC was disabled or replaced. Findings and models live only on the volume (see [persistence-files.md](persistence-files.md)) |
 
-See [tutorial.md](tutorial.md), [console.md](console.md), [envoy-gateway.md](envoy-gateway.md).
+See [tutorial.md](tutorial.md), [console.md](console.md), [setura-gateway.md](setura-gateway.md).

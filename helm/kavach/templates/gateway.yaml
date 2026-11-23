@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0
 {{- if .Values.gateway.enabled }}
 {{- if not .Values.gateway.parentRefs }}
-{{- fail "gateway.enabled needs gateway.parentRefs (the Envoy Gateway / Gateway API Gateway to attach to)" }}
+{{- fail "gateway.enabled needs gateway.parentRefs (the Setura / Gateway API Gateway to attach to)" }}
 {{- end }}
 {{- $bt := .Values.gateway.backendTLS | default dict }}
 {{- $needBackendTLS := and .Values.tls.enabled $bt.enabled }}
@@ -9,9 +9,9 @@
 {{- fail "tls.enabled=true serves HTTPS from the pod; set gateway.backendTLS.enabled=true (with a CA) or tls.enabled=false behind a trusted gateway" }}
 {{- end }}
 {{- if and $needBackendTLS (not $bt.caCertificateRefs) (not $bt.wellKnownCACertificates) }}
-{{- fail "gateway.backendTLS needs gateway.backendTLS.caCertificateRefs or wellKnownCACertificates so Envoy can verify the pod certificate (use tls.existingSecret for a stable cert)" }}
+{{- fail "gateway.backendTLS needs gateway.backendTLS.caCertificateRefs or wellKnownCACertificates so the gateway can verify the pod certificate (use tls.existingSecret for a stable cert)" }}
 {{- end }}
-# Envoy (via Gateway API) in front of the Kavach API. Optional: Kavach's own
+# Setura (via Gateway API) in front of the Kavach API. Optional: Kavach's own
 # auth (admin token) is unchanged; the gateway adds TLS termination, routing
 # and edge policy. Agents keep talking to the Service directly.
 apiVersion: gateway.networking.k8s.io/v1
@@ -64,26 +64,8 @@ spec:
     wellKnownCACertificates: {{ . | quote }}
     {{- end }}
 {{- end }}
-{{- with .Values.gateway.backendTrafficPolicy }}
-{{- if .enabled }}
----
-# Envoy Gateway extension (needs its CRDs). With backend TLS Envoy negotiates
-# HTTP/2 to the pod, which cannot carry a WebSocket upgrade; useClientProtocol
-# keeps the upstream hop on the client's HTTP version so streams upgrade.
-apiVersion: gateway.envoyproxy.io/v1alpha1
-kind: BackendTrafficPolicy
-metadata:
-  name: kavach
-  labels:
-    {{- include "kavach.labels" $ | nindent 4 }}
-spec:
-  targetRefs:
-  - group: gateway.networking.k8s.io
-    kind: HTTPRoute
-    name: kavach
-  useClientProtocol: {{ if hasKey . "useClientProtocol" }}{{ .useClientProtocol }}{{ else }}true{{ end }}
-{{- end }}
-{{- end }}
+{{- /* TODO(setura): Envoy Gateway needed a BackendTrafficPolicy (useClientProtocol) so WebSocket
+     upgrades survived backend TLS. Setura handles Upgrade requests itself; no policy is rendered. */ -}}
 {{- end }}
 {{- if .Values.gatewayApi.enabled }}
 {{- $hostname := required "gatewayApi.hostname is required when gatewayApi.enabled=true" .Values.gatewayApi.hostname }}

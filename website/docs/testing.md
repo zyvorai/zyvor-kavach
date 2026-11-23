@@ -96,7 +96,7 @@ Exercises common GETs against a live controller.
 ## Cluster deploy smoke
 
 ```bash
-./scripts/deploy-remote.sh sus@HOST --k8s --envoy-gateway
+./scripts/deploy-remote.sh sus@HOST --k8s --setura-gateway
 # wait for pods Ready
 kubectl -n kavach-system get pods,svc
 curl -sk -H "Authorization: Bearer Admin@321" \

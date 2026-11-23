@@ -8,7 +8,7 @@ There was no changelog file before this one, and no version string in the source
 
 ## Unreleased
 
-Nothing yet.
+- Gateway API front door: Setura Gateway (`zyvor.dev/setura-gateway`, GatewayClass `setura`) replaces Envoy Gateway. Helm values `envoyGateway.*` are now `seturaGateway.*`, `--envoy-gateway` is `--setura-gateway`, `ensure-envoy-gateway.sh` is `ensure-setura-gateway.sh` and `docs/envoy-gateway.md` is `docs/setura-gateway.md`. The EnvoyProxy and BackendTrafficPolicy objects are gone. Not run on a live cluster.
 
 ## v0.2.5 (2026-11-17)
 

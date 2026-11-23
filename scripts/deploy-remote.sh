@@ -12,9 +12,9 @@
 #   --verify-only     curl healthz on the remote NodePort; no sync/build
 #
 # Opt-in:
-#   --envoy-gateway   Preferred Gateway API front door via Envoy Gateway
-#                     (GatewayClass eg). Sets KAVACH_ENVOY_GATEWAY=1 and runs
-#                     k8s/bootstrap/ensure-envoy-gateway.sh when present.
+#   --setura-gateway   Preferred Gateway API front door via Setura Gateway
+#                     (GatewayClass setura). Sets KAVACH_SETURA_GATEWAY=1 and runs
+#                     k8s/bootstrap/ensure-setura-gateway.sh when present.
 #   --cilium-gateway  Sets KAVACH_GATEWAY_API=1 (Cilium GatewayClass; optional).
 #                     Calls k8s/bootstrap/ensure-kavach-cilium-gateway-tls.sh when present.
 #
@@ -39,7 +39,7 @@ ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 PROFILE="k3s"
 VERIFY_ONLY=false
 CILIUM_GATEWAY=false
-ENVOY_GATEWAY=false
+SETURA_GATEWAY=false
 DRY_RUN=false
 TARGET=""
 # shellcheck disable=SC2034
@@ -51,7 +51,7 @@ IMAGE_REF="ghcr.io/zyvorai/kavach:0.1.1"
 IMAGE_REPO="ghcr.io/zyvorai/kavach"
 IMAGE_TAG="0.1.1"
 NODE_PORT="${KAVACH_NODE_PORT:-30899}"
-ENVOY_HTTPS_NODE_PORT="${KAVACH_ENVOY_HTTPS_NODE_PORT:-30943}"
+SETURA_HTTPS_NODE_PORT="${KAVACH_SETURA_HTTPS_NODE_PORT:-30943}"
 
 usage() {
   sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'
@@ -65,7 +65,7 @@ while [[ $# -gt 0 ]]; do
     --k8s) PROFILE="k8s"; shift ;;
     --quick) PROFILE="quick"; shift ;;
     --verify-only) VERIFY_ONLY=true; shift ;;
-    --envoy-gateway) ENVOY_GATEWAY=true; shift ;;
+    --setura-gateway) SETURA_GATEWAY=true; shift ;;
     --cilium-gateway) CILIUM_GATEWAY=true; shift ;;
     --dry-run) DRY_RUN=true; shift ;;
     -*)
@@ -104,8 +104,8 @@ fi
 if $CILIUM_GATEWAY; then
   export KAVACH_GATEWAY_API=1
 fi
-if $ENVOY_GATEWAY; then
-  export KAVACH_ENVOY_GATEWAY=1
+if $SETURA_GATEWAY; then
+  export KAVACH_SETURA_GATEWAY=1
 fi
 
 # Default matches lab demo login. Override with KAVACH_ADMIN_TOKEN for production.
@@ -157,9 +157,9 @@ GATEWAY_API_FLAG="${KAVACH_GATEWAY_API:-0}"
 if $CILIUM_GATEWAY; then
   GATEWAY_API_FLAG=1
 fi
-ENVOY_GATEWAY_FLAG="${KAVACH_ENVOY_GATEWAY:-0}"
-if $ENVOY_GATEWAY; then
-  ENVOY_GATEWAY_FLAG=1
+SETURA_GATEWAY_FLAG="${KAVACH_SETURA_GATEWAY:-0}"
+if $SETURA_GATEWAY; then
+  SETURA_GATEWAY_FLAG=1
 fi
 
 remote_script=$(cat <<EOF
@@ -169,19 +169,19 @@ export PATH="/usr/local/go/bin:/usr/local/bin:\$HOME/go/bin:/usr/bin:\$PATH"
 export GOTOOLCHAIN=auto
 PROFILE="${PROFILE}"
 GATEWAY_API="${GATEWAY_API_FLAG}"
-ENVOY_GATEWAY="${ENVOY_GATEWAY_FLAG}"
+SETURA_GATEWAY="${SETURA_GATEWAY_FLAG}"
 ADMIN_TOKEN="${ADMIN_TOKEN_LOCAL}"
 IMAGE_REF="${IMAGE_REF}"
 IMAGE_REPO="${IMAGE_REPO}"
 IMAGE_TAG="${IMAGE_TAG}"
 NODE_PORT="${NODE_PORT}"
-ENVOY_HTTPS_NODE_PORT="${ENVOY_HTTPS_NODE_PORT}"
+SETURA_HTTPS_NODE_PORT="${SETURA_HTTPS_NODE_PORT}"
 HOST_IP_HINT="\$(hostname -I | awk '{print \$1}')"
 
 log() { printf '[kavach-deploy] %s\n' "\$*"; }
 
 mkdir -p "\$HOME/.kube"
-# Prefer the user's working kubeconfig (lab installs often already have Envoy Gateway here).
+# Prefer the user's working kubeconfig (lab installs often already have Setura Gateway here).
 if [[ -r "\$HOME/.kube/config" ]]; then
   export KUBECONFIG="\$HOME/.kube/config"
 elif [[ -r /etc/rancher/k3s/k3s.yaml ]]; then
@@ -364,9 +364,9 @@ fi
 
 # Stable TLS cert: mint a self-signed cert once and keep it in a Secret, so a
 # redeploy does not change the cert (browsers keep their exception). Delete the
-# Secret to rotate. Skipped for Envoy Gateway mode (it manages its own Secret).
+# Secret to rotate. Skipped for Setura Gateway mode (it manages its own Secret).
 TLS_STATIC_SECRET="kavach-tls-static"
-if [[ "\$ENVOY_GATEWAY" != "1" ]]; then
+if [[ "\$SETURA_GATEWAY" != "1" ]]; then
   kubectl create namespace kavach-system >/dev/null 2>&1 || true
   if ! kubectl -n kavach-system get secret "\$TLS_STATIC_SECRET" >/dev/null 2>&1; then
     log "creating persistent TLS secret \$TLS_STATIC_SECRET (self-signed, 10y, SAN includes \${HOST_IP})"
@@ -393,28 +393,29 @@ HELM_SET=(
   --set service.nodePort="\${NODE_PORT}"
 )
 
-if [[ "\$ENVOY_GATEWAY" != "1" ]]; then
+if [[ "\$SETURA_GATEWAY" != "1" ]]; then
   HELM_SET+=(--set "tls.existingSecret=\$TLS_STATIC_SECRET")
 fi
 
-if [[ "\$ENVOY_GATEWAY" == "1" ]]; then
-  log "Envoy Gateway opt-in (preferred Gateway API front door; class eg)"
-  if [[ -x k8s/bootstrap/ensure-envoy-gateway.sh ]]; then
-    bash k8s/bootstrap/ensure-envoy-gateway.sh || log "ensure-envoy-gateway.sh reported prerequisites missing (continuing; Helm may fail)"
+if [[ "\$SETURA_GATEWAY" == "1" ]]; then
+  log "Setura Gateway opt-in (preferred Gateway API front door; class setura)"
+  if [[ -x k8s/bootstrap/ensure-setura-gateway.sh ]]; then
+    bash k8s/bootstrap/ensure-setura-gateway.sh || log "ensure-setura-gateway.sh reported prerequisites missing (continuing; Helm may fail)"
   fi
   HELM_SET+=(
-    --set envoyGateway.enabled=true
-    --set envoyGateway.gatewayClassName=eg
-    --set-string "envoyGateway.addressHint=\${HOST_IP_HINT}"
-    --set-string "envoyGateway.hostname=kavach.\${HOST_IP_HINT}.sslip.io"
-    --set envoyGateway.httpsNodePort="\${ENVOY_HTTPS_NODE_PORT}"
+    --set seturaGateway.enabled=true
+    --set seturaGateway.gatewayClassName=setura
+    --set-string "seturaGateway.addressHint=\${HOST_IP_HINT}"
+    --set-string "seturaGateway.hostname=kavach.\${HOST_IP_HINT}.sslip.io"
+    --set seturaGateway.httpsNodePort="\${SETURA_HTTPS_NODE_PORT}"
   )
+  kubectl -n setura-system patch svc setura-gateway -p "{\"spec\":{\"type\":\"NodePort\",\"ports\":[{\"port\":8443,\"nodePort\":\${SETURA_HTTPS_NODE_PORT}},{\"port\":8080,\"nodePort\":30980}]}}" || log "could not patch the setura-gateway Service to NodePort (continuing)"
 else
-  HELM_SET+=(--set envoyGateway.enabled=false)
+  HELM_SET+=(--set seturaGateway.enabled=false)
 fi
 
 if [[ "\$GATEWAY_API" == "1" ]]; then
-  log "Cilium Gateway API opt-in (KAVACH_GATEWAY_API=1) — prefer --envoy-gateway for Envoy"
+  log "Cilium Gateway API opt-in (KAVACH_GATEWAY_API=1) — prefer --setura-gateway"
   HELM_SET+=(--set gatewayApi.enabled=true)
   if [[ -x k8s/bootstrap/ensure-kavach-cilium-gateway-tls.sh ]]; then
     bash k8s/bootstrap/ensure-kavach-cilium-gateway-tls.sh || log "ensure-kavach-cilium-gateway-tls.sh reported prerequisites missing (continuing with NodePort)"
@@ -430,6 +431,16 @@ helm upgrade --install kavach ./helm/kavach \
   --namespace kavach-system --create-namespace \
   "\${HELM_SET[@]}" \
   --wait --timeout 300s
+
+if [[ "\$SETURA_GATEWAY" == "1" ]]; then
+  # Setura serves all Gateways through one Service; the controller adds gw-8443/gw-8080
+  # (--expose-gateway-ports). Give those ports their NodePorts once they exist.
+  for _ in \$(seq 1 30); do
+    kubectl -n setura-system get svc setura-gateway -o jsonpath="{.spec.ports[*].port}" 2>/dev/null | grep -qw 8443 && break
+    sleep 2
+  done
+  kubectl -n setura-system patch svc setura-gateway -p "{\"spec\":{\"type\":\"NodePort\",\"ports\":[{\"port\":8443,\"nodePort\":\${SETURA_HTTPS_NODE_PORT}},{\"port\":8080,\"nodePort\":30980}]}}" || log "could not patch the setura-gateway Service to NodePort (continuing)"
+fi
 
 # Fixed tag: force restart so freshly imported content is what runs.
 if kubectl -n kavach-system get deploy kavach >/dev/null 2>&1; then
@@ -452,11 +463,11 @@ curl -skf "https://127.0.0.1:\${NODE_PORT}/healthz" \\
   || curl -skf "https://\${HOST_IP}:\${NODE_PORT}/healthz" \\
   || log "healthz not ready yet — retry with --verify-only"
 echo
-if [[ "\$ENVOY_GATEWAY" == "1" ]]; then
-  log "Envoy Gateway URL=https://kavach.\${HOST_IP}.sslip.io:\${ENVOY_HTTPS_NODE_PORT}/"
-  curl -skf -H "Host: kavach.\${HOST_IP}.sslip.io" "https://127.0.0.1:\${ENVOY_HTTPS_NODE_PORT}/healthz" \\
-    || curl -skf "https://kavach.\${HOST_IP}.sslip.io:\${ENVOY_HTTPS_NODE_PORT}/healthz" \\
-    || log "Envoy healthz not ready yet — check HTTPRoute/Gateway status"
+if [[ "\$SETURA_GATEWAY" == "1" ]]; then
+  log "Setura Gateway URL=https://kavach.\${HOST_IP}.sslip.io:\${SETURA_HTTPS_NODE_PORT}/"
+  curl -skf -H "Host: kavach.\${HOST_IP}.sslip.io" "https://127.0.0.1:\${SETURA_HTTPS_NODE_PORT}/healthz" \\
+    || curl -skf "https://kavach.\${HOST_IP}.sslip.io:\${SETURA_HTTPS_NODE_PORT}/healthz" \\
+    || log "Setura healthz not ready yet — check HTTPRoute/Gateway status"
   echo
 fi
 log "Kavach ready (HTTPS NodePort :\${NODE_PORT})"

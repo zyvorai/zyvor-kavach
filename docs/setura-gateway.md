@@ -1,0 +1,133 @@
+# Setura Gateway in front of Kavach
+
+Kavach uses **Setura Gateway** ([zyvor-setura-gateway](https://github.com/zyvorai/zyvor-setura-gateway))
+as the preferred Kubernetes Gateway API front door: a Go controller with a
+built-in proxy that serves HTTP/1.1, HTTP/2 and WebSocket and publishes
+Prometheus metrics. This is the recommended path for cloud-native deployments
+as classic Ingress (including Ingress Nginx Controllers) is retiring in favor
+of Gateway API.
+
+Bearer tokens and agent mTLS are unchanged. Setura adds TLS termination,
+hostname routing, and edge policy. Node agents keep talking to the in-cluster
+Service; only the API/UI goes through Setura.
+
+NodePort `:30899` remains available for direct lab access.
+
+## Install the controller
+
+The cluster needs the Gateway API CRDs and the Setura controller (GatewayClass
+`setura`, controller `zyvor.dev/setura-gateway`). Kavach does not install them
+from the chart; `ensure-setura-gateway.sh` does it with the `setura` CLI when
+the class is missing:
+
+```bash
+setura gateway install --image ghcr.io/zyvorai/zyvor-setura-gateway:0.7.0 \
+  --namespace setura-system --expose-gateway-ports | kubectl apply -f -
+```
+
+`--expose-gateway-ports` lets the controller add a Service port for every
+listener port the Gateways declare (here `8443` and `8080`).
+
+## Option A: Create a dedicated Gateway (recommended)
+
+The chart mints a **stable** TLS Secret (`kavach-tls`), a `Gateway`, `HTTPRoute`
+and `BackendTLSPolicy`.
+
+```bash
+./k8s/bootstrap/ensure-setura-gateway.sh
+
+helm upgrade --install kavach ./helm/kavach -n kavach-system \
+  --set auth.token="$KAVACH_TOKEN" \
+  --set seturaGateway.enabled=true \
+  --set seturaGateway.hostname=kavach.80.79.5.173.sslip.io \
+  --set seturaGateway.addressHint=80.79.5.173 \
+  --set agent.enabled=false
+```
+
+Or via remote deploy (this also patches the `setura-gateway` Service in
+`setura-system` to type NodePort with `30943` and `30980`):
+
+```bash
+./scripts/deploy-remote.sh sus@80.79.5.173 --k8s --setura-gateway
+```
+
+Then open `https://kavach.<node-ip>.sslip.io:30943/` (self-signed; `curl -sk`).
+
+## Option B: Attach HTTPRoute to an existing Gateway
+
+```bash
+helm upgrade --install kavach ./helm/kavach -n kavach-system \
+  --set auth.token="$KAVACH_TOKEN" \
+  --set gateway.enabled=true \
+  --set 'gateway.parentRefs[0].name=edge' \
+  --set 'gateway.parentRefs[0].namespace=zyvora' \
+  --set 'gateway.parentRefs[0].sectionName=auth' \
+  --set 'gateway.hostnames[0]=kavach.example.com' \
+  --set gateway.backendTLS.caCertificateRefs[0].name=kavach-ca \
+  --set gateway.backendTLS.caCertificateRefs[0].kind=ConfigMap
+```
+
+## Backend TLS
+
+The controller serves HTTPS by default, so the gateway must verify the pod
+certificate. `seturaGateway.*` wires this automatically via `BackendTLSPolicy`
+and ConfigMap `kavach-ca`. Envoy Gateway needed a `BackendTrafficPolicy`
+(`useClientProtocol`) for long-lived streams; Setura needs no equivalent and
+the chart renders none. Not verified here: `/v1/stream` and WebSocket through
+Setura with backend TLS on a live cluster.
+
+## Cilium Gateway (optional)
+
+`gatewayApi.*` can still create a Cilium Gateway + cert-manager Certificate.
+Prefer `seturaGateway.*` unless you explicitly want Cilium’s GatewayClass.
+
+## Values reference (`seturaGateway.*`)
+
+| Value | Default | Meaning |
+|---|---|---|
+| `enabled` | `false` | Render the Setura Gateway objects. Off unless you opt in (`--setura-gateway` on deploy sets it) |
+| `gatewayClassName` | `setura` | GatewayClass of Setura Gateway; `k8s/bootstrap/ensure-setura-gateway.sh` checks the Gateway API CRDs and this class (installing the controller with the `setura` CLI if it is missing) and exits non-zero if the class is owned by another controller (`KAVACH_SETURA_GATEWAY_CLASS`, `KAVACH_SETURA_IMAGE` and `KAVACH_SETURA_NAMESPACE` override the defaults) |
+| `hostname` | empty | HTTPS listener hostname. When empty the chart builds `kavach.<addressHint with dots replaced by dashes>.sslip.io`. `deploy-remote.sh` passes `kavach.<node-ip>.sslip.io` explicitly |
+| `addressHint` | `80.79.5.173` | Only used to build a default hostname and certificate SAN; set it to your node IP |
+| `httpsPort` / `httpPort` | `8443` / `8080` | Gateway listener ports |
+| `httpsNodePort` / `httpNodePort` | `30943` / `30980` | NodePorts applied by `deploy-remote.sh` to the shared `setura-gateway` Service (the chart itself does not own that Service) |
+| `httpRedirect` | `true` | Adds an HTTP to HTTPS redirect `HTTPRoute` |
+| `requestTimeout` | `0s` | Route timeout; `0s` keeps `/v1/stream` (Server-Sent Events) from being cut |
+| `tlsSecretName` / `caConfigMapName` | `kavach-tls` / `kavach-ca` | Stable edge TLS Secret and the CA ConfigMap the gateway uses to verify the pod |
+
+Objects created: `Secret/kavach-tls`, `ConfigMap/kavach-ca`, `Gateway`, the
+app `HTTPRoute`, the redirect `HTTPRoute` and `BackendTLSPolicy` (SNI
+`kavach.<namespace>.svc`).
+
+## Verify
+
+```bash
+kubectl get gatewayclass setura
+kubectl -n kavach-system get gateway,httproute,backendtlspolicy
+curl -sk https://kavach.80.79.5.173.sslip.io:30943/healthz
+curl -sk -H "Authorization: Bearer $KAVACH_TOKEN" https://kavach.80.79.5.173.sslip.io:30943/v1/summary
+# live stream through the gateway (should stay open):
+curl -skN -H "Authorization: Bearer $KAVACH_TOKEN" https://kavach.80.79.5.173.sslip.io:30943/v1/stream
+kavachctl doctor     # with KAVACH_URL pointing at the Setura URL
+```
+
+## Troubleshooting
+
+| Symptom | Check |
+|---|---|
+| `ensure-setura-gateway.sh` reports missing CRDs, CLI or class | Install Gateway API and the `setura` CLI first; Kavach does not install the CRDs. `deploy-remote.sh` logs a warning and continues, so Helm may then fail |
+| `503` or upstream TLS errors from the gateway | `BackendTLSPolicy` must trust the pod certificate: confirm `kavach-ca` holds the CA of the Secret the pod serves (`tls.existingSecret=kavach-tls`, set by the deploy script) |
+| `/v1/stream` closes after a minute | Route timeout: keep `requestTimeout: "0s"` |
+| Hostname not accepted by the Gateway | The listeners and routes match `seturaGateway.hostname` exactly; open the same name (the default form is `kavach.<ip>.sslip.io`) |
+| NodePort `30943` does not answer | The controller adds `gw-8443` only with `--expose-gateway-ports`; check `kubectl -n setura-system get svc setura-gateway` |
+| Rate limits or throttling look shared | Kavach limits per `RemoteAddr`; behind a proxy every client shares the gateway's address and `X-Forwarded-For` is deliberately not trusted (see [security-review.md](security-review.md)) |
+| Agent mTLS with `required` and Setura in front | Setura terminates edge TLS, so client certificates are not forwarded to the pod; node agents should keep using the in-cluster Service (see [agent-mtls.md](agent-mtls.md)) |
+
+## Not covered
+
+Setura is the edge front door. Kavach does not ingest Setura access logs through
+this path (SIEM export is separate, see [siem-export.md](siem-export.md)). The cluster-level
+prerequisites (Gateway API CRDs, the Setura controller, GatewayClass) are not installed
+by the chart. The edge TLS certificate is self-signed in the lab defaults; bring your own
+Secret for anything else. Not verified in this documentation pass: behaviour on a live
+Setura Gateway cluster.

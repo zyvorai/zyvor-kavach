@@ -199,7 +199,7 @@ Console: **World** domain loader.
 ## 11. Deploy to the lab cluster (optional)
 
 ```bash
-./scripts/deploy-remote.sh sus@80.79.5.173 --k8s --envoy-gateway
+./scripts/deploy-remote.sh sus@80.79.5.173 --k8s --setura-gateway
 ```
 
 Then:
@@ -213,7 +213,7 @@ export KAVACH_TLS_INSECURE=true
 
 Browser: same URL — accept the self-signed cert, sign in as `admin` / `Admin@321`.
 
-Full steps: [deploy-remote.md](deploy-remote.md), [envoy-gateway.md](envoy-gateway.md).
+Full steps: [deploy-remote.md](deploy-remote.md), [setura-gateway.md](setura-gateway.md).
 
 ---
 

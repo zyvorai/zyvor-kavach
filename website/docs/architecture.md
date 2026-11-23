@@ -78,7 +78,7 @@ CONTAIN / KILL / ISOLATE / DROP  ✗
 | `internal/edr` | Store, Detect(), APIs, console, world/AI/eBPF/finance platforms |
 | `internal/mcpserver` | Minimal MCP framing for `kavach-mcp` |
 | `bpf/` | CO-RE observation objects (exec, process, file, priv, net) |
-| `helm/kavach` | Deployment, agent DaemonSet, Envoy Gateway opts |
+| `helm/kavach` | Deployment, agent DaemonSet, Setura Gateway opts |
 
 ---
 
@@ -101,7 +101,7 @@ Bootstrap on empty stores seeds live inventory so demos are never blank (`Bootst
 |---------|---------|
 | Local listen | Loopback HTTP `:8099` |
 | Helm chart | In-pod HTTPS, NodePort **30899** |
-| Envoy Gateway | Optional HTTPS NodePort **30943** (`kavach.<ip>.sslip.io`) |
+| Setura Gateway | Optional HTTPS NodePort **30943** (`kavach.<ip>.sslip.io`) |
 | Auth | `KAVACH_TOKEN` bearer; console session cookie via `POST /v1/session` |
 | Agent auth | Same bearer; optional mTLS (`docs/agent-mtls.md`) |
 | TLS verify | Lab often uses self-signed → `KAVACH_TLS_INSECURE=true` |
@@ -151,7 +151,7 @@ kavach-system
   ├─ Deployment/kavach          controller
   ├─ DaemonSet/kavach-agent     optional node agents
   ├─ Service NodePort 30899
-  └─ (optional) Envoy Gateway + HTTPRoute :30943
+  └─ (optional) Setura Gateway + HTTPRoute :30943
 ```
 
 Chart: `helm/kavach`. Deploy script: `scripts/deploy-remote.sh`.
@@ -163,6 +163,6 @@ Chart: `helm/kavach`. Deploy script: `scripts/deploy-remote.sh`.
 - [Tutorial](tutorial.md)
 - [Use cases](use-cases.md)
 - [Deploy remote](deploy-remote.md)
-- [Envoy Gateway](envoy-gateway.md)
+- [Setura Gateway](setura-gateway.md)
 - [Agent mTLS](agent-mtls.md)
 - [Console](console.md)

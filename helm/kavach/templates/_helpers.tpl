@@ -27,12 +27,12 @@ kavach-auth
 {{- if .Values.tls.enabled -}}https{{- else -}}http{{- end -}}
 {{- end -}}
 
-{{/* Stable TLS Secret: explicit tls.existingSecret, else Envoy Gateway minted secret. */}}
+{{/* Stable TLS Secret: explicit tls.existingSecret, else Setura Gateway minted secret. */}}
 {{- define "kavach.tlsSecretName" -}}
 {{- if .Values.tls.existingSecret -}}
 {{ .Values.tls.existingSecret }}
-{{- else if .Values.envoyGateway.enabled -}}
-{{ .Values.envoyGateway.tlsSecretName | default "kavach-tls" }}
+{{- else if .Values.seturaGateway.enabled -}}
+{{ .Values.seturaGateway.tlsSecretName | default "kavach-tls" }}
 {{- end -}}
 {{- end -}}
 

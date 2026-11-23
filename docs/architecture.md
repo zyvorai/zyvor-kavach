@@ -97,7 +97,7 @@ The token comes from `KAVACH_TOKEN` (legacy alias `ZYVOR_EDR_TOKEN`): at least 8
 | `internal/edr` | Store, Detect(), content engine, APIs, console, local models, world/AI/eBPF/finance platforms |
 | `internal/mcpserver` | Minimal MCP framing for `kavach-mcp` |
 | `bpf/` | CO-RE observation objects (exec, process, file, priv, net) |
-| `helm/kavach` | Deployment, agent DaemonSet, Envoy Gateway opts |
+| `helm/kavach` | Deployment, agent DaemonSet, Setura Gateway opts |
 
 ---
 
@@ -138,7 +138,7 @@ All corpora and scores are **synthetic or heuristic**; detection rates measured 
 |---------|---------|
 | Local listen | Loopback HTTP `:8099` |
 | Helm chart | In-pod HTTPS, NodePort **30899**, PVC at `/app/data` |
-| Envoy Gateway | Optional HTTPS NodePort **30943** (`kavach.<ip>.sslip.io`) |
+| Setura Gateway | Optional HTTPS NodePort **30943** (`kavach.<ip>.sslip.io`) |
 | Auth | `KAVACH_TOKEN` bearer; console session cookie via `POST /v1/session` (body `{"token": ...}`; the console form sends username `admin` plus the token as password); cookie HttpOnly, SameSite=Strict, 1 hour |
 | Public routes | `/healthz`, `/livez`, `/readyz`, `/`, two static SVGs, `POST /v1/session`, `POST /v1/logout`, canary beacon `/c/{id}` |
 | Agent auth | Per-host credential (hashed at rest, host-scoped, revocable, ingest routes only) or the admin token; optional mTLS (`docs/agent-mtls.md`) |
@@ -214,7 +214,7 @@ kavach-system
   ├─ DaemonSet/kavach-agent     optional node agents
   ├─ PVC (2Gi, /app/data)       findings, models, ledgers
   ├─ Service NodePort 30899
-  └─ (optional) Envoy Gateway + HTTPRoute :30943
+  └─ (optional) Setura Gateway + HTTPRoute :30943
 ```
 
 Chart: `helm/kavach`. Deploy script: `scripts/deploy-remote.sh`, gated by the test runs described in [deploy-remote.md](deploy-remote.md).
@@ -241,7 +241,7 @@ Chart: `helm/kavach`. Deploy script: `scripts/deploy-remote.sh`, gated by the te
 - [Tutorial](tutorial.md)
 - [Use cases](use-cases.md)
 - [Deploy remote](deploy-remote.md)
-- [Envoy Gateway](envoy-gateway.md)
+- [Setura Gateway](setura-gateway.md)
 - [Agent mTLS](agent-mtls.md)
 - [Console](console.md)
 - [Testing](testing.md)

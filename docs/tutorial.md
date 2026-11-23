@@ -284,7 +284,7 @@ Pull-based with checkpointing; format mappings were not validated against any ve
 Run the test gates first ([deploy-remote.md](deploy-remote.md) explains the gated flow), then:
 
 ```bash
-./scripts/deploy-remote.sh sus@80.79.5.173 --k8s --envoy-gateway
+./scripts/deploy-remote.sh sus@80.79.5.173 --k8s --setura-gateway
 ```
 
 Then:
@@ -299,7 +299,7 @@ export KAVACH_TLS_INSECURE=true
 The deploy script reads `KAVACH_ADMIN_TOKEN` (default `Admin@321`) for the chart token. Browser: same URL, accept the
 self-signed cert, sign in as `admin` with that token as the password.
 
-Full steps: [deploy-remote.md](deploy-remote.md), [envoy-gateway.md](envoy-gateway.md).
+Full steps: [deploy-remote.md](deploy-remote.md), [setura-gateway.md](setura-gateway.md).
 
 ---
 
