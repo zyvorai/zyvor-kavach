@@ -143,6 +143,7 @@ func printHelp(w io.Writer) {
 	row("feedback record --finding ID --verdict V|list|rules|summary|verify|export [--redact]", "Analyst verdict ledger and per-rule precision")
 	row("chains list|show ID|case ID; competitive", "Attack chains; competitor matrix (public docs, may be out of date)")
 	row("casetemplates list|show|create|update|delete; case assign|apply-template|checklist|workflow|journal", "Case templates and workflow")
+	row("content test FILE...|selftest|fp-report --benign PATH...|tested-coverage", "Detection as code: offline rule tests, per-rule examples, benign-corpus false-positive report, ATT&CK coverage by tested rule (local, no server)")
 	row("content versions|changes|changelog; coverage blindspots|telemetry", "Content history; telemetry blind spots")
 	row("incidents correlated; case list|show|create|update|comment|close|export", "Incidents and cases")
 	row("hunt packs|run|run-all|schedules|schedule-add|schedule-rm|history|devices", "Hunt packs")
