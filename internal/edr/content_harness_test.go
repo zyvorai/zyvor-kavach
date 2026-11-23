@@ -254,7 +254,7 @@ func TestHarnessEventKindAndGen(t *testing.T) {
 
 func TestHarnessTripwireStateRestored(t *testing.T) {
 	twReg.mu.Lock()
-	before := len(twReg.defs)
+	before, beforePath := len(twReg.defs), twReg.path
 	twReg.mu.Unlock()
 	st, err := SelfTest(HarnessOptions{})
 	if err != nil || !st.OK() {
@@ -263,8 +263,8 @@ func TestHarnessTripwireStateRestored(t *testing.T) {
 	twReg.mu.Lock()
 	after, p := len(twReg.defs), twReg.path
 	twReg.mu.Unlock()
-	if before != after || p != "" {
-		t.Errorf("tripwire registry changed: %d -> %d path %q", before, after, p)
+	if before != after || p != beforePath {
+		t.Errorf("tripwire registry changed: %d -> %d path %q -> %q", before, after, beforePath, p)
 	}
 }
 
