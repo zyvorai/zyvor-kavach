@@ -1,0 +1,3 @@
+# ja3 list
+e7d705a3286e19ea42f587b344ee6865 test-malware-family
+t13d1517h2_8daaf6152771_cb7bf5808d99

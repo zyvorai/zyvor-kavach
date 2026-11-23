@@ -123,6 +123,10 @@ var tacticTemplates = map[string]tacticTpl{
 type techDef struct{ id, title, tactic, means string }
 
 var techniqueDefs = []techDef{
+	{"T1568", "Dynamic Resolution", "Command and Control", "Command-and-control addresses may be resolved dynamically (generated or rapidly changing domains) to resist blocking."},
+	{"T1568.001", "Fast Flux DNS", "Command and Control", "A domain may be resolving to many rapidly changing addresses to hide the real server."},
+	{"T1568.002", "Domain Generation Algorithms", "Command and Control", "Software may be generating many pseudo-random domain names to find its command server."},
+	{"T1562.004", "Disable or Modify System Firewall", "Defense Evasion", "A firewall configuration may have been changed in a way that weakens its protection."},
 	{"T1190", "Exploit Public-Facing Application", "Initial Access", "A weakness in an internet-facing application may have been used to gain entry."},
 	{"T1133", "External Remote Services", "Initial Access", "Remote access services such as VPN or RDP may have been used to enter the network."},
 	{"T1566", "Phishing", "Initial Access", "A deceptive message may have delivered a link or attachment to a user."},

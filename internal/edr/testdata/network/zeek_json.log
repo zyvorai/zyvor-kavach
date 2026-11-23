@@ -1,0 +1,4 @@
+{"ts": 1790000001, "note": "Scan::Port_Scan", "msg": "198.51.100.7 scanned 30 unique ports of host 10.0.0.20 password=hunter2", "src": "198.51.100.7", "dst": "10.0.0.20"}
+{"_path": "smb_files", "ts": 1790000002, "id.orig_h": "10.0.0.30", "id.orig_p": 50001, "id.resp_h": "10.0.2.41", "id.resp_p": 445, "action": "SMB::FILE_OPEN", "path": "\\\\10.0.2.41\\ADMIN$", "name": "svc.exe"}
+{"_path": "dce_rpc", "ts": 1790000003, "id.orig_h": "10.0.0.30", "id.orig_p": 50002, "id.resp_h": "10.0.2.41", "id.resp_p": 135, "endpoint": "svcctl", "operation": "CreateServiceW"}
+{"_path": "conn", "ts": 1790000004, "id.orig_h": "10.0.0.7", "id.orig_p": 1234, "id.resp_h": "203.0.113.20", "id.resp_p": 80, "proto": "tcp", "conn_state": "SF", "orig_bytes": 100, "resp_bytes": 200, "duration": 0.5}
