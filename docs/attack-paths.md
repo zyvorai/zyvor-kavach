@@ -26,6 +26,10 @@ curl -H "Authorization: Bearer $KAVACH_TOKEN" -X POST localhost:8080/v1/exposure
 
 MCP: `kavach_attack_paths` (read-only GET).
 
+## Exploit likelihood from imported KEV and EPSS files
+
+If you imported a CISA KEV or FIRST EPSS file ([exploit-intel.md](exploit-intel.md)), a path's vulnerable-software factor can gain: +10 for KEV (as before), +5 more when KEV marks ransomware use, +3 for EPSS of at least 0.10 and +6 for at least 0.50, capped at +15 for the exploitation bonus and 100 for the path. Each adjustment is listed in the path's `weighting` array. With nothing imported the output has no `weighting`. The EPSS cut-offs are Kavach policy, not FIRST values.
+
 ## Limits
 
 Assets are matched by host label, not by a verified network or identity graph, so "same asset" does not prove the exposed port reaches the vulnerable process or that the identity can be assumed from the host. Classification is keyword based and will mis-sort some findings. The weights are this project's own choices, not a published formula (Orca's and Google's exact formulas are not public in the pages read). The score orders review work and is not a probability.
