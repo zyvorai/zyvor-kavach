@@ -68,6 +68,9 @@ func run(args []string) error {
 	if handled, err := cloudAuditDispatch(args, os.Stdout); handled {
 		return err
 	}
+	if handled, err := webLogsDispatch(args, os.Stdout); handled {
+		return err
+	}
 	if handled, err := prDispatch(args, os.Stdout); handled {
 		return err
 	}

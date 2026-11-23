@@ -710,6 +710,41 @@ paths:
       summary: Supported cloud audit sources and loaded cld- rule count
       security: [{bearerAuth: []}]
       responses: {'200': {description: Sources}}
+  /v1/web/logs:
+    post:
+      summary: Analyse web access-log text (NGINX, Apache, F5 key=value, JSON lines, Cloudflare Logpush); admin token only
+      description: Body is raw log text. Optional query format=auto|combined|json|logfmt and host=label. Lines are evaluated by the web- content rules and summarised (API inventory, flood windows, credential-abuse detectors). Max 8 MiB, 50000 lines, 64 KiB per line. Observation only and offline.
+      security: [{bearerAuth: []}]
+      responses:
+        "200": { description: report with parsed, rejected, by_rule, findings, api and flood_windows }
+        "400": { description: empty body, no parseable line or unknown format }
+        "401": { description: missing or non-admin token }
+        "413": { description: body or line count over the cap }
+  /v1/web/analyze:
+    post:
+      summary: Analyse web access-log text and compare observed endpoints with an OpenAPI JSON document; admin token only
+      description: 'JSON body {log, format?, host?, openapi?}. openapi is an OpenAPI 3.x or Swagger 2.0 document as JSON (YAML is not accepted). Adds shadow_endpoints, undocumented_protected, verb_drift, param_drift and spec_operations_not_observed to the report.'
+      security: [{bearerAuth: []}]
+      responses:
+        "200": { description: same report as /v1/web/logs with the api section filled from the spec }
+        "400": { description: invalid envelope, spec or log }
+        "401": { description: missing or non-admin token }
+        "413": { description: body or line count over the cap }
+  /v1/web/sources:
+    get:
+      summary: Supported web log formats, loaded web- rule count, analytic rule ids and limits
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Sources}}
+  /v1/auth/logs:
+    post:
+      summary: Analyse authentication logs (credential stuffing, success after failures, impossible travel); admin token only
+      description: Body is a JSON array, a wrapper object (events, records, logs, items, entries, value), one object or JSON lines. Only time, user, source address, outcome, country and latitude/longitude are read; no geo lookup is made. Max 8 MiB and 50000 records.
+      security: [{bearerAuth: []}]
+      responses:
+        "200": { description: report with parsed, rejected, failures, successes, top_failing_sources, by_rule and findings }
+        "400": { description: invalid payload or no parseable record }
+        "401": { description: missing or non-admin token }
+        "413": { description: body or record count over the cap }
   /v1/mobile/devices:
     get:
       summary: Mobile devices (preview)

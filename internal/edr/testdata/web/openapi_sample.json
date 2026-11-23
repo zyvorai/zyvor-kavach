@@ -1,0 +1,8 @@
+{"openapi":"3.0.3","info":{"title":"Users","version":"1"},"servers":[{"url":"https://api.example.org/api/v1"}],
+ "paths":{
+  "/users":{"get":{"parameters":[{"name":"limit","in":"query"}]}},
+  "/users/{id}":{"parameters":[{"name":"id","in":"path","required":true}],
+    "get":{"parameters":[{"name":"expand","in":"query"}]},"delete":{}},
+  "/orders":{"get":{}},
+  "/admin/export":{"get":{"parameters":[{"$ref":"#/components/parameters/format"}]}}},
+ "components":{"parameters":{"format":{"name":"format","in":"query"}}}}
