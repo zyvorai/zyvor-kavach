@@ -547,6 +547,10 @@ func APIWithCredentials(token string, store *Store, registry *CredentialRegistry
 	RegisterCloudAudit(mux, token, store)
 	RegisterWebLogs(mux, token, store)
 	RegisterAuthLogs(mux, token, store)
+	RegisterIdpLogs(mux, token, store)
+	RegisterExploitIntel(mux, token, store)
+	RegisterRansomLogs(mux, token, store)
+	RegisterTripwires(mux, token, store)
 	RegisterPostureReports(mux, token, store)
 	RegisterAttackPaths(mux, token, store)
 	mux.HandleFunc("GET /metrics", func(w http.ResponseWriter, r *http.Request) {

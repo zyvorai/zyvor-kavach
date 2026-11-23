@@ -177,22 +177,23 @@ type AuthSource struct {
 }
 
 type AuthReport struct {
-	Mode       string         `json:"mode"`
-	Received   int            `json:"received"`
-	Parsed     int            `json:"parsed"`
-	Rejected   int            `json:"rejected"`
-	Failures   int            `json:"failures"`
-	Successes  int            `json:"successes"`
-	Users      int            `json:"distinct_users"`
-	Sources    int            `json:"distinct_sources"`
-	From       *time.Time     `json:"from,omitempty"`
-	To         *time.Time     `json:"to,omitempty"`
-	TopSources []AuthSource   `json:"top_failing_sources"`
-	ByRule     map[string]int `json:"by_rule"`
-	Findings   int            `json:"findings"`
-	GeoRecords int            `json:"records_with_geo"`
-	Errors     []string       `json:"errors,omitempty"`
-	Note       string         `json:"note"`
+	Mode         string         `json:"mode"`
+	Received     int            `json:"received"`
+	Parsed       int            `json:"parsed"`
+	Rejected     int            `json:"rejected"`
+	Failures     int            `json:"failures"`
+	Successes    int            `json:"successes"`
+	Users        int            `json:"distinct_users"`
+	Sources      int            `json:"distinct_sources"`
+	From         *time.Time     `json:"from,omitempty"`
+	To           *time.Time     `json:"to,omitempty"`
+	TopSources   []AuthSource   `json:"top_failing_sources"`
+	ByRule       map[string]int `json:"by_rule"`
+	Findings     int            `json:"findings"`
+	GeoRecords   int            `json:"records_with_geo"`
+	TripwireHits int            `json:"tripwire_hits,omitempty"`
+	Errors       []string       `json:"errors,omitempty"`
+	Note         string         `json:"note"`
 }
 
 type authFailRec struct {
@@ -454,6 +455,9 @@ func RegisterAuthLogs(mux *http.ServeMux, token string, store *Store) {
 			host = "auth:" + strings.ToLower(webTruncate(webSanitise(h), 120))
 		}
 		rep, findings := AnalyzeAuthLogs(recs, host)
+		twf, twn := twMerge(recs, "auth")
+		findings = append(findings, twf...)
+		rep.TripwireHits = twn
 		if rep.Parsed == 0 {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)

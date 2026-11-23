@@ -542,14 +542,18 @@ func (f *vulnFeeds) osvFindings(pkgs []map[string]any) []VMFinding {
 // markKEV flags findings whose CVE is in the CISA KEV catalog.
 func (f *vulnFeeds) markKEV(fs []VMFinding) {
 	kev, _, _ := vfEnabled()
-	if !kev {
-		return
-	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	for i := range fs {
-		if d, ok := f.cache.KEV[strings.ToUpper(fs[i].CVE)]; ok {
-			fs[i].KnownExploited, fs[i].KEVDateAdded = true, d
+		if kev {
+			if d, ok := f.cache.KEV[strings.ToUpper(fs[i].CVE)]; ok {
+				fs[i].KnownExploited, fs[i].KEVDateAdded = true, d
+				continue
+			}
+		}
+		// operator-imported KEV catalogue (offline)
+		if k, ok := xiKEVLookup(fs[i].CVE); ok {
+			fs[i].KnownExploited, fs[i].KEVDateAdded = true, k.Added
 		}
 	}
 }

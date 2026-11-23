@@ -71,6 +71,10 @@ type APSignal struct {
 	Detail   string `json:"detail,omitempty"`
 	Severity string `json:"severity,omitempty"`
 	KEV      bool   `json:"kev,omitempty"`
+	// Operator-imported exploitation evidence (see exploit_intel.go); zero when none is loaded.
+	EPSS       *float64 `json:"epss,omitempty"`
+	Ransomware bool     `json:"kev_ransomware_use,omitempty"`
+	CVE        string   `json:"cve,omitempty"`
 }
 
 // APFinding is the minimal finding shape accepted on the evaluate endpoint.
@@ -99,6 +103,8 @@ type APPath struct {
 	Factors     map[string]float64 `json:"factors"`
 	Signals     []APSignal         `json:"signals"`
 	BreakPoints []APBreak          `json:"break_points"`
+	// Weighting lists every exploitation-likelihood adjustment applied to the vulnerable-software factor.
+	Weighting []string `json:"weighting,omitempty"`
 }
 
 var apActions = map[string]string{
@@ -185,10 +191,35 @@ func ScoreAttackPaths(signals []APSignal, minScore float64) []APPath {
 				kev = true
 			}
 		}
+		var xiBonus float64
+		var xiWhy []string
+		if best[APVuln] > 0 {
+			seen := map[string]bool{}
+			for _, s := range sigs {
+				if s.Kind != APVuln || !(s.KEV || s.EPSS != nil) || seen[s.CVE+s.Source] {
+					continue
+				}
+				seen[s.CVE+s.Source] = true
+				id := s.CVE
+				if id == "" {
+					id = s.Source
+				}
+				b, why := xiPathWeights(s.KEV, s.Ransomware, s.EPSS, id)
+				xiBonus += b
+				xiWhy = append(xiWhy, why...)
+				if len(xiWhy) > 20 {
+					xiWhy = xiWhy[:20]
+				}
+			}
+			if xiBonus > 15 {
+				xiBonus = 15
+				xiWhy = append(xiWhy, "exploitation bonus capped at +15")
+			}
+		}
 		if len(best) < 2 || (best[APExposure] == 0 && best[APVuln] == 0 && best[APActive] == 0) {
 			continue
 		}
-		p := APPath{Host: h, Factors: map[string]float64{}}
+		p := APPath{Host: h, Factors: map[string]float64{}, Weighting: xiWhy}
 		total := 0.0
 		for _, k := range apKindOrder {
 			if best[k] == 0 {
@@ -197,6 +228,9 @@ func ScoreAttackPaths(signals []APSignal, minScore float64) []APPath {
 			c := apKindWeight[k] * best[k]
 			if k == APVuln && kev {
 				c += apKEVBonus
+			}
+			if k == APVuln {
+				c += xiBonus
 			}
 			p.Factors[k] = round1(c)
 			total += c
@@ -298,7 +332,7 @@ func apStoredSignals(store *Store) []APSignal {
 				if len(sigs) >= apMaxSignals {
 					break
 				}
-				sigs = append(sigs, APSignal{Host: a.Host, Kind: APVuln, Source: m.ID, Detail: apClip(m.Package+" "+m.Version, 120), Severity: apSevOf(m.Severity), KEV: m.KEV})
+				sigs = append(sigs, APSignal{Host: a.Host, Kind: APVuln, Source: m.ID, Detail: apClip(m.Package+" "+m.Version, 120), Severity: apSevOf(m.Severity), KEV: m.KEV, EPSS: m.EPSS, Ransomware: m.KEVRansomware, CVE: m.IntelCVE})
 			}
 		}
 	}

@@ -1,0 +1,4 @@
+{"time":"2026-11-12T10:00:00Z","host":"fs01","op":"rename","path":"C:\\Shares\\a\\q1.xlsx","new_path":"C:\\Shares\\a\\q1.xlsx.locked","process":"svc.exe"}
+{"time":"2026-11-12T10:00:01Z","host":"fs01","process":"cmd.exe","command":"cmd /c vssadmin.exe Delete Shadows /All /Quiet"}
+{"time":"2026-11-12T10:05:00Z","host":"bk01","job":"nightly","event":"Restore point deleted","message":"backup deleted by admin"}
+{"time":"2026-11-12T10:06:00Z","host":"bk01","job":"nightly","event":"Malware Activity Detected","activity_type":"EncryptedData"}
