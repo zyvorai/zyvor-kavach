@@ -840,6 +840,48 @@ paths:
         "400": { description: no recognised metric column }
         "401": { description: missing or non-admin token }
         "413": { description: too many rows or body over the cap }
+  /v1/cloudflare/sources:
+    get:
+      summary: Cloudflare export analytics formats, rule ids and limits
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Formats, rules and caps}, '401': {description: Unauthorized}}
+  /v1/cloudflare/logs:
+    post:
+      summary: Analyse an exported Cloudflare Logpush HTTP requests, firewall events, Gateway DNS or Gateway HTTP log offline; admin token only
+      description: Body is the raw export (JSON, JSON lines, CSV or TSV with a header row) or a JSON envelope with log, format and host. Max 8 MiB and 100,000 records. URL query strings are dropped from findings. Nothing contacts Cloudflare.
+      security: [{bearerAuth: []}]
+      parameters: [{name: format, in: query, required: false, schema: {type: string, enum: [auto, json, csv, tsv]}}, {name: host, in: query, required: false, schema: {type: string}}]
+      responses:
+        "200": { description: report with by_kind, by_rule, top_identities and findings stored }
+        "400": { description: unreadable log, no recognised field names or bad format }
+        "401": { description: missing or non-admin token }
+        "413": { description: body or record count over the cap }
+  /v1/cloudflare/policy:
+    post:
+      summary: Review an exported Cloudflare ruleset list offline (managed WAF, rate limiting, broad skip rules, log-only rules); admin token only
+      description: Body is one ruleset, an array of rulesets, or an object whose result holds them, or an envelope with policy, host and an optional RFC 3339 now. Max 8 MiB and 20,000 rules.
+      security: [{bearerAuth: []}]
+      responses:
+        "200": { description: report with posture_score, grade, by_rule, by_severity, items and findings stored }
+        "400": { description: not a recognised ruleset export or bad now value }
+        "401": { description: missing or non-admin token }
+        "413": { description: body over the cap }
+  /v1/umbrella/sources:
+    get:
+      summary: Cisco Umbrella export analytics formats, rule ids and limits
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Formats, rules and caps}, '401': {description: Unauthorized}}
+  /v1/umbrella/logs:
+    post:
+      summary: Analyse an exported Cisco Umbrella DNS or proxy CSV log offline (headerless or with a header); admin token only
+      description: Body is the raw export (CSV, TSV, JSON or JSON lines) or a JSON envelope with log, format and host. Max 8 MiB and 100,000 records. URL query strings are dropped from findings. Nothing contacts Cisco.
+      security: [{bearerAuth: []}]
+      parameters: [{name: format, in: query, required: false, schema: {type: string, enum: [auto, json, csv, tsv]}}, {name: host, in: query, required: false, schema: {type: string}}]
+      responses:
+        "200": { description: report with by_kind, by_rule, top_identities and findings stored }
+        "400": { description: unreadable log, no recognised columns or bad format }
+        "401": { description: missing or non-admin token }
+        "413": { description: body or record count over the cap }
   /v1/idp/sources:
     get:
       summary: Identity-provider log analytics rules, providers and limits

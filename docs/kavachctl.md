@@ -171,6 +171,8 @@ kavachctl web sources                                # formats, web- rule count,
 kavachctl authlog analyze auth.jsonl                 # offline credential-stuffing and impossible-travel analytics (admin token)
 kavachctl netcfg analyze fw-config.xml --format pan-xml   # offline device configuration posture review (admin token); see docs/netcfg-posture.md
 kavachctl zscaler logs nss-web.csv --sanctioned apps.txt   # offline Zscaler export analytics (admin token); see docs/zscaler-analytics.md
+kavachctl umbrella logs dns.csv                          # offline Cisco Umbrella log analytics (admin token); see docs/sase-log-analytics.md
+kavachctl cloudflare policy rulesets.json                 # offline Cloudflare ruleset review (admin token)
 kavachctl netlog analyze conn.log --host edge-1     # offline Zeek / EVE / DNS / flow / firewall log analytics (admin token); see docs/network-detection.md
 kavachctl idplog analyze okta.jsonl --host okta-prod  # offline Okta / Entra log analytics: MFA fatigue, spray, role grants (admin token)
 kavachctl ransomlog analyze fileaudit.jsonl           # offline file-activity and backup-job analytics (admin token)

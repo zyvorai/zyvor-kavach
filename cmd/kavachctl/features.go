@@ -537,7 +537,7 @@ func topLevelCommands() []string {
 		"discover", "spotlight", "exposure", "compliance", "attack", "metrics", "zero-trust", "sbom", "fim",
 		"persistence", "firewall", "browser", "casb", "cnapp", "ot", "ai", "audit", "report", "siem", "fusion",
 		"connectors", "cloud", "mobile", "risk", "trends", "export", "notes", "saved-searches", "alerts", "journal", "get", "watch", "doctor", "completion", "lab", "soc", "posture", "inspect", "ml", "prov", "ransom", "ttp", "exceptions", "hunts", "reports", "syslog", "validate", "vulns", "feedback", "competitive", "chains", "casetemplates", "content", "coverage", "help",
-		"adversary", "advisories", "blast-radius", "canary", "case", "containers", "digest", "governance", "lateral", "posture-trend", "prevalence", "ransomware", "regulatory", "search", "tuning", "cloudaudit", "web", "authlog", "idplog", "ransomlog", "exploitintel", "tripwire", "netlog", "netcfg", "zscaler",
+		"adversary", "advisories", "blast-radius", "canary", "case", "containers", "digest", "governance", "lateral", "posture-trend", "prevalence", "ransomware", "regulatory", "search", "tuning", "cloudaudit", "web", "authlog", "idplog", "ransomlog", "exploitintel", "tripwire", "netlog", "netcfg", "zscaler", "cloudflare", "umbrella",
 		"events", "enrich", "evidence", "guidance", "queries", "regression", "rollback",
 	}
 }

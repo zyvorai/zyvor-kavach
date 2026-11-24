@@ -338,6 +338,9 @@ func zsBuild(r map[string]string, line int) (ZsEvent, bool) {
 			}
 		}
 		e.DPort = int(zsInt(zsGet(r, "port", "serverport")))
+		if e.Action != "block" && zsAction(zsGet(r, "internalreason")) == "block" {
+			e.Action = "block" // ConnectionStatus shows open, close or active; a refusal is carried by InternalReason
+		}
 		if e.Action == "" {
 			e.Action = "other"
 		}
