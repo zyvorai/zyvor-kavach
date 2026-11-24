@@ -59,7 +59,7 @@ func TestEveryRuleHasPassingExamples(t *testing.T) {
 		inv[r.ID] = true
 	}
 	for id := range ruleMITRE {
-		for _, p := range []string{"web-an-", "auth-an-", "idp-an-", "rwlog-an-", "tripwire-", "netcfg-", "zs-an-", "zspol-", "zdx-an-"} {
+		for _, p := range []string{"web-an-", "auth-an-", "idp-an-", "rwlog-an-", "tripwire-", "netcfg-", "zs-an-", "zspol-", "zdx-an-", "cf-an-", "umb-an-", "cfpol-"} {
 			if strings.HasPrefix(id, p) && !inv[id] {
 				t.Errorf("rule %s is registered but missing from the harness inventory (add it to harnessAnalytics)", id)
 			}

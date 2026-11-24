@@ -45,7 +45,7 @@ const (
 )
 
 var (
-	harnessKinds   = map[string]bool{"web": true, "auth": true, "idp": true, "ransom": true, "tripwire": true, "event": true, "netcfg": true, "zslog": true, "zspolicy": true, "zdx": true}
+	harnessKinds   = map[string]bool{"web": true, "auth": true, "idp": true, "ransom": true, "tripwire": true, "event": true, "netcfg": true, "zslog": true, "zspolicy": true, "zdx": true, "cflog": true, "cfpolicy": true, "umblog": true}
 	harnessFormats = map[string]bool{"": true, "auto": true, "combined": true, "common": true, "clf": true, "json": true, "logfmt": true, "f5": true}
 	harnessRuleRe  = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
 	harnessTokenRe = regexp.MustCompile(`\{(i|t|clf)(?:([%/])(\d{1,6}))?\}`)
@@ -289,15 +289,15 @@ func harnessValidateSpec(s *HarnessCaseSpec, known map[string]bool) string {
 	}
 	s.Case = webSanitise(s.Case)
 	if !harnessKinds[s.Kind] {
-		return `kind must be one of web, auth, idp, ransom, tripwire, event, netcfg, zslog, zspolicy, zdx`
+		return `kind must be one of web, auth, idp, ransom, tripwire, event, netcfg, zslog, zspolicy, zdx, cflog, cfpolicy, umblog`
 	}
-	if s.Kind == "zslog" {
+	if s.Kind == "zslog" || s.Kind == "cflog" || s.Kind == "umblog" {
 		if s.Format != "" && s.Format != "auto" && s.Format != "json" && s.Format != "csv" && s.Format != "tsv" {
-			return "unknown zslog format (auto|json|csv|tsv)"
+			return "unknown log format (auto|json|csv|tsv)"
 		}
-	} else if s.Kind == "zspolicy" || s.Kind == "zdx" {
+	} else if s.Kind == "zspolicy" || s.Kind == "zdx" || s.Kind == "cfpolicy" {
 		if s.Format != "" {
-			return "format does not apply to kinds zspolicy and zdx"
+			return "format does not apply to kinds zspolicy, zdx and cfpolicy"
 		}
 	} else if s.Kind != "netcfg" && !harnessFormats[s.Format] {
 		return "unknown format (auto|combined|json|logfmt)"
@@ -312,7 +312,7 @@ func harnessValidateSpec(s *HarnessCaseSpec, known map[string]bool) string {
 		if !ok {
 			return "unknown netcfg format (" + ncFormatsLabel + ")"
 		}
-	} else if s.Kind != "web" && s.Kind != "zslog" && s.Kind != "zspolicy" && s.Kind != "zdx" && s.Format != "" {
+	} else if s.Kind != "web" && s.Kind != "zslog" && s.Kind != "zspolicy" && s.Kind != "zdx" && s.Kind != "cflog" && s.Kind != "umblog" && s.Kind != "cfpolicy" && s.Format != "" {
 		return "format only applies to kinds web and netcfg"
 	}
 	if s.Kind != "event" && len(s.Events) > 0 {
@@ -614,6 +614,30 @@ func harnessRunKind(kind, text, format, host string, dormant int, reg *ContentRe
 			return run
 		}
 		run.parsed, run.rejected, run.total = rep.Parsed, rep.Rejected, rep.Received
+		for _, f := range fs {
+			run.note(f.Rule, 0, harnessSample(f.Description))
+		}
+	case "cflog", "umblog":
+		runner := CloudflareRun
+		if kind == "umblog" {
+			runner = UmbrellaRun
+		}
+		rep, fs, err := runner([]byte(text), format, SvOptions{})
+		if err != nil {
+			run.err = webTruncate(webSanitise(err.Error()), 200)
+			return run
+		}
+		run.parsed, run.rejected, run.total = rep.Parsed, rep.Rejected, rep.Received
+		for _, f := range fs {
+			run.note(f.Rule, 0, harnessSample(f.Description))
+		}
+	case "cfpolicy":
+		rep, fs, err := CfPolicyRun([]byte(text), CfPolOptions{Now: time.Date(2026, 11, 23, 0, 0, 0, 0, time.UTC)})
+		if err != nil {
+			run.err = webTruncate(webSanitise(err.Error()), 200)
+			return run
+		}
+		run.parsed, run.total = 1, rep.Rules
 		for _, f := range fs {
 			run.note(f.Rule, 0, harnessSample(f.Description))
 		}

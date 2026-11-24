@@ -345,7 +345,8 @@ func TestNetcfgHostileText(t *testing.T) {
 	if !rep.Truncated || rep.Rules > ncMaxRules {
 		t.Errorf("truncated=%v rules=%d", rep.Truncated, rep.Rules)
 	}
-	if time.Since(start) > 15*time.Second {
+	// A quadratic regression takes minutes; the bound is loose because -race on a loaded CI host measured 24s for 2s of real work.
+	if time.Since(start) > 90*time.Second {
 		t.Errorf("cardinality bomb took %v", time.Since(start))
 	}
 }

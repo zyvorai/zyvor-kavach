@@ -264,3 +264,28 @@ func TestZscalerHTTP(t *testing.T) {
 		t.Errorf("sources %d", code)
 	}
 }
+
+func TestZscalerZPADenialFromInternalReason(t *testing.T) {
+	var b strings.Builder
+	for i := 0; i < 10; i++ {
+		fmt.Fprintf(&b, `{"LogTimestamp":"2026-11-20T10:%02d:00Z","Username":"u@example.test","Application":"App%d","ConnectionStatus":"close","InternalReason":"ZPN_STATUS_AUTH_FAILED","ClientPublicIP":"203.0.113.9"}`+"\n", i, i)
+	}
+	rep, fs, err := ZscalerRun([]byte(b.String()), "", ZsOptions{})
+	if err != nil || rep.ByKind["zpa"] != 10 {
+		t.Fatalf("%v %+v", err, rep)
+	}
+	found := false
+	for _, f := range fs {
+		found = found || f.Rule == "zs-an-zpa-denied-burst"
+	}
+	if !found {
+		t.Error("ten refusals carried in InternalReason did not raise zs-an-zpa-denied-burst")
+	}
+	ok := strings.ReplaceAll(b.String(), "ZPN_STATUS_AUTH_FAILED", "BRK_MT_TERMINATED")
+	_, fs, _ = ZscalerRun([]byte(ok), "", ZsOptions{})
+	for _, f := range fs {
+		if f.Rule == "zs-an-zpa-denied-burst" {
+			t.Error("a normal close raised the denied burst")
+		}
+	}
+}

@@ -295,6 +295,8 @@ func allCLICommands() []cliCommand {
 		{Name: "netlog-sources", Args: []string{"netlog", "sources"}},
 		{Name: "netcfg-sources", Args: []string{"netcfg", "sources"}},
 		{Name: "zscaler-sources", Args: []string{"zscaler", "sources"}},
+		{Name: "cloudflare-sources", Args: []string{"cloudflare", "sources"}},
+		{Name: "umbrella-sources", Args: []string{"umbrella", "sources"}},
 		{Name: "regulatory-profile", Args: []string{"regulatory", "profile"}},
 		{Name: "posture-trend", Args: []string{"posture-trend"}},
 		{Name: "digest", Args: []string{"digest"}},

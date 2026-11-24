@@ -123,6 +123,10 @@ var tacticTemplates = map[string]tacticTpl{
 type techDef struct{ id, title, tactic, means string }
 
 var techniqueDefs = []techDef{
+	{"T1119", "Automated Collection", "Collection", "A client may be harvesting content from a site or service with automated tooling."},
+	{"T1090.002", "External Proxy", "Command and Control", "Traffic may be relayed through an external proxy or anonymiser to hide its origin or evade policy."},
+	{"T1090.003", "Multi-hop Proxy", "Command and Control", "Traffic may pass through several proxies, such as Tor, so that its origin is hard to trace."},
+	{"T1553", "Subvert Trust Controls", "Defense Evasion", "Certificate or trust checks may be bypassed so that an untrusted server is accepted."},
 	{"T1600", "Weaken Encryption", "Defense Evasion", "Encryption on a network device may be configured with weak or deprecated algorithms or versions, which makes captured traffic easier to read or tamper with."},
 	{"T1078.001", "Default Accounts", "Initial Access", "A default, shared or empty credential on a device may let anyone who can reach it log in."},
 	{"T1040", "Network Sniffing", "Credential Access", "Cleartext management protocols let anyone on the path read credentials and sessions."},
@@ -392,7 +396,7 @@ func techniqueEntries() []GuidanceEntry {
 }
 
 var guidanceCatalog = func() []GuidanceEntry {
-	all := append(append(append(append(append(rulesCatalog(), netcfgGuidance()...), zscalerGuidance()...), zspolGuidance()...), zdxGuidance()...), techniqueEntries()...)
+	all := append(append(append(append(append(append(append(append(rulesCatalog(), netcfgGuidance()...), zscalerGuidance()...), zspolGuidance()...), zdxGuidance()...), cloudflareGuidance()...), umbrellaGuidance()...), cfPolicyGuidance()...), techniqueEntries()...)
 	sort.SliceStable(all, func(i, j int) bool {
 		if all[i].Kind != all[j].Kind {
 			return all[i].Kind > all[j].Kind // rule before technique

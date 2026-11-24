@@ -69,6 +69,15 @@ func harnessAnalytics() []harnessAnalytic {
 	for _, r := range zdxRules {
 		add("zdx-analytic", r.ID, r.Tactic, r.Technique, r.TechID, r.Sev)
 	}
+	for _, r := range cfRules {
+		add("cloudflare-analytic", r.ID, r.Tactic, r.Technique, r.TechID, r.Sev)
+	}
+	for _, r := range umbRules {
+		add("umbrella-analytic", r.ID, r.Tactic, r.Technique, r.TechID, r.Sev)
+	}
+	for _, r := range cfPolRules {
+		add("cloudflare-policy", r.ID, r.Tactic, r.Technique, r.TechID, r.Sev)
+	}
 	for _, r := range twRules {
 		add("tripwire", r.ID, r.Tactic, r.Technique, r.TechID, r.Sev)
 	}

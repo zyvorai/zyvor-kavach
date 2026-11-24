@@ -83,6 +83,9 @@ func run(args []string) error {
 	if handled, err := zscalerDispatch(args, os.Stdout); handled {
 		return err
 	}
+	if handled, err := saseDispatch(args, os.Stdout); handled {
+		return err
+	}
 	if handled, err := netLogDispatch(args, os.Stdout); handled {
 		return err
 	}
