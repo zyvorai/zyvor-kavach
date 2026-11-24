@@ -392,7 +392,7 @@ func techniqueEntries() []GuidanceEntry {
 }
 
 var guidanceCatalog = func() []GuidanceEntry {
-	all := append(append(rulesCatalog(), netcfgGuidance()...), techniqueEntries()...)
+	all := append(append(append(append(append(rulesCatalog(), netcfgGuidance()...), zscalerGuidance()...), zspolGuidance()...), zdxGuidance()...), techniqueEntries()...)
 	sort.SliceStable(all, func(i, j int) bool {
 		if all[i].Kind != all[j].Kind {
 			return all[i].Kind > all[j].Kind // rule before technique

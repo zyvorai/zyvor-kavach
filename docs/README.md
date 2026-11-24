@@ -49,6 +49,7 @@ Published site (synced from these files): https://zyvorai.github.io/zyvor-kavach
 | [RESEARCH-vendors-detection.md](RESEARCH-vendors-detection.md) | Vendor and open-content detection survey with ranked ideas |
 | [RESEARCH-vendors-identity-intel.md](RESEARCH-vendors-identity-intel.md) | Identity, e-mail, threat-intel, SIEM, deception, ransomware and DSPM vendor survey with ranked ideas |
 | [netcfg-posture.md](netcfg-posture.md) | Network-device configuration posture review (PAN-OS, FortiGate, ASA, iptables, nftables); research in [RESEARCH-network-posture.md](RESEARCH-network-posture.md) |
+| [zscaler-analytics.md](zscaler-analytics.md) | Offline analytics over exported Zscaler ZIA NSS and ZPA LSS logs, policy-export review and a ZDX-style experience score (35 rules); field assumptions and what was not added |
 | [network-detection.md](network-detection.md) | Zeek, Suricata, DNS, flow and firewall log analytics; research in [RESEARCH-vendors-network.md](RESEARCH-vendors-network.md) |
 | [identity-detection.md](identity-detection.md) | Okta and Entra sign-in and audit log analytics |
 | [ransomware-logs.md](ransomware-logs.md) | Ransomware indicators from file-activity and backup-job logs |

@@ -804,6 +804,42 @@ paths:
         "400": { description: invalid envelope or unreadable configuration }
         "401": { description: missing or non-admin token }
         "413": { description: body over the cap }
+  /v1/zscaler/sources:
+    get:
+      summary: Zscaler export analytics formats, rule ids and limits
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: Formats, rules and caps}, '401': {description: Unauthorized}}
+  /v1/zscaler/logs:
+    post:
+      summary: Analyse an exported Zscaler NSS web, firewall or DNS log or ZPA LSS user-activity log offline; admin token only
+      description: Body is the raw export (JSON, JSON lines, CSV or TSV with a header row) or a JSON envelope with log, format, host, sanctioned_apps (list or newline text), work_start_hour and work_end_hour (UTC). Optional query format and host label. Max 8 MiB and 100,000 records. URL query strings are dropped from findings. Nothing contacts Zscaler.
+      security: [{bearerAuth: []}]
+      parameters: [{name: format, in: query, required: false, schema: {type: string, enum: [auto, json, csv, tsv]}}, {name: host, in: query, required: false, schema: {type: string}}]
+      responses:
+        "200": { description: report with by_kind, by_rule, top_users and top_apps risk, and findings stored }
+        "400": { description: unreadable log, no recognised field names, bad format or bad working hours }
+        "401": { description: missing or non-admin token }
+        "413": { description: body or record count over the cap }
+  /v1/zscaler/policy:
+    post:
+      summary: Review an exported Zscaler ZIA or ZPA policy set offline (any-any allows, SSL bypass, DLP, unsanctioned apps, stale rules, ZPA scope); admin token only
+      description: Body is one JSON object whose keys name rule lists (url_filtering_rules, firewall_filtering_rules, dlp_web_rules, ssl_inspection_rules, cloud_app_control_rules, zpa_access_policies, zpa_app_segments, sanctioned_apps) or an envelope with policy, host and an optional RFC 3339 now. Max 8 MiB and 20,000 rules.
+      security: [{bearerAuth: []}]
+      responses:
+        "200": { description: report with posture_score, grade, by_rule, by_severity, items and findings stored }
+        "400": { description: not a recognised policy export or bad now value }
+        "401": { description: missing or non-admin token }
+        "413": { description: body over the cap }
+  /v1/zscaler/zdx:
+    post:
+      summary: Score exported ZDX-style probe metrics offline per user, application and pair; admin token only
+      description: Body is CSV, TSV, JSON or JSON lines of probe rows (user, app, time, page_fetch_ms, dns_ms, latency_ms, packet_loss_pct, cpu_pct and similar) or an envelope with probes and host. The score is Kavach's own formula, not the Zscaler ZDX Score. Max 100,000 rows.
+      security: [{bearerAuth: []}]
+      responses:
+        "200": { description: report with score, band, by_user, by_app, by_user_app, by_rule and findings stored }
+        "400": { description: no recognised metric column }
+        "401": { description: missing or non-admin token }
+        "413": { description: too many rows or body over the cap }
   /v1/idp/sources:
     get:
       summary: Identity-provider log analytics rules, providers and limits

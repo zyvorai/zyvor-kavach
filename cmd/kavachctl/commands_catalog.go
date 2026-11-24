@@ -294,6 +294,7 @@ func allCLICommands() []cliCommand {
 		{Name: "tripwire-list", Args: []string{"tripwire", "list"}},
 		{Name: "netlog-sources", Args: []string{"netlog", "sources"}},
 		{Name: "netcfg-sources", Args: []string{"netcfg", "sources"}},
+		{Name: "zscaler-sources", Args: []string{"zscaler", "sources"}},
 		{Name: "regulatory-profile", Args: []string{"regulatory", "profile"}},
 		{Name: "posture-trend", Args: []string{"posture-trend"}},
 		{Name: "digest", Args: []string{"digest"}},

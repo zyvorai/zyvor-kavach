@@ -45,7 +45,7 @@ const (
 )
 
 var (
-	harnessKinds   = map[string]bool{"web": true, "auth": true, "idp": true, "ransom": true, "tripwire": true, "event": true, "netcfg": true}
+	harnessKinds   = map[string]bool{"web": true, "auth": true, "idp": true, "ransom": true, "tripwire": true, "event": true, "netcfg": true, "zslog": true, "zspolicy": true, "zdx": true}
 	harnessFormats = map[string]bool{"": true, "auto": true, "combined": true, "common": true, "clf": true, "json": true, "logfmt": true, "f5": true}
 	harnessRuleRe  = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
 	harnessTokenRe = regexp.MustCompile(`\{(i|t|clf)(?:([%/])(\d{1,6}))?\}`)
@@ -289,9 +289,17 @@ func harnessValidateSpec(s *HarnessCaseSpec, known map[string]bool) string {
 	}
 	s.Case = webSanitise(s.Case)
 	if !harnessKinds[s.Kind] {
-		return `kind must be one of web, auth, idp, ransom, tripwire, event, netcfg`
+		return `kind must be one of web, auth, idp, ransom, tripwire, event, netcfg, zslog, zspolicy, zdx`
 	}
-	if s.Kind != "netcfg" && !harnessFormats[s.Format] {
+	if s.Kind == "zslog" {
+		if s.Format != "" && s.Format != "auto" && s.Format != "json" && s.Format != "csv" && s.Format != "tsv" {
+			return "unknown zslog format (auto|json|csv|tsv)"
+		}
+	} else if s.Kind == "zspolicy" || s.Kind == "zdx" {
+		if s.Format != "" {
+			return "format does not apply to kinds zspolicy and zdx"
+		}
+	} else if s.Kind != "netcfg" && !harnessFormats[s.Format] {
 		return "unknown format (auto|combined|json|logfmt)"
 	}
 	if s.Kind == "netcfg" {
@@ -304,7 +312,7 @@ func harnessValidateSpec(s *HarnessCaseSpec, known map[string]bool) string {
 		if !ok {
 			return "unknown netcfg format (" + ncFormatsLabel + ")"
 		}
-	} else if s.Kind != "web" && s.Format != "" {
+	} else if s.Kind != "web" && s.Kind != "zslog" && s.Kind != "zspolicy" && s.Kind != "zdx" && s.Format != "" {
 		return "format only applies to kinds web and netcfg"
 	}
 	if s.Kind != "event" && len(s.Events) > 0 {
@@ -599,6 +607,36 @@ func harnessRunKind(kind, text, format, host string, dormant int, reg *ContentRe
 		harnessRunWeb(run, text, format, host, reg)
 	case "event":
 		harnessRunEvents(run, text, reg)
+	case "zslog":
+		rep, fs, err := ZscalerRun([]byte(text), format, ZsOptions{Sanctioned: map[string]bool{"sanctioned-drive": true}})
+		if err != nil {
+			run.err = webTruncate(webSanitise(err.Error()), 200)
+			return run
+		}
+		run.parsed, run.rejected, run.total = rep.Parsed, rep.Rejected, rep.Received
+		for _, f := range fs {
+			run.note(f.Rule, 0, harnessSample(f.Description))
+		}
+	case "zspolicy":
+		rep, fs, err := ZspolRun([]byte(text), ZspolOptions{Now: time.Date(2026, 11, 23, 0, 0, 0, 0, time.UTC)})
+		if err != nil {
+			run.err = webTruncate(webSanitise(err.Error()), 200)
+			return run
+		}
+		run.parsed, run.total = 1, len(rep.Items)
+		for _, f := range fs {
+			run.note(f.Rule, 0, harnessSample(f.Description))
+		}
+	case "zdx":
+		rep, fs, err := ZdxRun([]byte(text), "")
+		if err != nil {
+			run.err = webTruncate(webSanitise(err.Error()), 200)
+			return run
+		}
+		run.parsed, run.rejected, run.total = rep.Rows, rep.Rejected, rep.Rows+rep.Rejected
+		for _, f := range fs {
+			run.note(f.Rule, 0, harnessSample(f.Description))
+		}
 	case "netcfg":
 		rep, fs, err := NetcfgRun([]byte(text), format, NetcfgOptions{Now: time.Date(2026, 11, 23, 0, 0, 0, 0, time.UTC)})
 		if err != nil {

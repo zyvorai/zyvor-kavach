@@ -60,6 +60,15 @@ func harnessAnalytics() []harnessAnalytic {
 	for _, r := range netcfgRules {
 		add("netcfg-analytic", r.ID, r.Tactic, r.Technique, r.TechID, r.Sev)
 	}
+	for _, r := range zsRules {
+		add("zscaler-analytic", r.ID, r.Tactic, r.Technique, r.TechID, r.Sev)
+	}
+	for _, r := range zsPolRules {
+		add("zscaler-policy", r.ID, r.Tactic, r.Technique, r.TechID, r.Sev)
+	}
+	for _, r := range zdxRules {
+		add("zdx-analytic", r.ID, r.Tactic, r.Technique, r.TechID, r.Sev)
+	}
 	for _, r := range twRules {
 		add("tripwire", r.ID, r.Tactic, r.Technique, r.TechID, r.Sev)
 	}
