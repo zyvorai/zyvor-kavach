@@ -200,7 +200,7 @@ func ReplayBenign(paths []string, o FPOptions) (*FPReport, error) {
 	if o.Threshold <= 0 {
 		o.Threshold = fpDefaultRate
 	}
-	if o.Kind != "" && (!harnessKinds[o.Kind] || o.Kind == "netcfg") {
+	if o.Kind != "" && (!harnessKinds[o.Kind] || o.Kind == "netcfg" || o.Kind == "zslog" || o.Kind == "zspolicy" || o.Kind == "zdx") {
 		return nil, fmt.Errorf("kind must be one of web, auth, idp, ransom, event")
 	}
 	budget := o.Budget
