@@ -116,16 +116,16 @@ KAVACH_ADMIN_TOKEN='use-a-real-secret' ./scripts/deploy-remote.sh sus@80.79.5.17
   Browser / kavachctl / MCP / SIEM
               │
               ▼
-     ┌────────────────────┐
+     ┌───────────────────┐
      │  kavach controller │  HTTPS :30899 / Setura :30943
      │  findings · AI Hub │  Apple.com console · /v1/*
      │  eBPF platform API │
      └─────────┬──────────┘
                │ bearer / session / optional mTLS
-     ┌─────────▼──────────┐      ┌─────────────────┐
+     ┌─────────▼──────────┐      ┌────────────────┐
      │  kavach agent      │      │ Netra poller /  │
      │  /proc · eBPF pins │      │ netra-bridge    │
-     └────────────────────┘      └─────────────────┘
+     └───────────────────┘      └────────────────┘
 ```
 
 → [architecture.md](docs/architecture.md)
@@ -139,6 +139,7 @@ KAVACH_ADMIN_TOKEN='use-a-real-secret' ./scripts/deploy-remote.sh sus@80.79.5.17
 | [Site](https://zyvorai.github.io/zyvor-kavach/) | Story + full guides |
 | [Tutorial](docs/tutorial.md) | First hour |
 | [Use cases](docs/use-cases.md) | SOC, hunt, XDR |
+| [Roadmap](docs/ROADMAP.md) | Planned features (multi-user auth, Postgres, Netra XDR, GuestKit, K8s, India finance, AI/hunt) |
 | [Testing](docs/testing.md) | Unit, race, smoke, lab |
 | [Security review](docs/security-review.md) | What was reviewed, accepted risks, gaps |
 | [OpenAPI](docs/openapi.yaml) | HTTP contract |
@@ -157,7 +158,7 @@ go test ./...                      # full corpora, no race detector
 - Detection and similarity numbers come from **synthetic corpora** and heuristics; they are not a guarantee against real attacks.
 - Reporting-regime clocks, compliance scores and framework catalogs are informational evidence, not legal advice or a certification; some items remain unverified ([verification-log.md](docs/verification-log.md)).
 - The embedded advisory set used for exposure is a small SAMPLE. SIEM mappings, syslog parsers and the eBPF programs were tested with fixtures, not live vendor systems or kernels.
-- Single controller replica with file-backed state; no multi-user auth (one shared token).
+- Single controller replica with file-backed state; no multi-user auth (one shared token). See [ROADMAP](docs/ROADMAP.md) for planned improvements.
 
 ---
 
